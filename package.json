@@ -1,0 +1,17 @@
+{
+  "name": "wrestling-battle-card",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Jeu de cartes de lutte olympique jouable dans le navigateur",
+  "scripts": {
+    "test": "tsx --test tests/*.test.ts",
+    "simuler": "tsx scripts/simuler.ts",
+    "verifier-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
