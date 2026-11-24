@@ -537,14 +537,16 @@ interface NamedRoomLike {
 }
 export interface RoomLike { join(name: string): Promise<NamedRoomLike> }
 
-// La connexion en direct de claude.ai, si cette page y a droit (sinon null).
-export async function obtenirRoom(): Promise<RoomLike | null> {
+// La connexion en direct de claude.ai. Renvoie la salle, ou la raison de l'échec.
+export type RaisonEchec = 'hors-claude' | 'non-admis';
+export async function obtenirRoom(): Promise<RoomLike | RaisonEchec> {
   const c = (window as unknown as { claude?: { use?: (n: string) => Promise<unknown> } }).claude;
-  if (!c?.use) return null;
+  if (!c?.use) return 'hors-claude';
   try {
-    return (await c.use('room')) as RoomLike | null;
+    const r = (await c.use('room')) as RoomLike | null;
+    return r ?? 'non-admis';
   } catch {
-    return null;
+    return 'non-admis';
   }
 }
 

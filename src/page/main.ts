@@ -811,15 +811,25 @@ function ecranAmis(message = '') {
 async function connecter(code: string, role: Role) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   let salle: Salle | null = null;
+  let raison = '';
   try {
     const room = await obtenirRoom();
-    if (room) salle = await salleClaude(room, code);
+    if (typeof room !== 'string') salle = await salleClaude(room, code);
     else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') salle = salleLocale(code);
-  } catch {
-    salle = null;
+    else raison = room;
+  } catch (err) {
+    raison = (err as { code?: string })?.code ?? 'inconnue';
   }
   if (!salle) {
-    return ecranAmis('Connexion impossible. Le combat entre amis marche seulement sur la page ouverte depuis claude.ai, connecté à ton compte Claude, et si le propriétaire de la page t\'a invité (le lien public seul ne suffit pas).');
+    const explications: Record<string, string> = {
+      'hors-claude': 'Cette page n\'est pas ouverte depuis claude.ai : ouvre le lien du jeu dans l\'application Claude ou sur claude.ai.',
+      'non-admis': 'Ton compte n\'a pas accès à la connexion en direct de cette page. Il faut être invité personnellement sur la page par son propriétaire (bouton de partage, avec ton adresse e-mail), puis l\'ouvrir depuis cette invitation. Le lien public seul ne suffit pas.',
+      not_granted: 'Ton compte n\'a pas accès à la connexion en direct de cette page : demande au propriétaire de t\'inviter personnellement.',
+      not_permitted: 'La salle t\'est refusée : demande au propriétaire de t\'inviter personnellement sur la page.',
+      upstream_error: 'La connexion n\'a pas répondu. Réessaie dans un instant.',
+      limit_reached: 'Trop de salles ouvertes en même temps. Recharge la page et réessaie.',
+    };
+    return ecranAmis(`Connexion impossible. ${explications[raison] ?? 'Raison inconnue.'} (code : ${echap(raison)})`);
   }
   let depart: Presence | null = null;
   try {
