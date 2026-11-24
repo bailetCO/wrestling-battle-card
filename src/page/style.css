@@ -411,6 +411,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 
 /* ---------- Combat entre amis ---------- */
 
+.lien-bouton { display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .bouton-amis { display: flex; align-items: center; justify-content: center; text-decoration: none; margin: 0 16px 12px; width: auto; }
 .reprise { margin: 0 16px 12px; padding: 10px 12px; border: 2px solid var(--orange); border-radius: 12px; display: grid; gap: 8px; }
 .reprise p { margin: 0; }

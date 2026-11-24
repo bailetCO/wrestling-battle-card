@@ -18,6 +18,7 @@ import {
   ACTIONS, LUTTEURS, apercuInitiative, avecDeck, creerCombat, creerHasard, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
+import mqtt from 'mqtt';
 import { HasardRejouable, type TourJoue } from './partie';
 
 // ---------- Transport : la salle ----------
@@ -26,6 +27,13 @@ export interface Pair {
   peer: string;
   presence: Readonly<Record<string, unknown>>;
 }
+
+// Adresse de la version ouverte à tous (GitHub Pages).
+export const ADRESSE_PUBLIQUE = 'https://bailetco.github.io/wrestling-battle-card/';
+
+// Relais publics gratuits et sans compte (MQTT sur WebSocket). On se branche sur les deux :
+// si l'un ne répond pas, l'autre suffit. À remplacer par Firebase plus tard.
+export const RELAIS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
 
 // Ce dont le protocole a besoin d'une salle (salle Claude, ou salle locale pour les tests).
 export interface Salle {
@@ -474,6 +482,86 @@ export class Duel {
     this.secret = null;
     this.maj({ h: [...moi.h, monCode] });
   }
+}
+
+// ---------- Salle par relais public ----------
+// Chaque joueur publie son état comme message « retenu » sur wbc/v1/<code>/p/<identifiant> :
+// le relais le garde et le donne à quiconque arrive. Si la page se ferme brutalement,
+// le relais efface cet état (« dernière volonté »). Un battement toutes les 10 s dit qu'on est là.
+
+export function salleRelais(code: string, adresses: string[] = RELAIS): Salle {
+  const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const base = `wbc/v1/${code}/p/`;
+  const sujet = base + id;
+  const autres = new Map<string, { presence: Record<string, unknown>; vu: number; recu: number }>();
+  const ecouteurs = new Set<() => void>();
+  const prevenir = () => ecouteurs.forEach((f) => f());
+  let mien: Presence | null = null;
+  const message = () => JSON.stringify({ p: mien, vu: Date.now() });
+  const clients = adresses.map((url, i) => {
+    const c = mqtt.connect(url, {
+      clientId: `wbc-${id}-${i}`, keepalive: 20, clean: true, reconnectPeriod: 3000, connectTimeout: 8000,
+      will: { topic: sujet, payload: '', retain: true, qos: 0 },
+    });
+    c.on('connect', () => {
+      c.subscribe(`${base}+`);
+      if (mien) c.publish(sujet, message(), { retain: true, qos: 0 });
+      prevenir();
+    });
+    c.on('close', prevenir);
+    c.on('error', () => undefined);
+    c.on('message', (topic, payload) => {
+      const peer = topic.slice(base.length);
+      if (peer === id || topic.indexOf(base) !== 0) return;
+      if (!payload.length) {
+        if (autres.delete(peer)) prevenir();
+        return;
+      }
+      try {
+        const d = JSON.parse(payload.toString()) as { p: Record<string, unknown> | null; vu: number };
+        if (!d.p || typeof d.vu !== 'number' || Date.now() - d.vu > 90_000) return; // ancien état oublié
+        const avant = autres.get(peer);
+        if (avant && avant.vu > d.vu) return;
+        autres.set(peer, { presence: d.p, vu: d.vu, recu: Date.now() });
+        prevenir();
+      } catch {
+        // message illisible : ignoré
+      }
+    });
+    return c;
+  });
+  const envoyer = () => {
+    if (!mien) return;
+    const m = message();
+    for (const c of clients) if (c.connected) c.publish(sujet, m, { retain: true, qos: 0 });
+  };
+  const battement = setInterval(() => {
+    envoyer();
+    const limite = Date.now() - 35_000;
+    let change = false;
+    for (const [k, x] of autres) if (x.recu < limite) { autres.delete(k); change = true; }
+    if (change) prevenir();
+  }, 10_000);
+  return {
+    publier(p) {
+      mien = p;
+      envoyer();
+    },
+    // Le plus récent d'abord : après un rechargement, l'ancien état de l'ami est ignoré.
+    pairs: () => [...autres.entries()].sort((a, b) => b[1].vu - a[1].vu).map(([peer, x]) => ({ peer, presence: x.presence })),
+    surChangement(fn) {
+      ecouteurs.add(fn);
+      return () => ecouteurs.delete(fn);
+    },
+    connecte: () => clients.some((c) => c.connected),
+    quitter() {
+      clearInterval(battement);
+      for (const c of clients) {
+        if (c.connected) c.publish(sujet, '', { retain: true, qos: 0 }, () => c.end());
+        else c.end(true);
+      }
+    },
+  };
 }
 
 // ---------- Salle locale (deux onglets du même navigateur, pour les tests) ----------

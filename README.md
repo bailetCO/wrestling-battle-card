@@ -1,5 +1,7 @@
 # Wrestling Battle Card
 
+Jouer : https://bailetco.github.io/wrestling-battle-card/ (mis à jour automatiquement à chaque modification de la branche main).
+
 Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont dans
 [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md).
 
@@ -24,7 +26,8 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/partie.ts` : le déroulé d'une partie contre l'ordinateur (initiative, pile ou face).
 - `src/page/carte.ts` : la carte d'un lutteur et ses cadres de rareté.
 - `src/page/portrait.ts` : les portraits manga provisoires, dessinés en code. Pour une vraie illustration, renseigner `image` dans `APPARENCE`.
-- `src/page/enligne.ts` : le combat entre amis (salle, choix secrets, initiative, pile ou face, reprise), sans affichage.
+- `src/page/enligne.ts` : le combat entre amis (salle, choix secrets, initiative, pile ou face, reprise), sans affichage, et la connexion par relais public.
+- `.github/workflows/pages.yml` : publication automatique sur GitHub Pages (tests puis construction).
 - `src/page/collection.ts` : la collection (cartes, boosters, decks), gardée dans le navigateur.
 - Page `#galerie` : les 15 cartes rangées par rareté, la collection et le mode test.
 - `tests/` : un test par règle.

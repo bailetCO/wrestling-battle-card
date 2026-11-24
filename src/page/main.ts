@@ -9,7 +9,8 @@ import {
 } from '../moteur';
 import { Partie, type TourJoue } from './partie';
 import {
-  Duel, codeValide, nouveauCode, obtenirRoom, salleClaude, salleLocale, type Presence, type Role, type Salle, type Vue,
+  ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais,
+  type Presence, type Role, type Salle, type Vue,
 } from './enligne';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
@@ -775,13 +776,47 @@ function oublierSession() {
   }
 }
 
+// Où se joue le combat entre amis selon l'adresse de la page.
+function relaisPerso(): string | null {
+  try {
+    return localStorage.getItem('wbc-relais'); // pour les tests : adresse d'un relais local
+  } catch {
+    return null;
+  }
+}
+function acces(): 'relais' | 'local' | 'ailleurs' {
+  if (relaisPerso()) return 'relais';
+  const h = location.hostname;
+  if (h.endsWith('github.io')) return 'relais';
+  if (h === 'localhost' || h === '127.0.0.1') return 'local';
+  return 'ailleurs';
+}
+
+let salleActive: Salle | null = null;
+
 function ecranAmis(message = '') {
   quitterLigne();
+  if (acces() === 'ailleurs') {
+    app.innerHTML = `
+      <main class="amis">
+        <header class="titre">
+          <h1>Combat entre amis</h1>
+          <p>Le combat entre amis se joue sur la version du jeu ouverte à tous : pas besoin de compte, il suffit du lien. Ouvre-la sur ton téléphone et envoie le même lien à ton ami.</p>
+        </header>
+        <section class="bloc">
+          <a class="principal lien-bouton" href="${ADRESSE_PUBLIQUE}" target="_blank" rel="noopener">Ouvrir la version ouverte à tous</a>
+          <p class="note">Adresse : ${ADRESSE_PUBLIQUE}</p>
+          <p class="note">Ta collection est gardée séparément sur chaque version du jeu.</p>
+        </section>
+        <a class="lien" href="#">Retour</a>
+      </main>`;
+    return;
+  }
   app.innerHTML = `
     <main class="amis">
       <header class="titre">
         <h1>Combat entre amis</h1>
-        <p>Toi et ton ami ouvrez cette page sur vos téléphones, connectés à votre compte Claude. L'un crée une salle, l'autre tape son code. Toutes les cartes sont permises entre amis.</p>
+        <p>Toi et ton ami ouvrez ce même lien sur vos téléphones. L'un crée une salle, l'autre tape son code. Toutes les cartes sont permises entre amis.</p>
       </header>
       ${message ? `<p class="alerte" role="alert">${message}</p>` : ''}
       <section class="bloc">
@@ -810,27 +845,11 @@ function ecranAmis(message = '') {
 
 async function connecter(code: string, role: Role) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
-  let salle: Salle | null = null;
-  let raison = '';
-  try {
-    const room = await obtenirRoom();
-    if (typeof room !== 'string') salle = await salleClaude(room, code);
-    else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') salle = salleLocale(code);
-    else raison = room;
-  } catch (err) {
-    raison = (err as { code?: string })?.code ?? 'inconnue';
-  }
-  if (!salle) {
-    const explications: Record<string, string> = {
-      'hors-claude': 'Cette page n\'est pas ouverte depuis claude.ai : ouvre le lien du jeu dans l\'application Claude ou sur claude.ai.',
-      'non-admis': 'Ton compte n\'a pas accès à la connexion en direct de cette page. Il faut être invité personnellement sur la page par son propriétaire (bouton de partage, avec ton adresse e-mail), puis l\'ouvrir depuis cette invitation. Le lien public seul ne suffit pas.',
-      not_granted: 'Ton compte n\'a pas accès à la connexion en direct de cette page : demande au propriétaire de t\'inviter personnellement.',
-      not_permitted: 'La salle t\'est refusée : demande au propriétaire de t\'inviter personnellement sur la page.',
-      upstream_error: 'La connexion n\'a pas répondu. Réessaie dans un instant.',
-      limit_reached: 'Trop de salles ouvertes en même temps. Recharge la page et réessaie.',
-    };
-    return ecranAmis(`Connexion impossible. ${explications[raison] ?? 'Raison inconnue.'} (code : ${echap(raison)})`);
-  }
+  const a = acces();
+  if (a === 'ailleurs') return ecranAmis();
+  const perso = relaisPerso();
+  const salle: Salle = a === 'local' ? salleLocale(code) : salleRelais(code, perso ? [perso] : RELAIS);
+  salleActive = salle;
   let depart: Presence | null = null;
   try {
     depart = JSON.parse(localStorage.getItem(clePresence(code, role)) ?? 'null');
@@ -860,6 +879,7 @@ async function connecter(code: string, role: Role) {
 function quitterLigne() {
   if (duel) duel.fermer();
   duel = null;
+  salleActive = null;
   vueLigne = null;
   mode = 'solo';
   HUMAIN = 0;
@@ -880,7 +900,7 @@ function rafraichirLigne(v: Vue) {
   if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
 
   if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
-    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}`;
+    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}`;
     if (sig !== signatureSalle) ecranSalle(v);
     signatureSalle = sig;
     return;
@@ -969,7 +989,7 @@ function ecranSalle(v: Vue) {
       <header class="titre">
         <h1>Salle ${echap(codeSalle.toUpperCase())}</h1>
         <p class="code-grand" aria-label="Code de la salle">${echap(codeSalle.toUpperCase())}</p>
-        <p>${v.amiPresent ? '<b class="ok">Ton ami est dans la salle.</b>' : 'Envoie ce code à ton ami. Il ouvre cette page, touche « Combat entre amis » et tape le code.'}</p>
+        <p>${!salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? '<b class="ok">Ton ami est dans la salle.</b>' : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
         <p>${v.monLutteur ? `Tu as choisi <b>${echap(trouverLutteur(v.monLutteur).nom)}</b>.` : 'Choisis ton lutteur ci-dessous.'}
            ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
            ${v.attente ? echap(v.attente) : ''}</p>

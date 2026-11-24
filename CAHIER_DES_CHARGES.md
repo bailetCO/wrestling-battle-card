@@ -215,7 +215,9 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 
 ### Combat entre amis (étape 5)
 
-- Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre la même page, touche « Combat entre amis » et tape le code. Les deux doivent être connectés à leur compte Claude et avoir accès à la page (le lien public seul ne suffit pas).
+- Le combat entre amis se joue sur la version ouverte à tous : https://bailetco.github.io/wrestling-battle-card/ (GitHub Pages, publiée automatiquement à chaque modification). Pas besoin de compte : il suffit du lien. La page sur claude.ai renvoie vers cette version.
+- Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre le même lien, touche « Combat entre amis » et tape le code.
+- Connexion : relais publics gratuits et sans compte (MQTT), deux à la fois pour plus de fiabilité. Solution provisoire, à remplacer par Firebase (au plus tard pour les comptes joueurs, étape 7). Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
 - Toutes les cartes sont permises entre amis ; chacun utilise son deck personnalisé s'il en a un. Pas de booster pour une victoire en ligne pour l'instant.
 - Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
