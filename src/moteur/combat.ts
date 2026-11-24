@@ -239,7 +239,7 @@ export function gagnantPeriode(e: EtatCombat, hasard: Hasard): Joueur {
   }
   // 2. Le dernier à avoir marqué.
   if (e.dernierMarqueur !== null) return e.dernierMarqueur;
-  // 3. PROVISOIRE (règle à valider) : personne n'a marqué → plus d'endurance, sinon au hasard.
+  // 3. Personne n'a marqué (0-0) : le lutteur avec le plus d'endurance ; à endurance égale, au hasard.
   if (a.endurance !== b.endurance) return a.endurance > b.endurance ? 0 : 1;
   return reussit(hasard, 0.5) ? 0 : 1;
 }

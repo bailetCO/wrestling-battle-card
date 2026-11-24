@@ -104,7 +104,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 - 3 périodes de 10 tours ; il faut gagner 2 périodes pour remporter le match.
 - Une période se gagne aux points ou par 10 points d'écart (supériorité technique).
 - Un tombé réussi met fin au combat et donne la victoire.
-- Égalité de points en fin de période : la période revient au lutteur qui a marqué la prise la plus élevée (valeur de prise la plus haute, puis la suivante, etc.) ; si l'égalité persiste, au dernier lutteur à avoir marqué.
+- Égalité de points en fin de période : la période revient au lutteur qui a marqué la prise la plus élevée (valeur de prise la plus haute, puis la suivante, etc.) ; si l'égalité persiste, au dernier lutteur à avoir marqué. À 0-0, la période revient au lutteur qui a le plus d'endurance (à endurance égale, tirage au sort).
 
 ### Résolution d'un tour
 

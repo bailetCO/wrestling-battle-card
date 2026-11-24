@@ -283,6 +283,13 @@ describe('Périodes et fin du match', () => {
     assert.equal(gagnantPeriode(e, toujours(0)), 1);
   });
 
+  it("0-0 : le lutteur avec le plus d'endurance gagne la période", () => {
+    const e = combatTest();
+    e.joueurs[0].endurance = 40;
+    e.joueurs[1].endurance = 55;
+    assert.equal(gagnantPeriode(e, toujours(0)), 1);
+  });
+
   it('2 périodes gagnées : victoire', () => {
     let e = combatTest();
     e.joueurs[0].periodesGagnees = 1;

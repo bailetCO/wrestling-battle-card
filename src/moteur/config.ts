@@ -22,7 +22,7 @@ export const ACTIONS: Record<IdAction, DefAction> = {
 };
 
 // Budget de chaque lutteur de départ : endurance + force ÷ 5 + récupération (en %) = 165.
-// Les familles spéciales sont provisoires : à valider par Corentin.
+// Familles spéciales validées pour l'instant. Équilibrage des statistiques prévu à l'étape 4.
 export const LUTTEURS: DefLutteur[] = [
   {
     id: 'usa', nom: 'USA', origine: 'USA',
