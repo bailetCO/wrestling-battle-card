@@ -233,12 +233,13 @@ describe('Action spéciale', () => {
     assert.equal(e.joueurs[0].score, 4);
   });
 
-  it('feinte spéciale réussie : 2 points tout de suite, sans bonus sur l\'attaque suivante', () => {
+  it('feinte spéciale réussie : 2 points tout de suite, puis enchaînement possible (+4)', () => {
     const def = combatTest({ familleSpeciale: 'feinte' });
     let e = tour(def, c('defense'), c('defense'));
     e = tour(e, c('feinte', true), c('contre'));
     assert.equal(e.joueurs[0].score, 2);
     assert.equal(e.joueurs[0].bonusFeinte, false);
+    assert.equal(e.joueurs[0].bonusEnchainement, true);
   });
 
   it('attaque spéciale réussie : tentative de tombé', () => {

@@ -25,7 +25,8 @@ export const ACTIONS: Record<IdAction, DefAction> = {
 // Budget = endurance + force ÷ 5 + récupération (en %) : de 153 à 175 selon le style.
 // La rareté vient du taux de victoire en simulation (npm run simuler) :
 // les 2 meilleurs légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.
-// Classement du 24/11/2026 : 210 000 combats, ordinateur aléatoire des deux côtés.
+// Classement du 24/11/2026 (après la révision des actions spéciales) : 210 000 combats,
+// ordinateur aléatoire des deux côtés.
 const L = (d: DefLutteur): DefLutteur => d;
 export const LUTTEURS: DefLutteur[] = [
   // ----- USA -----
@@ -36,7 +37,7 @@ export const LUTTEURS: DefLutteur[] = [
   }),
   L({
     id: 'usa-explosif', nom: 'Colt Ramsey', origine: 'USA', nation: 'usa', style: 'Explosif, enchaîne les attaques aux jambes',
-    enduranceMax: 80, force: 200, recuperation: 0.4, rarete: 'rare',
+    enduranceMax: 80, force: 200, recuperation: 0.4, rarete: 'commune',
     actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'], familleSpeciale: 'attaque',
   }),
   L({
@@ -57,7 +58,7 @@ export const LUTTEURS: DefLutteur[] = [
   }),
   L({
     id: 'russie-contre', nom: 'Pavel Zorine', origine: 'Russie', nation: 'russie', style: 'Contre-attaquant patient',
-    enduranceMax: 85, force: 150, recuperation: 0.5, rarete: 'commune',
+    enduranceMax: 85, force: 150, recuperation: 0.5, rarete: 'rare',
     actions: ['attaque_base', 'esquive', 'contre', 'relance'], familleSpeciale: 'contre',
   }),
   // ----- Europe -----
@@ -180,7 +181,7 @@ export const REGLES = {
   // Ordinateur : quand il a l'initiative, chance de changer d'action (niveau normal).
   ia: { chanceChangerInitiative: 1 / 2 },
 
-  tombe: { plusEndurance: 3 / 5, egalite: 2 / 5, moinsEndurance: 1 / 8 },
+  tombe: { plusEndurance: 3 / 5, egalite: 2 / 5, moinsEndurance: 1 / 5 },
 
   lutte: { chance: 1 / 10, pointsMin: 1, pointsMax: 2 },
   toursSansEnduranceAvantTombe: 3,
@@ -196,6 +197,8 @@ export const REGLES = {
     reductionApresReussite: 0.5,
     pointsDefense: 4,
     pointsFeinte: 2,
+    // Feinte spéciale réussie : +4 au tour suivant si l'attaque ou le contre suivant réussit.
+    bonusEnchainementFeinte: 4,
   },
 } as const;
 

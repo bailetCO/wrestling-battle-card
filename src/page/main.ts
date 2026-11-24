@@ -141,6 +141,7 @@ function badges(e: EtatCombat, j: Joueur): string {
   const b: string[] = [];
   if (l.initiative) b.push('Initiative');
   if (l.bonusFeinte) b.push('+2 sur la prochaine attaque');
+  if (l.bonusEnchainement) b.push('Enchaînement : +4 si attaque ou contre réussi');
   if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % de précision (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
   let serie = 0;
   for (let i = l.historique.length - 1; i >= 0 && l.historique[i].reussie; i--) serie++;
@@ -246,6 +247,8 @@ function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: Cote; fo
   if ((l = trouve(/se fait tomber/))) return { texte: 'TOMBÉ !', cote: inverse(de(l)), fort: true };
   if ((l = trouve(/il s'en sort/))) return { texte: 'SAUVÉ !', cote: inverse(de(l)), fort: true };
   if ((l = trouve(/renvoyés/))) return { texte: 'CONTRE !', cote: de(l), fort: true };
+  if ((l = trouve(/perce /))) return { texte: 'PERCÉE !', cote: de(l), fort: true };
+  if ((l = trouve(/à contretemps/))) return { texte: 'CONTRE !', cote: de(l), fort: true };
   if ((l = trouve(/renversement/))) return { texte: 'RENVERSEMENT !', cote: de(l), fort: true };
   const nomsAttaque = Object.values(ACTIONS).filter((a) => a.famille === 'attaque').map((a) => a.nom);
   for (const ligne of L) {
@@ -253,6 +256,9 @@ function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: Cote; fo
     if (m && nomsAttaque.includes(m[2])) {
       const pts = Number(m[1]);
       return { texte: pts >= 5 ? 'PROJECTION !' : 'AMENÉE !', cote: de(ligne), fort: pts >= 4 };
+    }
+    if (m && /enchaînement/.test(m[2])) {
+      return { texte: 'ENCHAÎNEMENT !', cote: de(ligne), fort: true };
     }
   }
   if ((l = trouve(/marque \d+ points? \(Sprawl\)/))) return { texte: 'SPRAWL !', cote: de(l), fort: false };

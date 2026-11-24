@@ -59,6 +59,7 @@ export interface EtatLutteur {
   prises: number[]; // valeur de chaque prise marquée dans la période
   periodesGagnees: number;
   bonusFeinte: boolean; // +2 sur l'attaque de ce tour (feinte réussie au tour précédent)
+  bonusEnchainement: boolean; // +4 si l'attaque ou le contre de ce tour réussit (feinte spéciale au tour précédent)
   malusPrecisionTours: number; // tours restants avec -5 % de précision sur les attaques (matraquage)
   toursSansAttaque: number; // compteur pour la pénalité de passivité
   historique: { reussie: boolean; attaque: boolean }[]; // 3 derniers tours, pour le combo

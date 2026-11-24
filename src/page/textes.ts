@@ -8,10 +8,10 @@ export const NOM_FAMILLE: Record<Famille, string> = {
 };
 
 export const EFFET_SPECIALE: Record<Famille, string> = {
-  attaque: 'Si elle passe : tentative de tombé.',
-  contre: 'S\'il passe : tentative de tombé.',
+  attaque: 'Si elle passe : tentative de tombé. Plus fort que l\'adversaire : peut percer sa défense ou son contre.',
+  contre: 'Face à une attaque ou une feinte : gagne toujours, renvoie tous les points et tente le tombé.',
   defense: 'Si elle passe : renversement, 4 points.',
-  feinte: 'Si elle passe : l\'adversaire glisse, 2 points.',
+  feinte: 'Si elle passe : 2 points, puis +4 si ton attaque ou ton contre suivant réussit.',
 };
 
 // Petites icônes de famille (SVG).
