@@ -61,6 +61,28 @@ Une même action peut porter un nom différent selon l'origine du lutteur (par e
 | Feinte | Feinte | Fake | Finta | Feinto | Nax | Feinte |
 | Matraquage | Feinte | Snap Down | Sbivanie | Hatakikomi | Dóor-dóor | Matraquage |
 
+### Les 15 lutteurs (étape 3)
+
+Trois styles de jeu par nation. Noms fictifs et provisoires. Le budget (endurance + force ÷ 5 + récupération) varie de 153 à 175 selon le style. La rareté vient du taux de victoire sur 210 000 combats simulés entre l'ordinateur et lui-même (choix au hasard) : les 2 meilleurs sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Ce classement sera refait après le rééquilibrage de l'étape 4.
+
+| Lutteur | Nation | Style | Endurance | Force | Récupération | Budget | 4 actions | Spéciale | Victoires (simulation) | Rareté |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Tanner Briggs | USA | Lutteur de pression, très physique | 100 | 150 | 35 % | 165 | Double jambe, Sprawl, Matraquage, Relance | attaque | 67,0 % | Épique |
+| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 80 | 200 | 40 % | 160 | Simple jambe, Double jambe, Feinte, Sprawl | attaque | 38,0 % | Rare |
+| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 95 | 175 | 45 % | 175 | Attaque, Sprawl, Parade, Contre | défense | 77,6 % | Légendaire |
+| Mikhaïl Orlov | Russie | Technicien précis | 90 | 175 | 40 % | 165 | Ceinture arrière, Parade, Contre, Feinte | contre | 63,2 % | Épique |
+| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 95 | 200 | 35 % | 170 | Double jambe, Matraquage, Sprawl, Relance | attaque | 70,9 % | Épique |
+| Pavel Zorine | Russie | Contre-attaquant patient | 85 | 150 | 50 % | 165 | Attaque, Esquive, Contre, Relance | contre | 36,9 % | Commune |
+| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 85 | 175 | 45 % | 165 | Attaque, Défense, Feinte, Contre | défense | 56,7 % | Rare |
+| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 90 | 160 | 45 % | 167 | Simple jambe, Ceinture arrière, Parade, Feinte | feinte | 58,3 % | Rare |
+| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 70 | 240 | 35 % | 153 | German suplex, Défense, Matraquage, Contre | attaque | 12,4 % | Commune |
+| Lamine Sarr | Afrique | Puissant et athlétique | 75 | 225 | 45 % | 165 | Grande projection, Sprawl, Bras roulé, Relance | attaque | 16,6 % | Commune |
+| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 80 | 190 | 55 % | 173 | Simple jambe, Feinte, Esquive, Bras roulé | feinte | 55,8 % | Rare |
+| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 100 | 170 | 40 % | 174 | Attaque, Parade, Sprawl, Contre | défense | 76,5 % | Légendaire |
+| Kenji Arata | Japon | Rapide et explosif | 70 | 175 | 60 % | 165 | Simple jambe, Feinte, Esquive, Contre | feinte | 31,2 % | Commune |
+| Ryō Takamine | Japon | Technicien, ceinture et relances | 75 | 165 | 55 % | 163 | Ceinture arrière, Feinte, Parade, Relance | contre | 37,2 % | Commune |
+| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 85 | 140 | 50 % | 163 | Attaque, Esquive, Contre, Matraquage | contre | 51,7 % | Rare |
+
 ### Style graphique
 
 - Style manga semi-réaliste, entre réalisme et anime (esprit Baki, Hajime no Ippo).
@@ -177,13 +199,14 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 
 ## 6. Feuille de route
 
-1. Prototype du combat : deux personnages, 4 actions chacun, combat local.
-2. Interface visuelle : cartes, écran de combat, animations simples.
-3. Collection : plusieurs personnages, une dizaine d'actions, choix du deck.
-4. Multijoueur en ligne entre amis.
-5. Comptes joueurs et sauvegarde de la collection.
-6. Tests avec la communauté et équilibrage.
-7. Monétisation et application mobile.
+1. Moteur de règles du combat (sans graphisme), testé.
+2. Premier combat jouable dans le navigateur, contre l'ordinateur.
+3. Cartes et interface style manga : 15 lutteurs (3 styles par nation), portraits provisoires, cadres de rareté.
+4. Collection, niveau « fort » de l'ordinateur et rééquilibrage des lutteurs.
+5. Combat entre amis en ligne.
+6. Mise en ligne, tests avec la communauté et équilibrage.
+7. Comptes joueurs et sauvegarde de la collection.
+8. Monétisation et application mobile.
 
 ## 7. Modèle économique
 

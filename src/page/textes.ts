@@ -1,15 +1,7 @@
-// Textes d'affichage (présentation des lutteurs, effets des actions spéciales).
+// Textes d'affichage (familles, effets des actions spéciales, icônes).
 // Aucun chiffre de jeu ici : ils restent dans src/moteur/config.ts.
 
 import type { Famille } from '../moteur';
-
-export const PRESENTATION: Record<string, { style: string; pointsForts: string; endurance: string }> = {
-  usa: { style: 'Lutteur de pression, très physique', pointsForts: 'Attaques aux jambes', endurance: 'Grande barre' },
-  russie: { style: 'Technicien précis', pointsForts: 'Contres et relances', endurance: 'Barre moyenne' },
-  europe: { style: 'Équilibré, idéal pour débuter', pointsForts: 'Défense', endurance: 'Barre moyenne' },
-  afrique: { style: 'Puissant et athlétique', pointsForts: 'Grandes projections', endurance: 'Récupération rapide' },
-  japon: { style: 'Rapide et explosif', pointsForts: 'Feintes et attaques surprises', endurance: 'Petite barre' },
-};
 
 export const NOM_FAMILLE: Record<Famille, string> = {
   attaque: 'Attaque', defense: 'Défense', contre: 'Contre', feinte: 'Feinte',

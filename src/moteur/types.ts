@@ -27,10 +27,16 @@ export interface DefAction {
   points: number; // points marqués si l'action réussit (0 si aucun)
 }
 
+export type Nation = 'usa' | 'russie' | 'europe' | 'afrique' | 'japon';
+export type Rarete = 'commune' | 'rare' | 'epique' | 'legendaire';
+
 export interface DefLutteur {
   id: string;
-  nom: string;
-  origine: string;
+  nom: string; // nom fictif du personnage
+  origine: string; // nom affiché de la nation
+  nation: Nation; // sert aux noms locaux des actions
+  style: string; // style de jeu, en clair
+  rarete: Rarete; // fixée d'après les simulations (taux de victoire)
   enduranceMax: number; // 0 à 100
   force: number; // 10 à 250
   recuperation: number; // part de l'endurance max récupérée entre deux périodes (0,35 = 35 %)

@@ -3,11 +3,14 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte,
-  type Choix, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction, type Joueur,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur,
+  type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
+  type Joueur, type Nation,
 } from '../moteur';
 import { HUMAIN, ORDI, Partie, type TourJoue } from './partie';
-import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, PRESENTATION } from './textes';
+import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
+import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
+import { portraitSVG } from './portrait';
 
 const app = document.getElementById('app')!;
 
@@ -17,6 +20,8 @@ let partie: Partie | null = null;
 let tours: TourJoue[] = [];
 let scoresPeriodes: [number, number][] = [];
 let enAttente = false; // un tour est en cours de résolution (fenêtre ouverte)
+let endurancesAvant: [number, number] | null = null; // pour animer les barres
+let idPortrait = 0;
 
 // ---------- Outils ----------
 
@@ -29,49 +34,63 @@ function famille(a: IdAction | 'lutte'): Famille | 'lutte' {
   return a === 'lutte' ? 'lutte' : ACTIONS[a].famille;
 }
 
-function libelleAction(idLutteur: string, a: IdAction | 'lutte'): { local: string; fr: string } {
+function libelleAction(nation: string, a: IdAction | 'lutte'): { local: string; fr: string } {
   if (a === 'lutte') return { local: 'Lutte', fr: 'Lutte' };
-  return { local: nomLocal(idLutteur, a), fr: ACTIONS[a].nom };
+  return { local: nomLocal(nation, a), fr: ACTIONS[a].nom };
 }
 
 function nouvelleGraine(): number {
   return Math.floor(Math.random() * 1_000_000) + 1;
 }
 
+const portrait = (def: DefLutteur) => portraitSVG(def, `m${idPortrait++}`);
+
 // ---------- Écran 1 : choix du lutteur ----------
+
+const NATIONS: { id: Nation; nom: string }[] = [
+  { id: 'usa', nom: 'USA' }, { id: 'russie', nom: 'Russie' }, { id: 'europe', nom: 'Europe' },
+  { id: 'afrique', nom: 'Afrique' }, { id: 'japon', nom: 'Japon' },
+];
 
 function ecranChoix() {
   partie = null;
-  const cartes = LUTTEURS.map((l) => {
-    const p = PRESENTATION[l.id];
-    const actions = l.actions
-      .map((a) => `<li><span class="ico f-${ACTIONS[a].famille}">${ICONE[ACTIONS[a].famille]}</span>${echap(nomLocal(l.id, a))}</li>`)
-      .join('');
-    return `
-      <button class="carte" data-lutteur="${l.id}">
-        <span class="carte-tete">
-          <span class="carte-nom">${echap(l.nom)}</span>
-          <span class="carte-style">${echap(p.style)}</span>
-        </span>
-        <span class="carte-stats">
-          <span><b>${l.enduranceMax}</b> endurance</span>
-          <span><b>${l.force}</b> force</span>
-          <span><b>${pct(l.recuperation)}</b> récupération</span>
-        </span>
-        <span class="carte-fort">Points forts : ${echap(p.pointsForts)}. Spéciale : ${NOM_FAMILLE[l.familleSpeciale].toLowerCase()}.</span>
-        <ul class="carte-actions">${actions}</ul>
-      </button>`;
-  }).join('');
+  const cartes = LUTTEURS.map((l) => `
+    <div class="emplacement" id="carte-${l.id}" data-nation="${l.nation}">
+      ${carteHTML(l, `<button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>`)}
+    </div>`).join('');
+  const puces = NATIONS.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
 
   app.innerHTML = `
     <main class="choix">
       <header class="titre">
         <h1>Wrestling Battle Card</h1>
-        <p>Choisis ton lutteur. L'ordinateur prend un des quatre autres.</p>
+        <p>Choisis ton lutteur parmi les 15 cartes. L'ordinateur prend un adversaire au hasard.</p>
       </header>
-      <div class="cartes">${cartes}</div>
+      <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
+      <div class="defile" tabindex="0" aria-label="Cartes des lutteurs">${cartes}</div>
+      <div class="defile-nav">
+        <button class="rond" data-pas="-1" aria-label="Carte précédente">‹</button>
+        <a class="lien" href="#galerie">Voir la galerie par rareté</a>
+        <button class="rond" data-pas="1" aria-label="Carte suivante">›</button>
+      </div>
     </main>`;
 
+  const defile = app.querySelector<HTMLElement>('.defile')!;
+  const pas = (sens: number) => {
+    const largeur = defile.querySelector<HTMLElement>('.emplacement')!.offsetWidth + 14;
+    defile.scrollBy({ left: sens * largeur, behavior: 'smooth' });
+  };
+  app.querySelectorAll<HTMLButtonElement>('[data-pas]').forEach((b) => b.addEventListener('click', () => pas(Number(b.dataset.pas))));
+  defile.addEventListener('keydown', (ev) => {
+    if (ev.key === 'ArrowRight') pas(1);
+    if (ev.key === 'ArrowLeft') pas(-1);
+  });
+  app.querySelectorAll<HTMLButtonElement>('[data-aller]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const cible = defile.querySelector<HTMLElement>(`[data-nation="${b.dataset.aller}"]`);
+      if (cible) defile.scrollTo({ left: cible.offsetLeft - defile.offsetLeft - 16, behavior: 'smooth' });
+    }),
+  );
   app.querySelectorAll<HTMLButtonElement>('[data-lutteur]').forEach((b) =>
     b.addEventListener('click', () => {
       const id = b.dataset.lutteur!;
@@ -80,14 +99,38 @@ function ecranChoix() {
       lancer(id, ordi, nouvelleGraine());
     }),
   );
+  activerReflets(app);
+  window.scrollTo(0, 0);
+}
+
+// ---------- Galerie par rareté ----------
+
+function ecranGalerie() {
+  partie = null;
+  const groupes = ORDRE_RARETE.map((r) => {
+    const cartes = LUTTEURS.filter((l) => l.rarete === r).map((l) => carteHTML(l)).join('');
+    return `<section class="groupe"><h2>${NOM_RARETE[r]}</h2><div class="grille-cartes">${cartes}</div></section>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="galerie">
+      <header class="titre">
+        <h1>Galerie</h1>
+        <p>Raretés fixées d'après 210 000 combats simulés : les 2 lutteurs qui gagnent le plus sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.</p>
+        <a class="lien" href="#">Retour au choix du lutteur</a>
+      </header>
+      ${groupes}
+    </main>`;
+  activerReflets(app);
   window.scrollTo(0, 0);
 }
 
 function lancer(idHumain: string, idOrdi: string, graine: number) {
+  if (location.hash) history.replaceState(null, '', location.pathname);
   partie = new Partie(idHumain, idOrdi, graine);
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
+  endurancesAvant = null;
   ecranCombat();
 }
 
@@ -108,12 +151,12 @@ function badges(e: EtatCombat, j: Joueur): string {
   return b.map((t) => `<span class="badge">${echap(t)}</span>`).join('');
 }
 
-function barre(l: EtatLutteur, coin: 'rouge' | 'bleu', etiquette: string): string {
+function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquette: string): string {
   const max = l.def.enduranceMax;
-  const larg = (l.endurance / max) * 100;
+  const cible = (l.endurance / max) * 100;
+  const depart = endurancesAvant ? (endurancesAvant[j] / max) * 100 : cible;
   const repere = (50 / max) * 100;
   const chance = chanceReussite(precisionDe(l.endurance));
-  const bas = l.endurance < 50;
   return `
     <div class="endu ${coin}">
       <div class="endu-ligne">
@@ -121,7 +164,7 @@ function barre(l: EtatLutteur, coin: 'rouge' | 'bleu', etiquette: string): strin
         <span><b>${fmt(l.endurance)}</b> / ${max} · réussite ${pct(chance)}</span>
       </div>
       <div class="endu-barre" role="meter" aria-label="Endurance ${etiquette}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${fmt(l.endurance)}">
-        <div class="endu-rempli ${bas ? 'bas' : ''}" style="width:${larg}%"></div>
+        <div class="endu-rempli ${l.endurance < 50 ? 'bas' : ''}" style="width:${depart}%" data-cible="${cible}"></div>
         ${repere < 100 ? `<div class="endu-repere" style="left:${repere}%" title="Sous 50, la précision baisse"></div>` : ''}
       </div>
     </div>`;
@@ -160,7 +203,7 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
     .map((a) => `
       <button class="action speciale" data-action="${a}" data-speciale="1" data-mode="${mode}">
         <span class="ico f-${ACTIONS[a].famille}">${ICONE[ACTIONS[a].famille]}</span>
-        <span class="a-nom">★ ${echap(nomLocal(l.def.id, a))} spéciale</span>
+        <span class="a-nom">★ ${echap(nomLocal(l.def.nation, a))} spéciale</span>
         <span class="a-fr">${EFFET_SPECIALE[ACTIONS[a].famille]}</span>
         <span class="a-cout">−${fmt(coutSpeciale(e, HUMAIN, a))}</span>
       </button>`)
@@ -171,7 +214,7 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
     return `
       <button class="action" data-action="${a}" data-mode="${mode}" ${ok ? '' : 'disabled'}>
         <span class="ico f-${f}">${ICONE[f]}</span>
-        <span class="a-nom">${echap(nomLocal(l.def.id, a))}</span>
+        <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
         <span class="a-fr">${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[f].toLowerCase()}</span>
         <span class="a-cout">−${fmt(ACTIONS[a].cout)}</span>
       </button>`;
@@ -188,27 +231,104 @@ function classeLigne(ligne: string, e: EtatCombat): string {
   return '';
 }
 
-function htmlDuel(choixH: Choix, choixO: Choix, e: EtatCombat): string {
-  const cote = (c: Choix, j: Joueur, coin: string) => {
-    const lib = libelleAction(e.joueurs[j].def.id, c.action);
-    const f = famille(c.action);
-    return `<span class="${coin}"><span class="ico f-${f}">${ICONE[f]}</span>${c.speciale ? '★ ' : ''}${echap(lib.local)}<small>${echap(lib.fr)}</small></span>`;
-  };
-  return `<div class="duel">${cote(choixH, HUMAIN, 'rouge')}<span class="contre-mot">contre</span>${cote(choixO, ORDI, 'bleu')}</div>`;
+// Le mot qui s'affiche en grand dans la case, façon manga, selon ce qui s'est passé.
+type Cote = 'rouge' | 'bleu' | 'neutre';
+function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: Cote; fort: boolean } | null {
+  const nh = e.joueurs[HUMAIN].def.nom;
+  const no = e.joueurs[ORDI].def.nom;
+  const de = (l: string): Cote =>
+    l.startsWith(nh) || l.includes(`de ${nh} l'emporte`) ? 'rouge' : l.startsWith(no) || l.includes(`de ${no} l'emporte`) ? 'bleu' : 'neutre';
+  const inverse = (c: Cote): Cote => (c === 'rouge' ? 'bleu' : c === 'bleu' ? 'rouge' : 'neutre');
+  const L = t.lignes;
+  const trouve = (re: RegExp) => L.find((l) => re.test(l));
+  let l: string | undefined;
+  if ((l = trouve(/: TOMBÉ\./))) return { texte: 'TOMBÉ !', cote: de(l), fort: true };
+  if ((l = trouve(/se fait tomber/))) return { texte: 'TOMBÉ !', cote: inverse(de(l)), fort: true };
+  if ((l = trouve(/il s'en sort/))) return { texte: 'SAUVÉ !', cote: inverse(de(l)), fort: true };
+  if ((l = trouve(/renvoyés/))) return { texte: 'CONTRE !', cote: de(l), fort: true };
+  if ((l = trouve(/renversement/))) return { texte: 'RENVERSEMENT !', cote: de(l), fort: true };
+  const nomsAttaque = Object.values(ACTIONS).filter((a) => a.famille === 'attaque').map((a) => a.nom);
+  for (const ligne of L) {
+    const m = ligne.match(/ marque (\d+) points? \((.+)\)\.$/);
+    if (m && nomsAttaque.includes(m[2])) {
+      const pts = Number(m[1]);
+      return { texte: pts >= 5 ? 'PROJECTION !' : 'AMENÉE !', cote: de(ligne), fort: pts >= 4 };
+    }
+  }
+  if ((l = trouve(/marque \d+ points? \(Sprawl\)/))) return { texte: 'SPRAWL !', cote: de(l), fort: false };
+  if ((l = trouve(/point de sortie/))) return { texte: 'SORTIE !', cote: de(l), fort: false };
+  if ((l = trouve(/glisse/))) return { texte: 'GLISSADE !', cote: de(l), fort: false };
+  if ((l = trouve(/passivité adverse/))) return { texte: 'PASSIVITÉ !', cote: de(l), fort: false };
+  if ((l = trouve(/marque \d+ points? \(Lutte\)/))) return { texte: 'ÇA PASSE !', cote: de(l), fort: false };
+  if ((l = trouve(/^Combo pour/))) return { texte: 'COMBO !', cote: l.includes(nh) ? 'rouge' : 'bleu', fort: false };
+  if ((l = trouve(/est dissipée/))) return { texte: 'DISSIPÉE !', cote: de(l), fort: false };
+  if ((l = trouve(/sur la feinte\./))) return { texte: 'FEINTE !', cote: inverse(de(l)), fort: false };
+  if ((l = trouve(/La défense de .* l'emporte/))) return { texte: 'BLOQUÉ !', cote: de(l), fort: false };
+  if ((l = trouve(/La feinte de .* l'emporte/))) return { texte: 'FEINTE !', cote: de(l), fort: false };
+  if ((l = trouve(/Le contre de .* l'emporte/))) return { texte: 'CONTRE !', cote: de(l), fort: false };
+  if ((l = trouve(/a au moins le double d'endurance/))) return { texte: 'PLUS FORT !', cote: de(l), fort: false };
+  if ((l = trouve(/tente un tombé, sans succès/))) return { texte: 'RATÉ !', cote: inverse(de(l)), fort: false };
+  if (trouve(/personne ne marque/)) return { texte: 'BLOCAGE', cote: 'neutre', fort: false };
+  if (L.filter((x) => /rate son action/.test(x)).length >= 1) return { texte: 'DANS LE VENT…', cote: 'neutre', fort: false };
+  if (trouve(/lutte sans résultat/)) return { texte: 'LUTTE…', cote: 'neutre', fort: false };
+  return null;
 }
 
-function htmlTour(t: TourJoue, e: EtatCombat, recent: boolean): string {
-  const [entete, ...reste] = t.lignes;
-  const lignes = reste.map((l) => `<li class="${classeLigne(l, e)}">${echap(l)}</li>`).join('');
-  const titre = entete?.replace(/ :.*$/, '') ?? '';
+function miniCarte(c: Choix, def: DefLutteur, coin: 'rouge' | 'bleu', delai: number): string {
+  const lib = libelleAction(def.nation, c.action);
+  const f = famille(c.action);
   return `
-    <article class="tour ${recent ? 'recent' : ''}">
-      <h3>${echap(titre)}</h3>
+    <div class="mini ${coin} ${c.speciale ? 'speciale' : ''}" style="--delai:${delai}ms">
+      <span class="mini-ico f-${f}">${ICONE[f]}</span>
+      <b>${c.speciale ? '★ ' : ''}${echap(lib.local)}</b>
+      <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small>
+    </div>`;
+}
+
+function htmlDuel(choixH: Choix, choixO: Choix, e: EtatCombat): string {
+  return `<div class="duel-mini">${miniCarte(choixH, e.joueurs[HUMAIN].def, 'rouge', 0)}<span class="contre-mot">contre</span>${miniCarte(choixO, e.joueurs[ORDI].def, 'bleu', 140)}</div>`;
+}
+
+function lignesTour(t: TourJoue, e: EtatCombat): string {
+  const [, ...reste] = t.lignes;
+  return `
+    ${t.ordiAChange ? '<li>L\'ordinateur avait l\'initiative : il a vu deux de tes actions possibles et a changé la sienne.</li>' : ''}
+    ${reste.map((l) => `<li class="${classeLigne(l, e)}">${echap(l)}</li>`).join('')}`;
+}
+
+const titreTour = (t: TourJoue) => (t.lignes[0] ?? '').replace(/ :.*$/, '');
+
+// La case du dernier tour : les deux actions se révèlent, puis le mot du résultat.
+function caseDernierTour(e: EtatCombat): string {
+  const t = tours[tours.length - 1];
+  const [h, o] = e.joueurs;
+  if (!t) {
+    return `
+      <section class="case face-a-face">
+        <div class="vs-portrait rouge">${portrait(h.def)}<span>Toi</span></div>
+        <span class="vs">VS</span>
+        <div class="vs-portrait bleu">${portrait(o.def)}<span>Ordi</span></div>
+        <p class="case-aide">Choisis ton action en bas. L'ordinateur choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.</p>
+      </section>`;
+  }
+  const ono = onomatopee(t, e);
+  return `
+    <section class="case ${ono?.fort ? 'secoue' : ''}" aria-live="polite">
+      ${ono?.fort ? '<div class="rayons" aria-hidden="true"></div>' : ''}
+      <h3>${echap(titreTour(t))}</h3>
       ${htmlDuel(t.choixHumain, t.choixOrdi, e)}
-      <ul>
-        ${t.ordiAChange ? '<li>L\'ordinateur avait l\'initiative : il a vu deux de tes actions possibles et a changé la sienne.</li>' : ''}
-        ${lignes}
-      </ul>
+      ${ono ? `<p class="onomato ${ono.cote}">${ono.texte}</p>` : ''}
+      <ul class="case-texte">${lignesTour(t, e)}</ul>
+    </section>`;
+}
+
+function htmlTourAncien(t: TourJoue, e: EtatCombat): string {
+  const h = libelleAction(e.joueurs[HUMAIN].def.nation, t.choixHumain.action);
+  const o = libelleAction(e.joueurs[ORDI].def.nation, t.choixOrdi.action);
+  return `
+    <article class="tour">
+      <h3>${echap(titreTour(t))} : <span class="rouge">${t.choixHumain.speciale ? '★ ' : ''}${echap(h.local)}</span> contre <span class="bleu">${t.choixOrdi.speciale ? '★ ' : ''}${echap(o.local)}</span></h3>
+      <ul>${lignesTour(t, e)}</ul>
     </article>`;
 }
 
@@ -219,23 +339,21 @@ function tableau(e: EtatCombat): string {
   const historique = scoresPeriodes.length
     ? `<span class="hist">${scoresPeriodes.map(([a, b], i) => `P${i + 1} ${a}-${b}`).join('  ')}</span>`
     : '';
+  const coin = (l: EtatLutteur, c: 'rouge' | 'bleu', qui: string) => `
+      <button class="coin ${c}" data-voir="${l.def.id}" aria-label="Voir la carte de ${echap(l.def.nom)}">
+        <span class="coin-tete"><span class="vignette">${portrait(l.def)}</span><span class="qui">${qui}<br><small>${echap(l.def.nom)}</small></span></span>
+        <span class="score">${l.score}</span>
+        <span class="periodes" aria-label="Périodes gagnées : ${l.periodesGagnees}">${pastilles(l.periodesGagnees)}</span>
+      </button>`;
   return `
     <header class="tableau">
-      <div class="coin rouge">
-        <span class="qui">Toi · ${echap(h.def.nom)}</span>
-        <span class="score">${h.score}</span>
-        <span class="periodes" aria-label="Périodes gagnées : ${h.periodesGagnees}">${pastilles(h.periodesGagnees)}</span>
-      </div>
+      ${coin(h, 'rouge', 'Toi')}
       <div class="centre">
         <span class="per">Période <b>${e.periode}</b>/3</span>
         <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>
         ${historique}
       </div>
-      <div class="coin bleu">
-        <span class="qui">Ordi · ${echap(o.def.nom)}</span>
-        <span class="score">${o.score}</span>
-        <span class="periodes" aria-label="Périodes gagnées : ${o.periodesGagnees}">${pastilles(o.periodesGagnees)}</span>
-      </div>
+      ${coin(o, 'bleu', 'Ordi')}
     </header>`;
 }
 
@@ -244,24 +362,19 @@ function ecranCombat() {
   const e = partie.etat;
   if (e.termine) return ecranFin();
   const [h, o] = e.joueurs;
-  const journal = tours
-    .slice()
-    .reverse()
-    .map((t, i) => htmlTour(t, e, i === 0))
-    .join('');
+  const anciens = tours.slice(0, -1).reverse().map((t) => htmlTourAncien(t, e)).join('');
 
   app.innerHTML = `
     <main class="combat">
       ${tableau(e)}
       <section class="jauges">
-        ${barre(h, 'rouge', 'Toi')}
+        ${barre(h, HUMAIN, 'rouge', 'Toi')}
         <div class="badges rouge">${badges(e, HUMAIN)}</div>
-        ${barre(o, 'bleu', 'Ordi')}
+        ${barre(o, ORDI, 'bleu', 'Ordi')}
         <div class="badges bleu">${badges(e, ORDI)}</div>
       </section>
-      <section class="journal" aria-live="polite">
-        ${journal || `<p class="vide">Choisis ton action en bas de l'écran. L'ordinateur choisit en même temps que toi, en secret. Coûts en endurance à droite de chaque bouton ; sous 50 d'endurance, tes actions peuvent rater.</p>`}
-      </section>
+      ${caseDernierTour(e)}
+      ${anciens ? `<section class="journal"><h2>Tours précédents</h2>${anciens}</section>` : ''}
       <footer class="pave">
         ${h.initiative ? '<p class="spe-info init">Tu as l\'initiative : après ton choix, tu verras deux actions possibles de l\'ordinateur.</p>' : ''}
         ${etatSpeciale(e)}
@@ -270,8 +383,19 @@ function ecranCombat() {
       </footer>
     </main>`;
 
+  // Les barres partent de l'endurance d'avant le tour et glissent vers la nouvelle valeur.
+  requestAnimationFrame(() =>
+    app.querySelectorAll<HTMLElement>('.endu-rempli[data-cible]').forEach((b) => {
+      b.style.width = `${b.dataset.cible}%`;
+    }),
+  );
+  endurancesAvant = [h.endurance, o.endurance];
+
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
     b.addEventListener('click', () => choisir(lireChoix(b))),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
+    b.addEventListener('click', () => fenetreCarte(trouverLutteur(b.dataset.voir!))),
   );
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
     if (confirmerAbandon()) ecranChoix();
@@ -326,12 +450,17 @@ function resoudre(choixHumain: Choix, choixOrdi: Choix, change: boolean, face?: 
 
 // ---------- Fenêtres ----------
 
-function ouvrirFenetre(html: string): HTMLElement {
+function ouvrirFenetre(html: string, fermable = false): HTMLElement {
   fermerFenetre();
   const f = document.createElement('div');
   f.className = 'voile';
   f.innerHTML = `<div class="fenetre" role="dialog" aria-modal="true">${html}</div>`;
   document.body.appendChild(f);
+  if (fermable) {
+    f.addEventListener('click', (ev) => {
+      if (ev.target === f || (ev.target as HTMLElement).closest('[data-fermer]')) fermerFenetre();
+    });
+  }
   f.querySelector<HTMLElement>('button')?.focus();
   return f;
 }
@@ -340,12 +469,17 @@ function fermerFenetre() {
   document.querySelector('.voile')?.remove();
 }
 
+function fenetreCarte(def: DefLutteur) {
+  const f = ouvrirFenetre(`<div class="fenetre-carte">${carteHTML(def)}</div><button class="secondaire" data-fermer>Fermer</button>`, true);
+  activerReflets(f);
+}
+
 function fenetreInitiative(choixHumain: Choix, choixOrdi: Choix, apercu: (IdAction | 'lutte')[]) {
   const e = partie!.etat;
-  const idO = e.joueurs[ORDI].def.id;
-  const mien = libelleAction(e.joueurs[HUMAIN].def.id, choixHumain.action);
+  const nationO = e.joueurs[ORDI].def.nation;
+  const mien = libelleAction(e.joueurs[HUMAIN].def.nation, choixHumain.action);
   const options = apercu.map((a) => {
-    const lib = libelleAction(idO, a);
+    const lib = libelleAction(nationO, a);
     const f = famille(a);
     return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small></li>`;
   }).join('');
@@ -383,16 +517,19 @@ function ecranFin() {
   const e = partie.etat;
   const gagne = e.vainqueur === HUMAIN;
   const [h, o] = e.joueurs;
+  const vainqueur = gagne ? h : o;
   const comment = e.finPar === 'tombe'
     ? 'par tombé'
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
-  const journal = tours.slice().reverse().map((t, i) => htmlTour(t, e, i === 0)).join('');
+  const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
   app.innerHTML = `
     <main class="fin">
       <section class="verdict ${gagne ? 'rouge' : 'bleu'}">
-        <h1>${gagne ? 'Victoire' : 'Défaite'}</h1>
-        <p>${echap(gagne ? h.def.nom : o.def.nom)} gagne ${comment}.</p>
+        <div class="rayons" aria-hidden="true"></div>
+        <div class="verdict-portrait">${portrait(vainqueur.def)}</div>
+        <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
+        <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         ${scoresPeriodes.length ? `<p class="hist">${scoresPeriodes.map(([a, b], i) => `Période ${i + 1} : ${a} - ${b}`).join('<br>')}</p>` : ''}
         <p class="hist">Toi : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
         <div class="fin-boutons">
@@ -400,11 +537,19 @@ function ecranFin() {
           <button class="secondaire" data-changer>Changer de lutteur</button>
         </div>
       </section>
-      <section class="journal">${journal}</section>
+      <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
   app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine()));
   app.querySelector('[data-changer]')!.addEventListener('click', ecranChoix);
   window.scrollTo(0, 0);
 }
 
-ecranChoix();
+// ---------- Navigation ----------
+
+function route() {
+  fermerFenetre();
+  if (location.hash === '#galerie') ecranGalerie();
+  else if (!partie) ecranChoix();
+}
+window.addEventListener('hashchange', route);
+route();

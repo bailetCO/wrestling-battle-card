@@ -21,39 +21,93 @@ export const ACTIONS: Record<IdAction, DefAction> = {
   matraquage: { id: 'matraquage', nom: 'Matraquage', famille: 'feinte', cout: 5, points: 0 },
 };
 
-// Budget de chaque lutteur de départ : endurance + force ÷ 5 + récupération (en %) = 165.
-// Familles spéciales validées pour l'instant. Équilibrage des statistiques prévu à l'étape 4.
+// 15 lutteurs : 3 styles de jeu par nation. Noms fictifs, provisoires.
+// Budget = endurance + force ÷ 5 + récupération (en %) : de 153 à 175 selon le style.
+// La rareté vient du taux de victoire en simulation (npm run simuler) :
+// les 2 meilleurs légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.
+// Classement du 24/11/2026 : 210 000 combats, ordinateur aléatoire des deux côtés.
+const L = (d: DefLutteur): DefLutteur => d;
 export const LUTTEURS: DefLutteur[] = [
-  {
-    id: 'usa', nom: 'USA', origine: 'USA',
-    enduranceMax: 100, force: 150, recuperation: 0.35,
-    actions: ['double_jambe', 'sprawl', 'matraquage', 'relance'],
-    familleSpeciale: 'attaque',
-  },
-  {
-    id: 'russie', nom: 'Russie', origine: 'Russie',
-    enduranceMax: 90, force: 175, recuperation: 0.4,
-    actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
-    familleSpeciale: 'contre',
-  },
-  {
-    id: 'europe', nom: 'Europe', origine: 'Europe',
-    enduranceMax: 85, force: 175, recuperation: 0.45,
-    actions: ['attaque_base', 'defense', 'feinte', 'contre'],
-    familleSpeciale: 'defense',
-  },
-  {
-    id: 'afrique', nom: 'Afrique', origine: 'Afrique',
-    enduranceMax: 75, force: 225, recuperation: 0.45,
-    actions: ['grande_projection', 'sprawl', 'bras_roule', 'relance'],
-    familleSpeciale: 'attaque',
-  },
-  {
-    id: 'japon', nom: 'Japon', origine: 'Japon',
-    enduranceMax: 70, force: 175, recuperation: 0.6,
-    actions: ['simple_jambe', 'feinte', 'esquive', 'contre'],
-    familleSpeciale: 'feinte',
-  },
+  // ----- USA -----
+  L({
+    id: 'usa', nom: 'Tanner Briggs', origine: 'USA', nation: 'usa', style: 'Lutteur de pression, très physique',
+    enduranceMax: 100, force: 150, recuperation: 0.35, rarete: 'epique',
+    actions: ['double_jambe', 'sprawl', 'matraquage', 'relance'], familleSpeciale: 'attaque',
+  }),
+  L({
+    id: 'usa-explosif', nom: 'Colt Ramsey', origine: 'USA', nation: 'usa', style: 'Explosif, enchaîne les attaques aux jambes',
+    enduranceMax: 80, force: 200, recuperation: 0.4, rarete: 'rare',
+    actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'], familleSpeciale: 'attaque',
+  }),
+  L({
+    id: 'usa-defenseur', nom: 'Duke Halvorsen', origine: 'USA', nation: 'usa', style: 'Défenseur, un mur qui use l\'adversaire',
+    enduranceMax: 95, force: 175, recuperation: 0.45, rarete: 'legendaire',
+    actions: ['attaque_base', 'sprawl', 'parade', 'contre'], familleSpeciale: 'defense',
+  }),
+  // ----- Russie -----
+  L({
+    id: 'russie', nom: 'Mikhaïl Orlov', origine: 'Russie', nation: 'russie', style: 'Technicien précis',
+    enduranceMax: 90, force: 175, recuperation: 0.4, rarete: 'epique',
+    actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'], familleSpeciale: 'contre',
+  }),
+  L({
+    id: 'russie-pression', nom: 'Rustam Kazbekov', origine: 'Russie', nation: 'russie', style: 'Lutteur de pression, infatigable',
+    enduranceMax: 95, force: 200, recuperation: 0.35, rarete: 'epique',
+    actions: ['double_jambe', 'matraquage', 'sprawl', 'relance'], familleSpeciale: 'attaque',
+  }),
+  L({
+    id: 'russie-contre', nom: 'Pavel Zorine', origine: 'Russie', nation: 'russie', style: 'Contre-attaquant patient',
+    enduranceMax: 85, force: 150, recuperation: 0.5, rarete: 'commune',
+    actions: ['attaque_base', 'esquive', 'contre', 'relance'], familleSpeciale: 'contre',
+  }),
+  // ----- Europe -----
+  L({
+    id: 'europe', nom: 'Hugo Delmas', origine: 'Europe', nation: 'europe', style: 'Équilibré, idéal pour débuter',
+    enduranceMax: 85, force: 175, recuperation: 0.45, rarete: 'rare',
+    actions: ['attaque_base', 'defense', 'feinte', 'contre'], familleSpeciale: 'defense',
+  }),
+  L({
+    id: 'europe-technicien', nom: 'Lucas Ferrand', origine: 'Europe', nation: 'europe', style: 'Technicien, feintes et ceintures',
+    enduranceMax: 90, force: 160, recuperation: 0.45, rarete: 'rare',
+    actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], familleSpeciale: 'feinte',
+  }),
+  L({
+    id: 'europe-puissant', nom: 'Théo Marchal', origine: 'Europe', nation: 'europe', style: 'Poids lourd, suplex dévastateur',
+    enduranceMax: 70, force: 240, recuperation: 0.35, rarete: 'commune',
+    actions: ['german_suplex', 'defense', 'matraquage', 'contre'], familleSpeciale: 'attaque',
+  }),
+  // ----- Afrique -----
+  L({
+    id: 'afrique', nom: 'Lamine Sarr', origine: 'Afrique', nation: 'afrique', style: 'Puissant et athlétique',
+    enduranceMax: 75, force: 225, recuperation: 0.45, rarete: 'commune',
+    actions: ['grande_projection', 'sprawl', 'bras_roule', 'relance'], familleSpeciale: 'attaque',
+  }),
+  L({
+    id: 'afrique-explosif', nom: 'Ibou Ndiaye', origine: 'Afrique', nation: 'afrique', style: 'Explosif, feintes et bras roulés',
+    enduranceMax: 80, force: 190, recuperation: 0.55, rarete: 'rare',
+    actions: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'], familleSpeciale: 'feinte',
+  }),
+  L({
+    id: 'afrique-defenseur', nom: 'Cheikh Faye', origine: 'Afrique', nation: 'afrique', style: 'Défenseur, immense réserve d\'énergie',
+    enduranceMax: 100, force: 170, recuperation: 0.4, rarete: 'legendaire',
+    actions: ['attaque_base', 'parade', 'sprawl', 'contre'], familleSpeciale: 'defense',
+  }),
+  // ----- Japon -----
+  L({
+    id: 'japon', nom: 'Kenji Arata', origine: 'Japon', nation: 'japon', style: 'Rapide et explosif',
+    enduranceMax: 70, force: 175, recuperation: 0.6, rarete: 'commune',
+    actions: ['simple_jambe', 'feinte', 'esquive', 'contre'], familleSpeciale: 'feinte',
+  }),
+  L({
+    id: 'japon-technicien', nom: 'Ryō Takamine', origine: 'Japon', nation: 'japon', style: 'Technicien, ceinture et relances',
+    enduranceMax: 75, force: 165, recuperation: 0.55, rarete: 'commune',
+    actions: ['ceinture_arriere', 'feinte', 'parade', 'relance'], familleSpeciale: 'contre',
+  }),
+  L({
+    id: 'japon-contre', nom: 'Daichi Morikawa', origine: 'Japon', nation: 'japon', style: 'Contre-attaquant insaisissable',
+    enduranceMax: 85, force: 140, recuperation: 0.5, rarete: 'rare',
+    actions: ['attaque_base', 'esquive', 'contre', 'matraquage'], familleSpeciale: 'contre',
+  }),
 ];
 
 // Noms locaux des actions selon l'origine du lutteur (à valider par Corentin).
@@ -76,9 +130,9 @@ export const NOMS_LOCAUX: Record<IdAction, Record<string, string>> = {
   matraquage: { usa: 'Snap Down', russie: 'Sbivanie', japon: 'Hatakikomi', afrique: 'Dóor-dóor', europe: 'Matraquage' },
 };
 
-// Nom d'une action pour un lutteur donné ; à défaut, le nom français.
-export function nomLocal(idLutteur: string, action: IdAction): string {
-  return NOMS_LOCAUX[action][idLutteur] ?? ACTIONS[action].nom;
+// Nom d'une action selon la nation du lutteur ; à défaut, le nom français.
+export function nomLocal(nation: string, action: IdAction): string {
+  return NOMS_LOCAUX[action][nation] ?? ACTIONS[action].nom;
 }
 
 // Qui bat qui (hors cas particulier « contre contre attaque » et « même famille »).
