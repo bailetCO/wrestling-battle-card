@@ -259,6 +259,14 @@ function tenterPercee(
   return null;
 }
 
+// Utilisé par l'ordinateur « fort » pour prévoir l'issue d'un duel (aucun hasard, aucun effet).
+export function comparerFamilles(
+  e: EtatCombat, f: [Famille, Famille], endurances: [number, number], speciale: [boolean, boolean],
+): 'gagne' | 'perd' | 'neutre' {
+  const r = duel(e, f, endurances, speciale).res[0];
+  return r === 'gagne' ? 'gagne' : r === 'perd' ? 'perd' : 'neutre';
+}
+
 function tenterTombe(
   e: EtatCombat, j: Joueur, endDebut: [number, number], hasard: Hasard, options: OptionsTour,
 ): boolean {

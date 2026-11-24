@@ -3,13 +3,16 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, avecDeck, verifierDeck, TAILLE_DECK,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation,
 } from '../moteur';
 import { HUMAIN, ORDI, Partie, type TourJoue } from './partie';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
+import {
+  charger, choisirDeck, deckDe, nouvelleCollection, possede, recompenser, sauver, type Collection,
+} from './collection';
 import { portraitSVG } from './portrait';
 
 const app = document.getElementById('app')!;
@@ -22,6 +25,8 @@ let scoresPeriodes: [number, number][] = [];
 let enAttente = false; // un tour est en cours de résolution (fenêtre ouverte)
 let endurancesAvant: [number, number] | null = null; // pour animer les barres
 let idPortrait = 0;
+let collection: Collection = charger();
+let recompenseDonnee = false; // une seule récompense par combat
 
 // ---------- Outils ----------
 
@@ -52,25 +57,54 @@ const NATIONS: { id: Nation; nom: string }[] = [
   { id: 'afrique', nom: 'Afrique' }, { id: 'japon', nom: 'Japon' },
 ];
 
+function compteur(): string {
+  const n = collection.toutDebloque ? LUTTEURS.length : collection.cartes.length;
+  return `Ta collection : <b>${n}/${LUTTEURS.length}</b> cartes${collection.toutDebloque ? ' (mode test)' : ''} · ${collection.victoires} victoire${collection.victoires > 1 ? 's' : ''}`;
+}
+
+function carteJoueur(def: DefLutteur, bouton = ''): string {
+  return carteHTML(avecDeck(def, deckDe(collection, def.id)), bouton);
+}
+
+function carteVerrouillee(def: DefLutteur): string {
+  return `
+    <div class="verrou">
+      ${carteHTML(def)}
+      <p class="verrou-texte"><b>Carte ${NOM_RARETE[def.rarete].toLowerCase()} à gagner</b>Gagne des combats pour ouvrir des boosters.</p>
+    </div>`;
+}
+
 function ecranChoix() {
   partie = null;
-  const cartes = LUTTEURS.map((l) => `
-    <div class="emplacement" id="carte-${l.id}" data-nation="${l.nation}">
-      ${carteHTML(l, `<button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>`)}
-    </div>`).join('');
+  const tries = [...LUTTEURS].sort((a, b) => Number(possede(collection, b.id)) - Number(possede(collection, a.id)));
+  const cartes = tries.map((l) => {
+    const a = possede(collection, l.id);
+    const perso = deckDe(collection, l.id) ? ' (perso)' : '';
+    const boutons = `
+      <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
+      <button class="secondaire cl-deck" data-deck="${l.id}">Modifier le deck${perso}</button>`;
+    return `<div class="emplacement" data-nation="${l.nation}">${a ? carteJoueur(l, boutons) : carteVerrouillee(l)}</div>`;
+  }).join('');
   const puces = NATIONS.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
+  const niv = collection.niveau;
 
   app.innerHTML = `
     <main class="choix">
       <header class="titre">
         <h1>Wrestling Battle Card</h1>
-        <p>Choisis ton lutteur parmi les 15 cartes. L'ordinateur prend un adversaire au hasard.</p>
+        <p>Choisis ton lutteur. L'ordinateur prend un adversaire au hasard parmi les 15. Chaque victoire ouvre un booster.</p>
+        <p class="compteur">${compteur()}</p>
       </header>
+      <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
+        <span>Ordinateur</span>
+        <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>1 carte par victoire</small></button>
+        <button class="${niv === 'fort' ? 'actif' : ''}" data-niveau="fort" aria-pressed="${niv === 'fort'}">Fort<small>2 cartes par victoire</small></button>
+      </div>
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
       <div class="defile" tabindex="0" aria-label="Cartes des lutteurs">${cartes}</div>
       <div class="defile-nav">
         <button class="rond" data-pas="-1" aria-label="Carte précédente">‹</button>
-        <a class="lien" href="#galerie">Voir la galerie par rareté</a>
+        <a class="lien" href="#galerie">Galerie et collection</a>
         <button class="rond" data-pas="1" aria-label="Carte suivante">›</button>
       </div>
     </main>`;
@@ -91,6 +125,20 @@ function ecranChoix() {
       if (cible) defile.scrollTo({ left: cible.offsetLeft - defile.offsetLeft - 16, behavior: 'smooth' });
     }),
   );
+  app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
+    b.addEventListener('click', () => {
+      collection.niveau = b.dataset.niveau === 'fort' ? 'fort' : 'normal';
+      sauver(collection);
+      app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((x) => {
+        const actif = x.dataset.niveau === collection.niveau;
+        x.classList.toggle('actif', actif);
+        x.setAttribute('aria-pressed', String(actif));
+      });
+    }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-deck]').forEach((b) =>
+    b.addEventListener('click', () => fenetreDeck(trouverLutteur(b.dataset.deck!))),
+  );
   app.querySelectorAll<HTMLButtonElement>('[data-lutteur]').forEach((b) =>
     b.addEventListener('click', () => {
       const id = b.dataset.lutteur!;
@@ -103,34 +151,117 @@ function ecranChoix() {
   window.scrollTo(0, 0);
 }
 
-// ---------- Galerie par rareté ----------
+// ---------- Choix du deck ----------
+
+function fenetreDeck(def: DefLutteur) {
+  let choix: IdAction[] = [...(deckDe(collection, def.id) ?? def.actions)];
+  const f = ouvrirFenetre(`
+    <h2>Deck de ${echap(def.nom)}</h2>
+    <p>Choisis ${TAILLE_DECK} actions parmi ${def.actionsPossibles.length}, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}).</p>
+    <div class="deck-liste">${def.actionsPossibles.map((a) => {
+      const fam = ACTIONS[a].famille;
+      return `
+        <button class="deck-action" data-a="${a}" aria-pressed="false">
+          <span class="ico f-${fam}">${ICONE[fam]}</span>
+          <span class="a-nom">${echap(nomLocal(def.nation, a))}${fam === def.familleSpeciale ? ' ★' : ''}</span>
+          <span class="a-fr">${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
+          <span class="a-cout">${ACTIONS[a].cout}</span>
+        </button>`;
+    }).join('')}</div>
+    <p class="deck-etat" aria-live="polite"></p>
+    <div class="deck-boutons">
+      <button class="principal" data-enregistrer>Enregistrer le deck</button>
+      <button class="secondaire" data-defaut>Revenir au deck de départ</button>
+      <button class="lien" data-fermer>Annuler</button>
+    </div>`, true);
+  const maj = () => {
+    f.querySelectorAll<HTMLButtonElement>('[data-a]').forEach((b) => {
+      const pris = choix.includes(b.dataset.a as IdAction);
+      b.classList.toggle('pris', pris);
+      b.setAttribute('aria-pressed', String(pris));
+    });
+    const erreur = verifierDeck(def, choix);
+    const etat = f.querySelector<HTMLElement>('.deck-etat')!;
+    etat.textContent = `${choix.length}/${TAILLE_DECK} actions choisies.${erreur && choix.length === TAILLE_DECK ? ` ${erreur}` : ''}`;
+    f.querySelector<HTMLButtonElement>('[data-enregistrer]')!.disabled = !!erreur;
+  };
+  f.querySelectorAll<HTMLButtonElement>('[data-a]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const a = b.dataset.a as IdAction;
+      if (choix.includes(a)) choix = choix.filter((x) => x !== a);
+      else if (choix.length < TAILLE_DECK) choix.push(a);
+      maj();
+    }),
+  );
+  f.querySelector('[data-enregistrer]')!.addEventListener('click', () => {
+    if (choisirDeck(collection, def.id, choix)) return;
+    sauver(collection);
+    fermerFenetre();
+    ecranChoix();
+  });
+  f.querySelector('[data-defaut]')!.addEventListener('click', () => {
+    delete collection.decks[def.id];
+    sauver(collection);
+    fermerFenetre();
+    ecranChoix();
+  });
+  maj();
+}
+
+// ---------- Galerie et collection ----------
 
 function ecranGalerie() {
   partie = null;
   const groupes = ORDRE_RARETE.map((r) => {
-    const cartes = LUTTEURS.filter((l) => l.rarete === r).map((l) => carteHTML(l)).join('');
-    return `<section class="groupe"><h2>${NOM_RARETE[r]}</h2><div class="grille-cartes">${cartes}</div></section>`;
+    const liste = LUTTEURS.filter((l) => l.rarete === r);
+    const n = liste.filter((l) => possede(collection, l.id)).length;
+    const cartes = liste.map((l) => (possede(collection, l.id) ? carteJoueur(l) : carteVerrouillee(l))).join('');
+    return `<section class="groupe"><h2>${NOM_RARETE[r]} <small>${n}/${liste.length}</small></h2><div class="grille-cartes">${cartes}</div></section>`;
   }).join('');
   app.innerHTML = `
     <main class="galerie">
       <header class="titre">
         <h1>Galerie</h1>
-        <p>Raretés fixées d'après 210 000 combats simulés : les 2 lutteurs qui gagnent le plus sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.</p>
+        <p class="compteur">${compteur()}</p>
+        <p>Chaque victoire ouvre un booster : 1 carte contre l'ordinateur normal, 2 contre le fort. Les cartes communes sortent plus souvent que les légendaires. La collection est gardée sur ce téléphone.</p>
+        <p>Raretés fixées d'après plus de 100 000 combats simulés : les 2 lutteurs qui gagnent le plus sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.</p>
         <a class="lien" href="#">Retour au choix du lutteur</a>
       </header>
       ${groupes}
+      <section class="groupe reglages">
+        <h2>Réglages de test</h2>
+        <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>
+        <button class="lien" data-raz>Remettre la collection à zéro</button>
+      </section>
     </main>`;
+  app.querySelector('[data-test]')!.addEventListener('click', () => {
+    collection.toutDebloque = !collection.toutDebloque;
+    sauver(collection);
+    ecranGalerie();
+  });
+  const raz = app.querySelector<HTMLButtonElement>('[data-raz]')!;
+  raz.addEventListener('click', () => {
+    if (!raz.dataset.confirme) {
+      raz.dataset.confirme = '1';
+      raz.textContent = 'Appuie encore pour tout effacer (cartes, decks, victoires)';
+      return;
+    }
+    collection = nouvelleCollection();
+    sauver(collection);
+    ecranGalerie();
+  });
   activerReflets(app);
   window.scrollTo(0, 0);
 }
 
 function lancer(idHumain: string, idOrdi: string, graine: number) {
   if (location.hash) history.replaceState(null, '', location.pathname);
-  partie = new Partie(idHumain, idOrdi, graine);
+  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, deckDe(collection, idHumain));
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
   endurancesAvant = null;
+  recompenseDonnee = false;
   ecranCombat();
 }
 
@@ -358,6 +489,7 @@ function tableau(e: EtatCombat): string {
         <span class="per">Période <b>${e.periode}</b>/3</span>
         <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>
         ${historique}
+        <span class="niv">Ordi ${partie?.niveau === 'fort' ? 'fort' : 'normal'}</span>
       </div>
       ${coin(o, 'bleu', 'Ordi')}
     </header>`;
@@ -401,7 +533,10 @@ function ecranCombat() {
     b.addEventListener('click', () => choisir(lireChoix(b))),
   );
   app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
-    b.addEventListener('click', () => fenetreCarte(trouverLutteur(b.dataset.voir!))),
+    b.addEventListener('click', () => {
+      const j = partie?.etat.joueurs.find((x) => x.def.id === b.dataset.voir);
+      fenetreCarte(j ? j.def : trouverLutteur(b.dataset.voir!));
+    }),
   );
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
     if (confirmerAbandon()) ecranChoix();
@@ -529,6 +664,19 @@ function ecranFin() {
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
+  let booster = '';
+  if (gagne && !recompenseDonnee) {
+    recompenseDonnee = true;
+    const gagnees = recompenser(collection, partie.niveau, Math.random);
+    sauver(collection);
+    booster = gagnees.length
+      ? `<section class="booster">
+          <h2>Booster ouvert : ${gagnees.length > 1 ? `${gagnees.length} nouvelles cartes` : 'nouvelle carte'} !</h2>
+          <div class="booster-cartes">${gagnees.map((id, i) => `<div class="tirage" style="--delai:${300 + i * 450}ms">${carteHTML(trouverLutteur(id))}</div>`).join('')}</div>
+          <p class="compteur">${compteur()}</p>
+        </section>`
+      : `<section class="booster"><h2>Collection complète</h2><p>Tu as déjà les 15 cartes.</p></section>`;
+  }
   app.innerHTML = `
     <main class="fin">
       <section class="verdict ${gagne ? 'rouge' : 'bleu'}">
@@ -538,13 +686,15 @@ function ecranFin() {
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         ${scoresPeriodes.length ? `<p class="hist">${scoresPeriodes.map(([a, b], i) => `Période ${i + 1} : ${a} - ${b}`).join('<br>')}</p>` : ''}
         <p class="hist">Toi : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
-        <div class="fin-boutons">
-          <button class="principal" data-revanche>Revanche</button>
-          <button class="secondaire" data-changer>Changer de lutteur</button>
-        </div>
       </section>
+      ${booster}
+      <div class="fin-boutons">
+        <button class="principal" data-revanche>Revanche</button>
+        <button class="secondaire" data-changer>Changer de lutteur</button>
+      </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
+  activerReflets(app);
   app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine()));
   app.querySelector('[data-changer]')!.addEventListener('click', ecranChoix);
   window.scrollTo(0, 0);

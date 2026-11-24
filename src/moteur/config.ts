@@ -9,8 +9,8 @@ export const ACTIONS: Record<IdAction, DefAction> = {
   double_jambe: { id: 'double_jambe', nom: 'Double jambe', famille: 'attaque', cout: 7, points: 4 },
   ceinture_arriere: { id: 'ceinture_arriere', nom: 'Ceinture arrière', famille: 'attaque', cout: 7, points: 4 },
   bras_roule: { id: 'bras_roule', nom: 'Bras roulé', famille: 'attaque', cout: 7, points: 4 },
-  grande_projection: { id: 'grande_projection', nom: 'Grande projection', famille: 'attaque', cout: 10, points: 5 },
-  german_suplex: { id: 'german_suplex', nom: 'German suplex', famille: 'attaque', cout: 10, points: 5 },
+  grande_projection: { id: 'grande_projection', nom: 'Grande projection', famille: 'attaque', cout: 8, points: 5 },
+  german_suplex: { id: 'german_suplex', nom: 'German suplex', famille: 'attaque', cout: 8, points: 5 },
   defense: { id: 'defense', nom: 'Défense', famille: 'defense', cout: 3, points: 0 },
   parade: { id: 'parade', nom: 'Parade', famille: 'defense', cout: 3, points: 0 },
   esquive: { id: 'esquive', nom: 'Esquive', famille: 'defense', cout: 3, points: 0 },
@@ -22,92 +22,108 @@ export const ACTIONS: Record<IdAction, DefAction> = {
 };
 
 // 15 lutteurs : 3 styles de jeu par nation. Noms fictifs, provisoires.
-// Budget = endurance + force ÷ 5 + récupération (en %) : de 153 à 175 selon le style.
-// La rareté vient du taux de victoire en simulation (npm run simuler) :
-// les 2 meilleurs légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.
-// Classement du 24/11/2026 (après la révision des actions spéciales) : 210 000 combats,
-// ordinateur aléatoire des deux côtés.
+// actions : le deck par défaut (4 actions). actionsPossibles : les 7 actions parmi
+// lesquelles le joueur compose son deck (4 actions dont au moins une de la famille spéciale).
+// Stats rééquilibrées à l'étape 4 (24/11/2026). Rareté = classement par taux de victoire,
+// moyenne de deux simulations (ordinateur au hasard et ordinateur fort, des deux côtés) :
+// légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 %.
+// Vérification : npm run simuler.
 const L = (d: DefLutteur): DefLutteur => d;
 export const LUTTEURS: DefLutteur[] = [
   // ----- USA -----
   L({
     id: 'usa', nom: 'Tanner Briggs', origine: 'USA', nation: 'usa', style: 'Lutteur de pression, très physique',
-    enduranceMax: 100, force: 150, recuperation: 0.35, rarete: 'epique',
-    actions: ['double_jambe', 'sprawl', 'matraquage', 'relance'], familleSpeciale: 'attaque',
+    enduranceMax: 85, force: 145, recuperation: 0.35, rarete: 'legendaire',
+    actions: ['double_jambe', 'sprawl', 'matraquage', 'relance'],
+    actionsPossibles: ['double_jambe', 'sprawl', 'matraquage', 'relance', 'simple_jambe', 'feinte', 'defense'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'usa-explosif', nom: 'Colt Ramsey', origine: 'USA', nation: 'usa', style: 'Explosif, enchaîne les attaques aux jambes',
-    enduranceMax: 80, force: 200, recuperation: 0.4, rarete: 'commune',
-    actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'], familleSpeciale: 'attaque',
+    enduranceMax: 66, force: 200, recuperation: 0.4, rarete: 'commune',
+    actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'],
+    actionsPossibles: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl', 'attaque_base', 'esquive', 'relance'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'usa-defenseur', nom: 'Duke Halvorsen', origine: 'USA', nation: 'usa', style: 'Défenseur, un mur qui use l\'adversaire',
-    enduranceMax: 95, force: 175, recuperation: 0.45, rarete: 'legendaire',
-    actions: ['attaque_base', 'sprawl', 'parade', 'contre'], familleSpeciale: 'defense',
+    enduranceMax: 76, force: 140, recuperation: 0.39, rarete: 'rare',
+    actions: ['attaque_base', 'sprawl', 'contre', 'matraquage'],
+    actionsPossibles: ['attaque_base', 'sprawl', 'parade', 'contre', 'defense', 'matraquage', 'double_jambe'], familleSpeciale: 'defense',
   }),
   // ----- Russie -----
   L({
     id: 'russie', nom: 'Mikhaïl Orlov', origine: 'Russie', nation: 'russie', style: 'Technicien précis',
-    enduranceMax: 90, force: 175, recuperation: 0.4, rarete: 'epique',
-    actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'], familleSpeciale: 'contre',
+    enduranceMax: 71, force: 170, recuperation: 0.35, rarete: 'epique',
+    actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
+    actionsPossibles: ['ceinture_arriere', 'parade', 'contre', 'feinte', 'bras_roule', 'relance', 'esquive'], familleSpeciale: 'contre',
   }),
   L({
     id: 'russie-pression', nom: 'Rustam Kazbekov', origine: 'Russie', nation: 'russie', style: 'Lutteur de pression, infatigable',
-    enduranceMax: 95, force: 200, recuperation: 0.35, rarete: 'epique',
-    actions: ['double_jambe', 'matraquage', 'sprawl', 'relance'], familleSpeciale: 'attaque',
+    enduranceMax: 79, force: 200, recuperation: 0.32, rarete: 'epique',
+    actions: ['double_jambe', 'matraquage', 'sprawl', 'relance'],
+    actionsPossibles: ['double_jambe', 'matraquage', 'sprawl', 'relance', 'ceinture_arriere', 'defense', 'grande_projection'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'russie-contre', nom: 'Pavel Zorine', origine: 'Russie', nation: 'russie', style: 'Contre-attaquant patient',
-    enduranceMax: 85, force: 150, recuperation: 0.5, rarete: 'rare',
-    actions: ['attaque_base', 'esquive', 'contre', 'relance'], familleSpeciale: 'contre',
+    enduranceMax: 71, force: 145, recuperation: 0.48, rarete: 'rare',
+    actions: ['attaque_base', 'esquive', 'contre', 'relance'],
+    actionsPossibles: ['attaque_base', 'esquive', 'contre', 'relance', 'parade', 'feinte', 'simple_jambe'], familleSpeciale: 'contre',
   }),
   // ----- Europe -----
   L({
     id: 'europe', nom: 'Hugo Delmas', origine: 'Europe', nation: 'europe', style: 'Équilibré, idéal pour débuter',
-    enduranceMax: 85, force: 175, recuperation: 0.45, rarete: 'rare',
-    actions: ['attaque_base', 'defense', 'feinte', 'contre'], familleSpeciale: 'defense',
+    enduranceMax: 68, force: 165, recuperation: 0.42, rarete: 'rare',
+    actions: ['attaque_base', 'defense', 'feinte', 'contre'],
+    actionsPossibles: ['attaque_base', 'defense', 'feinte', 'contre', 'simple_jambe', 'parade', 'matraquage'], familleSpeciale: 'defense',
   }),
   L({
     id: 'europe-technicien', nom: 'Lucas Ferrand', origine: 'Europe', nation: 'europe', style: 'Technicien, feintes et ceintures',
-    enduranceMax: 90, force: 160, recuperation: 0.45, rarete: 'rare',
-    actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], familleSpeciale: 'feinte',
+    enduranceMax: 68, force: 160, recuperation: 0.43, rarete: 'legendaire',
+    actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
+    actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte', 'contre', 'esquive', 'bras_roule'], familleSpeciale: 'feinte',
   }),
   L({
     id: 'europe-puissant', nom: 'Théo Marchal', origine: 'Europe', nation: 'europe', style: 'Poids lourd, suplex dévastateur',
-    enduranceMax: 70, force: 240, recuperation: 0.35, rarete: 'commune',
-    actions: ['german_suplex', 'defense', 'matraquage', 'contre'], familleSpeciale: 'attaque',
+    enduranceMax: 68, force: 240, recuperation: 0.43, rarete: 'commune',
+    actions: ['german_suplex', 'defense', 'matraquage', 'contre'],
+    actionsPossibles: ['german_suplex', 'defense', 'matraquage', 'contre', 'grande_projection', 'sprawl', 'ceinture_arriere'], familleSpeciale: 'attaque',
   }),
   // ----- Afrique -----
   L({
     id: 'afrique', nom: 'Lamine Sarr', origine: 'Afrique', nation: 'afrique', style: 'Puissant et athlétique',
-    enduranceMax: 75, force: 225, recuperation: 0.45, rarete: 'commune',
-    actions: ['grande_projection', 'sprawl', 'bras_roule', 'relance'], familleSpeciale: 'attaque',
+    enduranceMax: 71, force: 240, recuperation: 0.53, rarete: 'commune',
+    actions: ['grande_projection', 'sprawl', 'bras_roule', 'relance'],
+    actionsPossibles: ['grande_projection', 'sprawl', 'bras_roule', 'relance', 'double_jambe', 'feinte', 'defense'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'afrique-explosif', nom: 'Ibou Ndiaye', origine: 'Afrique', nation: 'afrique', style: 'Explosif, feintes et bras roulés',
-    enduranceMax: 80, force: 190, recuperation: 0.55, rarete: 'rare',
-    actions: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'], familleSpeciale: 'feinte',
+    enduranceMax: 60, force: 180, recuperation: 0.51, rarete: 'rare',
+    actions: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'],
+    actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'bras_roule', 'double_jambe', 'relance', 'matraquage'], familleSpeciale: 'feinte',
   }),
   L({
     id: 'afrique-defenseur', nom: 'Cheikh Faye', origine: 'Afrique', nation: 'afrique', style: 'Défenseur, immense réserve d\'énergie',
-    enduranceMax: 100, force: 170, recuperation: 0.4, rarete: 'legendaire',
-    actions: ['attaque_base', 'parade', 'sprawl', 'contre'], familleSpeciale: 'defense',
+    enduranceMax: 78, force: 155, recuperation: 0.37, rarete: 'rare',
+    actions: ['bras_roule', 'sprawl', 'contre', 'attaque_base'],
+    actionsPossibles: ['attaque_base', 'parade', 'sprawl', 'contre', 'defense', 'relance', 'bras_roule'], familleSpeciale: 'defense',
   }),
   // ----- Japon -----
   L({
     id: 'japon', nom: 'Kenji Arata', origine: 'Japon', nation: 'japon', style: 'Rapide et explosif',
-    enduranceMax: 70, force: 175, recuperation: 0.6, rarete: 'commune',
-    actions: ['simple_jambe', 'feinte', 'esquive', 'contre'], familleSpeciale: 'feinte',
+    enduranceMax: 61, force: 165, recuperation: 0.6, rarete: 'commune',
+    actions: ['simple_jambe', 'feinte', 'esquive', 'contre'],
+    actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'contre', 'matraquage', 'relance', 'attaque_base'], familleSpeciale: 'feinte',
   }),
   L({
     id: 'japon-technicien', nom: 'Ryō Takamine', origine: 'Japon', nation: 'japon', style: 'Technicien, ceinture et relances',
-    enduranceMax: 75, force: 165, recuperation: 0.55, rarete: 'commune',
-    actions: ['ceinture_arriere', 'feinte', 'parade', 'relance'], familleSpeciale: 'contre',
+    enduranceMax: 61, force: 160, recuperation: 0.55, rarete: 'commune',
+    actions: ['ceinture_arriere', 'feinte', 'parade', 'relance'],
+    actionsPossibles: ['ceinture_arriere', 'feinte', 'parade', 'relance', 'contre', 'simple_jambe', 'esquive'], familleSpeciale: 'contre',
   }),
   L({
     id: 'japon-contre', nom: 'Daichi Morikawa', origine: 'Japon', nation: 'japon', style: 'Contre-attaquant insaisissable',
-    enduranceMax: 85, force: 140, recuperation: 0.5, rarete: 'rare',
-    actions: ['attaque_base', 'esquive', 'contre', 'matraquage'], familleSpeciale: 'contre',
+    enduranceMax: 69, force: 140, recuperation: 0.48, rarete: 'epique',
+    actions: ['attaque_base', 'esquive', 'contre', 'matraquage'],
+    actionsPossibles: ['attaque_base', 'esquive', 'contre', 'matraquage', 'relance', 'parade', 'feinte'], familleSpeciale: 'contre',
   }),
 ];
 
@@ -178,8 +194,27 @@ export const REGLES = {
   combo: { actions: 3, attaquesMin: 2 },
   pression: { tours: 3, points: 1 },
 
-  // Ordinateur : quand il a l'initiative, chance de changer d'action (niveau normal).
-  ia: { chanceChangerInitiative: 1 / 2 },
+  // Collection : cartes gagnées après une victoire, tirées parmi celles qu'on n'a pas encore.
+  collection: {
+    cartesParVictoire: { normal: 1, fort: 2 },
+    poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
+  },
+
+  // Ordinateur.
+  ia: {
+    // Niveau normal : avec l'initiative, chance de changer d'action (au hasard).
+    chanceChangerInitiative: 1 / 2,
+    // Niveau fort.
+    fort: {
+      chanceContrerInitiative: 3 / 4, // avec l'initiative, joue l'action qui contre la tienne
+      chanceMeilleureAction: 0.9, // sinon la 2e meilleure, pour rester imprévisible
+      valeurTombe: 10, // valeur d'un tombé réussi, comptée en points
+      valeurFeinte: 1.5, // valeur du bonus +2 d'une feinte réussie
+      valeurRecuperation: 0.6, // valeur de l'endurance récupérée par une défense réussie
+      // Prix d'un point d'endurance dépensé, selon l'endurance restante.
+      endurance: { seuilHaut: 60, seuilBas: 30, poidsHaut: 0.3, poidsMoyen: 0.5, poidsBas: 0.7, passerSous50: 0.8, tomberAZero: 3 },
+    },
+  },
 
   tombe: { plusEndurance: 3 / 5, egalite: 2 / 5, moinsEndurance: 1 / 5 },
 
@@ -201,6 +236,28 @@ export const REGLES = {
     bonusEnchainementFeinte: 4,
   },
 } as const;
+
+// ---------- Decks ----------
+
+export const TAILLE_DECK = 4;
+
+// Un deck est valide s'il a 4 actions différentes, toutes dans la liste du lutteur,
+// dont au moins une de sa famille spéciale. Renvoie la raison sinon.
+export function verifierDeck(def: DefLutteur, actions: IdAction[]): string | null {
+  if (actions.length !== TAILLE_DECK) return `Il faut exactement ${TAILLE_DECK} actions.`;
+  if (new Set(actions).size !== actions.length) return 'Chaque action ne peut être prise qu\'une fois.';
+  if (actions.some((a) => !def.actionsPossibles.includes(a))) return 'Une action ne fait pas partie de la liste de ce lutteur.';
+  if (!actions.some((a) => ACTIONS[a].famille === def.familleSpeciale)) {
+    return 'Il faut au moins une action de la famille de l\'action spéciale.';
+  }
+  return null;
+}
+
+// Copie du lutteur avec un autre deck (si le deck n'est pas valide, on garde celui par défaut).
+export function avecDeck(def: DefLutteur, actions: IdAction[] | undefined): DefLutteur {
+  if (!actions || verifierDeck(def, actions)) return def;
+  return { ...def, actions: [...actions] };
+}
 
 export function trouverLutteur(id: string): DefLutteur {
   const lutteur = LUTTEURS.find((l) => l.id === id);

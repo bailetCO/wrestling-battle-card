@@ -2,8 +2,9 @@
 // La page appelle ces fonctions ; toutes les règles restent dans src/moteur.
 
 import {
-  apercuInitiative, choixAleatoire, creerCombat, creerHasard, jouerTour, reagirInitiative,
-  type Choix, type EtatCombat, type Face, type Hasard, type IdAction,
+  apercuInitiative, avecDeck, choixOrdinateur, creerCombat, creerHasard, jouerTour, reagirInitiative,
+  reagirInitiativeForte, trouverLutteur,
+  type Choix, type EtatCombat, type Face, type Hasard, type IdAction, type Niveau,
 } from '../moteur';
 
 export const HUMAIN = 0;
@@ -45,14 +46,17 @@ export class Partie {
   etat: EtatCombat;
   readonly hasard: HasardRejouable;
 
-  constructor(readonly idHumain: string, readonly idOrdi: string, graine: number) {
-    this.etat = creerCombat(idHumain, idOrdi);
+  constructor(
+    readonly idHumain: string, readonly idOrdi: string, graine: number,
+    readonly niveau: Niveau = 'normal', deckHumain?: IdAction[],
+  ) {
+    this.etat = creerCombat(avecDeck(trouverLutteur(idHumain), deckHumain), idOrdi);
     this.hasard = new HasardRejouable(graine);
   }
 
   // L'ordinateur choisit en secret.
   choixOrdi(): Choix {
-    return choixAleatoire(this.etat, ORDI, this.hasard.fn);
+    return choixOrdinateur(this.etat, ORDI, this.hasard.fn, this.niveau);
   }
 
   // Si le joueur a l'initiative : 2 actions possibles de l'ordinateur, dont la vraie.
@@ -64,6 +68,7 @@ export class Partie {
   reactionOrdi(choixHumain: Choix, choixOrdi: Choix): Choix {
     if (!this.etat.joueurs[ORDI].initiative) return choixOrdi;
     apercuInitiative(this.etat, ORDI, choixHumain.action, this.hasard.fn);
+    if (this.niveau === 'fort') return reagirInitiativeForte(this.etat, ORDI, choixOrdi, choixHumain, this.hasard.fn);
     return reagirInitiative(this.etat, ORDI, choixOrdi, this.hasard.fn);
   }
 

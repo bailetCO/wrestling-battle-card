@@ -8,7 +8,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - [x] Étape 1 – Moteur de règles (sans graphisme), testé
 - [x] Étape 2 – Premier combat jouable dans le navigateur, contre l'ordinateur
 - [x] Étape 3 – Cartes et interface style manga : 15 lutteurs, portraits provisoires, raretés
-- [ ] Étape 4 – Collection, niveau « fort » de l'ordinateur et rééquilibrage
+- [x] Étape 4 – Collection, decks, niveau « fort » de l'ordinateur et rééquilibrage
 - [ ] Étape 5 – Combat entre amis en ligne
 - [ ] Étape 6 – Mise en ligne, tests avec la communauté et équilibrage
 - [ ] Étape 7 – Comptes joueurs et sauvegarde de la collection
@@ -19,12 +19,13 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/moteur/config.ts` : tous les chiffres du jeu (lutteurs, coûts, points, probabilités).
 - `src/moteur/combat.ts` : les règles d'un tour, des périodes et de la fin du match.
 - `src/moteur/hasard.ts` : le hasard, rejouable à l'identique avec une graine.
-- `src/moteur/ia.ts` : l'ordinateur (choix au hasard ; avec l'initiative, il change d'action une fois sur deux).
+- `src/moteur/ia.ts` : l'ordinateur, niveau normal (au hasard) et niveau fort.
 - `src/page/` : la page du jeu (écran de choix, combat, fin). Elle n'applique aucune règle elle-même, elle appelle le moteur.
 - `src/page/partie.ts` : le déroulé d'une partie contre l'ordinateur (initiative, pile ou face).
 - `src/page/carte.ts` : la carte d'un lutteur et ses cadres de rareté.
 - `src/page/portrait.ts` : les portraits manga provisoires, dessinés en code. Pour une vraie illustration, renseigner `image` dans `APPARENCE`.
-- Page `#galerie` : les 15 cartes rangées par rareté.
+- `src/page/collection.ts` : la collection (cartes, boosters, decks), gardée dans le navigateur.
+- Page `#galerie` : les 15 cartes rangées par rareté, la collection et le mode test.
 - `tests/` : un test par règle.
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
 
@@ -33,8 +34,8 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 ```bash
 npm install          # une seule fois
 npm test             # lance tous les tests
-npm run simuler      # simule 300 combats par duel et propose les raretés
-npm run simuler -- 1000 --duels
+npm run simuler      # simule les combats (ordinateur au hasard puis fort) et vérifie les raretés
+npm run simuler -- 400 150   # plus de combats, résultat plus précis (environ 1 minute)
 npm run dev          # lance le jeu sur l'ordinateur (adresse affichée, à ouvrir dans le navigateur)
 npm run build        # construit le jeu en un seul fichier : dist/index.html
 ```

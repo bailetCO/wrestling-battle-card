@@ -61,27 +61,40 @@ Une même action peut porter un nom différent selon l'origine du lutteur (par e
 | Feinte | Feinte | Fake | Finta | Feinto | Nax | Feinte |
 | Matraquage | Feinte | Snap Down | Sbivanie | Hatakikomi | Dóor-dóor | Matraquage |
 
-### Les 15 lutteurs (étape 3)
+### Les 15 lutteurs
 
-Trois styles de jeu par nation. Noms fictifs et provisoires. Le budget (endurance + force ÷ 5 + récupération) varie de 153 à 175 selon le style. La rareté vient du taux de victoire sur 210 000 combats simulés entre l'ordinateur et lui-même (choix au hasard) : les 2 meilleurs sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Classement refait après la révision des actions spéciales (24/11/2026) ; il sera refait après le rééquilibrage de l'étape 4.
+Trois styles de jeu par nation. Noms et dessins fictifs et provisoires.
 
-| Lutteur | Nation | Style | Endurance | Force | Récupération | Budget | 4 actions | Spéciale | Victoires (simulation) | Rareté |
+Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
+
+| Lutteur | Nation | Style | Endurance | Force | Récupération | Deck de départ | Autres actions possibles | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Tanner Briggs | USA | Lutteur de pression, très physique | 100 | 150 | 35 % | 165 | Double jambe, Sprawl, Matraquage, Relance | attaque | 64,1 % | Épique |
-| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 80 | 200 | 40 % | 160 | Simple jambe, Double jambe, Feinte, Sprawl | attaque | 38,1 % | Commune |
-| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 95 | 175 | 45 % | 175 | Attaque, Sprawl, Parade, Contre | défense | 77,7 % | Légendaire |
-| Mikhaïl Orlov | Russie | Technicien précis | 90 | 175 | 40 % | 165 | Ceinture arrière, Parade, Contre, Feinte | contre | 62,7 % | Épique |
-| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 95 | 200 | 35 % | 170 | Double jambe, Matraquage, Sprawl, Relance | attaque | 69,5 % | Épique |
-| Pavel Zorine | Russie | Contre-attaquant patient | 85 | 150 | 50 % | 165 | Attaque, Esquive, Contre, Relance | contre | 43,8 % | Rare |
-| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 85 | 175 | 45 % | 165 | Attaque, Défense, Feinte, Contre | défense | 54,2 % | Rare |
-| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 90 | 160 | 45 % | 167 | Simple jambe, Ceinture arrière, Parade, Feinte | feinte | 54,9 % | Rare |
-| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 70 | 240 | 35 % | 153 | German suplex, Défense, Matraquage, Contre | attaque | 13,6 % | Commune |
-| Lamine Sarr | Afrique | Puissant et athlétique | 75 | 225 | 45 % | 165 | Grande projection, Sprawl, Bras roulé, Relance | attaque | 19,0 % | Commune |
-| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 80 | 190 | 55 % | 173 | Simple jambe, Feinte, Esquive, Bras roulé | feinte | 53,0 % | Rare |
-| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 100 | 170 | 40 % | 174 | Attaque, Parade, Sprawl, Contre | défense | 76,2 % | Légendaire |
-| Kenji Arata | Japon | Rapide et explosif | 70 | 175 | 60 % | 165 | Simple jambe, Feinte, Esquive, Contre | feinte | 30,9 % | Commune |
-| Ryō Takamine | Japon | Technicien, ceinture et relances | 75 | 165 | 55 % | 163 | Ceinture arrière, Feinte, Parade, Relance | contre | 39,3 % | Commune |
-| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 85 | 140 | 50 % | 163 | Attaque, Esquive, Contre, Matraquage | contre | 53,1 % | Rare |
+| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 68 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé | feinte | 50,6 / 68,8 / 59,7 % | Légendaire |
+| Tanner Briggs | USA | Lutteur de pression, très physique | 85 | 145 | 35 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense | attaque | 72,7 / 46,4 / 59,5 % | Légendaire |
+| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 79 | 200 | 32 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection | attaque | 64,5 / 43,0 / 53,7 % | Épique |
+| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 69 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte | contre | 51,9 / 55,4 / 53,6 % | Épique |
+| Mikhaïl Orlov | Russie | Technicien précis | 71 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive | contre | 51,0 / 55,1 / 53,0 % | Épique |
+| Pavel Zorine | Russie | Contre-attaquant patient | 71 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe | contre | 43,8 / 57,2 / 50,5 % | Rare |
+| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 76 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe | défense | 58,6 / 42,1 / 50,3 % | Rare |
+| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 68 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage | défense | 48,8 / 49,3 / 49,1 % | Rare |
+| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 60 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage | feinte | 39,0 / 58,4 / 48,7 % | Rare |
+| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 78 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance | défense | 47,3 / 49,5 / 48,4 % | Rare |
+| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 66 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance | attaque | 38,7 / 53,3 / 46,0 % | Commune |
+| Kenji Arata | Japon | Rapide et explosif | 61 | 165 | 60 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque | feinte | 42,3 / 48,8 / 45,6 % | Commune |
+| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 68 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière | attaque | 49,0 / 39,7 / 44,3 % | Commune |
+| Lamine Sarr | Afrique | Puissant et athlétique | 71 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense | attaque | 54,2 / 33,4 / 43,8 % | Commune |
+| Ryō Takamine | Japon | Technicien, ceinture et relances | 61 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive | contre | 37,7 / 49,5 / 43,6 % | Commune |
+
+### Decks
+
+- Chaque lutteur a une liste de 7 actions possibles, liée à son style. Le joueur compose son deck de 4 actions avant le combat, dont au moins une de la famille de son action spéciale.
+- Le deck de départ est celui du tableau ci-dessus ; l'équilibrage est mesuré avec lui.
+
+### Collection
+
+- Au départ, le joueur possède 5 cartes : la moins rare de chaque nation.
+- Chaque victoire ouvre un booster : 1 carte contre l'ordinateur normal, 2 contre l'ordinateur fort. Les cartes sont tirées parmi celles qui manquent, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
+- La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs (étape 7). Un mode test débloque toutes les cartes.
 
 ### Style graphique
 
@@ -164,7 +177,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 ### Chiffrage
 
-Chaque personnage de départ a le même budget : endurance + force ÷ 5 + récupération = 165. La force reste sous 250 pour laisser de la marge aux cartes légendaires ; les cartes communes ont un budget plus faible.
+Version d'origine, remplacée par le rééquilibrage de l'étape 4 (voir Les 15 lutteurs) : chaque personnage de départ avait le même budget, endurance + force ÷ 5 + récupération = 165. La force reste sous 250 pour laisser de la marge aux futures cartes.
 
 | Lutteur | Endurance | Force | Récupération entre périodes |
 | --- | --- | --- | --- |
@@ -183,7 +196,7 @@ Chaque personnage de départ a le même budget : endurance + force ÷ 5 + récup
 | Contre, relance | Contre | 6 | Points de l'attaque renvoyés |
 | Attaque de base, simple jambe | Attaque | 6 | 2 |
 | Double jambe, ceinture arrière, bras roulé (bras à la volée) | Attaque | 7 | 4 |
-| Grande projection, german suplex | Attaque | 10 | 5 |
+| Grande projection, german suplex | Attaque | 8 (10 avant l'étape 4) | 5 |
 
 Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'endurance par période, ce qui permet de tenir jusqu'à la 3e période ; enchaîner les attaques fait passer sous 50 d'endurance dès la 3e période, avec une précision dégradée.
 
@@ -193,6 +206,11 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 - Chaque action coûte plus ou moins d'endurance selon sa puissance, ce qui évite de répéter les grosses attaques.
 - À 0 d'endurance, la seule action possible est « Lutte » : 1 chance sur 10 de marquer 1 ou 2 points (tirés au hasard).
 - Après 3 tours sans endurance, le lutteur a 100 % de chance de se faire tomber.
+
+### Ordinateur
+
+- Niveau normal : il choisit au hasard parmi ses actions jouables. Avec l'initiative, il change d'action une fois sur deux, au hasard.
+- Niveau fort : il estime ce que rapporte chacune de ses actions (et spéciales) face à tout ce que l'adversaire peut jouer : points, chances de tombé, coût en endurance, risque de passer sous 50, passivité. Il joue la meilleure 9 fois sur 10, sinon la deuxième, pour rester imprévisible. Avec l'initiative, il joue l'action qui contre celle de l'adversaire 3 fois sur 4. Il gagne environ 78 % de ses combats contre le niveau normal.
 
 ## 5. Plateforme et technique
 

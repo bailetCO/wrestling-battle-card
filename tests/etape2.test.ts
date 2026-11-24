@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTIONS, LUTTEURS, NOMS_LOCAUX, nomLocal } from '../src/moteur/config';
+import { ACTIONS, LUTTEURS, NOMS_LOCAUX, avecDeck, nomLocal, verifierDeck } from '../src/moteur/config';
 import { creerCombat, jouerTour } from '../src/moteur/combat';
 import { reagirInitiative } from '../src/moteur/ia';
 import type { IdAction } from '../src/moteur/types';
@@ -75,4 +75,21 @@ test('chaque lutteur : 4 actions différentes, une action de sa famille spécial
 test('raretés réparties 5 communes, 5 rares, 3 épiques, 2 légendaires', () => {
   const n = (r: string) => LUTTEURS.filter((l) => l.rarete === r).length;
   assert.deepEqual([n('commune'), n('rare'), n('epique'), n('legendaire')], [5, 5, 3, 2]);
+});
+
+test('decks : 7 actions possibles par lutteur, le deck par défaut en fait partie et est valide', () => {
+  for (const l of LUTTEURS) {
+    assert.equal(new Set(l.actionsPossibles).size, 7, l.id);
+    assert.equal(verifierDeck(l, l.actions), null, l.id);
+  }
+});
+
+test('decks : refuse un deck sans action de la famille spéciale, ou hors liste', () => {
+  const usa = LUTTEURS.find((l) => l.id === 'usa')!; // spéciale attaque
+  assert.ok(verifierDeck(usa, ['sprawl', 'matraquage', 'relance', 'feinte']));
+  assert.ok(verifierDeck(usa, ['double_jambe', 'sprawl', 'matraquage', 'contre']));
+  assert.ok(verifierDeck(usa, ['double_jambe', 'double_jambe', 'matraquage', 'relance']));
+  assert.equal(verifierDeck(usa, ['simple_jambe', 'sprawl', 'feinte', 'relance']), null);
+  assert.deepEqual(avecDeck(usa, ['simple_jambe', 'sprawl', 'feinte', 'relance']).actions, ['simple_jambe', 'sprawl', 'feinte', 'relance']);
+  assert.deepEqual(avecDeck(usa, ['contre', 'sprawl', 'feinte', 'relance']).actions, usa.actions);
 });

@@ -40,7 +40,8 @@ export interface DefLutteur {
   enduranceMax: number; // 0 à 100
   force: number; // 10 à 250
   recuperation: number; // part de l'endurance max récupérée entre deux périodes (0,35 = 35 %)
-  actions: IdAction[]; // les 4 actions de la carte
+  actions: IdAction[]; // les 4 actions de la carte (le deck)
+  actionsPossibles: IdAction[]; // les actions parmi lesquelles on compose le deck
   familleSpeciale: Famille; // famille de l'action spéciale
 }
 
