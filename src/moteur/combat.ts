@@ -196,6 +196,29 @@ function duel(
   return { res: ['perd', 'gagne'], sortie: false };
 }
 
+const LIBELLE: Record<Famille, string> = {
+  attaque: 'l\'attaque', defense: 'la défense', contre: 'le contre', feinte: 'la feinte',
+};
+const maj = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+// Phrase qui explique pourquoi un duel a été gagné (pour le journal).
+function expliquerDuel(e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], sortie: boolean): string {
+  const g: Joueur = res[0] === 'gagne' ? 0 : 1;
+  const p = autre(g);
+  const nomG = e.joueurs[g].def.nom;
+  const nomP = e.joueurs[p].def.nom;
+  if (f[g] === f[p]) return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
+  if (f[g] === 'contre' && f[p] === 'attaque') {
+    return sortie
+      ? `Le contre de ${nomG} passe, mais avec un seul avantage (endurance ou force) : point de sortie.`
+      : `${nomG} a plus d'endurance et plus de force : le contre renvoie l'attaque.`;
+  }
+  if (f[g] === 'attaque' && f[p] === 'contre') {
+    return `Le contre de ${nomP} n'a ni plus d'endurance ni plus de force : l'attaque passe.`;
+  }
+  return `${maj(LIBELLE[f[g]])} de ${nomG} l'emporte sur ${LIBELLE[f[p]]} de ${nomP}.`;
+}
+
 function tenterTombe(
   e: EtatCombat, j: Joueur, endDebut: [number, number], hasard: Hasard, options: OptionsTour,
 ): boolean {
@@ -303,7 +326,7 @@ export function jouerTour(
     const malus = fam[j] === 'attaque' && J[j].malusPrecisionTours > 0 ? REGLES.matraquage.malusPrecision : 0;
     const p = precisionDe(endDebut[j]) - malus;
     passe[j] = reussit(hasard, chanceReussite(p));
-    if (!passe[j]) log(e, `${J[j].def.nom} rate son action (précision ${p.toFixed(2)}) : action dans le vent.`);
+    if (!passe[j]) log(e, `${J[j].def.nom} rate son action (précision ${p.toFixed(2).replace('.', ',')}) : action dans le vent.`);
   }
   for (const l of J) if (l.malusPrecisionTours > 0) l.malusPrecisionTours--;
 
@@ -315,6 +338,7 @@ export function jouerTour(
     res = d.res;
     sortie = d.sortie;
     if (res[0] === 'neutre') log(e, 'Même famille et pas le double d\'endurance : personne ne marque.');
+    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, sortie));
   } else {
     for (const j of LES_DEUX) if (passe[j]) res[j] = 'gagne';
   }

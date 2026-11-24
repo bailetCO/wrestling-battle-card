@@ -1,7 +1,7 @@
 // Ordinateur très simple : choisit au hasard parmi les actions jouables.
-// Il sera amélioré à l'étape 4.
+// Un niveau « fort » est prévu plus tard.
 
-import { ACTIONS } from './config';
+import { ACTIONS, REGLES } from './config';
 import { actionsJouables, peutJouerSpeciale } from './combat';
 import { choisirParmi, reussit, type Hasard } from './hasard';
 import type { Choix, EtatCombat, Joueur } from './types';
@@ -15,4 +15,16 @@ export function choixAleatoire(etat: EtatCombat, j: Joueur, hasard: Hasard, chan
     peutJouerSpeciale(etat, j, action) &&
     reussit(hasard, chanceSpeciale);
   return { action, speciale };
+}
+
+// Quand l'ordinateur a l'initiative, il voit 2 actions possibles de l'adversaire.
+// Niveau normal : une fois sur deux, il change pour une autre action jouable, au hasard.
+export function reagirInitiative(
+  etat: EtatCombat, j: Joueur, choixActuel: Choix, hasard: Hasard,
+): Choix {
+  if (choixActuel.action === 'lutte') return choixActuel;
+  if (!reussit(hasard, REGLES.ia.chanceChangerInitiative)) return choixActuel;
+  const autres = actionsJouables(etat, j).filter((a) => a !== choixActuel.action);
+  if (autres.length === 0) return choixActuel;
+  return { action: choisirParmi(hasard, autres), speciale: false };
 }
