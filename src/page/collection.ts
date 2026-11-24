@@ -10,6 +10,7 @@ export interface Collection {
   niveau: Niveau;
   toutDebloque: boolean; // mode test : toutes les cartes disponibles
   victoires: number;
+  defaitesDeSuite: number; // remis à zéro à chaque victoire ou booster de consolation
 }
 
 const ORDRE: Rarete[] = ['commune', 'rare', 'epique', 'legendaire'];
@@ -24,7 +25,7 @@ export function cartesDeDepart(): string[] {
 }
 
 export function nouvelleCollection(): Collection {
-  return { cartes: cartesDeDepart(), decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0 };
+  return { cartes: cartesDeDepart(), decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0 };
 }
 
 export function possede(c: Collection, id: string): boolean {
@@ -50,7 +51,18 @@ export function ouvrirBooster(c: Collection, nombre: number, hasard: Hasard): st
 // Enregistre une victoire et renvoie les cartes gagnées.
 export function recompenser(c: Collection, niveau: Niveau, hasard: Hasard): string[] {
   c.victoires++;
+  c.defaitesDeSuite = 0;
   const gagnees = ouvrirBooster(c, REGLES.collection.cartesParVictoire[niveau], hasard);
+  c.cartes.push(...gagnees);
+  return gagnees;
+}
+
+// Enregistre une défaite. Toutes les 2 défaites d'affilée : booster de consolation.
+export function consoler(c: Collection, hasard: Hasard): string[] | null {
+  c.defaitesDeSuite++;
+  if (c.defaitesDeSuite < REGLES.collection.defaitesPourConsolation) return null;
+  c.defaitesDeSuite = 0;
+  const gagnees = ouvrirBooster(c, REGLES.collection.cartesConsolation, hasard);
   c.cartes.push(...gagnees);
   return gagnees;
 }

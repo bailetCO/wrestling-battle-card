@@ -94,6 +94,7 @@ Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 c
 
 - Au départ, le joueur possède 5 cartes : la moins rare de chaque nation.
 - Chaque victoire ouvre un booster : 1 carte contre l'ordinateur normal, 2 contre l'ordinateur fort. Les cartes sont tirées parmi celles qui manquent, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
+- Toutes les 2 défaites d'affilée, un booster de consolation offre 1 carte. Une victoire remet ce compteur à zéro.
 - La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs (étape 7). Un mode test débloque toutes les cartes.
 
 ### Style graphique
@@ -126,7 +127,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 | Duel | Résultat |
 | --- | --- |
-| Attaque contre feinte | L'attaque l'emporte. Même si l'attaque rate, la feinte est dissipée : aucun effet (ni bonus, ni initiative, ni effet de matraquage ou d'action spéciale) |
+| Attaque contre feinte | L'attaque l'emporte. Même si l'attaque rate, la feinte est dissipée : aucun effet (ni bonus, ni initiative, ni effet de matraquage ou d'action spéciale) et elle compte comme ratée pour le combo |
 | Défense contre attaque | La défense l'emporte |
 | Contre contre défense | Le contre l'emporte |
 | Feinte contre contre | La feinte l'emporte |

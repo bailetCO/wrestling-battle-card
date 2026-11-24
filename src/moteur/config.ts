@@ -197,6 +197,9 @@ export const REGLES = {
   // Collection : cartes gagnées après une victoire, tirées parmi celles qu'on n'a pas encore.
   collection: {
     cartesParVictoire: { normal: 1, fort: 2 },
+    // Booster de consolation : 1 carte toutes les 2 défaites d'affilée.
+    defaitesPourConsolation: 2,
+    cartesConsolation: 1,
     poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
   },
 

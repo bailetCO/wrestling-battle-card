@@ -11,7 +11,7 @@ import { HUMAIN, ORDI, Partie, type TourJoue } from './partie';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
 import {
-  charger, choisirDeck, deckDe, nouvelleCollection, possede, recompenser, sauver, type Collection,
+  charger, choisirDeck, consoler, deckDe, nouvelleCollection, possede, recompenser, sauver, type Collection,
 } from './collection';
 import { portraitSVG } from './portrait';
 
@@ -27,6 +27,7 @@ let endurancesAvant: [number, number] | null = null; // pour animer les barres
 let idPortrait = 0;
 let collection: Collection = charger();
 let recompenseDonnee = false; // une seule récompense par combat
+let partieBooster = ''; // ce qu'affiche l'écran de fin (booster ou message)
 
 // ---------- Outils ----------
 
@@ -262,6 +263,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   enAttente = false;
   endurancesAvant = null;
   recompenseDonnee = false;
+  partieBooster = '';
   ecranCombat();
 }
 
@@ -664,19 +666,26 @@ function ecranFin() {
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
-  let booster = '';
-  if (gagne && !recompenseDonnee) {
+  const montrer = (titre: string, gagnees: string[]) => gagnees.length
+    ? `<section class="booster">
+        <h2>${titre} : ${gagnees.length > 1 ? `${gagnees.length} nouvelles cartes` : 'nouvelle carte'} !</h2>
+        <div class="booster-cartes">${gagnees.map((id, i) => `<div class="tirage" style="--delai:${300 + i * 450}ms">${carteHTML(trouverLutteur(id))}</div>`).join('')}</div>
+        <p class="compteur">${compteur()}</p>
+      </section>`
+    : `<section class="booster"><h2>Collection complète</h2><p>Tu as déjà les 15 cartes.</p></section>`;
+  if (!recompenseDonnee) {
     recompenseDonnee = true;
-    const gagnees = recompenser(collection, partie.niveau, Math.random);
+    if (gagne) {
+      partieBooster = montrer('Booster ouvert', recompenser(collection, partie.niveau, Math.random));
+    } else {
+      const conso = consoler(collection, Math.random);
+      partieBooster = conso
+        ? montrer('Booster de consolation', conso)
+        : `<section class="booster"><p>Encore une défaite d'affilée et tu reçois un booster de consolation.</p></section>`;
+    }
     sauver(collection);
-    booster = gagnees.length
-      ? `<section class="booster">
-          <h2>Booster ouvert : ${gagnees.length > 1 ? `${gagnees.length} nouvelles cartes` : 'nouvelle carte'} !</h2>
-          <div class="booster-cartes">${gagnees.map((id, i) => `<div class="tirage" style="--delai:${300 + i * 450}ms">${carteHTML(trouverLutteur(id))}</div>`).join('')}</div>
-          <p class="compteur">${compteur()}</p>
-        </section>`
-      : `<section class="booster"><h2>Collection complète</h2><p>Tu as déjà les 15 cartes.</p></section>`;
   }
+  const booster = partieBooster;
   app.innerHTML = `
     <main class="fin">
       <section class="verdict ${gagne ? 'rouge' : 'bleu'}">

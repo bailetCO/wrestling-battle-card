@@ -98,3 +98,15 @@ describe('Attaque spéciale : percée en force', () => {
     assert.equal(f.journal.some((l) => l.includes('perce')), false);
   });
 });
+
+describe('Feinte dissipée et combo', () => {
+  it('une feinte dissipée par une attaque compte comme ratée (elle casse le combo)', () => {
+    let e = combatTest({}, { enduranceMax: 100 });
+    e.joueurs[1].endurance = 10; // l'attaque adverse peut rater
+    const tirages = [0, 0.99];
+    let i = 0;
+    e = tour(e, c('feinte'), c('double_jambe'), () => tirages[i++] ?? 0.5);
+    const h = e.joueurs[0].historique;
+    assert.equal(h[h.length - 1].reussie, false);
+  });
+});

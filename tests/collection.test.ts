@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LUTTEURS } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
-import { cartesDeDepart, choisirDeck, nouvelleCollection, ouvrirBooster, possede, recompenser } from '../src/page/collection';
+import { cartesDeDepart, choisirDeck, consoler, nouvelleCollection, ouvrirBooster, possede, recompenser } from '../src/page/collection';
 
 test('départ : une carte par nation, la moins rare', () => {
   const d = cartesDeDepart();
@@ -53,4 +53,20 @@ test('deck : enregistré seulement s\'il est valide', () => {
   assert.equal(c.decks.usa, undefined);
   assert.equal(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'feinte', 'relance']), null);
   assert.deepEqual(c.decks.usa, ['simple_jambe', 'sprawl', 'feinte', 'relance']);
+});
+
+test('consolation : un booster d\'une carte toutes les 2 défaites d\'affilée', () => {
+  const c = nouvelleCollection();
+  assert.equal(consoler(c, creerHasard(1)), null);
+  const conso = consoler(c, creerHasard(2));
+  assert.equal(conso?.length, 1);
+  assert.equal(c.defaitesDeSuite, 0);
+  assert.equal(consoler(c, creerHasard(3)), null);
+});
+
+test('consolation : une victoire remet le compteur de défaites à zéro', () => {
+  const c = nouvelleCollection();
+  consoler(c, creerHasard(1));
+  recompenser(c, 'normal', creerHasard(2));
+  assert.equal(consoler(c, creerHasard(3)), null);
 });
