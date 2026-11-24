@@ -213,6 +213,15 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 - Niveau normal : il choisit au hasard parmi ses actions jouables. Avec l'initiative, il change d'action une fois sur deux, au hasard.
 - Niveau fort : il estime ce que rapporte chacune de ses actions (et spéciales) face à tout ce que l'adversaire peut jouer : points, chances de tombé, coût en endurance, risque de passer sous 50, passivité. Il joue la meilleure 9 fois sur 10, sinon la deuxième, pour rester imprévisible. Avec l'initiative, il joue l'action qui contre celle de l'adversaire 3 fois sur 4. Il gagne environ 78 % de ses combats contre le niveau normal.
 
+### Combat entre amis (étape 5)
+
+- Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre la même page, touche « Combat entre amis » et tape le code. Les deux doivent être connectés à leur compte Claude et avoir accès à la page (le lien public seul ne suffit pas).
+- Toutes les cartes sont permises entre amis ; chacun utilise son deck personnalisé s'il en a un. Pas de booster pour une victoire en ligne pour l'instant.
+- Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
+- Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
+- Les deux téléphones calculent le combat avec le même moteur et le même numéro de combat : ils obtiennent le même résultat, vérifié à chaque tour.
+- Reprise : chaque téléphone garde son historique ; après un rechargement, le combat reprend où il en était. Si l'ami part plus de 2 minutes, on peut arrêter le combat (victoire par forfait). Abandon et revanche possibles.
+
 ## 5. Plateforme et technique
 
 - Version 1 : jeu sur navigateur, accessible par un simple lien, sur ordinateur et mobile.

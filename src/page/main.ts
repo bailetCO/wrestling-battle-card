@@ -7,7 +7,10 @@ import {
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation,
 } from '../moteur';
-import { HUMAIN, ORDI, Partie, type TourJoue } from './partie';
+import { Partie, type TourJoue } from './partie';
+import {
+  Duel, codeValide, nouveauCode, obtenirRoom, salleClaude, salleLocale, type Presence, type Role, type Salle, type Vue,
+} from './enligne';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
 import {
@@ -20,6 +23,19 @@ const app = document.getElementById('app')!;
 // ---------- État de la page ----------
 
 let partie: Partie | null = null;
+// Qui est qui dans le moteur : en solo tu es le joueur 0 ; en ligne, l'invité est le joueur 1.
+let HUMAIN: Joueur = 0;
+let ORDI: Joueur = 1;
+// Combat entre amis
+let mode: 'solo' | 'ligne' = 'solo';
+let duel: Duel | null = null;
+let vueLigne: Vue | null = null;
+let codeSalle = '';
+let fenetreLigne: '' | 'init' | 'face' = '';
+let toursAffiches = -1;
+let absentDepuis: number | null = null;
+const adv = () => (mode === 'ligne' ? 'Ami' : 'Ordi');
+const etatEnCours = (): EtatCombat | null => (mode === 'ligne' ? vueLigne?.etat ?? null : partie?.etat ?? null);
 let tours: TourJoue[] = [];
 let scoresPeriodes: [number, number][] = [];
 let enAttente = false; // un tour est en cours de résolution (fenêtre ouverte)
@@ -96,6 +112,8 @@ function ecranChoix() {
         <p>Choisis ton lutteur. L'ordinateur prend un adversaire au hasard parmi les 15. Chaque victoire ouvre un booster.</p>
         <p class="compteur">${compteur()}</p>
       </header>
+      ${sessionLigne() ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(sessionLigne()!.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
+      <a class="principal bouton-amis" href="#amis">Combat entre amis</a>
       <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
         <span>Ordinateur</span>
         <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>1 carte par victoire</small></button>
@@ -137,6 +155,14 @@ function ecranChoix() {
       });
     }),
   );
+  app.querySelector('[data-reprendre]')?.addEventListener('click', () => {
+    const x = sessionLigne();
+    if (x) connecter(x.code, x.role);
+  });
+  app.querySelector('[data-oublier]')?.addEventListener('click', () => {
+    oublierSession();
+    ecranChoix();
+  });
   app.querySelectorAll<HTMLButtonElement>('[data-deck]').forEach((b) =>
     b.addEventListener('click', () => fenetreDeck(trouverLutteur(b.dataset.deck!))),
   );
@@ -257,6 +283,9 @@ function ecranGalerie() {
 
 function lancer(idHumain: string, idOrdi: string, graine: number) {
   if (location.hash) history.replaceState(null, '', location.pathname);
+  mode = 'solo';
+  HUMAIN = 0;
+  ORDI = 1;
   partie = new Partie(idHumain, idOrdi, graine, collection.niveau, deckDe(collection, idHumain));
   tours = [];
   scoresPeriodes = [];
@@ -440,14 +469,15 @@ const titreTour = (t: TourJoue) => (t.lignes[0] ?? '').replace(/ :.*$/, '');
 // La case du dernier tour : les deux actions se révèlent, puis le mot du résultat.
 function caseDernierTour(e: EtatCombat): string {
   const t = tours[tours.length - 1];
-  const [h, o] = e.joueurs;
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
   if (!t) {
     return `
       <section class="case face-a-face">
         <div class="vs-portrait rouge">${portrait(h.def)}<span>Toi</span></div>
         <span class="vs">VS</span>
-        <div class="vs-portrait bleu">${portrait(o.def)}<span>Ordi</span></div>
-        <p class="case-aide">Choisis ton action en bas. L'ordinateur choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.</p>
+        <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
+        <p class="case-aide">Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.</p>
       </section>`;
   }
   const ono = onomatopee(t, e);
@@ -472,7 +502,8 @@ function htmlTourAncien(t: TourJoue, e: EtatCombat): string {
 }
 
 function tableau(e: EtatCombat): string {
-  const [h, o] = e.joueurs;
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
   const pastilles = (n: number) =>
     Array.from({ length: REGLES.periodesPourGagner }, (_, i) => `<i class="${i < n ? 'pleine' : ''}"></i>`).join('');
   const historique = scoresPeriodes.length
@@ -491,17 +522,18 @@ function tableau(e: EtatCombat): string {
         <span class="per">Période <b>${e.periode}</b>/3</span>
         <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>
         ${historique}
-        <span class="niv">Ordi ${partie?.niveau === 'fort' ? 'fort' : 'normal'}</span>
+        <span class="niv">${mode === 'ligne' ? 'Entre amis' : `Ordi ${partie?.niveau === 'fort' ? 'fort' : 'normal'}`}</span>
       </div>
-      ${coin(o, 'bleu', 'Ordi')}
+      ${coin(o, 'bleu', adv())}
     </header>`;
 }
 
 function ecranCombat() {
-  if (!partie) return;
-  const e = partie.etat;
-  if (e.termine) return ecranFin();
-  const [h, o] = e.joueurs;
+  const e = etatEnCours();
+  if (!e) return;
+  if (e.termine) return mode === 'ligne' ? ecranFinLigne() : ecranFin();
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
   const anciens = tours.slice(0, -1).reverse().map((t) => htmlTourAncien(t, e)).join('');
 
   app.innerHTML = `
@@ -510,16 +542,17 @@ function ecranCombat() {
       <section class="jauges">
         ${barre(h, HUMAIN, 'rouge', 'Toi')}
         <div class="badges rouge">${badges(e, HUMAIN)}</div>
-        ${barre(o, ORDI, 'bleu', 'Ordi')}
+        ${barre(o, ORDI, 'bleu', adv())}
         <div class="badges bleu">${badges(e, ORDI)}</div>
       </section>
       ${caseDernierTour(e)}
       ${anciens ? `<section class="journal"><h2>Tours précédents</h2>${anciens}</section>` : ''}
       <footer class="pave">
-        ${h.initiative ? '<p class="spe-info init">Tu as l\'initiative : après ton choix, tu verras deux actions possibles de l\'ordinateur.</p>' : ''}
+        ${h.initiative ? `<p class="spe-info init">Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.</p>` : ''}
+        ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
         ${etatSpeciale(e)}
-        ${boutonsActions(e, 'tour')}
-        <p class="graine">Combat n° ${partie.hasard.graine} · <button class="lien" data-quitter>Abandonner</button></p>
+        <div class="actions-zone">${boutonsActions(e, 'tour')}</div>
+        <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>Abandonner</button></p>
       </footer>
     </main>`;
 
@@ -529,20 +562,23 @@ function ecranCombat() {
       b.style.width = `${b.dataset.cible}%`;
     }),
   );
-  endurancesAvant = [h.endurance, o.endurance];
+  endurancesAvant = [e.joueurs[0].endurance, e.joueurs[1].endurance];
 
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
     b.addEventListener('click', () => choisir(lireChoix(b))),
   );
   app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
     b.addEventListener('click', () => {
-      const j = partie?.etat.joueurs.find((x) => x.def.id === b.dataset.voir);
+      const j = etatEnCours()?.joueurs.find((x) => x.def.id === b.dataset.voir);
       fenetreCarte(j ? j.def : trouverLutteur(b.dataset.voir!));
     }),
   );
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
-    if (confirmerAbandon()) ecranChoix();
+    if (!confirmerAbandon()) return;
+    if (mode === 'ligne') duel?.abandonner();
+    else ecranChoix();
   });
+  if (mode === 'ligne') majStatutLigne();
 }
 
 function confirmerAbandon(): boolean {
@@ -562,6 +598,10 @@ function lireChoix(b: HTMLButtonElement): Choix {
 // ---------- Déroulé d'un tour ----------
 
 function choisir(choixHumain: Choix) {
+  if (mode === 'ligne') {
+    duel?.jouer(choixHumain);
+    return;
+  }
   if (!partie || enAttente) return;
   enAttente = true;
   const choixOrdi = partie.choixOrdi();
@@ -584,7 +624,7 @@ function resoudre(choixHumain: Choix, choixOrdi: Choix, change: boolean, face?: 
   tours.push(r);
   for (const l of r.lignes) {
     const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)\.$/);
-    if (m) scoresPeriodes.push([Number(m[1]), Number(m[2])]);
+    if (m) scoresPeriodes.push(HUMAIN === 0 ? [Number(m[1]), Number(m[2])] : [Number(m[2]), Number(m[1])]);
   }
   fermerFenetre();
   enAttente = false;
@@ -659,7 +699,8 @@ function ecranFin() {
   if (!partie) return;
   const e = partie.etat;
   const gagne = e.vainqueur === HUMAIN;
-  const [h, o] = e.joueurs;
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
   const vainqueur = gagne ? h : o;
   const comment = e.finPar === 'tombe'
     ? 'par tombé'
@@ -709,12 +750,324 @@ function ecranFin() {
   window.scrollTo(0, 0);
 }
 
+
+// ---------- Combat entre amis ----------
+
+const CLE_SESSION = 'wbc-ligne-session';
+const clePresence = (code: string, role: Role) => `wbc-ligne-${code}-${role}`;
+
+function sessionLigne(): { code: string; role: Role } | null {
+  try {
+    const x = JSON.parse(localStorage.getItem(CLE_SESSION) ?? 'null');
+    return x && codeValide(x.code) && (x.role === 'hote' || x.role === 'invite') ? x : null;
+  } catch {
+    return null;
+  }
+}
+
+function oublierSession() {
+  try {
+    const x = sessionLigne();
+    if (x) localStorage.removeItem(clePresence(x.code, x.role));
+    localStorage.removeItem(CLE_SESSION);
+  } catch {
+    // rien à faire
+  }
+}
+
+function ecranAmis(message = '') {
+  quitterLigne();
+  app.innerHTML = `
+    <main class="amis">
+      <header class="titre">
+        <h1>Combat entre amis</h1>
+        <p>Toi et ton ami ouvrez cette page sur vos téléphones, connectés à votre compte Claude. L'un crée une salle, l'autre tape son code. Toutes les cartes sont permises entre amis.</p>
+      </header>
+      ${message ? `<p class="alerte" role="alert">${message}</p>` : ''}
+      <section class="bloc">
+        <h2>Créer une salle</h2>
+        <button class="principal" data-creer>Créer et obtenir un code</button>
+      </section>
+      <section class="bloc">
+        <h2>Rejoindre ton ami</h2>
+        <form class="rejoindre">
+          <label for="code">Code de la salle (4 lettres)</label>
+          <input id="code" name="code" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="4" placeholder="ABCD">
+          <button class="principal" type="submit">Rejoindre</button>
+        </form>
+      </section>
+      <a class="lien" href="#">Retour</a>
+    </main>`;
+  app.querySelector('[data-creer]')!.addEventListener('click', () => connecter(nouveauCode(), 'hote'));
+  app.querySelector('form')!.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const code = (app.querySelector<HTMLInputElement>('#code')!.value || '').trim().toLowerCase();
+    if (!codeValide(code)) return ecranAmis('Le code fait 4 lettres, sans chiffres.');
+    connecter(code, 'invite');
+  });
+  window.scrollTo(0, 0);
+}
+
+async function connecter(code: string, role: Role) {
+  app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
+  let salle: Salle | null = null;
+  try {
+    const room = await obtenirRoom();
+    if (room) salle = await salleClaude(room, code);
+    else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') salle = salleLocale(code);
+  } catch {
+    salle = null;
+  }
+  if (!salle) {
+    return ecranAmis('Connexion impossible. Le combat entre amis marche seulement sur la page ouverte depuis claude.ai, connecté à ton compte Claude, et si le propriétaire de la page t\'a invité (le lien public seul ne suffit pas).');
+  }
+  let depart: Presence | null = null;
+  try {
+    depart = JSON.parse(localStorage.getItem(clePresence(code, role)) ?? 'null');
+    localStorage.setItem(CLE_SESSION, JSON.stringify({ code, role }));
+  } catch {
+    depart = null;
+  }
+  partie = null;
+  mode = 'ligne';
+  codeSalle = code;
+  HUMAIN = role === 'hote' ? 0 : 1;
+  ORDI = role === 'hote' ? 1 : 0;
+  toursAffiches = -1;
+  fenetreLigne = '';
+  absentDepuis = null;
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  duel = new Duel(salle, role, depart, (p) => {
+    try {
+      localStorage.setItem(clePresence(code, role), JSON.stringify(p));
+    } catch {
+      // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
+    }
+  });
+  duel.surVue(rafraichirLigne);
+}
+
+function quitterLigne() {
+  if (duel) duel.fermer();
+  duel = null;
+  vueLigne = null;
+  mode = 'solo';
+  HUMAIN = 0;
+  ORDI = 1;
+  fermerFenetre();
+}
+
+let signatureSalle = '';
+let minuteurAbsence: number | undefined;
+
+function rafraichirLigne(v: Vue) {
+  vueLigne = v;
+  if (mode !== 'ligne') return;
+  // Absence de l'ami pendant le combat
+  if (v.phase === 'combat' && !v.amiPresent) absentDepuis ??= Date.now();
+  else absentDepuis = null;
+  clearTimeout(minuteurAbsence);
+  if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
+
+  if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
+    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}`;
+    if (sig !== signatureSalle) ecranSalle(v);
+    signatureSalle = sig;
+    return;
+  }
+  signatureSalle = '';
+  if (v.phase === 'fin') {
+    fermerFenetre();
+    fenetreLigne = '';
+    tours = v.tours;
+    return ecranFinLigne();
+  }
+  // Combat : on ne redessine tout que quand un nouveau tour est joué.
+  if (v.tours.length !== toursAffiches || !app.querySelector('.combat')) {
+    toursAffiches = v.tours.length;
+    tours = v.tours;
+    scoresPeriodes = [];
+    for (const t of tours) for (const l of t.lignes) {
+      const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)\.$/);
+      if (m) scoresPeriodes.push(HUMAIN === 0 ? [Number(m[1]), Number(m[2])] : [Number(m[2]), Number(m[1])]);
+    }
+    if (toursAffiches === 0 || !app.querySelector('.combat')) endurancesAvant = null;
+    fenetreLigne = '';
+    fermerFenetre();
+    ecranCombat();
+  }
+  majStatutLigne();
+}
+
+// Met à jour la zone d'état et les fenêtres sans tout redessiner.
+function majStatutLigne() {
+  const v = vueLigne;
+  const e = v?.etat;
+  if (!v || !e || v.phase !== 'combat') return;
+  const statut = app.querySelector<HTMLElement>('.statut');
+  const zone = app.querySelector<HTMLElement>('.actions-zone');
+  let texte = '';
+  if (absentDepuis) {
+    const s = Math.round((Date.now() - absentDepuis) / 1000);
+    texte = s >= 120 ? 'Ton ami est parti depuis plus de 2 minutes.' : `Ton ami s'est déconnecté. En attente de son retour… (${s} s)`;
+  } else if (v.desaccord) {
+    texte = 'Attention : vos deux téléphones ne calculent pas la même chose. Recommencez le combat.';
+  } else if (v.aChoisir) {
+    texte = 'À toi de choisir ton action.';
+  } else if (v.monChoix && v.attente) {
+    const lib = libelleAction(e.joueurs[HUMAIN].def.nation, v.monChoix.action);
+    texte = `Ton choix : ${v.monChoix.speciale ? '★ ' : ''}${lib.local}. ${v.attente}`;
+  } else if (v.attente) {
+    texte = v.attente;
+  }
+  if (statut) statut.textContent = texte;
+  if (zone) zone.classList.toggle('bloque', !v.aChoisir);
+  zone?.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
+    if (!v.aChoisir) b.dataset.bloque = '1';
+    else delete b.dataset.bloque;
+  });
+  if (absentDepuis && Date.now() - absentDepuis >= 120_000 && !app.querySelector('[data-forfait]')) {
+    statut?.insertAdjacentHTML('afterend', '<button class="secondaire" data-forfait>Arrêter : victoire par forfait</button>');
+    app.querySelector('[data-forfait]')!.addEventListener('click', () => {
+      oublierSession();
+      quitterLigne();
+      ecranChoix();
+    });
+  }
+  // Fenêtres d'initiative et de pile ou face
+  if (v.initiative && fenetreLigne !== 'init') {
+    fenetreLigne = 'init';
+    fenetreInitiativeLigne(v);
+  } else if (v.pileOuFace && fenetreLigne !== 'face') {
+    fenetreLigne = 'face';
+    fenetrePileOuFaceLigne(v);
+  } else if (!v.initiative && !v.pileOuFace && fenetreLigne) {
+    fenetreLigne = '';
+    fermerFenetre();
+  }
+}
+
+function ecranSalle(v: Vue) {
+  const liste = LUTTEURS.map((l) => `
+    <button class="choix-l ${v.monLutteur === l.id ? 'pris' : ''}" data-l="${l.id}" aria-pressed="${v.monLutteur === l.id}">
+      <span class="vignette">${portrait(l)}</span>
+      <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[l.rarete]}</small></span>
+    </button>`).join('');
+  const ami = v.amiLutteur ? trouverLutteur(v.amiLutteur) : null;
+  app.innerHTML = `
+    <main class="amis">
+      <header class="titre">
+        <h1>Salle ${echap(codeSalle.toUpperCase())}</h1>
+        <p class="code-grand" aria-label="Code de la salle">${echap(codeSalle.toUpperCase())}</p>
+        <p>${v.amiPresent ? '<b class="ok">Ton ami est dans la salle.</b>' : 'Envoie ce code à ton ami. Il ouvre cette page, touche « Combat entre amis » et tape le code.'}</p>
+        <p>${v.monLutteur ? `Tu as choisi <b>${echap(trouverLutteur(v.monLutteur).nom)}</b>.` : 'Choisis ton lutteur ci-dessous.'}
+           ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
+           ${v.attente ? echap(v.attente) : ''}</p>
+      </header>
+      <div class="liste-l">${liste}</div>
+      <p class="note">Ton deck personnalisé est utilisé s'il existe (sinon le deck de départ).</p>
+      <button class="lien" data-sortir>Quitter la salle</button>
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) =>
+    b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!))),
+  );
+  app.querySelector('[data-sortir]')!.addEventListener('click', () => {
+    oublierSession();
+    quitterLigne();
+    ecranChoix();
+  });
+}
+
+function fenetreInitiativeLigne(v: Vue) {
+  const e = v.etat!;
+  const choix = v.monChoix;
+  const nationA = e.joueurs[ORDI].def.nation;
+  const options = v.initiative!.map((a) => {
+    const lib = libelleAction(nationA, a);
+    const f = famille(a);
+    return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small></li>`;
+  }).join('');
+  const mien = choix ? libelleAction(e.joueurs[HUMAIN].def.nation, choix.action) : null;
+  const f = ouvrirFenetre(`
+    <h2>Initiative</h2>
+    <p>Ton ami a choisi une de ces deux actions :</p>
+    <ul class="apercu">${options}</ul>
+    ${choix && mien ? `<button class="principal" data-garder>Garder ${choix.speciale ? '★ ' : ''}${echap(mien.local)}</button>` : ''}
+    <p class="ou">ou changer pour :</p>
+    <div class="pave-fenetre">${boutonsActions(e, 'initiative')}</div>`);
+  f.querySelector('[data-garder]')?.addEventListener('click', () => choix && duel?.decider(choix));
+  f.querySelectorAll<HTMLButtonElement>('[data-mode="initiative"]').forEach((b) =>
+    b.addEventListener('click', () => duel?.decider(lireChoix(b))),
+  );
+}
+
+function fenetrePileOuFaceLigne(v: Vue) {
+  const f = ouvrirFenetre(`
+    <h2>Tentative de tombé !</h2>
+    <p>Ton ami est sur le point de te faire tomber. Annonce pile ou face : si la pièce tombe sur ton annonce, tu t'en sors.</p>
+    <div class="pile-face">
+      <button class="principal" data-face="pile">Pile</button>
+      <button class="principal" data-face="face">Face</button>
+    </div>`);
+  f.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) =>
+    b.addEventListener('click', () => duel?.annoncer(b.dataset.face as Face)),
+  );
+  void v;
+}
+
+function ecranFinLigne() {
+  const v = vueLigne;
+  const e = v?.etat;
+  if (!v || !e) return;
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
+  let gagne: boolean;
+  let comment: string;
+  if (v.abandon) {
+    gagne = v.abandon === 'ami';
+    comment = gagne ? 'par abandon de ton ami' : 'par abandon';
+  } else {
+    gagne = e.vainqueur === HUMAIN;
+    comment = e.finPar === 'tombe'
+      ? 'par tombé'
+      : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
+  }
+  const vainqueur = gagne ? h : o;
+  const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
+  const revanche = v.revancheMoi
+    ? (v.revancheAmi ? 'Nouvelle manche…' : 'Revanche demandée : en attente de ton ami…')
+    : v.revancheAmi ? 'Ton ami veut une revanche !' : '';
+  app.innerHTML = `
+    <main class="fin">
+      <section class="verdict ${gagne ? 'rouge' : 'bleu'}">
+        <div class="rayons" aria-hidden="true"></div>
+        <div class="verdict-portrait">${portrait(vainqueur.def)}</div>
+        <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
+        <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
+        <p class="hist">Toi : ${echap(h.def.nom)} · Ami : ${echap(o.def.nom)} · ${e.tourGlobal} tours · salle ${echap(codeSalle.toUpperCase())}</p>
+      </section>
+      <div class="fin-boutons">
+        ${revanche ? `<p class="statut">${revanche}</p>` : ''}
+        <button class="principal" data-revanche ${v.revancheMoi ? 'disabled' : ''}>Revanche</button>
+        <button class="secondaire" data-sortir>Quitter la salle</button>
+      </div>
+      <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
+    </main>`;
+  app.querySelector('[data-revanche]')!.addEventListener('click', () => duel?.revanche());
+  app.querySelector('[data-sortir]')!.addEventListener('click', () => {
+    oublierSession();
+    quitterLigne();
+    ecranChoix();
+  });
+}
+
 // ---------- Navigation ----------
 
 function route() {
   fermerFenetre();
   if (location.hash === '#galerie') ecranGalerie();
-  else if (!partie) ecranChoix();
+  else if (location.hash === '#amis') ecranAmis();
+  else if (!partie && mode === 'solo') ecranChoix();
 }
 window.addEventListener('hashchange', route);
 route();

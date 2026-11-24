@@ -9,7 +9,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - [x] Étape 2 – Premier combat jouable dans le navigateur, contre l'ordinateur
 - [x] Étape 3 – Cartes et interface style manga : 15 lutteurs, portraits provisoires, raretés
 - [x] Étape 4 – Collection, decks, niveau « fort » de l'ordinateur et rééquilibrage
-- [ ] Étape 5 – Combat entre amis en ligne
+- [x] Étape 5 – Combat entre amis en ligne
 - [ ] Étape 6 – Mise en ligne, tests avec la communauté et équilibrage
 - [ ] Étape 7 – Comptes joueurs et sauvegarde de la collection
 - [ ] Étape 8 – Monétisation et application mobile
@@ -24,6 +24,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/partie.ts` : le déroulé d'une partie contre l'ordinateur (initiative, pile ou face).
 - `src/page/carte.ts` : la carte d'un lutteur et ses cadres de rareté.
 - `src/page/portrait.ts` : les portraits manga provisoires, dessinés en code. Pour une vraie illustration, renseigner `image` dans `APPARENCE`.
+- `src/page/enligne.ts` : le combat entre amis (salle, choix secrets, initiative, pile ou face, reprise), sans affichage.
 - `src/page/collection.ts` : la collection (cartes, boosters, decks), gardée dans le navigateur.
 - Page `#galerie` : les 15 cartes rangées par rareté, la collection et le mode test.
 - `tests/` : un test par règle.
@@ -38,4 +39,6 @@ npm run simuler      # simule les combats (ordinateur au hasard puis fort) et v�
 npm run simuler -- 400 150   # plus de combats, résultat plus précis (environ 1 minute)
 npm run dev          # lance le jeu sur l'ordinateur (adresse affichée, à ouvrir dans le navigateur)
 npm run build        # construit le jeu en un seul fichier : dist/index.html
+npm run apercu       # sert le jeu construit sur http://localhost:4173 ; le combat entre amis
+                     # y marche entre deux onglets du même navigateur (pour tester)
 ```
