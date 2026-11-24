@@ -104,6 +104,14 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 - 3 périodes de 10 tours ; il faut gagner 2 périodes pour remporter le match.
 - Une période se gagne aux points ou par 10 points d'écart (supériorité technique).
 - Un tombé réussi met fin au combat et donne la victoire.
+- Égalité de points en fin de période : la période revient au lutteur qui a marqué la prise la plus élevée (valeur de prise la plus haute, puis la suivante, etc.) ; si l'égalité persiste, au dernier lutteur à avoir marqué.
+
+### Résolution d'un tour
+
+1. Les deux joueurs choisissent leur action en secret.
+2. Initiative (si active) : le joueur qui a l'initiative voit 2 actions de l'adversaire, dont celle réellement choisie, et peut changer son action ou la garder.
+3. La précision de chaque action est tirée avant de comparer les familles.
+4. Les familles sont comparées (voir Interactions entre les actions), puis points, endurance et avantages sont appliqués.
 
 ### Points
 
@@ -113,7 +121,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 ### Avantages
 
-- **Initiative** : après une feinte réussie sur une défense, 2 chances sur 3 de pouvoir changer d'action au tour suivant.
+- **Initiative** : après une feinte réussie sur une défense, 2 chances sur 3 d'obtenir l'initiative au tour suivant : le joueur voit 2 actions de l'adversaire, dont celle qu'il a choisie, et peut changer son action ou non.
 - **Déséquilibre** : face à un contre réussi, l'attaquant perd 5, 10 ou 15 % de son endurance selon que son attaque valait 2 points, 4 points, ou 5 points et plus.
 - **Combo** : trois actions réussies dont deux attaques permettent de tenter un tombé. Réussite : 3 chances sur 5 avec plus d'endurance, 2 sur 5 à égalité, 1 sur 8 avec moins.
 - **Récupération** : une défense réussie rend 5 % d'endurance sous la moitié de la barre, 10 % au-dessus.
@@ -157,7 +165,8 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 
 - Chaque lutteur a deux statistiques d'endurance : la taille de sa barre et sa vitesse de récupération entre les périodes.
 - Chaque action coûte plus ou moins d'endurance selon sa puissance, ce qui évite de répéter les grosses attaques.
-- Un lutteur épuisé n'a plus accès qu'à ses actions de base et ne peut pas choisir son action : elle est activée aléatoirement au tour suivant. Après 3 tours sans endurance, le lutteur a 100 % de chance de se faire tomber, et ses actions choisies aléatoirement ont 1 chance sur 2 de réussir.
+- À 0 d'endurance, la seule action possible est « Lutte » : 1 chance sur 10 de marquer 1 ou 2 points (tirés au hasard).
+- Après 3 tours sans endurance, le lutteur a 100 % de chance de se faire tomber.
 
 ## 5. Plateforme et technique
 
