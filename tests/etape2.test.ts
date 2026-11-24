@@ -38,3 +38,20 @@ test('le journal explique pourquoi un duel est gagné', () => {
   e = jouerTour(e, c('defense'), c('double_jambe'), toujours(0));
   assert.ok(e.journal.some((l) => l.includes('La défense de Europe l\'emporte sur l\'attaque de USA')));
 });
+
+test('feinte contre attaque ratée : la feinte est dissipée, sans bonus ni initiative', () => {
+  const e = creerCombat('japon', 'usa');
+  e.joueurs[1].endurance = 10; // précision basse : l'attaque de USA peut rater
+  const tirages = [0, 0.99]; // la feinte passe, l'attaque rate
+  let i = 0;
+  const apres = jouerTour(e, c('feinte'), c('double_jambe'), () => tirages[i++] ?? 0.5);
+  assert.equal(apres.joueurs[0].bonusFeinte, false);
+  assert.equal(apres.joueurs[0].initiative, false);
+  assert.ok(apres.journal.some((l) => l.includes('la feinte de Japon est dissipée')));
+});
+
+test('feinte sur défense : seul le feinteur peut prendre l\'initiative', () => {
+  const apres = jouerTour(creerCombat('japon', 'usa'), c('feinte'), c('sprawl'), toujours(0));
+  assert.equal(apres.joueurs[0].initiative, true);
+  assert.equal(apres.joueurs[1].initiative, false);
+});

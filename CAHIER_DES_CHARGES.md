@@ -91,7 +91,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 | Duel | Résultat |
 | --- | --- |
-| Attaque contre feinte | L'attaque l'emporte |
+| Attaque contre feinte | L'attaque l'emporte. Même si l'attaque rate, la feinte est dissipée : aucun effet (ni bonus, ni initiative, ni effet de matraquage ou d'action spéciale) |
 | Défense contre attaque | La défense l'emporte |
 | Contre contre défense | Le contre l'emporte |
 | Feinte contre contre | La feinte l'emporte |
@@ -121,7 +121,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 ### Avantages
 
-- **Initiative** : après une feinte réussie sur une défense, 2 chances sur 3 d'obtenir l'initiative au tour suivant : le joueur voit 2 actions de l'adversaire, dont celle qu'il a choisie, et peut changer son action ou non.
+- **Initiative** : réservée au lutteur qui a feinté. Après une feinte réussie sur une défense, 2 chances sur 3 d'obtenir l'initiative au tour suivant : le joueur voit 2 actions de l'adversaire, dont celle qu'il a choisie, et peut changer son action ou non.
 - **Déséquilibre** : face à un contre réussi, l'attaquant perd 5, 10 ou 15 % de son endurance selon que son attaque valait 2 points, 4 points, ou 5 points et plus.
 - **Combo** : trois actions réussies dont deux attaques permettent de tenter un tombé. Réussite : 3 chances sur 5 avec plus d'endurance, 2 sur 5 à égalité, 1 sur 8 avec moins.
 - **Récupération** : une défense réussie rend 5 % d'endurance sous la moitié de la barre, 10 % au-dessus.

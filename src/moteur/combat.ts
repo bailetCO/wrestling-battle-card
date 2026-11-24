@@ -342,6 +342,13 @@ export function jouerTour(
   } else {
     for (const j of LES_DEUX) if (passe[j]) res[j] = 'gagne';
   }
+  // Feinte face à une attaque : même si l'attaque rate, la feinte est dissipée (aucun effet).
+  for (const j of LES_DEUX) {
+    if (fam[j] === 'feinte' && fam[autre(j)] === 'attaque' && res[j] === 'gagne') {
+      res[j] = 'rien';
+      log(e, `${J[autre(j)].def.nom} attaque : la feinte de ${J[j].def.nom} est dissipée, sans effet.`);
+    }
+  }
 
   // 4. Effets.
   const bonusSuivant: [boolean, boolean] = [false, false];
