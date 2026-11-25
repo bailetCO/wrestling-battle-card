@@ -113,3 +113,28 @@ test('tournoi par équipe : 5 duels, fini à 3 victoires ; 10 médailles, 30 $ e
   assert.deepEqual(recompenserTournoi(col2, perdu, creerHasard(1)), []);
   assert.equal(col2.medailles, 0);
 });
+
+test('bonus de nation : 3 lutteurs +5 %, 4 +7 %, 5 +10 %, pour toute l\'équipe', async () => {
+  const { bonusNation, avecBonus, LUTTEURS: L } = await import('../src/moteur/config');
+  const de = (n: string) => L.filter((l) => l.nation === n).map((l) => l.id);
+  const tur = de('turquie'), iran = de('iran'), geo = de('georgie');
+  assert.equal(bonusNation([tur[0], tur[1], iran[0], iran[1], geo[0]]).bonus, 0);
+  assert.equal(bonusNation([tur[0], tur[1], tur[2], iran[0], geo[0]]).bonus, 0.05);
+  assert.equal(bonusNation([tur[0], tur[1], tur[2], tur[3], geo[0]]).bonus, 0.07);
+  const b = bonusNation(tur.slice(0, 5));
+  assert.deepEqual([b.nation, b.nombre, b.bonus], ['turquie', 5, 0.1]);
+  const d = L.find((l) => l.id === geo[0])!;
+  assert.equal(avecBonus(d, 0.1).force, Math.round(d.force * 1.1));
+  assert.equal(avecBonus(d, 0), d);
+});
+
+test('tournoi par équipe : le club adverse est souvent une sélection nationale (bonus de nation)', async () => {
+  const { bonusNation } = await import('../src/moteur/config');
+  let nationales = 0;
+  for (let g = 1; g <= 200; g++) {
+    const t = creerTournoiEquipe(['usa', 'europe', 'japon', 'russie', 'afrique'], g);
+    assert.equal(new Set(t.leurs).size, 5);
+    if (t.nomAdverse.startsWith('Sélection')) { nationales++; assert.ok(bonusNation(t.leurs).bonus > 0); }
+  }
+  assert.ok(nationales > 60 && nationales < 140, `${nationales}`);
+});

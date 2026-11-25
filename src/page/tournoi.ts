@@ -2,7 +2,7 @@
 // La page joue les combats du joueur ; ceux entre deux ordinateurs sont simulés ici.
 
 import {
-  LUTTEURS, REGLES, choixOrdinateur, creerCombat, creerHasard, jouerTour,
+  LUTTEURS, NATIONS, REGLES, choixOrdinateur, creerCombat, creerHasard, jouerTour,
   type DefLutteur, type Hasard, type Niveau,
 } from '../moteur';
 import { gagnerMedailles, joindreGains, ouvrirBooster, type Booster, type Collection } from './collection';
@@ -151,11 +151,27 @@ export interface TournoiEquipe {
 
 const CLUBS = ['Club de Tbilissi', 'Club d\'Oulan-Bator', 'Club de Dakar', 'Club d\'Osaka', 'Club du Dagestan', 'Club de l\'Iowa', 'Club de Bakou', 'Club de Téhéran'];
 
+// Le club adverse : une fois sur deux, un club national (3 à 5 lutteurs d'une même nation, donc
+// avec un bonus de nation), sinon des lutteurs de partout.
 export function creerTournoiEquipe(mes: string[], graine: number): TournoiEquipe {
   const h = creerHasard(graine);
   const n = T.equipe.duels;
+  let leurs: string[];
+  let nomAdverse = CLUBS[Math.floor(h() * CLUBS.length)];
+  if (h() < 0.5) {
+    const nation = NATIONS[Math.floor(h() * NATIONS.length)];
+    const k = 3 + Math.floor(h() * 3);
+    const deLaNation = LUTTEURS.filter((l) => l.nation === nation.id).map((l) => l.id);
+    const pris: string[] = [];
+    while (pris.length < k) pris.push(deLaNation.splice(Math.floor(h() * deLaNation.length), 1)[0]);
+    leurs = [...pris, ...tirer(n - k, LUTTEURS.filter((l) => l.nation === nation.id).map((l) => l.id), h)];
+    for (let i = leurs.length - 1; i > 0; i--) { const j = Math.floor(h() * (i + 1)); [leurs[i], leurs[j]] = [leurs[j], leurs[i]]; }
+    nomAdverse = `Sélection ${nation.nom}`;
+  } else {
+    leurs = tirer(n, [], h);
+  }
   return {
-    type: 'equipe', mes: mes.slice(0, n), leurs: tirer(n, [], h), nomAdverse: CLUBS[Math.floor(h() * CLUBS.length)],
+    type: 'equipe', mes: mes.slice(0, n), leurs, nomAdverse,
     resultats: Array(n).fill(null), details: Array(n).fill(''), graine, gainsCombats: { medailles: 0, dollars: 0 }, recompense: null,
   };
 }

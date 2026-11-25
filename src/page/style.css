@@ -1079,3 +1079,5 @@ b.moi { color: #ff8a95; }
 .boss span { display: grid; }
 .boss small { color: var(--doux); }
 .arene-finie .defile, .arene-finie .defile-nav, .arene-finie .puces { display: none; }
+.bonus-nation { padding: 8px 10px; border-radius: 10px; background: rgba(242, 163, 58, .12); border-left: 4px solid var(--orange); color: var(--texte) !important; }
+.bonus-nation.adverse { border-left-color: var(--bleu); background: rgba(90, 140, 255, .1); }

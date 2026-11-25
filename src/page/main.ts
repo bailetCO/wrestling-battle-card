@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, NATIONS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, LUTTEURS, NATIONS, REGLES, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -64,7 +64,8 @@ let tuto = false; // combat guidé du tutoriel en cours
 // Combat d'arène en cours : progression par nation, ou revanche contre le boss d'une nation battue.
 let areneCtx: { type: 'progression' } | { type: 'boss'; nation: string } | null = null;
 let bossChoisi: string | null = null; // nation dont on va réaffronter le boss (choix du lutteur)
-let enTournoi: CleMatch | number | null = null; // combat du joueur dans un tournoi (clé du combat ou n° du duel)
+let enTournoi: CleMatch | number | null = null;
+let bonusEnCours: { moi: number; lui: number } | null = null; // bonus de nation du combat (tournoi par équipe) // combat du joueur dans un tournoi (clé du combat ou n° du duel)
 let bonusCeCombat = false; // combat d'arène qui suit le tutoriel : boosters doublés
 // Boosters gagnés pendant le combat solo (ou message de consolation), affichés à la fin.
 let paquetSolo: Paquet | null = null;
@@ -783,6 +784,14 @@ function sauverTournoi() {
   } catch { /* stockage indisponible : le tournoi vit seulement dans cette page */ }
 }
 
+// Bonus de nation d'une équipe, en clair.
+function texteBonusNation(ids: string[]): string {
+  const b = bonusNation(ids);
+  if (!b.bonus) return `aucun (il faut ${Object.keys(R_.tournoi.equipe.bonusNation)[0]} lutteurs d'une même nation)`;
+  const nom = NATIONS.find((n) => n.id === b.nation)?.nom ?? '';
+  return `<b>+${Math.round(b.bonus * 100)} %</b> sur les statistiques de toute l'équipe (${b.nombre} lutteurs ${nom === 'USA' ? 'des USA' : `de ${nom}`})`;
+}
+
 // La carte de mes lutteurs (avec fusion et deck) ; celles de l'ordinateur sont les cartes de base.
 const defTournoi = (id: string, moi: boolean) => (moi ? defJoueur(trouverLutteur(id)) : trouverLutteur(id));
 
@@ -858,7 +867,10 @@ function ecranInscriptionEquipe(ordre: string[]) {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi par équipe', `Ordre des duels · inscription ${R_.tournoi.equipe.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}
-      <section class="bloc"><p>Ton lutteur n°1 affronte leur n°1, etc. Place tes meilleurs où tu veux.</p><ol class="ordre-liste">${liste}</ol>
+      <section class="bloc"><p>Ton lutteur n°1 affronte leur n°1, etc. Place tes meilleurs où tu veux.</p>
+        <p class="bonus-nation">🚩 Bonus de nation : ${texteBonusNation(ordre.slice(0, n))}</p>
+        <p class="note">3 lutteurs d'une même nation : +5 % · 4 : +7 % · 5 : +10 %, pour toute l'équipe. Compose ton équipe dans Mon Club.</p>
+        <ol class="ordre-liste">${liste}</ol>
         <button class="principal" data-valider-equipe>Inscrire mon équipe</button></section>
     </main>`;
   const echanger = (i: number, j: number) => {
@@ -954,6 +966,8 @@ function ecranEquipe(t: TournoiEquipe) {
     <main class="sous-menu">
       ${enTete('Tournoi par équipe', `Club de ${echap(collection.coach ?? '')} contre ${echap(t.nomAdverse)}`, '#tournois')}
       <section class="bloc score-equipe"><span>${moi}</span><i>–</i><span>${eux}</span></section>
+      <section class="bloc"><p class="bonus-nation">🚩 Ton bonus de nation : ${texteBonusNation(t.mes)}</p>
+        <p class="bonus-nation adverse">🚩 ${echap(t.nomAdverse)} : ${texteBonusNation(t.leurs)}</p></section>
       ${prochain !== null ? `<section class="bloc prochain-combat"><h2>Duel ${prochain + 1}</h2><p><b class="moi">${echap(trouverLutteur(t.mes[prochain]).nom)}</b> contre ${echap(trouverLutteur(t.leurs[prochain]).nom)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
       ${fin ? sectionFinTournoi(t, gagne ? 'Tournoi par équipe gagné' : 'Tournoi par équipe') : ''}
       <section class="bloc"><h2>Les duels</h2><ul class="matchs">${duels}</ul></section>
@@ -997,7 +1011,12 @@ function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: strin
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
-  partie = new Partie(idMoi, idLui, nouvelleGraine(), collection.niveau, defTournoi(idMoi, true));
+  // Tournoi par équipe : le bonus de nation de chaque équipe s'applique à ses lutteurs.
+  const equipe = tournoi?.type === 'equipe' ? tournoi : null;
+  const bMoi = equipe ? bonusNation(equipe.mes).bonus : 0;
+  const bLui = equipe ? bonusNation(equipe.leurs).bonus : 0;
+  bonusEnCours = equipe ? { moi: bMoi, lui: bLui } : null;
+  partie = new Partie(idMoi, idLui, nouvelleGraine(), collection.niveau, avecBonus(defTournoi(idMoi, true), bMoi), [], false, avecBonus(defTournoi(idLui, false), bLui));
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1012,6 +1031,7 @@ function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: strin
 function finCombatTournoi(abandon: boolean) {
   const cle = enTournoi;
   enTournoi = null;
+  bonusEnCours = null;
   if (!partie || !tournoi || cle === null) return ecranTournois();
   const e = partie.etat;
   const gagne = !abandon && e.vainqueur === HUMAIN;
@@ -1358,6 +1378,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   messageSolo = '';
   tuto = false;
   enTournoi = null;
+  bonusEnCours = null;
   bonusCeCombat = rapide ? false : collection.bonusTutoriel;
   ecranCombat();
 }
@@ -1435,6 +1456,7 @@ function lancerTutoriel() {
   messageSolo = '';
   tuto = true;
   enTournoi = null;
+  bonusEnCours = null;
   bonusCeCombat = false;
   ecranCombat();
 }
@@ -1750,8 +1772,8 @@ function ecranCombat() {
         </section>
       </div>
       <section class="badges-ligne">
-        <div class="badges rouge">${badges(e, HUMAIN)}</div>
-        <div class="badges bleu">${badges(e, ORDI)}</div>
+        <div class="badges rouge">${badges(e, HUMAIN)}${bonusEnCours?.moi ? `<span class="badge">🚩 Nation +${Math.round(bonusEnCours.moi * 100)} %</span>` : ''}</div>
+        <div class="badges bleu">${badges(e, ORDI)}${bonusEnCours?.lui ? `<span class="badge">🚩 Nation +${Math.round(bonusEnCours.lui * 100)} %</span>` : ''}</div>
       </section>
       ${caseDernierTour(e)}
       ${anciens ? `<section class="journal"><h2>Tours précédents</h2>${anciens}</section>` : ''}
@@ -2300,6 +2322,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide
   }
   partie = null;
   mode = 'ligne';
+  bonusEnCours = null;
   codeSalle = code;
   HUMAIN = role === 'hote' ? 0 : 1;
   ORDI = role === 'hote' ? 1 : 0;

@@ -305,7 +305,12 @@ export const REGLES = {
       dollars: { 1: 15, 2: 9, 3: 5 } as Record<number, number>,
     },
     // Par équipe : 5 duels (lutteur n°1 contre n°1, etc.), la première équipe à 3 victoires gagne.
-    equipe: { inscription: 10, duels: 5, victoiresPourGagner: 3, medailles: 10, dollars: 30 },
+    equipe: {
+      inscription: 10, duels: 5, victoiresPourGagner: 3, medailles: 10, dollars: 30,
+      // Bonus de nation : selon le nombre de lutteurs de la même nation dans l'équipe, toute
+      // l'équipe (même les lutteurs d'une autre nation) gagne ce pourcentage sur ses statistiques.
+      bonusNation: { 3: 0.05, 4: 0.07, 5: 0.1 } as Record<number, number>,
+    },
   },
 
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
@@ -465,6 +470,30 @@ export function avecGrade(def: DefLutteur, grade: number, etoiles: Partial<Recor
     actionsPossibles: possibles,
     couts,
     niveau: niveauCarte(def, g),
+  };
+}
+
+// Bonus de nation d'une équipe : la nation la plus représentée et le pourcentage gagné (0 sans bonus).
+export function bonusNation(ids: string[]): { nation: Nation | null; nombre: number; bonus: number } {
+  const compte = new Map<Nation, number>();
+  for (const id of ids) {
+    const n = trouverLutteur(id).nation;
+    compte.set(n, (compte.get(n) ?? 0) + 1);
+  }
+  let nation: Nation | null = null, nombre = 0;
+  for (const [n, k] of compte) if (k > nombre) { nation = n; nombre = k; }
+  const bonus = REGLES.tournoi.equipe.bonusNation[nombre] ?? 0;
+  return { nation: bonus ? nation : null, nombre, bonus };
+}
+
+// Statistiques augmentées d'un pourcentage (bonus de nation), comme pour la fusion.
+export function avecBonus(def: DefLutteur, bonus: number): DefLutteur {
+  if (!bonus) return def;
+  return {
+    ...def,
+    enduranceMax: Math.round(def.enduranceMax * (1 + bonus)),
+    force: Math.round(def.force * (1 + bonus)),
+    recuperation: Math.round(def.recuperation * (1 + bonus) * 100) / 100,
   };
 }
 
