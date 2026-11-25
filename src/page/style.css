@@ -1212,3 +1212,10 @@ b.moi { color: #ff8a95; }
 .q-unique .q-diff, .q-unique .etape-n { color: #ffd76a; }
 .q-difficile .q-diff { color: var(--attaque); }
 .bouton-changer { display: block; width: 100%; margin-top: 8px; font-size: 14px; }
+
+/* Collection : cartes en miniature (3 par ligne sur téléphone). */
+.grille-mini.miniatures { grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 8px; }
+.miniatures .mini-carte { padding: 3px 3px 5px; gap: 2px; border-radius: 9px; box-shadow: 2px 2px 0 var(--encre); }
+.miniatures .mc-nom { font-size: 12px; line-height: 1.15; }
+.miniatures .mc-bas { font-size: 10px; }
+.miniatures .mc-nombre { font-size: 11px; padding: 1px 5px; }

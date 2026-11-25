@@ -357,6 +357,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   - Verrouillées : jamais dans les boosters, ni dans l'arène, ni chez les adversaires. On les obtient en fin de saison, ou dans la boutique (Social) à 200 $ l'exemplaire, autant de fois qu'on veut.
   - Elles sont déjà au niveau Champion du Monde : leurs doubles servent à gagner des étoiles (actions moins chères) et des styles de carte, par la fusion.
   - Dans la collection, elles ont leur propre groupe, en premier (grisées tant qu'elles ne sont pas gagnées) ; le compte « x/120 cartes » ne les inclut pas.
+- Collection : cartes affichées en miniature (3 par ligne sur téléphone) ; dans chaque groupe, les cartes possédées d'abord, les cartes à gagner ensuite.
 
 ### Scènes de dialogue (modes histoire)
 

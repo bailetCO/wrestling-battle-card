@@ -152,3 +152,16 @@ test('cartes Champion du Monde : 12, verrouillées, jamais en booster, achat 200
   c.exemplaires[id] = 10;
   assert.equal(fusionner(c, id, f.actions[0]), null);
 });
+
+test('cartes Champion du Monde : gardées dans la sauvegarde, utilisables dans Mon Club et les decks', async () => {
+  const { recruter } = await import('../src/page/collection');
+  const c = ouverte();
+  c.exemplaires['champion-japon'] = 3;
+  c.etoiles['champion-japon'] = { feinte: 1 };
+  const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
+  assert.equal(d.exemplaires['champion-japon'], 3);
+  assert.deepEqual(d.etoiles['champion-japon'], { feinte: 1 });
+  d.medailles = 30;
+  assert.equal(recruter(d, 'champion-japon'), null);
+  assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify(d))).club, ['champion-japon']);
+});

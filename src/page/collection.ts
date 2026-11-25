@@ -63,6 +63,9 @@ export interface Booster {
 // Au départ : une carte par nation, la moins rare de chaque nation.
 // Les 20 cartes de départ : tirées au hasard parmi celles débloquées dès le départ
 // (4 communes et 1 rare par nation).
+// Carte connue du jeu : un des 120 lutteurs ou une des 12 cartes Champion du Monde.
+export const carteConnue = (id: string) => LUTTEURS.some((l) => l.id === id) || CHAMPIONS.some((l) => l.id === id);
+
 export const POOL_DEPART = () => LUTTEURS.filter((l) => l.depart).map((l) => l.id);
 export function cartesDeDepart(hasard: Hasard = Math.random, deja: string[] = []): string[] {
   const pool = POOL_DEPART().filter((id) => !deja.includes(id));
@@ -297,7 +300,7 @@ export const styleDe = (c: Collection, id: string) => Math.min(nbStyles(c, id), 
 // (Champion du Monde, puis toutes les étoiles). Renvoie le nombre de doubles ajoutés.
 export function doublesPourMaximum(c: Collection): number {
   let ajout = 0;
-  for (const l of LUTTEURS) {
+  for (const l of [...LUTTEURS, ...CHAMPIONS]) {
     if (nbExemplaires(c, l.id) === 0) continue;
     const g = gradeDe(c, l.id);
     let besoin = 1; // l'original
@@ -349,7 +352,7 @@ export function deckDe(c: Collection, id: string): IdAction[] | undefined {
 }
 
 export function choisirDeck(c: Collection, id: string, actions: IdAction[]): string | null {
-  if (!LUTTEURS.some((l) => l.id === id)) return 'Lutteur inconnu.';
+  if (!carteConnue(id)) return 'Lutteur inconnu.';
   const erreur = verifierDeck(defPossede(c, id), actions);
   if (!erreur) c.decks[id] = [...actions];
   return erreur;
@@ -415,7 +418,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
     for (const id of cartesDeDepart(Math.random, miens)) c.exemplaires[id] = (c.exemplaires[id] ?? 0) + 1;
   }
   c.departComplet = true;
-  if (Array.isArray(b.club)) c.club = [...new Set((b.club as unknown[]).filter((x): x is string => typeof x === 'string' && LUTTEURS.some((l) => l.id === x)))];
+  if (Array.isArray(b.club)) c.club = [...new Set((b.club as unknown[]).filter((x): x is string => typeof x === 'string' && carteConnue(x)))];
   c.dollars = entier(b.dollars);
   if (b.styles && typeof b.styles === 'object') c.styles = { ...(b.styles as Record<string, number>) };
   if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;
@@ -429,10 +432,10 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (m && typeof m.jour === 'string' && Array.isArray(m.faits)) c.marchand = { jour: m.jour, faits: m.faits.filter((x): x is number => typeof x === 'number') };
   // Nettoyage : cartes inconnues, decks invalides
   for (const id of Object.keys(c.exemplaires)) {
-    if (!LUTTEURS.some((l) => l.id === id) || !(c.exemplaires[id] > 0)) delete c.exemplaires[id];
+    if (!carteConnue(id) || !(c.exemplaires[id] > 0)) delete c.exemplaires[id];
   }
   for (const [id, deck] of Object.entries(c.decks)) {
-    if (!LUTTEURS.some((l) => l.id === id) || verifierDeck(defPossede(c, id), deck)) delete c.decks[id];
+    if (!carteConnue(id) || verifierDeck(defPossede(c, id), deck)) delete c.decks[id];
   }
   return c;
 }

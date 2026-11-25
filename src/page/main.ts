@@ -874,8 +874,10 @@ function ecranCollection() {
   partie = null;
   const groupes = groupesCollection().map(({ titre, liste }) => {
     const n = liste.filter((l) => possede(collection, l.id)).length;
-    const cartes = liste.map((l) => miniCarteCollection(l)).join('');
-    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini">${cartes}</div></section>`;
+    // Les cartes possédées d'abord, celles à gagner ensuite (l'ordre du tri est gardé dans chaque partie).
+    const triees = [...liste.filter((l) => possede(collection, l.id)), ...liste.filter((l) => !possede(collection, l.id))];
+    const cartes = triees.map((l) => miniCarteCollection(l)).join('');
+    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini miniatures">${cartes}</div></section>`;
   }).join('');
   const tris = TRIS.map((t) => `<button class="puce ${collection.tri === t.id ? 'actif' : ''}" data-tri="${t.id}" aria-pressed="${collection.tri === t.id}">${t.nom}</button>`).join('');
   app.innerHTML = `
