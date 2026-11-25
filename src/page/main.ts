@@ -3,19 +3,20 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, avecDeck, verifierDeck, TAILLE_DECK,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, avecDeck, avecGrade, verifierDeck, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation,
 } from '../moteur';
 import { Partie, type TourJoue } from './partie';
 import {
   ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais,
-  type Presence, type Role, type Salle, type Vue,
+  type ModeSalle, type Presence, type Role, type Salle, type Vue,
 } from './enligne';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
 import {
-  charger, choisirDeck, consoler, deckDe, nouvelleCollection, possede, recompenser, sauver, type Collection,
+  cartesPossedees, charger, choisirDeck, consoler, deckDe, fusionner, gradeDe, nbDoubles, nbExemplaires,
+  nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
 } from './collection';
 import { portraitSVG } from './portrait';
 
@@ -35,7 +36,8 @@ let codeSalle = '';
 let fenetreLigne: '' | 'init' | 'face' = '';
 let toursAffiches = -1;
 let absentDepuis: number | null = null;
-const adv = () => (mode === 'ligne' ? 'Ami' : 'Ordi');
+const adv = () => (mode === 'ligne' ? vueLigne?.amiCoach || 'Ami' : 'Ordi');
+const moiNom = () => collection.coach || 'Toi';
 const etatEnCours = (): EtatCombat | null => (mode === 'ligne' ? vueLigne?.etat ?? null : partie?.etat ?? null);
 let tours: TourJoue[] = [];
 let scoresPeriodes: [number, number][] = [];
@@ -68,7 +70,7 @@ function nouvelleGraine(): number {
 
 const portrait = (def: DefLutteur) => portraitSVG(def, `m${idPortrait++}`);
 
-// ---------- Écran 1 : choix du lutteur ----------
+// ---------- Accueil, menu principal ----------
 
 const NATIONS: { id: Nation; nom: string }[] = [
   { id: 'usa', nom: 'USA' }, { id: 'russie', nom: 'Russie' }, { id: 'europe', nom: 'Europe' },
@@ -76,12 +78,23 @@ const NATIONS: { id: Nation; nom: string }[] = [
 ];
 
 function compteur(): string {
-  const n = collection.toutDebloque ? LUTTEURS.length : collection.cartes.length;
-  return `Ta collection : <b>${n}/${LUTTEURS.length}</b> cartes${collection.toutDebloque ? ' (mode test)' : ''} · ${collection.victoires} victoire${collection.victoires > 1 ? 's' : ''}`;
+  const n = collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection);
+  return `<b>${n}/${LUTTEURS.length}</b> cartes${collection.toutDebloque ? ' (mode test)' : ''} · ${nbDoubles(collection)} double${nbDoubles(collection) > 1 ? 's' : ''} · ${collection.victoires} victoire${collection.victoires > 1 ? 's' : ''}`;
+}
+
+// La carte telle que le joueur la possède : son deck, son grade, ses exemplaires.
+function defJoueur(def: DefLutteur): DefLutteur {
+  return avecGrade(avecDeck(def, deckDe(collection, def.id)), gradeDe(collection, def.id));
+}
+
+function etiquettesCarte(def: DefLutteur): string {
+  const g = gradeDe(collection, def.id);
+  const n = nbExemplaires(collection, def.id);
+  return `${g > 1 ? `<span class="pastille grade" title="Grade ${g}">Grade ${g}</span>` : ''}${n > 1 ? `<span class="pastille nombre" title="${n} exemplaires">×${n}</span>` : ''}`;
 }
 
 function carteJoueur(def: DefLutteur, bouton = ''): string {
-  return carteHTML(avecDeck(def, deckDe(collection, def.id)), bouton);
+  return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton)}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
 }
 
 function carteVerrouillee(def: DefLutteur): string {
@@ -92,47 +105,151 @@ function carteVerrouillee(def: DefLutteur): string {
     </div>`;
 }
 
-function ecranChoix() {
+const ICONES_MENU: Record<string, string> = {
+  collection: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="10" width="20" height="28" rx="3" transform="rotate(-12 18 24)" fill="none" stroke="currentColor" stroke-width="3"/><rect x="20" y="10" width="20" height="28" rx="3" transform="rotate(10 30 24)" fill="currentColor" opacity=".9"/></svg>',
+  combat: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 40 30 18M14 12l6 6M40 40 18 18M34 12l-6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2" opacity=".4"/></svg>',
+  club: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
+function ecranAccueil(message = '') {
   partie = null;
-  const tries = [...LUTTEURS].sort((a, b) => Number(possede(collection, b.id)) - Number(possede(collection, a.id)));
-  const cartes = tries.map((l) => {
-    const a = possede(collection, l.id);
-    const perso = deckDe(collection, l.id) ? ' (perso)' : '';
+  app.innerHTML = `
+    <main class="accueil">
+      <div class="rayons" aria-hidden="true"></div>
+      <section class="accueil-centre">
+        <h1 class="logo">Wrestling<br>Battle Card</h1>
+        <p>Bienvenue sur le tapis. Avant ton premier combat, choisis ton nom de coach : c'est sous ce nom que tu diriges tes lutteurs et que tes amis te verront.</p>
+        <form class="form-pseudo">
+          <label for="pseudo">Ton pseudo de coach</label>
+          <input id="pseudo" name="pseudo" maxlength="16" autocomplete="nickname" placeholder="Coach…" value="${echap(collection.coach ?? '')}">
+          <p class="erreur" role="alert">${echap(message)}</p>
+          <button class="principal" type="submit">${collection.coach ? 'Enregistrer' : 'Entrer dans le jeu'}</button>
+        </form>
+        ${collection.coach ? '<a class="lien" href="#">Annuler</a>' : ''}
+      </section>
+    </main>`;
+  app.querySelector('form')!.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const v = app.querySelector<HTMLInputElement>('#pseudo')!.value.trim();
+    const erreur = verifierPseudo(v);
+    if (erreur) return ecranAccueil(erreur);
+    collection.coach = v;
+    sauver(collection);
+    if (location.hash) history.replaceState(null, '', location.pathname);
+    ecranMenu();
+  });
+  app.querySelector<HTMLInputElement>('#pseudo')!.focus();
+  window.scrollTo(0, 0);
+}
+
+function ecranMenu() {
+  partie = null;
+  const session = sessionLigne();
+  const fusions = LUTTEURS.filter((l) => {
+    const f = prochaineFusion(collection, l.id);
+    return f && f.doublesDispo >= f.doublesNecessaires;
+  }).length;
+  const tuile = (id: string, titre: string, sous: string, href: string, alerte = '') => `
+    <a class="tuile t-${id}" href="${href}">
+      <span class="tuile-ico">${ICONES_MENU[id]}</span>
+      <span class="tuile-titre">${titre}</span>
+      <span class="tuile-sous">${sous}</span>
+      ${alerte ? `<span class="tuile-alerte">${alerte}</span>` : ''}
+    </a>`;
+  app.innerHTML = `
+    <main class="menu">
+      <header class="menu-tete">
+        <span class="avatar" aria-hidden="true">${echap((collection.coach ?? '?').slice(0, 1).toUpperCase())}</span>
+        <span class="menu-coach"><small>Coach</small><b>${echap(collection.coach ?? '')}</b></span>
+        <a class="lien petit" href="#pseudo">Modifier</a>
+      </header>
+      <p class="compteur menu-stats">${compteur()}</p>
+      ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
+      <nav class="tuiles" aria-label="Menu principal">
+        ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
+        ${tuile('collection', 'Collection', `${collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection)}/${LUTTEURS.length} cartes · régler les actions`, '#collection')}
+        ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter de grade', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
+        ${tuile('club', 'Club', 'Amis, échanges et marchand', '#club')}
+      </nav>
+    </main>`;
+  app.querySelector('[data-reprendre]')?.addEventListener('click', () => {
+    const x = sessionLigne();
+    if (x) connecter(x.code, x.role);
+  });
+  app.querySelector('[data-oublier]')?.addEventListener('click', () => {
+    oublierSession();
+    ecranMenu();
+  });
+  window.scrollTo(0, 0);
+}
+
+function enTete(titre: string, sous = '', retour = '#') {
+  return `
+    <header class="titre entete">
+      <a class="retour" href="${retour}" aria-label="Retour">‹</a>
+      <div><h1>${titre}</h1>${sous ? `<p>${sous}</p>` : ''}</div>
+    </header>`;
+}
+
+function ecranCombatMenu() {
+  partie = null;
+  const niv = collection.niveau;
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Combat')}
+      <section class="bloc">
+        <h2>Arène</h2>
+        <p>Affronte l'ordinateur avec un lutteur de ta collection. Chaque victoire ouvre un booster ; toutes les 2 défaites d'affilée, un booster de consolation.</p>
+        <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
+          <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>Pour s'entraîner</small></button>
+          <button class="${niv === 'fort' ? 'actif' : ''}" data-niveau="fort" aria-pressed="${niv === 'fort'}">Fort<small>Il lit ton jeu</small></button>
+        </div>
+        <a class="principal lien-bouton" href="#arene">Choisir mon lutteur</a>
+      </section>
+      <section class="bloc">
+        <h2>En ligne</h2>
+        <p>Affronte un ami sur son téléphone. Avec ta collection, chaque victoire ouvre 2 boosters.</p>
+        <a class="principal lien-bouton" href="#amis">Combat entre amis</a>
+      </section>
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
+    b.addEventListener('click', () => {
+      collection.niveau = b.dataset.niveau === 'fort' ? 'fort' : 'normal';
+      sauver(collection);
+      ecranCombatMenu();
+    }),
+  );
+  window.scrollTo(0, 0);
+}
+
+// Arène : choix du lutteur parmi ses cartes.
+function ecranArene() {
+  partie = null;
+  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  const cartes = miens.map((l) => {
     const boutons = `
       <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
-      <button class="secondaire cl-deck" data-deck="${l.id}">Modifier le deck${perso}</button>`;
-    return `<div class="emplacement" data-nation="${l.nation}">${a ? carteJoueur(l, boutons) : carteVerrouillee(l)}</div>`;
+      <button class="secondaire cl-deck" data-deck="${l.id}">Régler les actions${deckDe(collection, l.id) ? ' (perso)' : ''}</button>`;
+    return `<div class="emplacement" data-nation="${l.nation}">${carteJoueur(l, boutons)}</div>`;
   }).join('');
-  const puces = NATIONS.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
-  const niv = collection.niveau;
-
+  const nations = NATIONS.filter((n) => miens.some((l) => l.nation === n.id));
+  const puces = nations.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
   app.innerHTML = `
     <main class="choix">
-      <header class="titre">
-        <h1>Wrestling Battle Card</h1>
-        <p>Choisis ton lutteur. L'ordinateur prend un adversaire au hasard parmi les 15. Chaque victoire ouvre un booster.</p>
-        <p class="compteur">${compteur()}</p>
-      </header>
-      ${sessionLigne() ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(sessionLigne()!.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
-      <a class="principal bouton-amis" href="#amis">Combat entre amis</a>
-      <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
-        <span>Ordinateur</span>
-        <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>1 carte par victoire</small></button>
-        <button class="${niv === 'fort' ? 'actif' : ''}" data-niveau="fort" aria-pressed="${niv === 'fort'}">Fort<small>2 cartes par victoire</small></button>
-      </div>
+      ${enTete('Arène', `Ordinateur ${collection.niveau === 'fort' ? 'fort' : 'normal'} · l'adversaire est tiré au hasard parmi les 15 lutteurs.`, '#combat')}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
-      <div class="defile" tabindex="0" aria-label="Cartes des lutteurs">${cartes}</div>
+      <div class="defile" tabindex="0" aria-label="Tes lutteurs">${cartes}</div>
       <div class="defile-nav">
         <button class="rond" data-pas="-1" aria-label="Carte précédente">‹</button>
-        <a class="lien" href="#galerie">Galerie et collection</a>
+        <span class="compteur">${miens.length} lutteur${miens.length > 1 ? 's' : ''}</span>
         <button class="rond" data-pas="1" aria-label="Carte suivante">›</button>
       </div>
     </main>`;
-
   const defile = app.querySelector<HTMLElement>('.defile')!;
   const pas = (sens: number) => {
-    const largeur = defile.querySelector<HTMLElement>('.emplacement')!.offsetWidth + 14;
-    defile.scrollBy({ left: sens * largeur, behavior: 'smooth' });
+    const e = defile.querySelector<HTMLElement>('.emplacement');
+    if (e) defile.scrollBy({ left: sens * (e.offsetWidth + 14), behavior: 'smooth' });
   };
   app.querySelectorAll<HTMLButtonElement>('[data-pas]').forEach((b) => b.addEventListener('click', () => pas(Number(b.dataset.pas))));
   defile.addEventListener('keydown', (ev) => {
@@ -145,25 +262,6 @@ function ecranChoix() {
       if (cible) defile.scrollTo({ left: cible.offsetLeft - defile.offsetLeft - 16, behavior: 'smooth' });
     }),
   );
-  app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
-    b.addEventListener('click', () => {
-      collection.niveau = b.dataset.niveau === 'fort' ? 'fort' : 'normal';
-      sauver(collection);
-      app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((x) => {
-        const actif = x.dataset.niveau === collection.niveau;
-        x.classList.toggle('actif', actif);
-        x.setAttribute('aria-pressed', String(actif));
-      });
-    }),
-  );
-  app.querySelector('[data-reprendre]')?.addEventListener('click', () => {
-    const x = sessionLigne();
-    if (x) connecter(x.code, x.role);
-  });
-  app.querySelector('[data-oublier]')?.addEventListener('click', () => {
-    oublierSession();
-    ecranChoix();
-  });
   app.querySelectorAll<HTMLButtonElement>('[data-deck]').forEach((b) =>
     b.addEventListener('click', () => fenetreDeck(trouverLutteur(b.dataset.deck!))),
   );
@@ -225,36 +323,31 @@ function fenetreDeck(def: DefLutteur) {
     if (choisirDeck(collection, def.id, choix)) return;
     sauver(collection);
     fermerFenetre();
-    ecranChoix();
+    route();
   });
   f.querySelector('[data-defaut]')!.addEventListener('click', () => {
     delete collection.decks[def.id];
     sauver(collection);
     fermerFenetre();
-    ecranChoix();
+    route();
   });
   maj();
 }
 
-// ---------- Galerie et collection ----------
+// ---------- Collection ----------
 
-function ecranGalerie() {
+function ecranCollection() {
   partie = null;
   const groupes = ORDRE_RARETE.map((r) => {
     const liste = LUTTEURS.filter((l) => l.rarete === r);
     const n = liste.filter((l) => possede(collection, l.id)).length;
-    const cartes = liste.map((l) => (possede(collection, l.id) ? carteJoueur(l) : carteVerrouillee(l))).join('');
-    return `<section class="groupe"><h2>${NOM_RARETE[r]} <small>${n}/${liste.length}</small></h2><div class="grille-cartes">${cartes}</div></section>`;
+    const cartes = liste.map((l) => miniCarteCollection(l)).join('');
+    return `<section class="groupe"><h2>${NOM_RARETE[r]} <small>${n}/${liste.length}</small></h2><div class="grille-mini">${cartes}</div></section>`;
   }).join('');
   app.innerHTML = `
     <main class="galerie">
-      <header class="titre">
-        <h1>Galerie</h1>
-        <p class="compteur">${compteur()}</p>
-        <p>Chaque victoire ouvre un booster : 1 carte contre l'ordinateur normal, 2 contre le fort. Les cartes communes sortent plus souvent que les légendaires. La collection est gardée sur ce téléphone.</p>
-        <p>Raretés fixées d'après plus de 100 000 combats simulés : les 2 lutteurs qui gagnent le plus sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes.</p>
-        <a class="lien" href="#">Retour au choix du lutteur</a>
-      </header>
+      ${enTete('Collection', compteur())}
+      <p class="note marge">Touche une de tes cartes pour régler ses actions ou la fusionner. Boosters : classique (3 cartes) ou rare (5 cartes, 1 fois sur 4). Les communes sortent plus souvent que les légendaires.</p>
       ${groupes}
       <section class="groupe reglages">
         <h2>Réglages de test</h2>
@@ -262,23 +355,138 @@ function ecranGalerie() {
         <button class="lien" data-raz>Remettre la collection à zéro</button>
       </section>
     </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-carte]').forEach((b) =>
+    b.addEventListener('click', () => fenetreCarteCollection(trouverLutteur(b.dataset.carte!))),
+  );
   app.querySelector('[data-test]')!.addEventListener('click', () => {
     collection.toutDebloque = !collection.toutDebloque;
     sauver(collection);
-    ecranGalerie();
+    ecranCollection();
   });
   const raz = app.querySelector<HTMLButtonElement>('[data-raz]')!;
   raz.addEventListener('click', () => {
     if (!raz.dataset.confirme) {
       raz.dataset.confirme = '1';
-      raz.textContent = 'Appuie encore pour tout effacer (cartes, decks, victoires)';
+      raz.textContent = 'Appuie encore pour tout effacer (cartes, grades, decks, victoires)';
       return;
     }
+    const coach = collection.coach;
     collection = nouvelleCollection();
+    collection.coach = coach;
     sauver(collection);
-    ecranGalerie();
+    ecranCollection();
   });
   activerReflets(app);
+  window.scrollTo(0, 0);
+}
+
+// Petite carte pour la grille de la collection : portrait, nom, nation, grade, exemplaires.
+function miniCarteCollection(l: DefLutteur): string {
+  const a = possede(collection, l.id);
+  const g = gradeDe(collection, l.id);
+  const n = nbExemplaires(collection, l.id);
+  const etoiles = g > 1 ? `<span class="mc-grade">${'◆'.repeat(g)}</span>` : '';
+  if (!a) {
+    return `
+      <div class="mini-carte verrouillee" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">
+        <span class="mc-portrait">${portrait(l)}</span>
+        <span class="mc-nom">${echap(l.nom)}</span>
+        <span class="mc-bas">À gagner</span>
+      </div>`;
+  }
+  return `
+    <button class="mini-carte" data-rarete="${l.rarete}" data-carte="${l.id}" aria-label="${echap(l.nom)}, grade ${g}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+      <span class="mc-portrait">${portrait(l)}</span>
+      ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
+      <span class="mc-nom">${echap(l.nom)}</span>
+      <span class="mc-bas">${echap(l.origine)} ${etoiles}</span>
+    </button>`;
+}
+
+function fenetreCarteCollection(def: DefLutteur) {
+  const f = prochaineFusion(collection, def.id);
+  const n = nbExemplaires(collection, def.id);
+  const f2 = ouvrirFenetre(`
+    <div class="fenetre-carte">${carteJoueur(def)}</div>
+    <p class="note">${n > 0 ? `${n} exemplaire${n > 1 ? 's' : ''} · grade ${gradeDe(collection, def.id)}/${R_.fusion.gradeMax}` : 'Carte du mode test'}${f ? (f.doublesDispo >= f.doublesNecessaires ? ` · fusion possible vers le grade ${f.grade}` : ` · grade ${f.grade} : ${f.doublesDispo}/${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''}`) : ''}</p>
+    <div class="deck-boutons">
+      <button class="principal" data-regler>Régler les actions</button>
+      ${f ? `<a class="secondaire lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a>` : ''}
+      <button class="lien" data-fermer>Fermer</button>
+    </div>`, true);
+  activerReflets(f2);
+  f2.querySelector('[data-regler]')!.addEventListener('click', () => fenetreDeck(def));
+}
+
+// ---------- Fusion ----------
+
+function statsTexte(d: DefLutteur): string {
+  return `Endurance ${d.enduranceMax} · force ${d.force} · récupération ${Math.round(d.recuperation * 100)} %`;
+}
+
+function ecranFusion(message = '') {
+  partie = null;
+  const miens = LUTTEURS.filter((l) => nbExemplaires(collection, l.id) > 0)
+    .sort((a, b) => {
+      const pa = prochaineFusion(collection, a.id), pb = prochaineFusion(collection, b.id);
+      const pret = (p: typeof pa) => (p && p.doublesDispo >= p.doublesNecessaires ? 1 : 0);
+      return pret(pb) - pret(pa) || nbExemplaires(collection, b.id) - nbExemplaires(collection, a.id);
+    });
+  const lignes = miens.map((l) => {
+    const f = prochaineFusion(collection, l.id);
+    const g = gradeDe(collection, l.id);
+    const etoiles = Array.from({ length: R_.fusion.gradeMax }, (_, i) => `<i class="${i < g ? 'plein' : ''}"></i>`).join('');
+    const pret = f && f.doublesDispo >= f.doublesNecessaires;
+    const prog = f ? Math.min(100, (f.doublesDispo / f.doublesNecessaires) * 100) : 100;
+    return `
+      <li class="fusion-ligne ${pret ? 'pret' : ''}" data-rarete="${l.rarete}">
+        <span class="vignette">${portrait(l)}</span>
+        <span class="fusion-info">
+          <b>${echap(l.nom)}</b>
+          <span class="grades" aria-label="Grade ${g} sur ${R_.fusion.gradeMax}">${etoiles}</span>
+          <small>${f ? `Grade ${f.grade} : ${Math.min(f.doublesDispo, f.doublesNecessaires)}/${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''}` : 'Grade maximal'}</small>
+          <span class="jauge"><i style="width:${prog}%"></i></span>
+        </span>
+        <button class="${pret ? 'principal' : 'secondaire'} petit-bouton" data-fusion="${l.id}" ${pret ? '' : 'disabled'}>Fusionner</button>
+      </li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Fusion', 'Fusionne les doubles d\'une carte pour la faire monter de grade. Grade 2 : 1 double, grade 3 : 2 doubles, grade 4 : 3, grade 5 : 4. +5 % sur toutes les stats par grade, +10 % pour le grade 5.')}
+      ${message}
+      ${miens.length ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note marge">Tu n\'as encore aucune carte.</p>'}
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-fusion]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.fusion!;
+      const def = trouverLutteur(id);
+      const avant = defJoueur(def);
+      const erreur = fusionner(collection, id);
+      if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
+      sauver(collection);
+      const apres = defJoueur(def);
+      ecranFusion();
+      const f = ouvrirFenetre(`
+        <h2 class="onomato rouge">FUSION !</h2>
+        <div class="fenetre-carte eclat-fusion">${carteJoueur(def)}</div>
+        <p><b>${echap(def.nom)}</b> passe au grade ${gradeDe(collection, id)}.</p>
+        <p class="note">Avant : ${statsTexte(avant)}<br>Après : ${statsTexte(apres)}</p>
+        <button class="principal" data-fermer>Continuer</button>`, true);
+      activerReflets(f);
+    }),
+  );
+  window.scrollTo(0, 0);
+}
+
+// ---------- Club ----------
+
+function ecranClub() {
+  partie = null;
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Club', 'Tes amis, les échanges de doubles et le marchand.')}
+      <section class="bloc"><h2>Bientôt</h2><p>La liste d'amis, l'échange de cartes en double et le marchand (3 offres par jour) arrivent dans la prochaine mise à jour.</p></section>
+    </main>`;
   window.scrollTo(0, 0);
 }
 
@@ -287,7 +495,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
-  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, deckDe(collection, idHumain));
+  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, deckDe(collection, idHumain), gradeDe(collection, idHumain));
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -518,14 +726,14 @@ function tableau(e: EtatCombat): string {
       </button>`;
   return `
     <header class="tableau">
-      ${coin(h, 'rouge', 'Toi')}
+      ${coin(h, 'rouge', echap(moiNom()))}
       <div class="centre">
         <span class="per">Période <b>${e.periode}</b>/3</span>
         <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>
         ${historique}
         <span class="niv">${mode === 'ligne' ? 'Entre amis' : `Ordi ${partie?.niveau === 'fort' ? 'fort' : 'normal'}`}</span>
       </div>
-      ${coin(o, 'bleu', adv())}
+      ${coin(o, 'bleu', echap(adv()))}
     </header>`;
 }
 
@@ -577,7 +785,7 @@ function ecranCombat() {
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
     if (!confirmerAbandon()) return;
     if (mode === 'ligne') duel?.abandonner();
-    else ecranChoix();
+    else ecranArene();
   });
   if (mode === 'ligne') majStatutLigne();
 }
@@ -696,6 +904,31 @@ function fenetrePileOuFace(choixHumain: Choix, choixOrdi: Choix, change: boolean
 
 // ---------- Écran 3 : fin du combat ----------
 
+// Les cartes d'un ou plusieurs boosters, retournées l'une après l'autre.
+function htmlBoosters(titre: string, boosters: Booster[]): string {
+  let k = 0;
+  const blocs = boosters.map((b) => {
+    const nouvelles = new Set(b.nouvelles);
+    const cartes = b.cartes.map((id) => {
+      const nouvelle = nouvelles.has(id);
+      nouvelles.delete(id);
+      return `<div class="tirage" style="--delai:${300 + k++ * 350}ms">${carteHTML(trouverLutteur(id))}<span class="pastille ${nouvelle ? 'nouvelle' : 'nombre'}">${nouvelle ? 'Nouvelle !' : 'Double'}</span></div>`;
+    }).join('');
+    return `
+      <div class="un-booster b-${b.type}">
+        <h3>${b.type === 'rare' ? 'Booster rare · 5 cartes' : 'Booster classique · 3 cartes'}</h3>
+        <div class="booster-cartes">${cartes}</div>
+      </div>`;
+  }).join('');
+  return `
+    <section class="booster">
+      <h2>${titre} : ${boosters.length > 1 ? `${boosters.length} boosters` : 'un booster'} !</h2>
+      ${blocs}
+      <p class="compteur">${compteur()}</p>
+      <p class="note">Tes doubles servent à la fusion et aux échanges.</p>
+    </section>`;
+}
+
 function ecranFin() {
   if (!partie) return;
   const e = partie.etat;
@@ -708,21 +941,14 @@ function ecranFin() {
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
-  const montrer = (titre: string, gagnees: string[]) => gagnees.length
-    ? `<section class="booster">
-        <h2>${titre} : ${gagnees.length > 1 ? `${gagnees.length} nouvelles cartes` : 'nouvelle carte'} !</h2>
-        <div class="booster-cartes">${gagnees.map((id, i) => `<div class="tirage" style="--delai:${300 + i * 450}ms">${carteHTML(trouverLutteur(id))}</div>`).join('')}</div>
-        <p class="compteur">${compteur()}</p>
-      </section>`
-    : `<section class="booster"><h2>Collection complète</h2><p>Tu as déjà les 15 cartes.</p></section>`;
   if (!recompenseDonnee) {
     recompenseDonnee = true;
     if (gagne) {
-      partieBooster = montrer('Booster ouvert', recompenser(collection, partie.niveau, Math.random));
+      partieBooster = htmlBoosters('Victoire', recompenser(collection, 'arene', Math.random));
     } else {
       const conso = consoler(collection, Math.random);
       partieBooster = conso
-        ? montrer('Booster de consolation', conso)
+        ? htmlBoosters('Booster de consolation', [conso])
         : `<section class="booster"><p>Encore une défaite d'affilée et tu reçois un booster de consolation.</p></section>`;
     }
     sauver(collection);
@@ -736,7 +962,7 @@ function ecranFin() {
         <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         ${scoresPeriodes.length ? `<p class="hist">${scoresPeriodes.map(([a, b], i) => `Période ${i + 1} : ${a} - ${b}`).join('<br>')}</p>` : ''}
-        <p class="hist">Toi : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
+        <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
       </section>
       ${booster}
       <div class="fin-boutons">
@@ -747,7 +973,7 @@ function ecranFin() {
     </main>`;
   activerReflets(app);
   app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine()));
-  app.querySelector('[data-changer]')!.addEventListener('click', ecranChoix);
+  app.querySelector('[data-changer]')!.addEventListener('click', ecranArene);
   window.scrollTo(0, 0);
 }
 
@@ -821,7 +1047,9 @@ function ecranAmis(message = '') {
       ${message ? `<p class="alerte" role="alert">${message}</p>` : ''}
       <section class="bloc">
         <h2>Créer une salle</h2>
-        <button class="principal" data-creer>Créer et obtenir un code</button>
+        <p>Choisis comment vous jouez :</p>
+        <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes et leurs grades · 2 boosters par victoire</small></button>
+        <button class="secondaire" data-creer="base">Cartes de base<small>Les 15 cartes, sans grade · pas de booster</small></button>
       </section>
       <section class="bloc">
         <h2>Rejoindre ton ami</h2>
@@ -833,7 +1061,9 @@ function ecranAmis(message = '') {
       </section>
       <a class="lien" href="#">Retour</a>
     </main>`;
-  app.querySelector('[data-creer]')!.addEventListener('click', () => connecter(nouveauCode(), 'hote'));
+  app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
+    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base')),
+  );
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const code = (app.querySelector<HTMLInputElement>('#code')!.value || '').trim().toLowerCase();
@@ -843,7 +1073,7 @@ function ecranAmis(message = '') {
   window.scrollTo(0, 0);
 }
 
-async function connecter(code: string, role: Role) {
+async function connecter(code: string, role: Role, modeSalle?: ModeSalle) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
@@ -872,7 +1102,7 @@ async function connecter(code: string, role: Role) {
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
-  });
+  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach });
   duel.surVue(rafraichirLigne);
 }
 
@@ -888,6 +1118,7 @@ function quitterLigne() {
 }
 
 let signatureSalle = '';
+let boosterLigne: { cle: string; html: string } = { cle: '', html: '' };
 let minuteurAbsence: number | undefined;
 
 function rafraichirLigne(v: Vue) {
@@ -900,7 +1131,7 @@ function rafraichirLigne(v: Vue) {
   if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
 
   if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
-    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}`;
+    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}`;
     if (sig !== signatureSalle) ecranSalle(v);
     signatureSalle = sig;
     return;
@@ -961,7 +1192,7 @@ function majStatutLigne() {
     app.querySelector('[data-forfait]')!.addEventListener('click', () => {
       oublierSession();
       quitterLigne();
-      ecranChoix();
+      ecranMenu();
     });
   }
   // Fenêtres d'initiative et de pile ou face
@@ -978,18 +1209,27 @@ function majStatutLigne() {
 }
 
 function ecranSalle(v: Vue) {
-  const liste = LUTTEURS.map((l) => `
+  const enCollection = v.modeSalle === 'collection';
+  const dispo = enCollection ? LUTTEURS.filter((l) => possede(collection, l.id)) : LUTTEURS;
+  const liste = dispo.map((l) => {
+    const g = enCollection ? gradeDe(collection, l.id) : 1;
+    return `
     <button class="choix-l ${v.monLutteur === l.id ? 'pris' : ''}" data-l="${l.id}" aria-pressed="${v.monLutteur === l.id}">
       <span class="vignette">${portrait(l)}</span>
-      <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[l.rarete]}</small></span>
-    </button>`).join('');
+      <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[l.rarete]}${g > 1 ? ` · grade ${g}` : ''}</small></span>
+    </button>`;
+  }).join('');
+  const modeTexte = v.modeSalle === null ? 'Connexion à la salle…'
+    : enCollection ? 'Mode : vos collections (grades compris) · 2 boosters par victoire.'
+    : 'Mode : cartes de base, toutes permises · pas de booster.';
   const ami = v.amiLutteur ? trouverLutteur(v.amiLutteur) : null;
   app.innerHTML = `
     <main class="amis">
       <header class="titre">
         <h1>Salle ${echap(codeSalle.toUpperCase())}</h1>
         <p class="code-grand" aria-label="Code de la salle">${echap(codeSalle.toUpperCase())}</p>
-        <p>${!salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? '<b class="ok">Ton ami est dans la salle.</b>' : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
+        <p class="note">${modeTexte}</p>
+        <p>${!salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami')} est dans la salle.</b>` : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
         <p>${v.monLutteur ? `Tu as choisi <b>${echap(trouverLutteur(v.monLutteur).nom)}</b>.` : 'Choisis ton lutteur ci-dessous.'}
            ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
            ${v.attente ? echap(v.attente) : ''}</p>
@@ -999,12 +1239,12 @@ function ecranSalle(v: Vue) {
       <button class="lien" data-sortir>Quitter la salle</button>
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) =>
-    b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!))),
+    b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!), enCollection ? gradeDe(collection, b.dataset.l!) : 1)),
   );
   app.querySelector('[data-sortir]')!.addEventListener('click', () => {
     oublierSession();
     quitterLigne();
-    ecranChoix();
+    ecranMenu();
   });
 }
 
@@ -1064,6 +1304,17 @@ function ecranFinLigne() {
   }
   const vainqueur = gagne ? h : o;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
+  // Récompense (mode collection) : 2 boosters par victoire, une seule fois par combat.
+  // Une victoire par abandon ne compte qu'après 5 tours joués.
+  const cle = `${codeSalle}-${v.graine}`;
+  if (v.modeSalle === 'collection' && gagne && (!v.abandon || e.tourGlobal >= 5) && boosterLigne.cle !== cle) {
+    if (!collection.recompensesEnLigne.includes(cle)) {
+      collection.recompensesEnLigne = [...collection.recompensesEnLigne, cle].slice(-50);
+      boosterLigne = { cle, html: htmlBoosters('Victoire en ligne', recompenser(collection, 'enLigne', Math.random)) };
+      sauver(collection);
+    }
+  }
+  const booster = boosterLigne.cle === cle ? boosterLigne.html : '';
   const revanche = v.revancheMoi
     ? (v.revancheAmi ? 'Nouvelle manche…' : 'Revanche demandée : en attente de ton ami…')
     : v.revancheAmi ? 'Ton ami veut une revanche !' : '';
@@ -1074,8 +1325,9 @@ function ecranFinLigne() {
         <div class="verdict-portrait">${portrait(vainqueur.def)}</div>
         <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
-        <p class="hist">Toi : ${echap(h.def.nom)} · Ami : ${echap(o.def.nom)} · ${e.tourGlobal} tours · salle ${echap(codeSalle.toUpperCase())}</p>
+        <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · ${echap(adv())} : ${echap(o.def.nom)} · ${e.tourGlobal} tours · salle ${echap(codeSalle.toUpperCase())}</p>
       </section>
+      ${booster}
       <div class="fin-boutons">
         ${revanche ? `<p class="statut">${revanche}</p>` : ''}
         <button class="principal" data-revanche ${v.revancheMoi ? 'disabled' : ''}>Revanche</button>
@@ -1083,11 +1335,12 @@ function ecranFinLigne() {
       </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
+  activerReflets(app);
   app.querySelector('[data-revanche]')!.addEventListener('click', () => duel?.revanche());
   app.querySelector('[data-sortir]')!.addEventListener('click', () => {
     oublierSession();
     quitterLigne();
-    ecranChoix();
+    ecranMenu();
   });
 }
 
@@ -1095,9 +1348,16 @@ function ecranFinLigne() {
 
 function route() {
   fermerFenetre();
-  if (location.hash === '#galerie') ecranGalerie();
-  else if (location.hash === '#amis') ecranAmis();
-  else if (!partie && mode === 'solo') ecranChoix();
+  const h = location.hash;
+  if (!collection.coach || h === '#pseudo') return ecranAccueil();
+  if (h === '#amis') return ecranAmis();
+  if (mode === 'ligne') return; // un combat en ligne est en cours : on n'y touche pas
+  if (h === '#collection' || h === '#galerie') return ecranCollection();
+  if (h === '#fusion') return ecranFusion();
+  if (h === '#club') return ecranClub();
+  if (h === '#combat') return ecranCombatMenu();
+  if (h === '#arene') return ecranArene();
+  if (!partie) ecranMenu();
 }
 window.addEventListener('hashchange', route);
 route();

@@ -196,11 +196,20 @@ export const REGLES = {
 
   // Collection : cartes gagnées après une victoire, tirées parmi celles qu'on n'a pas encore.
   collection: {
-    cartesParVictoire: { normal: 1, fort: 2 },
-    // Booster de consolation : 1 carte toutes les 2 défaites d'affilée.
+    // Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %).
+    // Les cartes sont tirées parmi les 15, doublons possibles, selon le poids de leur rareté.
+    boosters: { classique: { cartes: 3 }, rare: { cartes: 5 }, chanceRare: 0.25 },
+    boostersParVictoire: { arene: 1, enLigne: 2 },
+    // Booster de consolation (arène) : toutes les 2 défaites d'affilée.
     defaitesPourConsolation: 2,
-    cartesConsolation: 1,
     poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
+  },
+
+  // Fusion : passer au grade g demande g exemplaires identiques (l'original + g − 1 doubles,
+  // qui sont consommés). Bonus sur toutes les stats par rapport à la carte de base.
+  fusion: {
+    gradeMax: 5,
+    bonus: [0, 0, 0.05, 0.1, 0.15, 0.25], // indice = grade (grade 1 = carte de base)
   },
 
   // Ordinateur.
@@ -261,6 +270,24 @@ export function avecDeck(def: DefLutteur, actions: IdAction[] | undefined): DefL
   if (!actions || verifierDeck(def, actions)) return def;
   return { ...def, actions: [...actions] };
 }
+
+// ---------- Grades ----------
+
+// Copie du lutteur avec les statistiques de son grade (1 = carte de base).
+export function avecGrade(def: DefLutteur, grade: number): DefLutteur {
+  const g = Math.max(1, Math.min(REGLES.fusion.gradeMax, Math.floor(grade)));
+  const b = REGLES.fusion.bonus[g];
+  if (!b) return def;
+  return {
+    ...def,
+    enduranceMax: Math.round(def.enduranceMax * (1 + b)),
+    force: Math.round(def.force * (1 + b)),
+    recuperation: Math.round(def.recuperation * (1 + b) * 100) / 100,
+  };
+}
+
+// Nombre d'exemplaires identiques pour atteindre ce grade (l'original compris).
+export const exemplairesPourGrade = (grade: number) => grade;
 
 export function trouverLutteur(id: string): DefLutteur {
   const lutteur = LUTTEURS.find((l) => l.id === id);

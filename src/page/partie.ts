@@ -2,7 +2,7 @@
 // La page appelle ces fonctions ; toutes les règles restent dans src/moteur.
 
 import {
-  apercuInitiative, avecDeck, choixOrdinateur, creerCombat, creerHasard, jouerTour, reagirInitiative,
+  apercuInitiative, avecDeck, avecGrade, choixOrdinateur, creerCombat, creerHasard, jouerTour, reagirInitiative,
   reagirInitiativeForte, trouverLutteur,
   type Choix, type EtatCombat, type Face, type Hasard, type IdAction, type Niveau,
 } from '../moteur';
@@ -48,9 +48,9 @@ export class Partie {
 
   constructor(
     readonly idHumain: string, readonly idOrdi: string, graine: number,
-    readonly niveau: Niveau = 'normal', deckHumain?: IdAction[],
+    readonly niveau: Niveau = 'normal', deckHumain?: IdAction[], gradeHumain = 1,
   ) {
-    this.etat = creerCombat(avecDeck(trouverLutteur(idHumain), deckHumain), idOrdi);
+    this.etat = creerCombat(avecGrade(avecDeck(trouverLutteur(idHumain), deckHumain), gradeHumain), idOrdi);
     this.hasard = new HasardRejouable(graine);
   }
 

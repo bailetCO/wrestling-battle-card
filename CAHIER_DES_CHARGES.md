@@ -90,12 +90,22 @@ Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 c
 - Chaque lutteur a une liste de 7 actions possibles, liée à son style. Le joueur compose son deck de 4 actions avant le combat, dont au moins une de la famille de son action spéciale.
 - Le deck de départ est celui du tableau ci-dessus ; l'équilibrage est mesuré avec lui.
 
+### Accueil et menu
+
+- À la première ouverture, le joueur choisit son pseudo de coach (3 à 16 caractères), modifiable ensuite. Il s'affiche dans les combats et ses amis le voient en ligne.
+- Menu principal en 4 coins : Combat (arène contre l'ordinateur, ou en ligne contre un ami), Collection (cartes débloquées et manquantes, réglage des actions), Fusion, Club (amis, échanges de doubles, marchand).
+
 ### Collection
 
-- Au départ, le joueur possède 5 cartes : la moins rare de chaque nation.
-- Chaque victoire ouvre un booster : 1 carte contre l'ordinateur normal, 2 contre l'ordinateur fort. Les cartes sont tirées parmi celles qui manquent, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
-- Toutes les 2 défaites d'affilée, un booster de consolation offre 1 carte. Une victoire remet ce compteur à zéro.
-- La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs (étape 7). Un mode test débloque toutes les cartes.
+- Au départ, le joueur possède 5 cartes : la moins rare de chaque nation. La collection compte les exemplaires de chaque carte et son grade.
+- Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %). Les cartes sont tirées parmi les 15, doublons possibles, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
+- Arène : 1 booster par victoire ; toutes les 2 défaites d'affilée, un booster de consolation. En ligne (mode collection) : 2 boosters par victoire (une victoire par abandon ne compte qu'après 5 tours).
+- La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs. Un mode test débloque toutes les cartes.
+
+### Fusion
+
+- Passer au grade g demande g exemplaires identiques : l'original + (g − 1) doubles, qui sont consommés. Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4 (grade maximal).
+- Bonus sur toutes les statistiques (endurance, force, récupération) par rapport à la carte de base : +5 % aux grades 2, 3 et 4, puis +10 % au grade 5, soit +5, +10, +15 et +25 %.
 
 ### Style graphique
 
@@ -218,7 +228,7 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 - Le combat entre amis se joue sur la version ouverte à tous : https://bailetco.github.io/wrestling-battle-card/ (GitHub Pages, publiée automatiquement à chaque modification). Pas besoin de compte : il suffit du lien. La page sur claude.ai renvoie vers cette version.
 - Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre le même lien, touche « Combat entre amis » et tape le code.
 - Connexion : relais publics gratuits et sans compte (MQTT), deux à la fois pour plus de fiabilité. Solution provisoire, à remplacer par Firebase (au plus tard pour les comptes joueurs, étape 7). Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
-- Toutes les cartes sont permises entre amis ; chacun utilise son deck personnalisé s'il en a un. Pas de booster pour une victoire en ligne pour l'instant.
+- En créant la salle, l'hôte choisit le mode : « Cartes de base » (les 15 cartes, sans grade, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs grades, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
 - Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
 - Les deux téléphones calculent le combat avec le même moteur et le même numéro de combat : ils obtiennent le même résultat, vérifié à chaque tour.

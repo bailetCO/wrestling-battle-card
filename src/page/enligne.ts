@@ -15,7 +15,7 @@
 // Tout l'historique est dans la présence : après un rechargement, le combat reprend.
 
 import {
-  ACTIONS, LUTTEURS, apercuInitiative, avecDeck, creerCombat, creerHasard, jouerTour, trouverLutteur,
+  ACTIONS, LUTTEURS, apercuInitiative, avecDeck, avecGrade, creerCombat, creerHasard, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
 import mqtt from 'mqtt';
@@ -65,12 +65,19 @@ const actionDuCode = (n: number): IdAction | 'lutte' => (n === LUTTE ? 'lutte' :
 // ---------- Ce que chaque joueur publie ----------
 
 export type Role = 'hote' | 'invite'; // l'hôte est le joueur 0 du moteur, l'invité le joueur 1
+// Mode choisi par l'hôte : toutes les cartes de base (sans booster), ou chacun sa collection
+// avec ses grades (boosters à la clé).
+export type ModeSalle = 'base' | 'collection';
 
 export interface Presence {
   v: 1;
   jeu: 'wbc';
   role: Role;
   m: number; // numéro de la manche (revanche = +1)
+  mo: ModeSalle | null; // mode de la salle (publié par l'hôte)
+  co: string | null; // pseudo du coach
+  ic: string | null; // identifiant du coach (pour la liste d'amis)
+  gr: number; // grade du lutteur choisi (mode collection)
   lu: string | null; // lutteur choisi
   dk: number[] | null; // deck (codes d'actions)
   g: number | null; // numéro de combat (graine), publié par l'hôte
@@ -85,8 +92,8 @@ export interface Presence {
   ck: string | null; // contrôle : résumé de l'état après le dernier tour
 }
 
-export function presenceVide(role: Role, m = 0): Presence {
-  return { v: 1, jeu: 'wbc', role, m, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null }): Presence {
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, gr: 1, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -135,6 +142,9 @@ export type Phase =
 export interface Vue {
   phase: Phase;
   moi: Joueur;
+  modeSalle: ModeSalle | null;
+  amiCoach: string | null;
+  amiIdCoach: string | null;
   amiPresent: boolean;
   amiLutteur: string | null;
   monLutteur: string | null;
@@ -165,11 +175,17 @@ export class Duel {
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
+  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null };
+
   constructor(
     private salle: Salle, readonly role: Role,
     depart?: Presence | null, private sauvegarder: (p: Presence) => void = () => undefined,
+    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null } = {},
   ) {
-    this.moiP = depart && depart.role === role && depart.v === 1 ? depart : presenceVide(role);
+    this.ident = { mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null };
+    this.moiP = depart && depart.role === role && depart.v === 1
+      ? { ...presenceVide(role), ...depart, co: this.ident.co ?? depart.co ?? null, ic: this.ident.ic ?? depart.ic ?? null }
+      : presenceVide(role, 0, this.ident);
     this.vue = this.vueVide();
     this.arret = salle.surChangement(() => this.avancer());
     this.publier();
@@ -193,9 +209,10 @@ export class Duel {
 
   // ----- Actions du joueur -----
 
-  choisirLutteur(id: string, deck: IdAction[] | undefined) {
+  // grade : celui de la carte du joueur (pris en compte seulement en mode collection).
+  choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1) {
     const def = avecDeck(trouverLutteur(id), deck);
-    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)) });
+    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade });
   }
 
   async jouer(choix: Choix) {
@@ -255,7 +272,7 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, amiPresent: false, amiLutteur: null, monLutteur: null,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null,
       etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
@@ -276,18 +293,21 @@ export class Duel {
 
     // Manche : l'invité suit l'hôte ; l'hôte lance une nouvelle manche quand les deux veulent la revanche.
     if (ami && ami.m > this.moiP.m) {
-      this.moiP = presenceVide(this.role, ami.m);
+      this.moiP = presenceVide(this.role, ami.m, this.ident);
       this.secret = null;
       this.publier();
     }
     if (ami && this.role === 'hote' && this.moiP.rv && ami.rv && ami.m === this.moiP.m) {
-      this.moiP = presenceVide(this.role, this.moiP.m + 1);
+      this.moiP = presenceVide(this.role, this.moiP.m + 1, this.ident);
       this.secret = null;
       this.publier();
     }
     if (ami && ami.m !== this.moiP.m) ami = null; // l'ami est encore dans l'ancienne manche
 
     const moi = this.moiP;
+    v.modeSalle = this.role === 'hote' ? moi.mo ?? 'base' : ami?.mo ?? null;
+    v.amiCoach = ami?.co ?? null;
+    v.amiIdCoach = ami?.ic ?? null;
     v.monLutteur = moi.lu;
     v.amiLutteur = ami?.lu ?? null;
     v.revancheAmi = !!ami?.rv;
@@ -317,8 +337,13 @@ export class Duel {
     // ----- Rejouer le combat à partir des deux historiques -----
     const graine = hote.g;
     v.graine = graine;
-    const defHote = avecDeck(trouverLutteur(hote.lu), hote.dk.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
-    let defInvite = avecDeck(trouverLutteur(invite.lu), invite.dk.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
+    const enCollection = (hote.mo ?? 'base') === 'collection';
+    const def = (p: Presence) => {
+      const d = avecDeck(trouverLutteur(p.lu!), p.dk!.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
+      return enCollection ? avecGrade(d, p.gr ?? 1) : d;
+    };
+    const defHote = def(hote);
+    let defInvite = def(invite);
     if (defInvite.nom === defHote.nom) defInvite = { ...defInvite, nom: `${defInvite.nom} (2)` };
     let etat = creerCombat(defHote, defInvite);
     const hasard = new HasardRejouable(graine);
