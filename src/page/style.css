@@ -824,3 +824,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
   background: linear-gradient(160deg, #2a0f3d, #0d1a3a 50%, #3a1020);
 }
 .carte-l[data-rarete="champion"][data-style="4"] .cl-portrait { border-color: #fff; box-shadow: 0 0 14px rgba(255, 215, 106, .7); }
+
+/* Effet de l'action, en petit sous son nom. */
+.cl-effet { display: block; margin-top: 1px; font: 600 10.5px var(--police-texte); color: #ffd98a; letter-spacing: 0; }
+.a-effet { font-weight: 700; color: #ffd98a; }

@@ -65,11 +65,16 @@ describe('Contre contre attaque', () => {
     assert.equal(e.joueurs[1].endurance, 60 - ACTIONS.double_jambe.cout - 15); // attaque à 6 points : -15 %
   });
 
-  it("un seul des deux (endurance OU force) : 1 point de sortie, l'attaque ne marque pas", () => {
-    const depart = combatTest({ force: 150 }, { force: 150 });
-    depart.joueurs[1].endurance = 60;
-    const e = tour(depart, c('contre'), c('attaque_base'));
-    assert.equal(e.joueurs[0].score, 1);
+  it("un seul des deux (endurance OU force) suffit : le contre renvoie les points", () => {
+    // Même force, plus d'endurance pour le contreur.
+    const parEndurance = combatTest({ force: 150 }, { force: 150 });
+    parEndurance.joueurs[1].endurance = 60;
+    let e = tour(parEndurance, c('contre'), c('attaque_base'));
+    assert.equal(e.joueurs[0].score, 2);
+    assert.equal(e.joueurs[1].score, 0);
+    // Même endurance, plus de force pour le contreur.
+    e = tour(combatTest({ force: 200 }, { force: 150 }), c('contre'), c('attaque_base'));
+    assert.equal(e.joueurs[0].score, 2);
     assert.equal(e.joueurs[1].score, 0);
   });
 

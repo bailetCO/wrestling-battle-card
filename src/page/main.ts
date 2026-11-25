@@ -12,12 +12,12 @@ import {
   ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais,
   type ModeSalle, type Presence, type Role, type Salle, type Vue,
 } from './enligne';
-import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
+import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
   cartesPossedees, charger, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
-  nbFusions, nbStyles, styleDe, type TriCollection,
+  nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
 import { portraitSVG } from './portrait';
 import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
@@ -307,7 +307,7 @@ function fenetreDeck(base: DefLutteur) {
       <button class="deck-action ${ouverte ? '' : 'verrouillee'}" ${ouverte ? `data-a="${a}" aria-pressed="false"` : 'disabled'}>
         <span class="ico f-${fam}">${ICONE[fam]}</span>
         <span class="a-nom">${echap(nomLocal(def.nation, a))} ${etoiles}${fam === def.familleSpeciale ? ' <small class="marque-spe">spéciale</small>' : ''}</span>
-        <span class="a-fr">${ouverte ? '' : `Débloquée au niveau ${NOM_RARETE[NIVEAUX[gradeDeblocage - 1]]} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
+        <span class="a-fr">${ouverte ? '' : `Débloquée au niveau ${NOM_RARETE[NIVEAUX[gradeDeblocage - 1]]} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${effetAction(a)}</span>
         <span class="a-cout">${cout}</span>
       </button>`;
   };
@@ -405,6 +405,7 @@ function ecranCollection() {
       <section class="groupe reglages">
         <h2>Réglages de test</h2>
         <button class="secondaire" data-booster-test>Ouvrir un booster (test)</button>
+        <button class="secondaire" data-doubles-test>Doubles pour tout monter au maximum (test)</button>
         <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>
         <button class="lien" data-raz>Remettre la collection à zéro</button>
       </section>
@@ -423,6 +424,13 @@ function ecranCollection() {
     collection.toutDebloque = !collection.toutDebloque;
     sauver(collection);
     ecranCollection();
+  });
+  app.querySelector('[data-doubles-test]')!.addEventListener('click', () => {
+    const n = doublesPourMaximum(collection);
+    sauver(collection);
+    ecranCollection();
+    ouvrirFenetre(`<h2>Doubles ajoutés</h2><p>${n ? `${n} doubles ajoutés : tu peux monter chacune de tes cartes jusqu'à Champion du Monde et lui donner toutes ses étoiles dans Fusion.` : 'Tes cartes ont déjà assez de doubles.'}</p>
+      <a class="principal lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a><button class="lien" data-fermer>Fermer</button>`, true);
   });
   app.querySelector('[data-booster-test]')!.addEventListener('click', () => {
     const b = ouvrirBooster(collection, Math.random);
@@ -1014,7 +1022,7 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
       <button class="action" data-action="${a}" data-mode="${mode}" ${ok ? '' : 'disabled'}>
         <span class="ico f-${f}">${ICONE[f]}</span>
         <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
-        <span class="a-fr">${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[f].toLowerCase()}</span>
+        <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte, enchainement: l.bonusEnchainement })}</b></span>
         <span class="a-cout">−${fmt(coutAction(l.def, a))}</span>
       </button>`;
   }).join('');
@@ -1060,7 +1068,6 @@ function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: Cote; fo
     }
   }
   if ((l = trouve(/marque \d+ points? \(Sprawl\)/))) return { texte: 'SPRAWL !', cote: de(l), fort: false };
-  if ((l = trouve(/point de sortie/))) return { texte: 'SORTIE !', cote: de(l), fort: false };
   if ((l = trouve(/glisse/))) return { texte: 'GLISSADE !', cote: de(l), fort: false };
   if ((l = trouve(/passivité adverse/))) return { texte: 'PASSIVITÉ !', cote: de(l), fort: false };
   if ((l = trouve(/marque \d+ points? \(Lutte\)/))) return { texte: 'ÇA PASSE !', cote: de(l), fort: false };

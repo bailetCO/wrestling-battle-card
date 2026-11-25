@@ -1,11 +1,30 @@
 // Textes d'affichage (familles, effets des actions spéciales, icônes).
 // Aucun chiffre de jeu ici : ils restent dans src/moteur/config.ts.
 
-import type { Famille } from '../moteur';
+import { ACTIONS, REGLES, type Famille, type IdAction } from '../moteur';
 
 export const NOM_FAMILLE: Record<Famille, string> = {
   attaque: 'Attaque', defense: 'Défense', contre: 'Contre', feinte: 'Feinte',
 };
+
+// Effet d'une action en quelques mots (sur la carte et sur les boutons de combat).
+// `bonus` : points en plus déjà acquis (feinte réussie, enchaînement), pour le combat.
+export function effetAction(id: IdAction, bonus: { feinte?: boolean; enchainement?: boolean } = {}): string {
+  const a = ACTIONS[id];
+  const pc = (x: number) => `${Math.round(x * 100)} %`;
+  const extra = (bonus.feinte && a.famille === 'attaque' ? REGLES.bonusFeinte : 0)
+    + (bonus.enchainement && (a.famille === 'attaque' || a.famille === 'contre') ? REGLES.speciale.bonusEnchainementFeinte : 0);
+  const plus = extra ? ` (+${extra})` : '';
+  switch (a.famille) {
+    case 'attaque': return `${a.points + extra} pts${plus ? ' avec bonus' : ''}`;
+    case 'defense': return a.points ? `Bloque · ${a.points} pts` : 'Bloque · récupère';
+    case 'contre': return `Renvoie les pts${plus}`;
+    case 'feinte':
+      return id === 'matraquage'
+        ? `+${REGLES.bonusFeinte} · −${pc(REGLES.matraquage.malusPrecision)} précision`
+        : `+${REGLES.bonusFeinte} · initiative`;
+  }
+}
 
 export const EFFET_SPECIALE: Record<Famille, string> = {
   attaque: 'Si elle passe : tentative de tombé. Plus fort que l\'adversaire : peut percer sa défense ou son contre.',

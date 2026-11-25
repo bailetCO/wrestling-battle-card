@@ -173,7 +173,7 @@ function valider(e: EtatCombat, j: Joueur, c: Choix): Choix {
 // Compare deux actions qui ont toutes les deux passé leur tirage de précision.
 function duel(
   e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
-): { res: [Resultat, Resultat]; sortie: boolean } {
+): { res: [Resultat, Resultat] } {
   const [f0, f1] = f;
   // Contre spécial : bat toujours une attaque ou une feinte.
   for (const c of LES_DEUX) {
@@ -181,13 +181,13 @@ function duel(
     if (speciale[c] && f[c] === 'contre' && (f[a] === 'attaque' || f[a] === 'feinte')) {
       const res: [Resultat, Resultat] = ['perd', 'perd'];
       res[c] = 'gagne';
-      return { res, sortie: false };
+      return { res };
     }
   }
   if (f0 === f1) {
-    if (endDebut[0] >= 2 * endDebut[1]) return { res: ['gagne', 'perd'], sortie: false };
-    if (endDebut[1] >= 2 * endDebut[0]) return { res: ['perd', 'gagne'], sortie: false };
-    return { res: ['neutre', 'neutre'], sortie: false };
+    if (endDebut[0] >= 2 * endDebut[1]) return { res: ['gagne', 'perd'] };
+    if (endDebut[1] >= 2 * endDebut[0]) return { res: ['perd', 'gagne'] };
+    return { res: ['neutre', 'neutre'] };
   }
   for (const c of LES_DEUX) {
     const a = autre(c);
@@ -195,16 +195,17 @@ function duel(
       const plusEndurance = endDebut[c] > endDebut[a];
       const plusForce = e.joueurs[c].def.force > e.joueurs[a].def.force;
       const res: [Resultat, Resultat] = ['perd', 'perd'];
+      // Le contre gagne avec plus d'endurance OU plus de force que l'attaquant.
       if (plusEndurance || plusForce) {
         res[c] = 'gagne';
-        return { res, sortie: !(plusEndurance && plusForce) };
+        return { res };
       }
       res[a] = 'gagne';
-      return { res, sortie: false };
+      return { res };
     }
   }
-  if (BAT[f0].includes(f1)) return { res: ['gagne', 'perd'], sortie: false };
-  return { res: ['perd', 'gagne'], sortie: false };
+  if (BAT[f0].includes(f1)) return { res: ['gagne', 'perd'] };
+  return { res: ['perd', 'gagne'] };
 }
 
 const LIBELLE: Record<Famille, string> = {
@@ -214,7 +215,7 @@ const maj = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 // Phrase qui explique pourquoi un duel a été gagné (pour le journal).
 function expliquerDuel(
-  e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], sortie: boolean, spe: [boolean, boolean],
+  e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], spe: [boolean, boolean],
 ): string {
   const g: Joueur = res[0] === 'gagne' ? 0 : 1;
   const p = autre(g);
@@ -225,12 +226,10 @@ function expliquerDuel(
   }
   if (f[g] === f[p]) return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
   if (f[g] === 'contre' && f[p] === 'attaque') {
-    return sortie
-      ? `Le contre de ${nomG} passe, mais avec un seul avantage (endurance ou force) : point de sortie.`
-      : `${nomG} a plus d'endurance et plus de force : le contre renvoie l'attaque.`;
+    return `${nomG} a plus d'endurance ou plus de force : le contre renvoie l'attaque.`;
   }
   if (f[g] === 'attaque' && f[p] === 'contre') {
-    return `Le contre de ${nomP} n'a ni plus d'endurance ni plus de force : l'attaque passe.`;
+    return `${nomP} n'a ni plus d'endurance ni plus de force : son contre ne tient pas, l'attaque passe.`;
   }
   return `${maj(LIBELLE[f[g]])} de ${nomG} l'emporte sur ${LIBELLE[f[p]]} de ${nomP}.`;
 }
@@ -381,7 +380,6 @@ export function jouerTour(
 
   // 3. Comparaison des familles.
   let res: [Resultat, Resultat] = ['rien', 'rien'];
-  let sortie = false;
   const spe: [boolean, boolean] = [!!choix[0].speciale, !!choix[1].speciale];
   const percee = passe[0] && passe[1] ? tenterPercee(e, choix, fam, hasard) : null;
   if (percee !== null) {
@@ -390,9 +388,8 @@ export function jouerTour(
   } else if (passe[0] && passe[1]) {
     const d = duel(e, [fam[0]!, fam[1]!], endDebut, spe);
     res = d.res;
-    sortie = d.sortie;
     if (res[0] === 'neutre') log(e, 'Même famille et pas le double d\'endurance : personne ne marque.');
-    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, sortie, spe));
+    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, spe));
   } else {
     for (const j of LES_DEUX) if (passe[j]) res[j] = 'gagne';
   }
@@ -452,15 +449,11 @@ export function jouerTour(
       case 'contre': {
         const ench = l.bonusEnchainement ? REGLES.speciale.bonusEnchainementFeinte : 0;
         if (opposee?.famille === 'attaque') {
-          if (sortie) {
-            marquer(e, j, REGLES.pointsSortie + ench, ench ? 'point de sortie + enchaînement' : 'point de sortie');
-          } else {
-            const v = valeurAttaque(e, o, opposee.id, endDebut);
-            marquer(e, j, v + ench, `${a.nom} : points de l'attaque renvoyés${ench ? ' + enchaînement' : ''}`);
-            const perte = perteDesequilibre(v);
-            retirerEndurance(adv, perte * adv.def.enduranceMax);
-            log(e, `${adv.def.nom} est déséquilibré et perd ${Math.round(perte * 100)} % d'endurance.`);
-          }
+          const v = valeurAttaque(e, o, opposee.id, endDebut);
+          marquer(e, j, v + ench, `${a.nom} : points de l'attaque renvoyés${ench ? ' + enchaînement' : ''}`);
+          const perte = perteDesequilibre(v);
+          retirerEndurance(adv, perte * adv.def.enduranceMax);
+          log(e, `${adv.def.nom} est déséquilibré et perd ${Math.round(perte * 100)} % d'endurance.`);
         } else if (ench) {
           marquer(e, j, ench, 'enchaînement après la feinte spéciale');
         }

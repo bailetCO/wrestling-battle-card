@@ -44,14 +44,14 @@ export const LUTTEURS: DefLutteur[] = [
   }),
   L({
     id: 'usa-explosif', nom: 'Colt Ramsey', origine: 'USA', nation: 'usa', style: 'Explosif, enchaîne les attaques aux jambes',
-    enduranceMax: 65, force: 200, recuperation: 0.4, rarete: 'rare',
+    enduranceMax: 67, force: 200, recuperation: 0.4, rarete: 'rare',
     actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'],
     actionsPossibles: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'],
     deblocages: ['attaque_base', 'esquive', 'relance', 'matraquage'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'usa-defenseur', nom: 'Duke Halvorsen', origine: 'USA', nation: 'usa', style: 'Défenseur, un mur qui use l\'adversaire',
-    enduranceMax: 69, force: 140, recuperation: 0.39, rarete: 'epique',
+    enduranceMax: 67, force: 140, recuperation: 0.39, rarete: 'epique',
     actions: ['attaque_base', 'sprawl', 'contre', 'matraquage'],
     actionsPossibles: ['attaque_base', 'sprawl', 'contre', 'matraquage'],
     deblocages: ['parade', 'defense', 'double_jambe', 'relance'], familleSpeciale: 'defense',
@@ -59,21 +59,21 @@ export const LUTTEURS: DefLutteur[] = [
   // ----- Russie -----
   L({
     id: 'russie', nom: 'Mikhaïl Orlov', origine: 'Russie', nation: 'russie', style: 'Technicien précis',
-    enduranceMax: 68, force: 170, recuperation: 0.35, rarete: 'rare',
+    enduranceMax: 66, force: 170, recuperation: 0.35, rarete: 'rare',
     actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
     actionsPossibles: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
     deblocages: ['bras_roule', 'relance', 'esquive', 'simple_jambe'], familleSpeciale: 'contre',
   }),
   L({
     id: 'russie-pression', nom: 'Rustam Kazbekov', origine: 'Russie', nation: 'russie', style: 'Lutteur de pression, infatigable',
-    enduranceMax: 71, force: 175, recuperation: 0.29, rarete: 'legendaire',
+    enduranceMax: 68, force: 175, recuperation: 0.29, rarete: 'legendaire',
     actions: ['double_jambe', 'matraquage', 'sprawl', 'relance'],
     actionsPossibles: ['double_jambe', 'matraquage', 'sprawl', 'relance'],
     deblocages: ['ceinture_arriere', 'defense', 'grande_projection', 'feinte'], familleSpeciale: 'attaque',
   }),
   L({
     id: 'russie-contre', nom: 'Pavel Zorine', origine: 'Russie', nation: 'russie', style: 'Contre-attaquant patient',
-    enduranceMax: 69, force: 145, recuperation: 0.48, rarete: 'commune',
+    enduranceMax: 67, force: 145, recuperation: 0.48, rarete: 'commune',
     actions: ['attaque_base', 'esquive', 'contre', 'relance'],
     actionsPossibles: ['attaque_base', 'esquive', 'contre', 'relance'],
     deblocages: ['parade', 'feinte', 'simple_jambe', 'matraquage'], familleSpeciale: 'contre',
@@ -81,21 +81,21 @@ export const LUTTEURS: DefLutteur[] = [
   // ----- Europe -----
   L({
     id: 'europe', nom: 'Hugo Delmas', origine: 'Europe', nation: 'europe', style: 'Équilibré, idéal pour débuter',
-    enduranceMax: 69, force: 165, recuperation: 0.42, rarete: 'commune',
+    enduranceMax: 66, force: 165, recuperation: 0.42, rarete: 'commune',
     actions: ['attaque_base', 'defense', 'feinte', 'contre'],
     actionsPossibles: ['attaque_base', 'defense', 'feinte', 'contre'],
     deblocages: ['simple_jambe', 'parade', 'matraquage', 'relance'], familleSpeciale: 'defense',
   }),
   L({
     id: 'europe-technicien', nom: 'Lucas Ferrand', origine: 'Europe', nation: 'europe', style: 'Technicien, feintes et ceintures',
-    enduranceMax: 65, force: 160, recuperation: 0.43, rarete: 'rare',
+    enduranceMax: 67, force: 160, recuperation: 0.43, rarete: 'rare',
     actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
     actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
     deblocages: ['contre', 'esquive', 'bras_roule', 'matraquage'], familleSpeciale: 'feinte',
   }),
   L({
     id: 'europe-puissant', nom: 'Théo Marchal', origine: 'Europe', nation: 'europe', style: 'Poids lourd, suplex dévastateur',
-    enduranceMax: 62, force: 240, recuperation: 0.43, rarete: 'epique',
+    enduranceMax: 59, force: 240, recuperation: 0.43, rarete: 'epique',
     actions: ['german_suplex', 'defense', 'matraquage', 'contre'],
     actionsPossibles: ['german_suplex', 'defense', 'matraquage', 'contre'],
     deblocages: ['grande_projection', 'sprawl', 'ceinture_arriere', 'relance'], familleSpeciale: 'attaque',
@@ -110,7 +110,7 @@ export const LUTTEURS: DefLutteur[] = [
   }),
   L({
     id: 'afrique-explosif', nom: 'Ibou Ndiaye', origine: 'Afrique', nation: 'afrique', style: 'Explosif, feintes et bras roulés',
-    enduranceMax: 61, force: 180, recuperation: 0.51, rarete: 'commune',
+    enduranceMax: 63, force: 180, recuperation: 0.51, rarete: 'commune',
     actions: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'],
     actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'],
     deblocages: ['double_jambe', 'relance', 'matraquage', 'sprawl'], familleSpeciale: 'feinte',
@@ -125,21 +125,21 @@ export const LUTTEURS: DefLutteur[] = [
   // ----- Japon -----
   L({
     id: 'japon', nom: 'Kenji Arata', origine: 'Japon', nation: 'japon', style: 'Rapide et explosif',
-    enduranceMax: 62, force: 210, recuperation: 0.64, rarete: 'commune',
+    enduranceMax: 59, force: 210, recuperation: 0.64, rarete: 'commune',
     actions: ['simple_jambe', 'feinte', 'esquive', 'contre'],
     actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'contre'],
     deblocages: ['matraquage', 'relance', 'attaque_base', 'parade'], familleSpeciale: 'feinte',
   }),
   L({
     id: 'japon-technicien', nom: 'Ryō Takamine', origine: 'Japon', nation: 'japon', style: 'Technicien, ceinture et relances',
-    enduranceMax: 62, force: 160, recuperation: 0.55, rarete: 'commune',
+    enduranceMax: 61, force: 160, recuperation: 0.55, rarete: 'commune',
     actions: ['ceinture_arriere', 'feinte', 'parade', 'relance'],
     actionsPossibles: ['ceinture_arriere', 'feinte', 'parade', 'relance'],
     deblocages: ['contre', 'simple_jambe', 'esquive', 'matraquage'], familleSpeciale: 'contre',
   }),
   L({
     id: 'japon-contre', nom: 'Daichi Morikawa', origine: 'Japon', nation: 'japon', style: 'Contre-attaquant insaisissable',
-    enduranceMax: 65, force: 140, recuperation: 0.48, rarete: 'epique',
+    enduranceMax: 63, force: 140, recuperation: 0.48, rarete: 'epique',
     actions: ['attaque_base', 'esquive', 'contre', 'matraquage'],
     actionsPossibles: ['attaque_base', 'esquive', 'contre', 'matraquage'],
     deblocages: ['relance', 'parade', 'feinte', 'simple_jambe'], familleSpeciale: 'contre',
@@ -196,7 +196,6 @@ export const REGLES = {
 
   bonusFeinte: 2,
   bonusDoubleEndurance: 2,
-  pointsSortie: 1,
 
   feinteSurDefense: { perteEndurance: 0.1, chanceInitiative: 2 / 3 },
   matraquage: { perteEndurance: 0.05, malusPrecision: 0.05, tours: 2 },

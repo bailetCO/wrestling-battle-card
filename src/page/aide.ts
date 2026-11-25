@@ -36,7 +36,7 @@ export function schemaFamilles(): string {
         ${bulle('defense', 'Défense', 72, 196, false)}
         ${bulle('contre', 'Contre', 248, 196, false)}
       </svg>
-      <figcaption>La flèche va du gagnant vers le perdant. En pointillés (violet) : le contre bat l'attaque seulement avec plus d'endurance <i>et</i> plus de force.</figcaption>
+      <figcaption>La flèche va du gagnant vers le perdant. En pointillés (violet) : le contre bat l'attaque seulement avec plus d'endurance <i>ou</i> plus de force.</figcaption>
     </figure>`;
 }
 
@@ -57,7 +57,7 @@ export function reglesHTML(): string {
         <li><b>Attaque</b> (coût ${COUT_FAMILLE.attaque}) : marque des points (2 à 5 selon la prise).</li>
         <li><b>Défense</b> (coût ${COUT_FAMILLE.defense}) : bloque l'attaque et fait récupérer de l'endurance. Le Sprawl marque aussi 2 points.</li>
         <li><b>Feinte</b> (coût ${COUT_FAMILLE.feinte}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque vaut +${R.bonusFeinte}.</li>
-        <li><b>Contre</b> (coût ${COUT_FAMILLE.contre}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>et</i> plus de force (un seul des deux : 1 point de sortie).</li>
+        <li><b>Contre</b> (coût ${COUT_FAMILLE.contre}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>ou</i> plus de force que l'attaquant (sinon l'attaque passe).</li>
         <li>Deux actions de la même famille s'annulent, sauf si l'un a au moins le double d'endurance de l'autre.</li>
       </ul>
     </section>

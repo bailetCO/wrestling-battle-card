@@ -2,7 +2,7 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
+  LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte, type Rarete,
 } from '../moteur';
 
@@ -168,6 +168,25 @@ export function prochaineFusion(c: Collection, id: string): ProchaineFusion | nu
 export const nbStyles = (c: Collection, id: string) =>
   nbExemplaires(c, id) > 0 ? stylesDebloques(trouverLutteur(id), gradeDe(c, id), nbEtoiles(c, id)) : 0;
 export const styleDe = (c: Collection, id: string) => Math.min(nbStyles(c, id), c.styles[id] ?? 0);
+
+// Bouton de test : donne à chaque carte possédée assez de doubles pour la monter au maximum
+// (Champion du Monde, puis toutes les étoiles). Renvoie le nombre de doubles ajoutés.
+export function doublesPourMaximum(c: Collection): number {
+  let ajout = 0;
+  for (const l of LUTTEURS) {
+    if (nbExemplaires(c, l.id) === 0) continue;
+    const g = gradeDe(c, l.id);
+    let besoin = 1; // l'original
+    for (let x = g + 1; x <= gradeMaxDe(l); x++) besoin += exemplairesPourGrade(l, x) - 1;
+    const etoilesRestantes = etoilesPossibles(l) - nbEtoiles(c, l.id);
+    besoin += etoilesRestantes * REGLES.fusion.doublesParEtoile;
+    if (besoin > nbExemplaires(c, l.id)) {
+      ajout += besoin - nbExemplaires(c, l.id);
+      c.exemplaires[l.id] = besoin;
+    }
+  }
+  return ajout;
+}
 
 // Nombre de fusions faites sur une carte (montées de rareté + étoiles).
 export const nbFusions = (c: Collection, id: string) => (nbExemplaires(c, id) > 0 ? gradeDe(c, id) - 1 + nbEtoiles(c, id) : 0);

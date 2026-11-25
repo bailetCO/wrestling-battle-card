@@ -2,7 +2,7 @@
 
 import { ACTIONS, NIVEAUX, REGLES, coutAction, niveauCarte, nomLocal, type DefLutteur, type IdAction, type NiveauCarte, type Rarete } from '../moteur';
 import { COULEURS_NATION, portraitSVG } from './portrait';
-import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
+import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 
 export const NOM_RARETE: Record<NiveauCarte, string> = {
   commune: 'Commune', rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire', champion: 'Champion du Monde',
@@ -37,7 +37,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
     const f = ACTIONS[a].famille;
     const spe = f === def.familleSpeciale ? ' spe' : '';
     const etoiles = et[a] ? `<i class="etoiles-action">${'★'.repeat(et[a]!)}</i>` : '';
-    return `<li class="${spe}"><span class="ico f-${f}">${ICONE[f]}</span><span>${echap(nomLocal(def.nation, a))}${etoiles}</span><b>${coutAction(def, a)}</b></li>`;
+    return `<li class="${spe}"><span class="ico f-${f}">${ICONE[f]}</span><span>${echap(nomLocal(def.nation, a))}${etoiles}<small class="cl-effet">${effetAction(a)}</small></span><b>${coutAction(def, a)}</b></li>`;
   }).join('');
   const gemmes = '◆'.repeat(GEMMES[niveau]);
   return `

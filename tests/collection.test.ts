@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { LUTTEURS, avecGrade, coutAction, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import {
-  cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires, nbFusions, nbStyles, styleDe,
+  cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires, nbFusions, nbStyles, styleDe, doublesPourMaximum,
   nouvelleCollection, ouvrirBooster, possede, prochaineFusion, recompenser, verifierPseudo,
 } from '../src/page/collection';
 
@@ -194,4 +194,19 @@ test('collection : le tri et le style choisi sont gardés dans la sauvegarde', (
   const r = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
   assert.equal(r.tri, 'nation');
   assert.equal(r.styles.usa, 2);
+});
+
+test('test : assez de doubles pour monter chaque carte possédée au maximum', () => {
+  const c = nouvelleCollection();
+  const ids = Object.keys(c.exemplaires).filter((id) => c.exemplaires[id] > 0);
+  assert.ok(doublesPourMaximum(c) > 0);
+  for (const id of ids) {
+    while (prochaineFusion(c, id)) {
+      const f = prochaineFusion(c, id)!;
+      assert.equal(fusionner(c, id, f.type === 'etoile' ? f.actions[0] : undefined), null);
+    }
+    assert.equal(nbExemplaires(c, id), 1);
+    assert.equal(nbStyles(c, id), 4);
+  }
+  assert.equal(doublesPourMaximum(c), 0);
 });

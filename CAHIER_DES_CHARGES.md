@@ -65,25 +65,25 @@ Une même action peut porter un nom différent selon l'origine du lutteur (par e
 
 Trois styles de jeu par nation. Noms et dessins fictifs et provisoires.
 
-Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours) : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
+Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours ; endurances réajustées après la règle « le contre bat l'attaque avec plus d'endurance OU plus de force ») : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
 
 | Lutteur | Nation | Style | Endurance | Force | Récupération | 4 actions de base | Déblocages (dans l'ordre des fusions) | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 71 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection, Feinte | attaque | 65,9 / 55,4 / 60,6 % | Légendaire |
-| Tanner Briggs | USA | Lutteur de pression, très physique | 69 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense, Ceinture arrière | attaque | 54,7 / 59,5 / 57,1 % | Légendaire |
-| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 69 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe, Relance | défense | 59,0 / 51,5 / 55,2 % | Épique |
-| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 65 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte, Simple jambe | contre | 48,3 / 60,0 / 54,2 % | Épique |
-| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 62 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière, Relance | attaque | 53,7 / 54,5 / 54,1 % | Épique |
-| Lamine Sarr | Afrique | Puissant et athlétique | 65 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense, German suplex | attaque | 55,3 / 45,8 / 50,5 % | Rare |
-| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 65 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé, Matraquage | feinte | 45,0 / 55,6 / 50,3 % | Rare |
-| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 72 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance, Matraquage | défense | 46,1 / 54,2 / 50,1 % | Rare |
-| Mikhaïl Orlov | Russie | Technicien précis | 68 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive, Simple jambe | contre | 49,8 / 49,3 / 49,5 % | Rare |
-| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 65 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance, Matraquage | attaque | 45,3 / 50,7 / 48,0 % | Rare |
-| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 69 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage, Relance | défense | 53,9 / 37,3 / 45,6 % | Commune |
-| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 61 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage, Sprawl | feinte | 41,4 / 47,1 / 44,3 % | Commune |
-| Pavel Zorine | Russie | Contre-attaquant patient | 69 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe, Matraquage | contre | 39,6 / 48,0 / 43,8 % | Commune |
-| Kenji Arata | Japon | Rapide et explosif | 62 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque, Parade | feinte | 48,9 / 38,3 / 43,6 % | Commune |
-| Ryō Takamine | Japon | Technicien, ceinture et relances | 62 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive, Matraquage | contre | 43,2 / 43,0 / 43,1 % | Commune |
+| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 68 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection, Feinte | attaque | 60,3 / 53,1 / 56,7 % | Légendaire |
+| Tanner Briggs | USA | Lutteur de pression, très physique | 69 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense, Ceinture arrière | attaque | 57,7 / 62,8 / 60,2 % | Légendaire |
+| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 67 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe, Relance | défense | 58,2 / 53,8 / 56,0 % | Épique |
+| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 63 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte, Simple jambe | contre | 48,2 / 57,4 / 52,8 % | Épique |
+| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 59 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière, Relance | attaque | 49,5 / 60,9 / 55,2 % | Épique |
+| Lamine Sarr | Afrique | Puissant et athlétique | 65 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense, German suplex | attaque | 55,4 / 42,3 / 48,9 % | Rare |
+| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 67 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé, Matraquage | feinte | 48,0 / 50,9 / 49,5 % | Rare |
+| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 72 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance, Matraquage | défense | 47,7 / 53,0 / 50,4 % | Rare |
+| Mikhaïl Orlov | Russie | Technicien précis | 66 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive, Simple jambe | contre | 48,5 / 47,6 / 48,0 % | Rare |
+| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 67 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance, Matraquage | attaque | 48,8 / 47,6 / 48,2 % | Rare |
+| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 66 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage, Relance | défense | 52,5 / 38,1 / 45,3 % | Commune |
+| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 63 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage, Sprawl | feinte | 42,4 / 44,9 / 43,6 % | Commune |
+| Pavel Zorine | Russie | Contre-attaquant patient | 67 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe, Matraquage | contre | 40,5 / 47,1 / 43,8 % | Commune |
+| Kenji Arata | Japon | Rapide et explosif | 59 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque, Parade | feinte | 48,9 / 42,1 / 45,5 % | Commune |
+| Ryō Takamine | Japon | Technicien, ceinture et relances | 61 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive, Matraquage | contre | 43,5 / 48,5 / 46,0 % | Commune |
 
 ### Decks
 
@@ -162,7 +162,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 | Contre contre défense | Le contre l'emporte |
 | Feinte contre contre | La feinte l'emporte |
 | Feinte contre défense | La feinte l'emporte : le défenseur perd 10 % de son endurance totale et le feinteur a 2 chances sur 3 de gagner l'initiative |
-| Contre contre attaque | Plus d'endurance et plus de force : le contre renvoie les points de l'attaque et l'attaquant subit un déséquilibre. Un seul des deux : 1 point de sortie pour le contreur. Aucun des deux : l'attaque passe. Exceptions pour les actions spéciales : voir Action spéciale |
+| Contre contre attaque | Plus d'endurance OU plus de force que l'attaquant (depuis le 25/11/2026) : le contre renvoie les points de l'attaque et l'attaquant subit un déséquilibre. Aucun des deux : l'attaque passe. (Le point de sortie a été supprimé.) Exceptions pour les actions spéciales : voir Action spéciale |
 | Même famille | Le lutteur qui a au moins le double d'endurance gagne, sinon personne ne marque |
 
 ### Format du match
@@ -183,7 +183,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 - Marquent des points : une attaque, un contre ou un sprawl réussis (sprawl : 2 points techniques pour le défenseur).
 - Attaque réussie : 2, 4 ou 5 points selon l'action (voir Chiffrage) ; +2 points si elle suit une feinte réussie ; +2 points avec au moins le double d'endurance.
-- Contre réussi : il renvoie les points de l'attaque adverse ; point de sortie : 1 point.
+- Contre réussi : il renvoie les points de l'attaque adverse.
 
 ### Avantages
 
@@ -197,7 +197,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 - Tout se passe au même tour. Une action spéciale réussit comme une action normale (tirage de précision, puis duel des familles), avec les exceptions ci-dessous.
 - **Attaque spéciale** : si elle passe, tentative de tombé (mêmes chances que le combo). Si le lutteur a plus de force que l'adversaire, elle peut percer une défense ou un contre (sauf défense ou contre spéciale) et les faire échouer ; chance de percée = 1 − force de l'adversaire ÷ force de l'attaquant (250 contre 150 : 40 %).
-- **Contre spécial** : face à une attaque ou une feinte, il gagne toujours, renvoie tous les points de l'attaque (sans point de sortie, même sans avantage d'endurance ou de force) et tente le tombé. Face à une défense, il agit comme un contre normal, sans tombé.
+- **Contre spécial** : face à une attaque ou une feinte, il gagne toujours, renvoie tous les points de l'attaque (même sans avantage d'endurance ou de force) et tente le tombé. Face à une défense, il agit comme un contre normal, sans tombé.
 - **Défense spéciale** : si elle passe, elle renverse la situation et rapporte 4 points (2 × 2).
 - **Feinte spéciale** : si elle passe, l'adversaire glisse et elle rapporte 2 points immédiatement ; au tour suivant, +4 points d'enchaînement si l'attaque ou le contre du lutteur réussit (même un contre sur une défense).
 - Disponible à partir du 2e tour, avec 3 tours de recharge entre deux utilisations.
