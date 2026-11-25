@@ -498,6 +498,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 ### Action spéciale
 
+- Affichage en combat : pas de bouton à part. Quand l'action spéciale est disponible, l'action de la famille spéciale brille en orange avec une ★ ; en la touchant, une bulle demande « Activer l'action spéciale ? » (version spéciale, avec son effet et son coût, ou version normale, ou annuler). Cela laisse plus de place à l'écran pour le combat.
 - Tout se passe au même tour. Une action spéciale réussit comme une action normale (tirage de précision, puis duel des familles), avec les exceptions ci-dessous.
 - **Attaque spéciale** : si elle passe, tentative de tombé (mêmes chances que le combo). Si le lutteur a plus de force que l'adversaire, elle peut percer une défense ou un contre (sauf défense ou contre spéciale) et les faire échouer ; chance de percée = 1 − force de l'adversaire ÷ force de l'attaquant (250 contre 150 : 40 %).
 - **Contre spécial** : face à une attaque ou une feinte, il gagne toujours, renvoie tous les points de l'attaque (même sans avantage d'endurance ou de force) et tente le tombé. Face à une défense, il agit comme un contre normal, sans tombé.

@@ -73,7 +73,7 @@ export function reglesHTML(): string {
     </section>
     <section class="regle">
       <h2>Action spéciale</h2>
-      <p>Une fois disponible (dès le tour ${R.speciale.premierTour}, puis après ${R.speciale.toursRecharge} tours de repos), le bouton orange joue une action de ta famille spéciale en version renforcée, plus chère :</p>
+      <p>Une fois disponible (dès le tour ${R.speciale.premierTour}, puis après ${R.speciale.toursRecharge} tours de repos), l'action de ta famille spéciale brille en orange avec une ★ : touche-la, et le jeu te demande si tu l'actives en version spéciale, renforcée et plus chère :</p>
       <ul class="liste-regles">
         <li><b>Attaque spéciale</b> : tentative de tombé. Plus fort que l'adversaire, elle peut percer sa défense.</li>
         <li><b>Défense spéciale</b> : renversement, ${R.speciale.pointsDefense} points.</li>
@@ -187,7 +187,7 @@ export const ETAPES_GUIDEES: EtapeGuidee[] = [
   {
     ordi: { action: 'simple_jambe' },
     conseil: { action: 'defense', speciale: true },
-    texte: 'Des points pour toi ! Ton <b>action spéciale</b> est prête (le bouton orange). La Défense spéciale renverse l\'adversaire pour 4 points si elle bloque une attaque, et il va attaquer. Choisis la Défense spéciale.',
+    texte: 'Des points pour toi ! Ton <b>action spéciale</b> est prête : l\'action qui peut la jouer brille en orange avec une ★. La Défense spéciale renverse l\'adversaire pour 4 points si elle bloque une attaque, et il va attaquer. Touche la Défense, puis active la spéciale.',
   },
 ];
 

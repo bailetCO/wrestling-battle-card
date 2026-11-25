@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
@@ -2078,7 +2078,7 @@ function guiderBoutons(racine: ParentNode) {
   const g = etapeGuidee();
   if (!g) return;
   racine.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((b) => {
-    const bon = b.dataset.action === g.conseil.action && (b.dataset.speciale === '1') === g.conseil.speciale;
+    const bon = b.dataset.action === g.conseil.action; // spéciale ou non : demandé ensuite
     b.disabled = !bon;
     b.classList.toggle('conseille', bon);
   });
@@ -2157,22 +2157,6 @@ function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquette: str
     </div>`;
 }
 
-function etatSpeciale(e: EtatCombat): string {
-  const l = e.joueurs[HUMAIN];
-  const S = REGLES.speciale;
-  const fam = l.def.familleSpeciale;
-  const candidates = l.def.actions.filter((a) => ACTIONS[a].famille === fam);
-  if (candidates.some((a) => peutJouerSpeciale(e, HUMAIN, a))) return '';
-  let raison: string;
-  if (e.periode === 3 && e.tour > S.periode3DernierTour) raison = 'plus disponible après le 5e tour de la 3e période';
-  else if (e.tour < S.premierTour) raison = 'disponible à partir du 2e tour';
-  else if (!specialeOuverte(e, HUMAIN)) {
-    const reste = S.toursRecharge - (e.tourGlobal - (l.dernierSpecialTour ?? 0)) + 1;
-    raison = `recharge, encore ${reste} tour${reste > 1 ? 's' : ''}`;
-  } else raison = 'pas assez d\'endurance';
-  return `<p class="spe-info">Action spéciale (${NOM_FAMILLE[fam].toLowerCase()}) : ${raison}.</p>`;
-}
-
 function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
   const l = e.joueurs[HUMAIN];
   const jouables = actionsJouables(e, HUMAIN);
@@ -2185,28 +2169,22 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
         <span class="a-cout">0</span>
       </button>`;
   }
-  const speciales = l.def.actions
-    .filter((a) => ACTIONS[a].famille === l.def.familleSpeciale && peutJouerSpeciale(e, HUMAIN, a))
-    .map((a) => `
-      <button class="action speciale" data-action="${a}" data-speciale="1" data-mode="${mode}">
-        <span class="ico f-${ACTIONS[a].famille}">${ICONE[ACTIONS[a].famille]}</span>
-        <span class="a-nom">★ ${echap(nomLocal(l.def.nation, a))} spéciale</span>
-        <span class="a-fr">${EFFET_SPECIALE[ACTIONS[a].famille]}</span>
-        <span class="a-cout">−${fmt(coutSpeciale(e, HUMAIN, a))}</span>
-      </button>`)
-    .join('');
+  // Action spéciale : pas de bouton à part ; l'action qui peut être jouée en spéciale brille, et le
+  // jeu demande au moment du choix si on active la spéciale (voir demanderSpeciale).
   const normales = l.def.actions.map((a) => {
     const ok = jouables.includes(a);
     const f = ACTIONS[a].famille;
+    const spe = f === l.def.familleSpeciale && peutJouerSpeciale(e, HUMAIN, a);
     return `
-      <button class="action" data-action="${a}" data-mode="${mode}" ${ok ? '' : 'disabled'}>
+      <button class="action ${spe ? 'peut-speciale' : ''}" data-action="${a}" data-mode="${mode}" ${spe ? 'data-spe="1"' : ''} ${ok || spe ? '' : 'disabled'}>
+        ${spe ? '<span class="badge-spe" aria-label="Action spéciale possible">★</span>' : ''}
         <span class="ico f-${f}">${ICONE[f]}</span>
         <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
         <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement })}</b></span>
         <span class="a-cout">−${fmt(coutAction(l.def, a))}</span>
       </button>`;
   }).join('');
-  return `${speciales}<div class="grille">${normales}</div>`;
+  return `<div class="grille">${normales}</div>`;
 }
 
 function classeLigne(ligne: string, e: EtatCombat): string {
@@ -2384,7 +2362,7 @@ function ecranCombat() {
         ${h.initiative ? `<p class="spe-info init">Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.</p>` : ''}
         ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
         ${bulleCoach()}
-        ${etatSpeciale(e)}
+
         <div class="actions-zone">${boutonsActions(e, 'tour')}</div>
         <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : tuto ? 'Combat guidé' : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>${tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
       </footer>
@@ -2400,7 +2378,7 @@ function ecranCombat() {
   guiderBoutons(app);
 
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
-    b.addEventListener('click', () => choisir(lireChoix(b))),
+    b.addEventListener('click', () => demanderSpeciale(b, choisir)),
   );
   app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -2441,6 +2419,37 @@ function confirmerAbandon(): boolean {
 function lireChoix(b: HTMLButtonElement): Choix {
   const a = b.dataset.action as IdAction | 'lutte';
   return a === 'lutte' ? { action: 'lutte' } : { action: a, speciale: b.dataset.speciale === '1' };
+}
+
+// Choix d'une action : si elle peut être jouée en spéciale (elle brille), le jeu demande d'abord
+// si on active l'action spéciale, dans une petite bulle par-dessus l'écran.
+function demanderSpeciale(b: HTMLButtonElement, suite: (c: Choix) => void) {
+  const c = lireChoix(b);
+  if (b.dataset.spe !== '1' || c.action === 'lutte') return suite(c);
+  const e = partie?.etat ?? vueLigne?.etat;
+  if (!e) return suite(c);
+  const l = e.joueurs[HUMAIN];
+  const a = c.action;
+  const nom = echap(nomLocal(l.def.nation, a));
+  const normaleOk = actionsJouables(e, HUMAIN).includes(a);
+  const g = etapeGuidee();
+  document.querySelector('.choix-spe')?.remove();
+  const el = document.createElement('div');
+  el.className = 'choix-spe';
+  el.innerHTML = `<div class="choix-spe-boite" role="dialog" aria-modal="true" aria-label="Activer l'action spéciale ?">
+    <h3>★ Activer l'action spéciale ?</h3>
+    <button class="principal" data-oui ${g && !g.conseil.speciale ? 'disabled' : ''}>
+      <b>★ ${nom} spéciale</b><small>${EFFET_SPECIALE[ACTIONS[a].famille]} · −${fmt(coutSpeciale(e, HUMAIN, a))} d'endurance</small></button>
+    <button class="secondaire" data-non ${normaleOk && !(g && g.conseil.speciale) ? '' : 'disabled'}>
+      <b>${nom} normale</b><small>${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement })} · −${fmt(coutAction(l.def, a))} d'endurance</small></button>
+    <button class="lien" data-annuler>Annuler</button></div>`;
+  document.body.append(el);
+  const fermer = () => el.remove();
+  el.querySelector('[data-oui]')!.addEventListener('click', () => { fermer(); suite({ action: a, speciale: true }); });
+  el.querySelector('[data-non]')!.addEventListener('click', () => { fermer(); suite({ action: a, speciale: false }); });
+  el.querySelector('[data-annuler]')!.addEventListener('click', fermer);
+  el.addEventListener('click', (ev) => { if (ev.target === el) fermer(); });
+  el.querySelector<HTMLButtonElement>('[data-oui]:not([disabled]), [data-non]:not([disabled])')?.focus();
 }
 
 // ---------- Déroulé d'un tour ----------
@@ -2525,7 +2534,7 @@ function fenetreInitiative(choixHumain: Choix, choixOrdi: Choix, apercu: (IdActi
   guiderBoutons(f);
   f.querySelector('[data-garder]')!.addEventListener('click', () => suite(choixHumain, choixOrdi));
   f.querySelectorAll<HTMLButtonElement>('[data-mode="initiative"]').forEach((b) =>
-    b.addEventListener('click', () => suite(lireChoix(b), choixOrdi)),
+    b.addEventListener('click', () => demanderSpeciale(b, (c) => suite(c, choixOrdi))),
   );
 }
 
@@ -3147,7 +3156,7 @@ function fenetreInitiativeLigne(v: Vue) {
     <div class="pave-fenetre">${boutonsActions(e, 'initiative')}</div>`);
   f.querySelector('[data-garder]')?.addEventListener('click', () => choix && duel?.decider(choix));
   f.querySelectorAll<HTMLButtonElement>('[data-mode="initiative"]').forEach((b) =>
-    b.addEventListener('click', () => duel?.decider(lireChoix(b))),
+    b.addEventListener('click', () => demanderSpeciale(b, (c) => duel?.decider(c))),
   );
 }
 

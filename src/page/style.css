@@ -1220,3 +1220,15 @@ b.moi { color: #ff8a95; }
 .miniatures .mc-bas { font-size: 10px; }
 .miniatures .mc-nombre { font-size: 11px; padding: 1px 5px; }
 .voir-plus { display: block; margin: 10px auto 0; font-size: 15px; }
+
+/* Action spéciale : l'action qui peut la jouer brille ; au choix, une bulle demande si on l'active. */
+.action.peut-speciale { position: relative; border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange), 0 0 14px rgba(242, 163, 58, .55); animation: brille-spe 1.8s ease-in-out infinite; }
+.badge-spe { position: absolute; top: -8px; right: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: var(--encre); font-size: 13px; box-shadow: 2px 2px 0 var(--encre); }
+@keyframes brille-spe { 50% { box-shadow: 0 0 0 2px var(--orange), 0 0 22px rgba(242, 163, 58, .85); } }
+.choix-spe { position: fixed; inset: 0; z-index: 35; display: grid; align-items: end; justify-items: center; background: rgba(8, 25, 58, .55); padding: 12px 12px max(12px, env(safe-area-inset-bottom)); }
+.choix-spe-boite { width: min(100%, 440px); display: grid; gap: 8px; padding: 14px; border-radius: 16px; background: var(--tapis-clair); border: 2px solid var(--orange); box-shadow: 4px 4px 0 var(--encre); }
+.choix-spe-boite h3 { margin: 0 0 2px; font: 900 20px var(--police); color: var(--orange); }
+.choix-spe-boite button { display: grid; gap: 2px; text-align: left; }
+.choix-spe-boite button small { font-weight: 400; font-size: 13px; opacity: .85; }
+.choix-spe-boite .lien { text-align: center; }
+@media (prefers-reduced-motion: reduce) { .action.peut-speciale { animation: none; } }
