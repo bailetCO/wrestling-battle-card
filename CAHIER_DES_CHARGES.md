@@ -82,11 +82,11 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Lamine Sarr (Afrique) | Épique | Puissant et athlétique | 60 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance |  |
 | Ibou Ndiaye (Afrique) | Épique | Explosif, feintes et bras roulés | 56 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
 | Serge Diallo (Ghana) | Rare | Explosif, feintes et bras roulés | 55 | 175 | 52 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
-| Cheikh Faye (Afrique) | Rare | Défenseur, immense réserve d'énergie | 68 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque |  |
-| Ousmane Kane (Sénégal) | Rare | Défenseur, immense réserve d'énergie | 68 | 155 | 36 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Cheikh Faye (Afrique) | Rare | Défenseur, immense réserve d'énergie | 69 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque |  |
+| Ousmane Kane (Sénégal) | Rare | Défenseur, immense réserve d'énergie | 69 | 155 | 36 % | Bras roulé, Sprawl, Contre, Attaque | oui |
 | Moussa Ba (Cameroun) | Commune | Explosif, feintes et bras roulés | 53 | 185 | 53 % | Simple jambe, Feinte, Esquive, Bras roulé | oui |
 | Kwame Ekotto (Côte d'Ivoire) | Commune | Puissant et athlétique | 59 | 240 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
-| Tunde Adeyemi (Nigeria) | Commune | Défenseur, immense réserve d'énergie | 67 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Tunde Adeyemi (Nigeria) | Commune | Défenseur, immense réserve d'énergie | 68 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
 | Amadou Ndour (Sénégal) | Commune | Puissant et athlétique | 58 | 240 | 49 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
 
 #### Ouzbékistan (arène : 2e)
@@ -96,13 +96,13 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Jasur Karimjonov (Ouzbékistan) | Légendaire | Explosif, feintes et bras roulés | 59 | 180 | 49 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
 | Farrukh Yusupjonov (Ouzbékistan) | Épique | Explosif, feintes et bras roulés | 57 | 185 | 52 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
 | Akmal Tursunboyev (Ouzbékistan) | Épique | Puissant et athlétique | 62 | 235 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
-| Sardor Sobirjonov (Ouzbékistan) | Rare | Puissant et athlétique | 59 | 235 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Sardor Sobirjonov (Ouzbékistan) | Rare | Puissant et athlétique | 60 | 235 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
 | Bekzod Kholmatov (Ouzbékistan) | Rare | Technicien précis | 59 | 165 | 36 % | Ceinture arrière, Parade, Contre, Feinte |  |
 | Ulugbek Nazarbekov (Ouzbékistan) | Rare | Puissant et athlétique | 59 | 240 | 50 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
 | Sanjar Usmonaliyev (Ouzbékistan) | Commune | Explosif, feintes et bras roulés | 55 | 175 | 49 % | Simple jambe, Feinte, Esquive, Bras roulé | oui |
 | Dilshod Ergashboyev (Ouzbékistan) | Commune | Puissant et athlétique | 59 | 230 | 49 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
-| Otabek Rakhmonov (Ouzbékistan) | Commune | Technicien précis | 60 | 170 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
-| Sherzod Mirzayev (Ouzbékistan) | Commune | Technicien précis | 59 | 165 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Otabek Rakhmonov (Ouzbékistan) | Commune | Technicien précis | 58 | 170 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Sherzod Mirzayev (Ouzbékistan) | Commune | Technicien précis | 58 | 165 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
 
 #### Kirghizistan (arène : 3e)
 
@@ -110,13 +110,13 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Kanat Bekturov (Kirghizistan) | Légendaire | Rapide et explosif | 57 | 215 | 65 % | Simple jambe, Feinte, Esquive, Contre |  |
 | Aibek Osmonbekov (Kirghizistan) | Épique | Équilibré, solide partout | 63 | 165 | 40 % | Attaque, Défense, Feinte, Contre |  |
-| Azamat Asanaliev (Kirghizistan) | Épique | Équilibré, solide partout | 63 | 165 | 44 % | Attaque, Défense, Feinte, Contre |  |
-| Erlan Isakbekov (Kirghizistan) | Rare | Rapide et explosif | 56 | 215 | 61 % | Simple jambe, Feinte, Esquive, Contre |  |
+| Azamat Asanaliev (Kirghizistan) | Épique | Équilibré, solide partout | 62 | 165 | 44 % | Attaque, Défense, Feinte, Contre |  |
+| Erlan Isakbekov (Kirghizistan) | Rare | Rapide et explosif | 56 | 180 | 61 % | Simple jambe, Feinte, Esquive, Contre |  |
 | Ruslan Jumabaev (Kirghizistan) | Rare | Défenseur, immense réserve d'énergie | 69 | 150 | 35 % | Bras roulé, Sprawl, Contre, Attaque |  |
 | Ulan Mamytov (Kirghizistan) | Rare | Équilibré, solide partout | 61 | 165 | 42 % | Attaque, Défense, Feinte, Contre | oui |
-| Talant Usenaliev (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 67 | 150 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
-| Nursultan Toktogulov (Kirghizistan) | Commune | Rapide et explosif | 55 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | oui |
-| Bakyt Sadykbekov (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 66 | 155 | 39 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Talant Usenaliev (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 68 | 150 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Nursultan Toktogulov (Kirghizistan) | Commune | Rapide et explosif | 54 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | oui |
+| Bakyt Sadykbekov (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 67 | 155 | 39 % | Bras roulé, Sprawl, Contre, Attaque | oui |
 | Adilet Abdyldaev (Kirghizistan) | Commune | Rapide et explosif | 55 | 210 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
 
 #### Iran (arène : 4e)
@@ -124,7 +124,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Kian Jafarzadeh (Iran) | Légendaire | Lutteur de pression, très physique | 62 | 160 | 31 % | Double jambe, Sprawl, Matraquage, Relance |  |
-| Navid Tavakolian (Iran) | Épique | Poids lourd, suplex dévastateur | 54 | 240 | 44 % | German suplex, Défense, Matraquage, Contre |  |
+| Navid Tavakolian (Iran) | Épique | Poids lourd, suplex dévastateur | 53 | 240 | 44 % | German suplex, Défense, Matraquage, Contre |  |
 | Arash Moradian (Iran) | Épique | Poids lourd, suplex dévastateur | 53 | 240 | 45 % | German suplex, Défense, Matraquage, Contre |  |
 | Omid Rahbari (Iran) | Rare | Lutteur de pression, très physique | 58 | 155 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
 | Behnam Nourbakhsh (Iran) | Rare | Lutteur de pression, très physique | 59 | 165 | 28 % | Double jambe, Sprawl, Matraquage, Relance |  |
@@ -138,14 +138,14 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 | Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Beka Tsiklauri (Géorgie) | Légendaire | Poids lourd, suplex dévastateur | 55 | 240 | 42 % | German suplex, Défense, Matraquage, Contre |  |
+| Beka Tsiklauri (Géorgie) | Légendaire | Poids lourd, suplex dévastateur | 56 | 240 | 42 % | German suplex, Défense, Matraquage, Contre |  |
 | Davit Kvirikashvili (Géorgie) | Épique | Poids lourd, suplex dévastateur | 53 | 235 | 46 % | German suplex, Défense, Matraquage, Contre |  |
-| Zurab Gvaramadze (Géorgie) | Épique | Puissant et athlétique | 62 | 230 | 49 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Zurab Gvaramadze (Géorgie) | Épique | Puissant et athlétique | 63 | 215 | 49 % | Grande projection, Sprawl, Bras roulé, Relance |  |
 | Tornike Javakhidze (Géorgie) | Rare | Poids lourd, suplex dévastateur | 53 | 240 | 42 % | German suplex, Défense, Matraquage, Contre |  |
-| Levan Nadiradze (Géorgie) | Rare | Technicien, ceinture et relances | 56 | 155 | 55 % | Ceinture arrière, Feinte, Parade, Relance |  |
+| Levan Nadiradze (Géorgie) | Rare | Technicien, ceinture et relances | 55 | 155 | 55 % | Ceinture arrière, Feinte, Parade, Relance |  |
 | Luka Lomidze (Géorgie) | Rare | Technicien, ceinture et relances | 55 | 160 | 54 % | Ceinture arrière, Feinte, Parade, Relance | oui |
-| Sandro Chkhartishvili (Géorgie) | Commune | Technicien, ceinture et relances | 54 | 160 | 54 % | Ceinture arrière, Feinte, Parade, Relance | oui |
-| Lasha Mchedlishvili (Géorgie) | Commune | Puissant et athlétique | 60 | 235 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Sandro Chkhartishvili (Géorgie) | Commune | Technicien, ceinture et relances | 53 | 160 | 54 % | Ceinture arrière, Feinte, Parade, Relance | oui |
+| Lasha Mchedlishvili (Géorgie) | Commune | Puissant et athlétique | 59 | 235 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
 | Irakli Gelashvili (Géorgie) | Commune | Puissant et athlétique | 58 | 240 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
 | Nika Beridzeshvili (Géorgie) | Commune | Puissant et athlétique | 58 | 230 | 51 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
 
@@ -159,9 +159,9 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Ahmet Çelikkol (Turquie) | Rare | Lutteur de pression, très physique | 57 | 160 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
 | Furkan Demirtaş (Turquie) | Rare | Défenseur, immense réserve d'énergie | 69 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque |  |
 | Emre Aydınoğlu (Turquie) | Rare | Technicien, feintes et ceintures | 57 | 165 | 44 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
-| Mert Karaca (Turquie) | Commune | Lutteur de pression, très physique | 56 | 155 | 31 % | Double jambe, Sprawl, Matraquage, Relance | oui |
+| Mert Karaca (Turquie) | Commune | Lutteur de pression, très physique | 57 | 155 | 31 % | Double jambe, Sprawl, Matraquage, Relance | oui |
 | Kaan Kılıçarslan (Turquie) | Commune | Technicien, feintes et ceintures | 55 | 155 | 46 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
-| Oğuz Yıldırımlı (Turquie) | Commune | Défenseur, immense réserve d'énergie | 67 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Oğuz Yıldırımlı (Turquie) | Commune | Défenseur, immense réserve d'énergie | 68 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
 | Serkan Koçak (Turquie) | Commune | Défenseur, immense réserve d'énergie | 66 | 160 | 38 % | Bras roulé, Sprawl, Contre, Attaque | oui |
 
 #### Europe (arène : 7e)
@@ -170,8 +170,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Lucas Ferrand (Europe) | Légendaire | Technicien, feintes et ceintures | 60 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte |  |
 | Théo Marchal (Europe) | Épique | Poids lourd, suplex dévastateur | 53 | 240 | 43 % | German suplex, Défense, Matraquage, Contre |  |
-| Lukas Weber (France) | Épique | Équilibré, solide partout | 63 | 160 | 43 % | Attaque, Défense, Feinte, Contre |  |
-| Hugo Delmas (Europe) | Rare | Équilibré, solide partout | 61 | 165 | 42 % | Attaque, Défense, Feinte, Contre |  |
+| Lukas Weber (France) | Épique | Équilibré, solide partout | 62 | 160 | 43 % | Attaque, Défense, Feinte, Contre |  |
+| Hugo Delmas (Europe) | Rare | Équilibré, solide partout | 60 | 165 | 42 % | Attaque, Défense, Feinte, Contre |  |
 | Victor Schmid (Italie) | Rare | Poids lourd, suplex dévastateur | 53 | 230 | 43 % | German suplex, Défense, Matraquage, Contre |  |
 | Bastien Ricci (Allemagne) | Rare | Technicien, feintes et ceintures | 57 | 165 | 44 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
 | Matteo Morel (Suisse) | Commune | Technicien, feintes et ceintures | 57 | 160 | 42 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
@@ -206,21 +206,21 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Timur Kostine (Russie) | Rare | Technicien précis | 59 | 170 | 40 % | Ceinture arrière, Parade, Contre, Feinte | oui |
 | Mikhaïl Orlov (Russie) | Commune | Technicien précis | 60 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | oui |
 | Artyom Sorokine (Russie) | Commune | Contre-attaquant patient | 63 | 145 | 50 % | Attaque, Esquive, Contre, Relance | oui |
-| Ruslan Vlassov (Russie) | Commune | Technicien précis | 58 | 170 | 41 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Ruslan Vlassov (Russie) | Commune | Technicien précis | 56 | 170 | 41 % | Ceinture arrière, Parade, Contre, Feinte | oui |
 | Nikita Panine (Russie) | Commune | Technicien précis | 59 | 165 | 36 % | Ceinture arrière, Parade, Contre, Feinte | oui |
 
 #### Azerbaïdjan (arène : 10e)
 
 | Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rashad Abbasli (Azerbaïdjan) | Légendaire | Explosif, enchaîne les attaques aux jambes | 61 | 195 | 43 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Rashad Abbasli (Azerbaïdjan) | Légendaire | Explosif, enchaîne les attaques aux jambes | 60 | 195 | 43 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
 | Murad Ismayilzade (Azerbaïdjan) | Épique | Explosif, enchaîne les attaques aux jambes | 61 | 190 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
 | Elvin Hasanli (Azerbaïdjan) | Épique | Explosif, enchaîne les attaques aux jambes | 61 | 195 | 39 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
 | Nijat Safarli (Azerbaïdjan) | Rare | Équilibré, solide partout | 60 | 165 | 45 % | Attaque, Défense, Feinte, Contre |  |
-| Vugar Babayli (Azerbaïdjan) | Rare | Équilibré, solide partout | 62 | 165 | 40 % | Attaque, Défense, Feinte, Contre |  |
-| Emil Gurbanov (Azerbaïdjan) | Rare | Équilibré, solide partout | 61 | 165 | 44 % | Attaque, Défense, Feinte, Contre | oui |
-| Orkhan Novruzov (Azerbaïdjan) | Commune | Contre-attaquant patient | 62 | 150 | 47 % | Attaque, Esquive, Contre, Relance | oui |
-| Ramil Huseynli (Azerbaïdjan) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 200 | 39 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Vugar Babayli (Azerbaïdjan) | Rare | Équilibré, solide partout | 61 | 165 | 40 % | Attaque, Défense, Feinte, Contre |  |
+| Emil Gurbanov (Azerbaïdjan) | Rare | Équilibré, solide partout | 60 | 165 | 44 % | Attaque, Défense, Feinte, Contre | oui |
+| Orkhan Novruzov (Azerbaïdjan) | Commune | Contre-attaquant patient | 63 | 150 | 47 % | Attaque, Esquive, Contre, Relance | oui |
+| Ramil Huseynli (Azerbaïdjan) | Commune | Explosif, enchaîne les attaques aux jambes | 58 | 200 | 39 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
 | Tural Rzayev (Azerbaïdjan) | Commune | Contre-attaquant patient | 62 | 150 | 50 % | Attaque, Esquive, Contre, Relance | oui |
 | Farid Mammadli (Azerbaïdjan) | Commune | Contre-attaquant patient | 63 | 150 | 49 % | Attaque, Esquive, Contre, Relance | oui |
 
@@ -231,8 +231,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 | Aidos Ermekov (Kazakhstan) | Légendaire | Défenseur, un mur qui use l'adversaire | 62 | 140 | 40 % | Attaque, Sprawl, Contre, Matraquage |  |
 | Dias Saparuly (Kazakhstan) | Épique | Explosif, enchaîne les attaques aux jambes | 60 | 195 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
 | Askar Abenov (Kazakhstan) | Épique | Défenseur, un mur qui use l'adversaire | 59 | 150 | 42 % | Attaque, Sprawl, Contre, Matraquage |  |
-| Arman Zhaksybekov (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 54 | 230 | 41 % | German suplex, Défense, Matraquage, Contre |  |
-| Yerlan Seitkali (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 52 | 230 | 46 % | German suplex, Défense, Matraquage, Contre |  |
+| Arman Zhaksybekov (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 53 | 230 | 41 % | German suplex, Défense, Matraquage, Contre |  |
+| Yerlan Seitkali (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 53 | 230 | 46 % | German suplex, Défense, Matraquage, Contre |  |
 | Daulet Omarbekov (Kazakhstan) | Rare | Explosif, enchaîne les attaques aux jambes | 59 | 195 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
 | Timur Beisenuly (Kazakhstan) | Commune | Poids lourd, suplex dévastateur | 50 | 240 | 45 % | German suplex, Défense, Matraquage, Contre | oui |
 | Nurlan Nurmukhan (Kazakhstan) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 195 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
@@ -243,15 +243,15 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 | Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Sōta Sugawara (Japon) | Légendaire | Technicien, ceinture et relances | 59 | 165 | 54 % | Ceinture arrière, Feinte, Parade, Relance |  |
+| Sōta Sugawara (Japon) | Légendaire | Technicien, ceinture et relances | 58 | 165 | 54 % | Ceinture arrière, Feinte, Parade, Relance |  |
 | Hayato Kurokawa (Japon) | Épique | Technicien, ceinture et relances | 56 | 165 | 53 % | Ceinture arrière, Feinte, Parade, Relance |  |
 | Daichi Morikawa (Japon) | Épique | Contre-attaquant insaisissable | 58 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage |  |
-| Riku Okabe (Japon) | Rare | Rapide et explosif | 56 | 210 | 65 % | Simple jambe, Feinte, Esquive, Contre |  |
+| Riku Okabe (Japon) | Rare | Rapide et explosif | 56 | 180 | 65 % | Simple jambe, Feinte, Esquive, Contre |  |
 | Haruto Hanazawa (Japon) | Rare | Contre-attaquant insaisissable | 64 | 145 | 49 % | Attaque, Esquive, Contre, Relance |  |
 | Ryō Takamine (Japon) | Rare | Technicien, ceinture et relances | 55 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | oui |
 | Ren Minegishi (Japon) | Commune | Rapide et explosif | 55 | 210 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
 | Yūto Tsukada (Japon) | Commune | Rapide et explosif | 55 | 215 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
-| Kaito Shimura (Japon) | Commune | Contre-attaquant insaisissable | 62 | 140 | 50 % | Attaque, Esquive, Contre, Relance | oui |
+| Kaito Shimura (Japon) | Commune | Contre-attaquant insaisissable | 63 | 140 | 50 % | Attaque, Esquive, Contre, Relance | oui |
 | Kenji Arata (Japon) | Commune | Rapide et explosif | 55 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | oui |
 
 ### Decks
