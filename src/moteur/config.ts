@@ -194,15 +194,40 @@ export const LUTTEURS: DefLutteur[] = LIGNES.map(([id, nom, origine, nation, sty
   };
 });
 
+// 12 cartes Champion du Monde de naissance, une par nation (rareté « champion »). Verrouillées :
+// jamais dans les boosters ni dans l'arène ; gagnées en fin de saison sportive ou achetées 200 $.
+// Elles reprennent le style, les actions et la récupération de la légendaire de leur nation, avec
+// plus d'endurance et de force (équilibrage par simulation : environ 65 % de victoires).
+// [id, nom, origine, endurance, force, légendaire de référence]
+const LIGNES_CHAMPIONS: [string, string, string, number, number, string][] = [
+  ['champion-usa', 'Brody Callahan', 'USA', 64, 158, 'usa'],
+  ['champion-russie', 'Aleksandr Voronine', 'Russie', 63, 184, 'russie-pression'],
+  ['champion-japon', 'Takeru Hoshino', 'Japon', 59, 173, 'japon-5'],
+  ['champion-iran', 'Kourosh Rahimzadeh', 'Iran', 64, 160, 'iran-2'],
+  ['champion-georgie', 'Nodar Kvachadze', 'Géorgie', 57, 252, 'georgie-2'],
+  ['champion-azerbaidjan', 'Ramil Huseynli', 'Azerbaïdjan', 62, 195, 'azerbaidjan-1'],
+  ['champion-turquie', 'Selim Karadağ', 'Turquie', 62, 168, 'turquie-1'],
+  ['champion-ouzbekistan', 'Rustamjon Toshpulatov', 'Ouzbékistan', 61, 180, 'ouzbekistan-3'],
+  ['champion-kazakhstan', 'Yerlan Seitkali', 'Kazakhstan', 63, 147, 'kazakhstan-2'],
+  ['champion-kirghizistan', 'Bakytbek Asanov', 'Kirghizistan', 60, 226, 'kirghizistan-1'],
+  ['champion-afrique', 'Mamadou Diagne', 'Sénégal', 64, 252, 'afrique-4'],
+  ['champion-europe', 'Maxime Verdier', 'France', 62, 168, 'europe-technicien'],
+];
+export const CHAMPIONS: DefLutteur[] = LIGNES_CHAMPIONS.map(([id, nom, origine, enduranceMax, force, ref]) => {
+  const l = LUTTEURS.find((x) => x.id === ref)!;
+  return { ...l, id, nom, origine, enduranceMax, force, rarete: 'champion', depart: false, actions: [...l.actions], actionsPossibles: [...l.actions], deblocages: [...l.deblocages] };
+});
+export const estChampion = (id: string) => id.startsWith('champion-');
+
 // Lutteur spécial pour les tests : Cocoach, déjà Champion du Monde, avec les meilleures statistiques
-// du jeu (le maximum des 120 lutteurs pour chacune). Hors collection, boosters et arène ; choisissable
+// du jeu (le maximum des 132 cartes pour chacune). Hors collection, boosters et arène ; choisissable
 // seulement contre l'ordinateur, jamais en ligne.
 export const ID_LUTTEUR_TEST = 'cocoach-test';
 export const LUTTEUR_TEST: DefLutteur = {
   id: ID_LUTTEUR_TEST, nom: 'Cocoach', origine: 'France', nation: 'europe', style: 'Champion du Monde, lutteur de test',
-  enduranceMax: Math.max(...LUTTEURS.map((l) => l.enduranceMax)),
-  force: Math.max(...LUTTEURS.map((l) => l.force)),
-  recuperation: Math.max(...LUTTEURS.map((l) => l.recuperation)),
+  enduranceMax: Math.max(...LUTTEURS.map((l) => l.enduranceMax), ...CHAMPIONS.map((l) => l.enduranceMax)),
+  force: Math.max(...LUTTEURS.map((l) => l.force), ...CHAMPIONS.map((l) => l.force)),
+  recuperation: Math.max(...LUTTEURS.map((l) => l.recuperation), ...CHAMPIONS.map((l) => l.recuperation)),
   rarete: 'legendaire', familleSpeciale: 'feinte',
   actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
   deblocages: ['contre', 'esquive', 'bras_roule', 'matraquage'],
@@ -270,7 +295,7 @@ export const REGLES = {
     boostersParVictoire: { arene: 1, enLigne: 2 },
     // Booster de consolation (arène) : toutes les 2 défaites d'affilée.
     defaitesPourConsolation: 2,
-    poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 1 }, // chances relatives (légendaire : très rare)
+    poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 1, champion: 0 }, // chances relatives (légendaire : très rare ; Champion du Monde : jamais en booster)
     cartesDeDepart: 20, // tirées au hasard parmi les cartes débloquées dès le départ
     // Fragments : un double d'une nation se transforme en 1 fragment de sa légendaire ;
     // assez de fragments débloquent la légendaire (même un joueur malchanceux finit par l'avoir).
@@ -345,6 +370,12 @@ export const REGLES = {
   // l'ordre. Les compétitions sont des tournois individuels à double tableau : inscription et gains
   // habituels du tournoi individuel, plus la récompense du palier quand l'objectif est atteint.
   saison: {
+    // La 1re saison finit aux Jeux Olympiques ; les suivantes aux championnats du monde, et les JO
+    // reviennent toutes les 4 saisons (saisons 1, 5, 9…). Fin de saison : des cartes Champion du
+    // Monde (au hasard : 5 exemplaires d'une même carte, ou 5 cartes différentes) ; deux fois avec les JO.
+    joTousLes: 4,
+    cartesFinSaison: 5,
+    prixChampion: 200, // achat d'une carte Champion du Monde (un exemplaire) dans la boutique
     paliers: [
       { nom: 'Échanges interclub', victoires: 3, participants: 0, niveau: 'facile', placeMax: 0, boosters: 2, boostersRares: 0, legendaire: false },
       { nom: 'Championnat régional', victoires: 0, participants: 6, niveau: 'normal', placeMax: 1, boosters: 2, boostersRares: 0, legendaire: false },
@@ -544,7 +575,7 @@ export function avecBonus(def: DefLutteur, bonus: number): DefLutteur {
 export const exemplairesPourGrade = (def: DefLutteur, grade: number) => rangDe(def) + grade;
 
 export function trouverLutteur(id: string): DefLutteur {
-  const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id);
+  const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id) ?? CHAMPIONS.find((l) => l.id === id);
   if (!lutteur) throw new Error(`Lutteur inconnu : ${id}`);
   return lutteur;
 }

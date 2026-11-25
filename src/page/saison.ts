@@ -1,23 +1,29 @@
-// Saison sportive (mode histoire 2), sans affichage : 6 paliers dans l'ordre, ouverts quand le mode
-// histoire 1 est fini. Interclub (combats rapides), puis compétitions individuelles de plus en plus
-// grandes : régional, national, international, championnats du monde, Jeux Olympiques.
+// Saison sportive (mode histoire 2), sans affichage, ouverte quand le mode histoire 1 est fini.
+// Paliers dans l'ordre : interclub (combats rapides), puis compétitions individuelles de plus en plus
+// grandes : régional, national, international, championnats du monde, et Jeux Olympiques une saison
+// sur 4 (la 1re, puis la 5e, la 9e…). Une saison finie, on peut en commencer une nouvelle.
 
-import { REGLES, type Hasard } from '../moteur';
+import { CHAMPIONS, REGLES, type Hasard } from '../moteur';
 import { ouvrirBooster, type Booster, type Collection } from './collection';
 import { NB_ETAPES, legendaireOfferte } from './histoire';
 import { creerIndividuel, type Individuel } from './tournoi';
 
-export const PALIERS = REGLES.saison.paliers;
-export const NB_PALIERS = PALIERS.length;
+const S = REGLES.saison;
+export const PALIERS = S.paliers;
+export const NB_PALIERS = PALIERS.length; // avec les Jeux Olympiques
+
+export const saisonOlympique = (numero: number) => (numero - 1) % S.joTousLes === 0;
+// Nombre de paliers de la saison en cours : 6 avec les JO, 5 sinon (fin aux championnats du monde).
+export const nbPaliers = (c: Collection) => (saisonOlympique(c.saison.numero) ? NB_PALIERS : NB_PALIERS - 1);
 
 export const saisonOuverte = (c: Collection) => c.histoire.etape >= NB_ETAPES;
-export const saisonFinie = (c: Collection) => c.saison.palier >= NB_PALIERS;
+export const saisonFinie = (c: Collection) => c.saison.palier >= nbPaliers(c);
 
 // Objectif d'un palier, en mots.
 export function objectifPalier(i: number): string {
   const p = PALIERS[i];
   if (p.victoires) return `Gagner ${p.victoires} combats rapides (1 période) contre d'autres clubs`;
-  const ou = p.placeMax === 1 ? (i === NB_PALIERS - 1 ? 'Décrocher la médaille d\'or' : 'Gagner la compétition') : `Monter sur le podium (top ${p.placeMax})`;
+  const ou = p.placeMax === 1 ? (p.legendaire ? 'Décrocher la médaille d\'or' : 'Gagner la compétition') : `Monter sur le podium (top ${p.placeMax})`;
   return `${ou} : ${p.participants} lutteurs maximum, double tableau`;
 }
 
@@ -34,7 +40,32 @@ export type EvenementSaison =
   | { type: 'interclub' } // combat interclub gagné
   | { type: 'competition'; palier: number; place: number };
 
-export interface PalierValide { palier: number; boosters: Booster[] }
+export interface PalierValide { palier: number; boosters: Booster[]; finSaison: boolean }
+
+// Récompense de fin de saison, au hasard : 5 exemplaires d'une même carte Champion du Monde, ou 5
+// cartes Champion du Monde différentes.
+export function cartesFinSaison(c: Collection, hasard: Hasard): Booster {
+  const n = S.cartesFinSaison;
+  let ids: string[];
+  if (hasard() < 0.5) {
+    const id = CHAMPIONS[Math.floor(hasard() * CHAMPIONS.length)].id;
+    ids = Array.from({ length: n }, () => id);
+  } else {
+    const pool = CHAMPIONS.map((l) => l.id);
+    ids = Array.from({ length: Math.min(n, pool.length) }, () => pool.splice(Math.floor(hasard() * pool.length), 1)[0]);
+  }
+  const nouvelles = [...new Set(ids.filter((id) => !(c.exemplaires[id] > 0)))];
+  for (const id of ids) c.exemplaires[id] = (c.exemplaires[id] ?? 0) + 1;
+  return { type: 'recompense', cartes: ids, nouvelles };
+}
+
+// Commence la saison suivante (seulement quand la saison en cours est finie).
+export function nouvelleSaison(c: Collection): boolean {
+  if (!saisonOuverte(c) || !saisonFinie(c)) return false;
+  c.saison = { palier: 0, victoires: 0, numero: c.saison.numero + 1, terminees: c.saison.terminees };
+  c.scenesVues = c.scenesVues.filter((k) => !k.startsWith('s')); // les scènes de la saison reviennent
+  return true;
+}
 
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
   const p = PALIERS[i];
@@ -69,7 +100,14 @@ export function passerPalier(c: Collection, hasard: Hasard): PalierValide | null
 function validerPalier(c: Collection, i: number, hasard: Hasard): PalierValide {
   c.saison.palier++;
   c.saison.victoires = 0;
-  return { palier: i, boosters: recompense(c, i, hasard) };
+  const boosters = recompense(c, i, hasard);
+  const finSaison = saisonFinie(c);
+  if (finSaison) {
+    c.saison.terminees++;
+    const fois = saisonOlympique(c.saison.numero) ? 2 : 1;
+    for (let k = 0; k < fois; k++) boosters.push(cartesFinSaison(c, hasard));
+  }
+  return { palier: i, boosters, finSaison };
 }
 
 // Compétition du palier en cours (l'inscription se paie à part, comme un tournoi individuel).

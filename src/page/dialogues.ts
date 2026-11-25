@@ -12,7 +12,8 @@ export const PERSONNAGES: Record<Personnage, { nom: string; role: string }> = {
 export interface Replique { qui: Personnage; texte: string }
 
 // Clés : h0 à h11 = étapes 1 à 12 du mode histoire ; h12 = mode histoire terminé (la saison
-// s'ouvre) ; s0 à s5 = paliers de la saison ; s6 = saison terminée.
+// s'ouvre) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
+// championnats du monde et fin de saison quand il n'y a pas de Jeux Olympiques.
 export const SCENES: Record<string, Replique[]> = {
   h0: [
     { qui: 'philippe', texte: 'Bienvenue au club, Coach ! Moi, c\'est Philippe, directeur technique. J\'ai vu passer beaucoup de lutteurs… et encore plus de coachs.' },
@@ -96,6 +97,16 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'cocoach', texte: 'Toi et moi, en finale. C\'est écrit.' },
     { qui: 'philippe', texte: 'Seul l\'or compte, Coach. Va le chercher.' },
   ],
+  s4b: [
+    { qui: 'philippe', texte: 'Les championnats du monde, le sommet de la saison. Quarante lutteurs, les meilleurs de chaque nation, et l\'ordinateur au niveau fort.' },
+    { qui: 'philippe', texte: 'Monte sur le podium pour boucler la saison en beauté.' },
+    { qui: 'cocoach', texte: 'Les Jeux, ce n\'est pas pour cette année. Alors les Mondiaux, je les veux.' },
+  ],
+  s6b: [
+    { qui: 'philippe', texte: 'Podium mondial : saison bouclée ! Des cartes Champion du Monde t\'attendent.' },
+    { qui: 'cocoach', texte: 'Profite bien. La saison prochaine, je reviens plus fort.' },
+    { qui: 'philippe', texte: 'Repose-toi, Coach. Une nouvelle saison commence quand tu veux. Les Jeux reviennent tous les quatre ans.' },
+  ],
   s6: [
     { qui: 'philippe', texte: 'Champion olympique ! Je savais que ce jour viendrait.' },
     { qui: 'cocoach', texte: '… Bien joué, Coach. Mais la prochaine fois, c\'est moi.' },
@@ -104,8 +115,10 @@ export const SCENES: Record<string, Replique[]> = {
 };
 
 // Scènes liées à l'avancement du joueur (étape ou palier en cours), dans l'ordre où les montrer.
-export function scenesEnCours(etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean): string[] {
+export function scenesEnCours(etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean, olympique = true, premiereSaison = true): string[] {
   if (etapeHistoire < nbEtapes) return [`h${etapeHistoire}`];
-  if (saisonFinie) return ['s6'];
-  return palier === 0 ? ['h12', 's0'] : [`s${palier}`];
+  if (saisonFinie) return [olympique ? 's6' : 's6b'];
+  if (palier === 0) return premiereSaison ? ['h12', 's0'] : ['s0'];
+  if (palier === 4 && !olympique) return ['s4b'];
+  return [`s${palier}`];
 }

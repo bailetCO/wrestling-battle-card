@@ -46,10 +46,12 @@ test('saison : interclub = 3 victoires, puis compétitions dans l\'ordre', () =>
   // JO : seulement l'or ; légendaire + 3 boosters rares.
   assert.equal(noterSaison(c, { type: 'competition', palier: 5, place: 2 }, h), null);
   const jo = noterSaison(c, { type: 'competition', palier: 5, place: 1 }, h)!;
-  assert.equal(jo.boosters.length, 4);
+  assert.equal(jo.boosters.length, 6); // légendaire + 3 rares + 2 fois les cartes de fin de saison
   assert.equal(jo.boosters[0].type, 'recompense');
   assert.equal(LUTTEURS.find((l) => l.id === jo.boosters[0].cartes[0])!.rarete, 'legendaire');
-  assert.deepEqual(jo.boosters.slice(1).map((b) => b.type), ['rare', 'rare', 'rare']);
+  assert.deepEqual(jo.boosters.slice(1, 4).map((b) => b.type), ['rare', 'rare', 'rare']);
+  assert.ok(jo.finSaison);
+  assert.equal(c.saison.terminees, 1);
   assert.ok(saisonFinie(c));
 });
 
@@ -75,12 +77,12 @@ test('saison : compétitions à la bonne taille et au bon niveau', () => {
 
 test('saison et scènes gardées dans la sauvegarde', () => {
   const c = ouverte();
-  c.saison = { palier: 2, victoires: 0 };
+  c.saison = { palier: 2, victoires: 0, numero: 1, terminees: 0 };
   c.scenesVues = ['h0', 's1'];
   const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
-  assert.deepEqual(d.saison, { palier: 2, victoires: 0 });
+  assert.deepEqual(d.saison, { palier: 2, victoires: 0, numero: 1, terminees: 0 });
   assert.deepEqual(d.scenesVues, ['h0', 's1']);
-  assert.deepEqual(depuisSauvegarde({}).saison, { palier: 0, victoires: 0 });
+  assert.deepEqual(depuisSauvegarde({}).saison, { palier: 0, victoires: 0, numero: 1, terminees: 0 });
 });
 
 test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins', async () => {
@@ -92,4 +94,61 @@ test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins
   assert.deepEqual(scenesEnCours(12, 12, 0, false), ['h12', 's0']);
   assert.deepEqual(scenesEnCours(12, 12, 4, false), ['s4']);
   assert.deepEqual(scenesEnCours(12, 12, 6, true), ['s6']);
+});
+
+test('saisons suivantes : fin aux Mondiaux, JO toutes les 4 saisons, cartes Champion du Monde', async () => {
+  const { CHAMPIONS } = await import('../src/moteur/config');
+  const { nbPaliers, nouvelleSaison, saisonOlympique, passerPalier } = await import('../src/page/saison');
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 9].map(saisonOlympique), [true, false, false, false, true, false, true]);
+  const c = ouverte();
+  assert.ok(!nouvelleSaison(c)); // saison pas finie
+  for (let s = 1; s <= 5; s++) {
+    assert.equal(c.saison.numero, s);
+    assert.equal(nbPaliers(c), s === 1 || s === 5 ? 6 : 5);
+    let fin = null;
+    for (let i = 0; i < nbPaliers(c); i++) fin = passerPalier(c, h);
+    assert.ok(fin!.finSaison);
+    const cartes = fin!.boosters.filter((b) => b.cartes.length && b.cartes.every((id) => id.startsWith('champion-')));
+    assert.equal(cartes.length, s === 1 || s === 5 ? 2 : 1, `saison ${s}`);
+    for (const b of cartes) {
+      assert.equal(b.cartes.length, 5);
+      const diff = new Set(b.cartes).size;
+      assert.ok(diff === 1 || diff === 5);
+      for (const id of b.cartes) assert.ok(CHAMPIONS.some((x) => x.id === id));
+    }
+    assert.ok(saisonFinie(c));
+    assert.equal(c.saison.terminees, s);
+    c.scenesVues = ['s0', 's3', 'h12'];
+    assert.ok(nouvelleSaison(c));
+    assert.deepEqual(c.scenesVues, ['h12']);
+    assert.equal(c.saison.palier, 0);
+  }
+});
+
+test('cartes Champion du Monde : 12, verrouillées, jamais en booster, achat 200 $, étoiles avec les doubles', async () => {
+  const { CHAMPIONS, NATIONS, niveauCarte } = await import('../src/moteur/config');
+  const { acheterChampion, gradeDe, ouvrirBooster, possede, prochaineFusion, fusionner } = await import('../src/page/collection');
+  assert.equal(CHAMPIONS.length, 12);
+  assert.deepEqual(new Set(CHAMPIONS.map((l) => l.nation)), new Set(NATIONS.map((n) => n.id)));
+  const c = nouvelleCollection();
+  for (const l of CHAMPIONS) {
+    assert.ok(!possede(c, l.id));
+    assert.equal(niveauCarte(l, gradeDe(c, l.id)), 'champion');
+  }
+  const hh = creerHasard(9);
+  for (let i = 0; i < 300; i++) for (const id of ouvrirBooster(c, hh).cartes) assert.ok(!id.startsWith('champion-'));
+  const id = CHAMPIONS[0].id;
+  c.dollars = 199;
+  assert.equal(typeof acheterChampion(c, id), 'string');
+  c.dollars = 400;
+  assert.notEqual(typeof acheterChampion(c, id), 'string');
+  assert.notEqual(typeof acheterChampion(c, id), 'string');
+  assert.equal(c.dollars, 0);
+  assert.equal(c.exemplaires[id], 2);
+  assert.ok(possede(c, id));
+  // Les doubles servent aux étoiles (la carte est déjà au niveau Champion du Monde).
+  const f = prochaineFusion(c, id)!;
+  assert.equal(f.type, 'etoile');
+  c.exemplaires[id] = 10;
+  assert.equal(fusionner(c, id, f.actions[0]), null);
 });

@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -16,7 +16,7 @@ import {
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
-  acheterBooster, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
+  acheterBooster, acheterChampion, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
@@ -31,7 +31,7 @@ import {
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
 import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
-import { NB_PALIERS, PALIERS, creerCompetitionSaison, noterSaison, passerPalier, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
+import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
@@ -55,6 +55,7 @@ const adv = () => (mode === 'ligne' ? vueLigne?.amiCoach || 'Ami' : 'Ordi');
 const moiNom = () => collection.coach || 'Toi';
 // Pastille du niveau de compte, à côté du nom d'un coach.
 const pastilleNiveau = (n: number | null | undefined) => (n ? `<span class="niv-compte" title="Niveau de compte ${n}">Niv. ${n}</span>` : '');
+const pastilleSaisons = (n: number) => (n ? `<span class="niv-compte saisons" title="${n} saison${n > 1 ? 's' : ''} terminée${n > 1 ? 's' : ''}">🏆 ${n}</span>` : '');
 const niveauOrdi = (n: Niveau | undefined) => (n === 'fort' ? 'fort' : n === 'facile' ? 'facile' : 'normal');
 const etatEnCours = (): EtatCombat | null => (mode === 'ligne' ? vueLigne?.etat ?? null : partie?.etat ?? null);
 let tours: TourJoue[] = [];
@@ -207,8 +208,8 @@ function saison(ev: EvenementSaison) {
 function palierValide(r: ReturnType<typeof noterSaison>) {
   sauver(collection);
   if (!r) return;
-  recompensesHistoire.push({ titre: `${PALIERS[r.palier].nom} : réussi`, lien: '#saison', boosters: r.boosters });
-  annoncer(`${PALIERS[r.palier].nom} : objectif atteint !`, '#saison');
+  recompensesHistoire.push({ titre: `${PALIERS[r.palier].nom} : réussi${r.finSaison ? ', fin de saison' : ''}`, lien: '#saison', boosters: r.boosters });
+  annoncer(r.finSaison ? `Saison ${collection.saison.numero} terminée !` : `${PALIERS[r.palier].nom} : objectif atteint !`, '#saison');
 }
 
 function annoncer(titre: string, lien: string) {
@@ -231,10 +232,11 @@ function bandeauHistoire(): string {
     return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
   }
   if (saisonOuverte(collection)) {
-    if (saisonFinie(collection)) return '<a class="bandeau-histoire fini" href="#saison"><small>Saison sportive</small><b>Champion olympique 🥇</b></a>';
+    const num = collection.saison.numero;
+    if (saisonFinie(collection)) return `<a class="bandeau-histoire fini" href="#saison"><small>Saison ${num} terminée</small><b>Commencer la saison ${num + 1} ▶</b></a>`;
     const i = collection.saison.palier;
     const v = PALIERS[i].victoires;
-    return `<a class="bandeau-histoire" href="#saison"><small>Saison sportive · palier ${i + 1}/${NB_PALIERS} · ${echap(PALIERS[i].nom)}</small>
+    return `<a class="bandeau-histoire" href="#saison"><small>Saison ${num} · palier ${i + 1}/${nbPaliers(collection)} · ${echap(PALIERS[i].nom)}</small>
       <b>${echap(objectifPalier(i))}</b>${v ? `${jauge([collection.saison.victoires, v])}<span>${collection.saison.victoires}/${v}</span>` : ''}</a>`;
   }
   const i = collection.histoire.etape;
@@ -276,7 +278,7 @@ const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutteur('eur
 // Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
 function scenesAuto() {
   if (document.querySelector('.voile, .scene-dialogue, .revelation')) return;
-  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection))
+  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection), saisonOlympique(collection.saison.numero), collection.saison.numero === 1)
     .filter((k) => !collection.scenesVues.includes(k));
   if (cles.length) montrerScene(cles);
 }
@@ -370,7 +372,9 @@ function ecranSaison() {
   const cours = collection.saison.palier;
   const enCours = !!tournoi && !tournoi.recompense;
   const C = R_.tournoi.individuel;
-  const lignes = PALIERS.map((p, i) => {
+  const olympique = saisonOlympique(collection.saison.numero);
+  const num = collection.saison.numero;
+  const lignes = PALIERS.slice(0, nbPaliers(collection)).map((p, i) => {
     const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
     let action = '';
     if (i === cours) {
@@ -388,16 +392,20 @@ function ecranSaison() {
     return `<li class="etape-histoire ${etat}">
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
       <div><b>${echap(p.nom)}</b><p>${echap(objectifPalier(i))}</p>${action}
-        ${i <= cours ? `<button class="lien revoir-scene" data-scene="${i === 0 ? 's0' : `s${i}`}">💬 Revoir la scène</button>` : ''}
+        ${i <= cours ? `<button class="lien revoir-scene" data-scene="${i === 4 && !olympique ? 's4b' : `s${i}`}">💬 Revoir la scène</button>` : ''}
         ${i === cours ? '<button class="secondaire bouton-test" data-passer-palier>⏭ Passer au palier suivant (test)</button>' : ''}
         <small class="gain">🎁 ${recompensePalier(i)}</small></div></li>`;
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Saison sportive', saisonFinie(collection) ? 'Saison terminée : champion olympique !' : `Palier ${cours + 1} sur ${NB_PALIERS} · ${PALIERS[cours].nom}`)}
+      ${enTete(`Saison ${num}`, saisonFinie(collection) ? 'Saison terminée !' : `Palier ${cours + 1} sur ${nbPaliers(collection)} · ${PALIERS[cours].nom}`)}
       ${blocPaquet('#saison')}
+      ${saisonFinie(collection) ? `<section class="bloc saison-ouverte"><h2>Saison ${num} terminée 🏆</h2>
+        <p>${collection.saison.terminees} saison${collection.saison.terminees > 1 ? 's' : ''} terminée${collection.saison.terminees > 1 ? 's' : ''} au total. La saison ${num + 1} ${saisonOlympique(num + 1) ? 'se termine aux Jeux Olympiques' : 'se termine aux championnats du monde (les Jeux reviennent tous les 4 ans)'}.</p>
+        <button class="principal" data-nouvelle-saison>Commencer la saison ${num + 1}</button>
+        <button class="lien" data-scene="${olympique ? 's6' : 's6b'}">💬 Revoir la scène finale</button></section>` : ''}
+      <section class="bloc"><p class="note">${olympique ? 'Saison olympique : elle se termine aux Jeux Olympiques' : 'Cette saison se termine aux championnats du monde'}. Fin de saison : ${R_.saison.cartesFinSaison} cartes Champion du Monde (au hasard : 5 exemplaires d'une même carte, ou 5 cartes différentes)${olympique ? ', deux fois' : ''}.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
-      ${saisonFinie(collection) ? '<button class="lien marge" data-scene="s6">💬 Revoir la scène finale</button>' : ''}
     </main>`;
   activerReflets(app);
   brancherPaquet('#saison', ecranSaison);
@@ -405,6 +413,10 @@ function ecranSaison() {
   app.querySelector('[data-interclub]')?.addEventListener('click', () => ecranChoixSaison('interclub'));
   app.querySelector('[data-competition]')?.addEventListener('click', () => ecranChoixSaison('competition'));
   app.querySelector('[data-reprendre-competition]')?.addEventListener('click', ecranTournoiEnCours);
+  app.querySelector('[data-nouvelle-saison]')?.addEventListener('click', () => {
+    if (nouvelleSaison(collection)) sauver(collection);
+    ecranSaison();
+  });
   app.querySelector('[data-passer-palier]')?.addEventListener('click', () => {
     palierValide(passerPalier(collection, Math.random));
     document.querySelector('.bulle-histoire')?.remove();
@@ -418,7 +430,7 @@ function ecranSaison() {
 function ecranChoixSaison(quoi: 'interclub' | 'competition', message = '') {
   const p = PALIERS[collection.saison.palier];
   if (!p) return ecranSaison();
-  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete(p.nom, quoi === 'interclub' ? 'Combat rapide (1 période) contre un autre club' : `Inscription ${R_.tournoi.individuel.inscription} $ (tu as ${collection.dollars} $)`, '#saison')}
@@ -455,7 +467,7 @@ function ecranMenu() {
   partie = null;
   histoire({ type: 'etat' });
   const session = sessionLigne();
-  const fusions = LUTTEURS.filter((l) => fusionPrete(collection, l.id)).length;
+  const fusions = CARTES.filter((l) => fusionPrete(collection, l.id)).length;
   const tuile = (id: string, titre: string, sous: string, href: string, alerte = '', cadenas = '') => `
     <a class="tuile t-${id} ${cadenas ? 'verrouillee' : ''}" href="${href}">
       <span class="tuile-ico">${ICONES_MENU[id]}</span>
@@ -470,7 +482,7 @@ function ecranMenu() {
     <main class="menu">
       <header class="menu-tete">
         <span class="avatar" aria-hidden="true">${echap((collection.coach ?? '?').slice(0, 1).toUpperCase())}</span>
-        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(collection.coach ?? '')} ${pastilleNiveau(niveauCompte(collection))}</b></span>
+        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(collection.coach ?? '')} ${pastilleNiveau(niveauCompte(collection))}${pastilleSaisons(collection.saison.terminees)}</b></span>
         <a class="lien petit" href="#pseudo">Modifier</a>
       </header>
       ${porteMonnaie()}
@@ -596,7 +608,7 @@ function blocArene(): string {
 
 function ecranArene(rapide = false) {
   partie = null;
-  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   const cartes = miens.map((l) => {
     const boutons = `
       <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
@@ -740,8 +752,16 @@ const TRIS: { id: TriCollection; nom: string }[] = [
   { id: 'fusions', nom: 'Fusions' }, { id: 'niveau', nom: 'Rareté actuelle' },
 ];
 
-// Les groupes de cartes de la collection, selon le tri choisi.
+// Toutes les cartes qu'un joueur peut posséder : les 120 lutteurs et les 12 Champions du Monde.
+const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS];
+
+// Les groupes de cartes de la collection, selon le tri choisi ; les Champions du Monde en premier
+// (verrouillés tant qu'ils ne sont pas gagnés en fin de saison ou achetés 200 $).
 function groupesCollection(): { titre: string; liste: DefLutteur[] }[] {
+  return [{ titre: 'Champions du Monde', liste: CHAMPIONS }, ...groupesBase()];
+}
+
+function groupesBase(): { titre: string; liste: DefLutteur[] }[] {
   const tri = collection.tri;
   const rangBase = (l: DefLutteur) => ORDRE_RARETE.indexOf(l.rarete);
   if (tri === 'nation') {
@@ -946,7 +966,7 @@ function sectionFragments(): string {
 
 function ecranFusion(message = '') {
   partie = null;
-  const miens = LUTTEURS.filter((l) => nbExemplaires(collection, l.id) > 0)
+  const miens = CARTES.filter((l) => nbExemplaires(collection, l.id) > 0)
     .sort((a, b) => {
       return Number(fusionPrete(collection, b.id)) - Number(fusionPrete(collection, a.id))
         || nbExemplaires(collection, b.id) - nbExemplaires(collection, a.id);
@@ -1146,7 +1166,7 @@ const NOM_TOURNOI: Record<Tournoi['type'], string> = { individuel: 'Tournoi indi
 function ecranInscriptionIndividuel(nombre: number) {
   const C = R_.tournoi.individuel;
   const n = nombreParticipants(nombre);
-  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi individuel', `Inscription ${C.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}
@@ -1547,7 +1567,7 @@ function ecranMonClub(message = '') {
 }
 
 function fenetreRecruter() {
-  const libres = LUTTEURS.filter((l) => possede(collection, l.id) && !collection.club.includes(l.id));
+  const libres = CARTES.filter((l) => possede(collection, l.id) && !collection.club.includes(l.id));
   const f = ouvrirFenetre(`
     <h2>Recruter un lutteur</h2>
     ${libres.length
@@ -1637,6 +1657,17 @@ function ecranSocial(message = '') {
           }).join('')}
         </div>
       </section>
+      <section class="bloc boutique-champions">
+        <h2>Champions du Monde <small>${R_.saison.prixChampion} $</small></h2>
+        <p>Ces cartes ne sortent jamais des boosters : gagne-les en fin de saison sportive, ou achète-les ici (${R_.saison.prixChampion} $ l'exemplaire). Les doubles servent à leur donner des étoiles et des styles de carte.</p>
+        <ul class="liste-champions">${CHAMPIONS.map((l) => {
+          const n = nbExemplaires(collection, l.id);
+          const ok = collection.dollars >= R_.saison.prixChampion;
+          return `<li><span class="vignette">${portrait(l, 'champion')}</span>
+            <span class="fusion-info"><b>${echap(l.nom)}</b><small>${echap(NATIONS.find((x) => x.id === l.nation)?.nom ?? '')} · ${n ? `${n} exemplaire${n > 1 ? 's' : ''}` : '🔒 verrouillée'}</small></span>
+            <button class="${ok ? 'principal' : 'secondaire'} petit-bouton" data-champion="${l.id}" ${ok ? '' : 'disabled'}>${R_.saison.prixChampion} $</button></li>`;
+        }).join('')}</ul>
+      </section>
       <section class="bloc">
         <h2>Transfert de lutteur</h2>
         <p>3 offres par jour, chacune une fois : on te transfère un lutteur contre un de tes doubles de même rareté. Nouvelles offres demain.</p>
@@ -1681,6 +1712,14 @@ function ecranSocial(message = '') {
       if (typeof r === 'string') return ecranSocial(`<p class="alerte">${echap(r)}</p>`);
       sauver(collection);
       revelerPaquet({ titre: 'Booster acheté', boosters: [r], ouvert: false }, () => ecranSocial());
+    }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-champion]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const r = acheterChampion(collection, b.dataset.champion!);
+      if (typeof r === 'string') return ecranSocial(`<p class="alerte">${echap(r)}</p>`);
+      sauver(collection);
+      revelerPaquet({ titre: 'Champion du Monde acheté', boosters: [r], ouvert: false }, () => ecranSocial());
     }),
   );
   app.querySelector('[data-ouvrir-echange]')?.addEventListener('click', () => ouvrirEchange(nouveauCode()));
@@ -2911,7 +2950,7 @@ function majStatutLigne() {
 
 function ecranSalle(v: Vue) {
   const enCollection = v.modeSalle === 'collection';
-  const dispo = enCollection ? LUTTEURS.filter((l) => possede(collection, l.id)) : LUTTEURS;
+  const dispo = enCollection ? CARTES.filter((l) => possede(collection, l.id)) : LUTTEURS;
   const liste = dispo.map((l) => {
     const g = enCollection ? gradeDe(collection, l.id) : 1;
     return `

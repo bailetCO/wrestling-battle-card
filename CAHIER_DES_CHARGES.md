@@ -335,6 +335,17 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les tableaux vont jusqu'à 64 places (1/32 de finale) ; les places vides sont des exemptions tirées au sort.
 - Récompenses des modes histoire : le booster s'ouvre carte par carte avec son récapitulatif ; une fois revenu sur l'écran du mode histoire ou de la saison, les cartes de la dernière récompense ne sont plus affichées.
 
+### Saisons à répétition et cartes Champion du Monde
+
+- Une saison finie, le joueur peut en commencer une nouvelle (écran Saison, bandeau du menu). La 1re saison se termine aux Jeux Olympiques ; les suivantes aux championnats du monde ; les JO reviennent toutes les 4 saisons (saisons 1, 5, 9…), comme dans la vie réelle.
+- Fin de saison : en plus de la récompense du dernier palier, des cartes Champion du Monde, au hasard : 5 exemplaires d'une même carte, ou 5 cartes différentes. Une saison avec les JO donne cette récompense deux fois.
+- Le nombre de saisons terminées s'affiche à côté du niveau de compte (« 🏆 2 »).
+- Les scènes de la saison reviennent à chaque nouvelle saison ; sans JO, les championnats du monde et la fin de saison ont leurs propres scènes.
+- 12 cartes Champion du Monde, une par nation, rareté de base « Champion du Monde » (noms inventés ; style, actions et récupération de la légendaire de leur nation, avec plus d'endurance et de force). Équilibrage par simulation : environ 65 % de victoires (fourchette 62,5 à 67,5 %), contre environ 60 % pour une légendaire.
+  - Verrouillées : jamais dans les boosters, ni dans l'arène, ni chez les adversaires. On les obtient en fin de saison, ou dans la boutique (Social) à 200 $ l'exemplaire, autant de fois qu'on veut.
+  - Elles sont déjà au niveau Champion du Monde : leurs doubles servent à gagner des étoiles (actions moins chères) et des styles de carte, par la fusion.
+  - Dans la collection, elles ont leur propre groupe, en premier (grisées tant qu'elles ne sont pas gagnées) ; le compte « x/120 cartes » ne les inclut pas.
+
 ### Scènes de dialogue (modes histoire)
 
 - À chaque étape du mode histoire et à chaque palier de la saison, une petite scène façon BD (2 à 4 bulles) présente l'objectif. Elle s'affiche une fois, au menu ou dans l'écran du mode, et peut être revue (« Revoir la scène »).

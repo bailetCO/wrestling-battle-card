@@ -35,7 +35,7 @@ export interface DefNation {
   nom: string;
   ordreArene: number; // ordre de passage dans l'arène (de la plus abordable à la plus forte)
 }
-export type Rarete = 'commune' | 'rare' | 'epique' | 'legendaire';
+export type Rarete = 'commune' | 'rare' | 'epique' | 'legendaire' | 'champion'; // champion : les 12 cartes Champion du Monde de naissance
 // Niveau d'une carte : sa rareté de départ, puis celle qu'elle atteint par fusion.
 export type NiveauCarte = Rarete | 'champion';
 

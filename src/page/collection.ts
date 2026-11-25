@@ -2,7 +2,7 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
+  CHAMPIONS, ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte,
 } from '../moteur';
 
@@ -33,7 +33,7 @@ export interface Collection {
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
   histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
-  saison: { palier: number; victoires: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub
+  saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
 }
 
@@ -83,7 +83,7 @@ export function nouvelleCollection(): Collection {
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
-    saison: { palier: 0, victoires: 0 },
+    saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: [],
   };
 }
@@ -122,7 +122,7 @@ export function verifierPseudo(p: string): string | null {
 // ---------- Boosters ----------
 
 function tirerCarte(hasard: Hasard): string {
-  const poids = LUTTEURS.map((l) => REGLES.collection.poidsRarete[l.rarete]);
+  const poids: number[] = LUTTEURS.map((l) => REGLES.collection.poidsRarete[l.rarete]);
   let tirage = hasard() * poids.reduce((a, b) => a + b, 0);
   let k = 0;
   while (k < poids.length - 1 && tirage >= poids[k]) tirage -= poids[k++];
@@ -230,6 +230,17 @@ export function acheterBooster(c: Collection, type: TypeBooster, hasard: Hasard)
   if (c.dollars < prix) return `Il te faut ${prix} $ (tu as ${c.dollars} $).`;
   c.dollars -= prix;
   return ouvrirBooster(c, hasard, type);
+}
+
+// Achat d'un exemplaire d'une carte Champion du Monde (200 $, autant de fois qu'on veut).
+export function acheterChampion(c: Collection, id: string): Booster | string {
+  const prix = REGLES.saison.prixChampion;
+  if (!CHAMPIONS.some((l) => l.id === id)) return 'Carte inconnue.';
+  if (c.dollars < prix) return `Il te faut ${prix} $ (tu as ${c.dollars} $).`;
+  c.dollars -= prix;
+  const nouvelle = nbExemplaires(c, id) === 0;
+  c.exemplaires[id] = nbExemplaires(c, id) + 1;
+  return { type: 'recompense', cartes: [id], nouvelles: nouvelle ? [id] : [] };
 }
 
 // Victoire : 1 booster en arène, 2 en ligne (mode collection), plus les médailles (+1 en arène,
@@ -366,9 +377,14 @@ export function depuisSauvegarde(brut: unknown): Collection {
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
   c.arene = entier(b.arene);
-  const sa = b.saison as { palier?: unknown; victoires?: unknown } | undefined;
+  const sa = b.saison as { palier?: unknown; victoires?: unknown; numero?: unknown; terminees?: unknown } | undefined;
   if (sa && typeof sa === 'object') {
-    c.saison = { palier: Math.min(REGLES.saison.paliers.length, entier(sa.palier)), victoires: entier(sa.victoires) };
+    c.saison = {
+      palier: Math.min(REGLES.saison.paliers.length, entier(sa.palier)), victoires: entier(sa.victoires),
+      numero: Math.max(1, entier(sa.numero)), terminees: entier(sa.terminees),
+    };
+    // Ancienne sauvegarde : la 1re saison finie aux JO compte comme terminée.
+    if (!sa.terminees && c.saison.palier >= REGLES.saison.paliers.length) c.saison.terminees = 1;
   }
   if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
   const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;

@@ -16,7 +16,7 @@ const parFort = nombres[1] ?? 150;
 
 // Fourchettes : leur moyenne (pondérée par 4 communes, 3 rares, 2 épiques, 1 légendaire) fait 50 %.
 const FOURCHETTES: Record<Rarete, [number, number]> = {
-  legendaire: [0.575, 0.625], epique: [0.525, 0.575], rare: [0.475, 0.525], commune: [0.425, 0.475],
+  champion: [0.625, 0.675], legendaire: [0.575, 0.625], epique: [0.525, 0.575], rare: [0.475, 0.525], commune: [0.425, 0.475],
 };
 
 function mesurer(n: number, fort: boolean): number[] {
