@@ -57,6 +57,16 @@ export function noterSaison(c: Collection, ev: EvenementSaison, hasard: Hasard):
   }
   if (ev.type === 'competition' && ev.palier === i && !p.victoires) ok = ev.place <= p.placeMax;
   if (!ok) return null;
+  return validerPalier(c, i, hasard);
+}
+
+// Test : valide le palier en cours comme s'il était réussi (avec sa récompense).
+export function passerPalier(c: Collection, hasard: Hasard): PalierValide | null {
+  if (!saisonOuverte(c) || saisonFinie(c)) return null;
+  return validerPalier(c, c.saison.palier, hasard);
+}
+
+function validerPalier(c: Collection, i: number, hasard: Hasard): PalierValide {
   c.saison.palier++;
   c.saison.victoires = 0;
   return { palier: i, boosters: recompense(c, i, hasard) };

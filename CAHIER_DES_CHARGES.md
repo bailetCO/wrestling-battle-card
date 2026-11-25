@@ -340,6 +340,12 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Personnages : **Philippe**, le mentor (ancien champion devenu directeur technique), et **Cocoach**, le coach rival qu'on recroise jusqu'aux Jeux Olympiques.
 - Scènes : une par étape (12), une à la fin du mode histoire (ouverture de la saison), une par palier de la saison (6) et une finale (champion olympique).
 
+### Outils de test (à retirer avant le lancement public)
+
+- Mode histoire et saison : un bouton « ⏭ Passer à l'étape suivante (test) » / « Passer au palier suivant (test) » valide l'étape ou le palier en cours comme s'il était réussi, avec sa récompense et sa scène de dialogue, pour parcourir toute l'histoire.
+- Lutteur de test **Cocoach** : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
+- Collection, réglages de test : « +10 médailles », « +50 $ », mode test (toutes les cartes), ouvrir un booster.
+
 ### Combat automatique
 
 - À partir du niveau de compte 3, un bouton « ⚡ Combat auto » apparaît à côté de chaque bouton de combat contre l'ordinateur (arène, combat rapide, tournois, revanche, adversaire suivant). Avant, il est affiché verrouillé.

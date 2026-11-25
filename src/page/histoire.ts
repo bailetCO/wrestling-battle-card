@@ -151,10 +151,11 @@ export function legendaireOfferte(c: Collection, hasard: Hasard): Booster {
 // récompense (une étape validée peut en valider une autre aussitôt : club ouvert, arène).
 export interface EtapeValidee { etape: number; boosters: Booster[] }
 
-export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasard): EtapeValidee[] {
+export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasard, forcer = false): EtapeValidee[] {
   const faites: EtapeValidee[] = [];
   let e: EvenementHistoire = ev;
-  while (!histoireFinie(c) && valide(c, e)) {
+  while (!histoireFinie(c) && (forcer || valide(c, e))) {
+    forcer = false;
     const i = c.histoire.etape;
     c.histoire.etape++;
     c.histoire.nations = [];
@@ -163,3 +164,6 @@ export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasa
   }
   return faites;
 }
+
+// Test : valide l'étape en cours comme si elle était réussie (avec sa récompense).
+export const passerEtape = (c: Collection, hasard: Hasard) => noterHistoire(c, { type: 'etat' }, hasard, true);

@@ -194,6 +194,20 @@ export const LUTTEURS: DefLutteur[] = LIGNES.map(([id, nom, origine, nation, sty
   };
 });
 
+// Lutteur spécial pour les tests : Cocoach, déjà Champion du Monde, avec les meilleures statistiques
+// du jeu (le maximum des 120 lutteurs pour chacune). Hors collection, boosters et arène ; choisissable
+// seulement contre l'ordinateur, jamais en ligne.
+export const ID_LUTTEUR_TEST = 'cocoach-test';
+export const LUTTEUR_TEST: DefLutteur = {
+  id: ID_LUTTEUR_TEST, nom: 'Cocoach', origine: 'France', nation: 'europe', style: 'Champion du Monde, lutteur de test',
+  enduranceMax: Math.max(...LUTTEURS.map((l) => l.enduranceMax)),
+  force: Math.max(...LUTTEURS.map((l) => l.force)),
+  recuperation: Math.max(...LUTTEURS.map((l) => l.recuperation)),
+  rarete: 'legendaire', familleSpeciale: 'feinte',
+  actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
+  deblocages: ['contre', 'esquive', 'bras_roule', 'matraquage'],
+};
+
 // Nom affiché d'une action. Le jeu est entièrement en français : toutes les nations utilisent le
 // même nom (plus tard, un choix de langue traduira tout le jeu, noms des actions compris).
 export function nomLocal(_nation: string, action: IdAction): string {
@@ -527,7 +541,7 @@ export function avecBonus(def: DefLutteur, bonus: number): DefLutteur {
 export const exemplairesPourGrade = (def: DefLutteur, grade: number) => rangDe(def) + grade;
 
 export function trouverLutteur(id: string): DefLutteur {
-  const lutteur = LUTTEURS.find((l) => l.id === id);
+  const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id);
   if (!lutteur) throw new Error(`Lutteur inconnu : ${id}`);
   return lutteur;
 }

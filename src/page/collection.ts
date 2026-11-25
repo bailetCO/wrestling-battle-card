@@ -2,7 +2,7 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
+  ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte,
 } from '../moteur';
 
@@ -91,7 +91,8 @@ export function nouvelleCollection(): Collection {
 export const nbExemplaires = (c: Collection, id: string) => c.exemplaires[id] ?? 0;
 // Grade de la carte (1 = rareté de départ). Borné : une ancienne sauvegarde pouvait dépasser le maximum.
 export const gradeDe = (c: Collection, id: string) =>
-  nbExemplaires(c, id) > 0 ? Math.min(gradeMaxDe(trouverLutteur(id)), c.grades[id] ?? 1) : 1;
+  id === ID_LUTTEUR_TEST ? gradeMaxDe(trouverLutteur(id)) // lutteur de test : toujours Champion du Monde
+  : nbExemplaires(c, id) > 0 ? Math.min(gradeMaxDe(trouverLutteur(id)), c.grades[id] ?? 1) : 1;
 
 export const etoilesDe = (c: Collection, id: string): Partial<Record<IdAction, number>> => c.etoiles[id] ?? {};
 export const nbEtoiles = (c: Collection, id: string) => Object.values(etoilesDe(c, id)).reduce((n: number, x) => n + (x ?? 0), 0);
@@ -102,7 +103,7 @@ export function defPossede(c: Collection, id: string): DefLutteur {
 }
 
 export function possede(c: Collection, id: string): boolean {
-  return c.toutDebloque || nbExemplaires(c, id) > 0;
+  return id === ID_LUTTEUR_TEST || c.toutDebloque || nbExemplaires(c, id) > 0;
 }
 
 export const cartesPossedees = (c: Collection) => LUTTEURS.filter((l) => nbExemplaires(c, l.id) > 0).length;

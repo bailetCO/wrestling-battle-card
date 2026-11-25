@@ -15,7 +15,7 @@
 // Tout l'historique est dans la présence : après un rechargement, le combat reprend.
 
 import {
-  ACTIONS, apercuInitiative, avecDeck, avecGrade, chanceFortAuto, combatAuto, creerCombat, creerHasard, jouerTour, trouverLutteur,
+  ACTIONS, ID_LUTTEUR_TEST, apercuInitiative, avecDeck, avecGrade, chanceFortAuto, combatAuto, creerCombat, creerHasard, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
 import mqtt from 'mqtt';
@@ -237,6 +237,7 @@ export class Duel {
   }
 
   choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1, etoiles: Partial<Record<IdAction, number>> = {}, style = 0) {
+    if (id === ID_LUTTEUR_TEST) return; // le lutteur de test ne se joue pas en ligne
     const def = avecDeck(avecGrade(trouverLutteur(id), grade, etoiles), deck);
     this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade, et: { ...etoiles } as Record<string, number>, sy: style });
   }

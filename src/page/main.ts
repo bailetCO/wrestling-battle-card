@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, NATIONS, REGLES, autoOuvert, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -30,8 +30,8 @@ import {
   avancerI, creerIndividuel, niveauMatchI, enregistrerI, exemptes, exemption, finieI, nombreParticipants, placesI,
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
-import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, progression, type EvenementHistoire } from './histoire';
-import { NB_PALIERS, PALIERS, creerCompetitionSaison, noterSaison, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
+import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
+import { NB_PALIERS, PALIERS, creerCompetitionSaison, noterSaison, passerPalier, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
@@ -181,10 +181,14 @@ function ecranAccueil(message = '') {
 interface RecompenseHistoire { titre: string; lien: string; boosters: Booster[] }
 let recompensesHistoire: RecompenseHistoire[] = []; // étapes ou paliers validés dont les boosters restent à ouvrir
 let paquetHistoire: Paquet | null = null;
+let paquetHistoireLien = ''; // écran du paquet en cours (#histoire ou #saison)
 
 // Note un événement du jeu ; une étape validée est annoncée par une bulle.
 function histoire(ev: EvenementHistoire) {
-  const r = noterHistoire(collection, ev, Math.random);
+  etapesValidees(noterHistoire(collection, ev, Math.random));
+}
+
+function etapesValidees(r: ReturnType<typeof noterHistoire>) {
   if (!r.length) return;
   for (const x of r) {
     const legendaire = x.etape === NB_ETAPES - 1;
@@ -197,7 +201,10 @@ function histoire(ev: EvenementHistoire) {
 
 // Note un événement de la saison sportive.
 function saison(ev: EvenementSaison) {
-  const r = noterSaison(collection, ev, Math.random);
+  palierValide(noterSaison(collection, ev, Math.random));
+}
+
+function palierValide(r: ReturnType<typeof noterSaison>) {
   sauver(collection);
   if (!r) return;
   recompensesHistoire.push({ titre: `${PALIERS[r.palier].nom} : réussi`, lien: '#saison', boosters: r.boosters });
@@ -238,15 +245,21 @@ function bandeauHistoire(): string {
 
 // Prend la prochaine récompense à ouvrir pour cet écran (histoire ou saison).
 function preparerPaquet(lien: string) {
-  if (paquetHistoire) return;
+  if (paquetHistoire && paquetHistoireLien === lien) return;
+  if (paquetHistoire && !paquetHistoire.ouvert) {
+    // Paquet de l'autre écran pas encore ouvert : il retourne dans la file.
+    recompensesHistoire.unshift({ titre: paquetHistoire.titre, lien: paquetHistoireLien, boosters: paquetHistoire.boosters });
+  }
+  paquetHistoire = null;
   const i = recompensesHistoire.findIndex((r) => r.lien === lien);
   if (i < 0) return;
   const r = recompensesHistoire.splice(i, 1)[0];
   paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false };
+  paquetHistoireLien = lien;
 }
 
 function blocPaquet(lien: string): string {
-  if (!paquetHistoire) return '';
+  if (!paquetHistoire || paquetHistoireLien !== lien) return '';
   const encore = recompensesHistoire.some((r) => r.lien === lien);
   return `${sectionPaquet(paquetHistoire)}${paquetHistoire.ouvert && encore ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}`;
 }
@@ -320,6 +333,7 @@ function ecranHistoire() {
       <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
         ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres">${jauge(p)} ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="h${i}">💬 Revoir la scène</button>` : ''}
+        ${i === cours ? '<button class="secondaire bouton-test" data-passer-etape>⏭ Passer à l\'étape suivante (test)</button>' : ''}
         <small class="gain">🎁 ${recompense}</small></div></li>`;
   }).join('');
   app.innerHTML = `
@@ -333,6 +347,11 @@ function ecranHistoire() {
   activerReflets(app);
   brancherPaquet('#histoire', ecranHistoire);
   app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
+  app.querySelector('[data-passer-etape]')?.addEventListener('click', () => {
+    etapesValidees(passerEtape(collection, Math.random));
+    document.querySelector('.bulle-histoire')?.remove();
+    ecranHistoire();
+  });
   window.scrollTo(0, 0);
   scenesAuto();
 }
@@ -371,6 +390,7 @@ function ecranSaison() {
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
       <div><b>${echap(p.nom)}</b><p>${echap(objectifPalier(i))}</p>${action}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="${i === 0 ? 's0' : `s${i}`}">💬 Revoir la scène</button>` : ''}
+        ${i === cours ? '<button class="secondaire bouton-test" data-passer-palier>⏭ Passer au palier suivant (test)</button>' : ''}
         <small class="gain">🎁 ${recompensePalier(i)}</small></div></li>`;
   }).join('');
   app.innerHTML = `
@@ -386,6 +406,11 @@ function ecranSaison() {
   app.querySelector('[data-interclub]')?.addEventListener('click', () => ecranChoixSaison('interclub'));
   app.querySelector('[data-competition]')?.addEventListener('click', () => ecranChoixSaison('competition'));
   app.querySelector('[data-reprendre-competition]')?.addEventListener('click', ecranTournoiEnCours);
+  app.querySelector('[data-passer-palier]')?.addEventListener('click', () => {
+    palierValide(passerPalier(collection, Math.random));
+    document.querySelector('.bulle-histoire')?.remove();
+    ecranSaison();
+  });
   window.scrollTo(0, 0);
   scenesAuto();
 }
@@ -394,7 +419,7 @@ function ecranSaison() {
 function ecranChoixSaison(quoi: 'interclub' | 'competition', message = '') {
   const p = PALIERS[collection.saison.palier];
   if (!p) return ecranSaison();
-  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete(p.nom, quoi === 'interclub' ? 'Combat rapide (1 période) contre un autre club' : `Inscription ${R_.tournoi.individuel.inscription} $ (tu as ${collection.dollars} $)`, '#saison')}
@@ -572,7 +597,7 @@ function blocArene(): string {
 
 function ecranArene(rapide = false) {
   partie = null;
-  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   const cartes = miens.map((l) => {
     const boutons = `
       <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
@@ -1122,7 +1147,7 @@ const NOM_TOURNOI: Record<Tournoi['type'], string> = { individuel: 'Tournoi indi
 function ecranInscriptionIndividuel(nombre: number) {
   const C = R_.tournoi.individuel;
   const n = nombreParticipants(nombre);
-  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  const miens = [LUTTEUR_TEST, ...LUTTEURS.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi individuel', `Inscription ${C.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}

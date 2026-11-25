@@ -1187,3 +1187,4 @@ b.moi { color: #ff8a95; }
 .revoir-scene { display: block; margin-top: 6px; font-size: 13px; padding: 4px 0; }
 .saison-ouverte { border: 2px solid #ffd76a; }
 @media (prefers-reduced-motion: reduce) { .replique.nouvelle { animation: none; } }
+.bouton-test { display: block; width: 100%; margin-top: 8px; font-size: 14px; border-style: dashed; }

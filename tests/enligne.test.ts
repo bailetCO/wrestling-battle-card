@@ -228,3 +228,14 @@ test('combat automatique en ligne : seulement si les deux le demandent, même r�
   assert.equal(d.vue.autoAmi, true);
   c.fermer(); d.fermer();
 });
+
+test('en ligne : le lutteur de test Cocoach ne peut pas être choisi', async () => {
+  const { ID_LUTTEUR_TEST } = await import('../src/moteur/config');
+  const salle = salleMemoire();
+  const a = new Duel(salle('a'), 'hote', null, () => undefined);
+  await attendre();
+  a.choisirLutteur(ID_LUTTEUR_TEST, undefined);
+  await attendre();
+  assert.equal(a.vue.monLutteur, null);
+  a.fermer();
+});
