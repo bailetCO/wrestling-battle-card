@@ -276,7 +276,7 @@ const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutteur('eur
 
 // Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
 function scenesAuto() {
-  if (document.querySelector('.voile, .scene, .revelation')) return;
+  if (document.querySelector('.voile, .scene-dialogue, .revelation')) return;
   const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection))
     .filter((k) => !collection.scenesVues.includes(k));
   if (cles.length) montrerScene(cles);
@@ -286,9 +286,9 @@ function scenesAuto() {
 function montrerScene(cles: string[]) {
   const repliques = cles.flatMap((k) => SCENES[k] ?? []);
   if (!repliques.length) return;
-  document.querySelector('.scene')?.remove();
+  document.querySelector('.scene-dialogue')?.remove();
   const voile = document.createElement('div');
-  voile.className = 'scene';
+  voile.className = 'scene-dialogue';
   voile.setAttribute('role', 'dialog');
   voile.setAttribute('aria-modal', 'true');
   voile.setAttribute('aria-label', 'Scène du mode histoire');

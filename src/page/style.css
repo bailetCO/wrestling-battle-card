@@ -1153,7 +1153,7 @@ b.moi { color: #ff8a95; }
 .prochain-combat .bouton-auto, .fin-boutons .bouton-auto { width: 100%; }
 
 /* Scènes de dialogue des modes histoire (Philippe, Cocoach) : façon planche de BD. */
-.scene {
+.scene-dialogue {
   position: fixed; inset: 0; z-index: 30; display: grid; align-items: end; justify-items: center;
   background: rgba(8, 25, 58, .82); padding: 12px 12px max(12px, env(safe-area-inset-bottom));
 }
