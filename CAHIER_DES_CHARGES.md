@@ -356,7 +356,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - 12 cartes Champion du Monde, une par nation, rareté de base « Champion du Monde » (noms inventés ; style, actions et récupération de la légendaire de leur nation, avec plus d'endurance et de force). Équilibrage par simulation : environ 65 % de victoires (fourchette 62,5 à 67,5 %), contre environ 60 % pour une légendaire.
   - Verrouillées : jamais dans les boosters, ni dans l'arène, ni chez les adversaires. On les obtient en fin de saison, ou dans la boutique (Social) à 200 $ l'exemplaire, autant de fois qu'on veut.
   - Elles sont déjà au niveau Champion du Monde : leurs doubles servent à gagner des étoiles (actions moins chères) et des styles de carte, par la fusion.
-  - Dans la collection, elles ont leur propre groupe, en premier (grisées tant qu'elles ne sont pas gagnées) ; le compte « x/120 cartes » ne les inclut pas.
+  - Dans la collection, elles ont leur propre groupe : tout en bas tant que le joueur n'en possède aucune ; en haut dès la première, avec seulement les cartes possédées et un bouton « Voir plus » pour afficher celles à gagner. Le compte « x/120 cartes » ne les inclut pas.
 - Collection : cartes affichées en miniature (3 par ligne sur téléphone) ; dans chaque groupe, les cartes possédées d'abord, les cartes à gagner ensuite.
 
 ### Scènes de dialogue (modes histoire)

@@ -1219,3 +1219,4 @@ b.moi { color: #ff8a95; }
 .miniatures .mc-nom { font-size: 12px; line-height: 1.15; }
 .miniatures .mc-bas { font-size: 10px; }
 .miniatures .mc-nombre { font-size: 11px; padding: 1px 5px; }
+.voir-plus { display: block; margin: 10px auto 0; font-size: 15px; }

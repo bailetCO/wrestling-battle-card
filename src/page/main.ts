@@ -845,8 +845,13 @@ const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS];
 
 // Les groupes de cartes de la collection, selon le tri choisi ; les Champions du Monde en premier
 // (verrouillés tant qu'ils ne sont pas gagnés en fin de saison ou achetés 200 $).
-function groupesCollection(): { titre: string; liste: DefLutteur[] }[] {
-  return [{ titre: 'Champions du Monde', liste: CHAMPIONS }, ...groupesBase()];
+// Sans aucun Champion du Monde, leur groupe est tout en bas ; dès le premier, il remonte en haut et
+// ses cartes à gagner sont cachées derrière un bouton « Voir plus ».
+let championsDeplies = false;
+function groupesCollection(): { titre: string; liste: DefLutteur[]; replie?: boolean }[] {
+  const aucun = !CHAMPIONS.some((l) => possede(collection, l.id));
+  const champions = { titre: 'Champions du Monde', liste: CHAMPIONS, replie: !aucun && !championsDeplies };
+  return aucun ? [...groupesBase(), champions] : [champions, ...groupesBase()];
 }
 
 function groupesBase(): { titre: string; liste: DefLutteur[] }[] {
@@ -872,12 +877,15 @@ function groupesBase(): { titre: string; liste: DefLutteur[] }[] {
 
 function ecranCollection() {
   partie = null;
-  const groupes = groupesCollection().map(({ titre, liste }) => {
+  const groupes = groupesCollection().map(({ titre, liste, replie }) => {
     const n = liste.filter((l) => possede(collection, l.id)).length;
     // Les cartes possédées d'abord, celles à gagner ensuite (l'ordre du tri est gardé dans chaque partie).
-    const triees = [...liste.filter((l) => possede(collection, l.id)), ...liste.filter((l) => !possede(collection, l.id))];
+    const aGagner = liste.filter((l) => !possede(collection, l.id));
+    const triees = [...liste.filter((l) => possede(collection, l.id)), ...(replie ? [] : aGagner)];
     const cartes = triees.map((l) => miniCarteCollection(l)).join('');
-    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini miniatures">${cartes}</div></section>`;
+    const bouton = replie && aGagner.length ? `<button class="lien voir-plus" data-voir-champions>Voir plus (${aGagner.length} à gagner)</button>`
+      : liste === CHAMPIONS && n && championsDeplies ? '<button class="lien voir-plus" data-voir-champions>Voir moins</button>' : '';
+    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini miniatures">${cartes}</div>${bouton}</section>`;
   }).join('');
   const tris = TRIS.map((t) => `<button class="puce ${collection.tri === t.id ? 'actif' : ''}" data-tri="${t.id}" aria-pressed="${collection.tri === t.id}">${t.nom}</button>`).join('');
   app.innerHTML = `
@@ -902,6 +910,12 @@ function ecranCollection() {
   app.querySelectorAll<HTMLButtonElement>('[data-carte]').forEach((b) =>
     b.addEventListener('click', () => fenetreCarteCollection(trouverLutteur(b.dataset.carte!))),
   );
+  app.querySelector('[data-voir-champions]')?.addEventListener('click', () => {
+    const y = window.scrollY;
+    championsDeplies = !championsDeplies;
+    ecranCollection();
+    window.scrollTo(0, y);
+  });
   app.querySelectorAll<HTMLButtonElement>('[data-tri]').forEach((b) =>
     b.addEventListener('click', () => {
       collection.tri = b.dataset.tri as TriCollection;
