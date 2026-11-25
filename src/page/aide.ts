@@ -119,8 +119,8 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
       titre: 'La fusion',
       html: `${illus.fusion}
         <p>Fusionne tes doubles pour faire monter une carte d'une rareté : Commune, Rare, Épique, Légendaire, jusqu'à <b>Champion du Monde</b>. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde.</p>
-        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e) et <b>débloque une nouvelle action</b>, moins chère.</p>
-        <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix.</p>`,
+        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e). Plus la carte est rare, plus elle a d'<b>actions débloquées</b> (moins chères) : un Champion du Monde les a toutes.</p>
+        <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix. Chaque quart des étoiles débloque un <b>nouveau style de carte</b>.</p>`,
     },
     {
       titre: 'Le Club',

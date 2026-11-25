@@ -748,3 +748,79 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .sf-condition { color: var(--contre); stroke: var(--contre); }
 .sf-legende { fill: var(--contre); font-family: var(--police); font-size: 13px; font-weight: 700; }
 .schema figcaption { padding: 4px 8px 0; line-height: 1.4; }
+
+/* ---------- Styles de carte Champion du Monde (débloqués par les étoiles) ---------- */
+/* 1 · Or massif : cadre or plein, brossé. */
+.carte-l[data-rarete="champion"][data-style="1"] {
+  background: repeating-linear-gradient(100deg, #b8860b 0 3px, #e9c24f 3px 6px, #fff0b0 6px 8px, #c9971f 8px 12px);
+  animation: none;
+  box-shadow: 0 0 0 2px #fff0b0, 0 0 30px rgba(255, 205, 80, .55), 0 10px 24px rgba(0, 0, 0, .35);
+}
+.carte-l[data-rarete="champion"][data-style="1"] .cl-niveau { background: #b8860b; color: #fff8dc; }
+
+/* 2 · Nuit étoilée : cadre bleu nuit semé d'étoiles, liseré or. */
+.carte-l[data-rarete="champion"][data-style="2"] {
+  background:
+    radial-gradient(1.5px 1.5px at 12% 20%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 8%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 46%, #ffe9a0 50%, transparent 51%),
+    radial-gradient(1px 1px at 30% 90%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 55% 70%, #fff 50%, transparent 51%),
+    linear-gradient(160deg, #0b1440, #24135c 50%, #0b1440);
+  animation: none;
+  box-shadow: 0 0 0 2px #ffd76a, 0 0 30px rgba(120, 110, 255, .5), 0 10px 24px rgba(0, 0, 0, .35);
+}
+.carte-l[data-rarete="champion"][data-style="2"] .cl-niveau { background: #24135c; color: #ffd76a; }
+
+/* 3 · Couleurs de la nation : cadre aux couleurs du lutteur, bordé d'or. */
+.carte-l[data-rarete="champion"][data-style="3"] {
+  background: linear-gradient(135deg, var(--n1), #ffd76a 30%, var(--n2) 50%, #ffd76a 70%, var(--n1));
+  background-size: 220% 100%;
+  box-shadow: 0 0 0 2px #ffd76a, 0 0 28px rgba(255, 215, 106, .45), 0 10px 24px rgba(0, 0, 0, .35);
+}
+.carte-l[data-rarete="champion"][data-style="3"] .cl-niveau { background: var(--n2); color: #fff; }
+
+/* 4 · Panthéon : holographique arc-en-ciel et or, halo qui pulse. */
+.carte-l[data-rarete="champion"][data-style="4"] {
+  background: conic-gradient(from 0deg at var(--mx) var(--my), #ffd76a, #ff7ac8, #79f2c0, #6cc8ff, #b98bff, #ffd76a);
+  animation: halo 2.6s ease-in-out infinite;
+  box-shadow: 0 0 0 2px #fff, 0 0 40px rgba(255, 215, 106, .7), 0 10px 24px rgba(0, 0, 0, .35);
+}
+.carte-l[data-rarete="champion"][data-style="4"] .cl-reflet {
+  background:
+    radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, .45), transparent 45%),
+    repeating-linear-gradient(120deg, rgba(255, 0, 170, .12) 0 14px, rgba(0, 255, 200, .12) 14px 28px, rgba(255, 220, 0, .12) 28px 42px);
+  mix-blend-mode: color-dodge; opacity: .45;
+}
+.carte-l[data-rarete="champion"][data-style="4"] .cl-niveau { background: linear-gradient(90deg, #c8102e, #b98bff); color: #fff; }
+@keyframes halo { 50% { box-shadow: 0 0 0 2px #fff, 0 0 60px rgba(255, 215, 106, .95), 0 10px 24px rgba(0, 0, 0, .35); } }
+@media (prefers-reduced-motion: reduce) { .carte-l[data-rarete="champion"] { animation: none !important; } }
+
+.styles-carte { display: grid; gap: 8px; }
+.styles-carte .puces { flex-wrap: wrap; padding: 0; }
+.puces.tri { align-items: center; flex-wrap: wrap; }
+.puces.tri span { color: var(--doux); font-size: 14px; margin-right: 2px; }
+.puce.actif { background: var(--orange); color: #1d1300; border-color: var(--orange); }
+/* Les styles colorent aussi l'intérieur de la carte, pour se reconnaître d'un coup d'œil. */
+.carte-l[data-rarete="champion"][data-style] { padding: 8px; }
+.carte-l[data-rarete="champion"][data-style="1"] .cl-interieur {
+  background: linear-gradient(170deg, #4a3208, #1f1604 60%, #3a2706);
+}
+.carte-l[data-rarete="champion"][data-style="1"] .cl-portrait { border-color: #e9c24f; }
+.carte-l[data-rarete="champion"][data-style="2"] .cl-interieur {
+  background:
+    radial-gradient(1px 1px at 8% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 92% 30%, #ffe9a0 50%, transparent 51%),
+    radial-gradient(1px 1px at 20% 62%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 78% 80%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 50% 95%, #fff 50%, transparent 51%),
+    linear-gradient(170deg, #1a1550, #070b26 70%);
+}
+.carte-l[data-rarete="champion"][data-style="2"] .cl-portrait { border-color: #ffd76a; }
+.carte-l[data-rarete="champion"][data-style="3"] .cl-interieur {
+  background: linear-gradient(165deg, var(--n1), #0b1220 45%, #0b1220 70%, var(--n2));
+}
+.carte-l[data-rarete="champion"][data-style="4"] .cl-interieur {
+  background: linear-gradient(160deg, #2a0f3d, #0d1a3a 50%, #3a1020);
+}
+.carte-l[data-rarete="champion"][data-style="4"] .cl-portrait { border-color: #fff; box-shadow: 0 0 14px rgba(255, 215, 106, .7); }

@@ -1,12 +1,15 @@
 // La carte d'un lutteur : portrait, stats, actions et cadre selon la rareté.
 
-import { ACTIONS, NIVEAUX, REGLES, coutAction, gradeMaxDe, niveauCarte, nomLocal, type DefLutteur, type IdAction, type NiveauCarte, type Rarete } from '../moteur';
+import { ACTIONS, NIVEAUX, REGLES, coutAction, niveauCarte, nomLocal, type DefLutteur, type IdAction, type NiveauCarte, type Rarete } from '../moteur';
 import { COULEURS_NATION, portraitSVG } from './portrait';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
 
 export const NOM_RARETE: Record<NiveauCarte, string> = {
   commune: 'Commune', rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire', champion: 'Champion du Monde',
 };
+// Styles de carte d'un Champion du Monde (0 = cadre classique, puis 4 styles à débloquer).
+export const STYLES_CARTE = ['Ceinture', 'Or massif', 'Nuit étoilée', 'Couleurs de la nation', 'Panthéon'];
+
 export const ORDRE_RARETE: Rarete[] = ['legendaire', 'epique', 'rare', 'commune'];
 const GEMMES: Record<NiveauCarte, number> = { commune: 1, rare: 2, epique: 3, legendaire: 4, champion: 5 };
 
@@ -16,7 +19,7 @@ const echap = (t: string) =>
 let compteur = 0;
 
 // opts : le grade et les étoiles de la carte du joueur (pour afficher déblocages et étoiles).
-export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; etoiles?: Partial<Record<IdAction, number>> } = {}): string {
+export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; etoiles?: Partial<Record<IdAction, number>>; style?: number } = {}): string {
   const grade = opts.grade ?? 1;
   // Rareté affichée : celle atteinte par fusion.
   const niveau = opts.grade ? niveauCarte(def, opts.grade) : def.niveau ?? def.rarete;
@@ -38,7 +41,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
   }).join('');
   const gemmes = '◆'.repeat(GEMMES[niveau]);
   return `
-    <article class="carte-l" data-rarete="${niveau}" style="--n1:${col.fond};--n2:${col.fond2}">
+    <article class="carte-l" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
       <div class="cl-interieur">
         <header class="cl-tete">
           <span class="cl-nom">${echap(def.nom)}</span>
@@ -56,7 +59,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
           ${jauge(def.recuperation, 0.6, 'Récupération', `${Math.round(def.recuperation * 100)} %`)}
         </div>
         <ul class="cl-actions">${actions}</ul>
-        ${gradeMaxDe(def) > 1 ? `<p class="cl-deblocages">${def.deblocages.slice(0, gradeMaxDe(def) - 1).map((a, k) => `<span class="${k + 2 <= grade ? 'ouvert' : ''}">${NOM_RARETE[NIVEAUX[rang + k + 1]]} : ${echap(nomLocal(def.nation, a))}</span>`).join('')}</p>` : ''}
+        <p class="cl-deblocages">${def.deblocages.map((a, k) => `<span class="${k < rang + grade - 1 ? 'ouvert' : ''}">${NOM_RARETE[NIVEAUX[k + 1]]} : ${echap(nomLocal(def.nation, a))}</span>`).join('')}</p>
         <p class="cl-spe"><b>★ Spéciale ${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}</b> ${EFFET_SPECIALE[def.familleSpeciale]}
           Dès le tour ${REGLES.speciale.premierTour}, recharge ${REGLES.speciale.toursRecharge} tours.</p>
         ${bouton}

@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, gradeMaxDe, niveauCarte, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, gradeMaxDe, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation, type NiveauCarte,
 } from '../moteur';
@@ -13,10 +13,11 @@ import {
   type ModeSalle, type Presence, type Role, type Salle, type Vue,
 } from './enligne';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE } from './textes';
-import { NOM_RARETE, ORDRE_RARETE, activerReflets, carteHTML } from './carte';
+import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
   cartesPossedees, charger, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
+  nbFusions, nbStyles, styleDe, type TriCollection,
 } from './collection';
 import { portraitSVG } from './portrait';
 import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
@@ -104,7 +105,7 @@ function etiquettesCarte(def: DefLutteur): string {
 }
 
 function carteJoueur(def: DefLutteur, bouton = ''): string {
-  return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton, { grade: gradeDe(collection, def.id), etoiles: etoilesDe(collection, def.id) })}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
+  return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton, { grade: gradeDe(collection, def.id), etoiles: etoilesDe(collection, def.id), style: styleDe(collection, def.id) })}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
 }
 
 function carteVerrouillee(def: DefLutteur): string {
@@ -297,8 +298,7 @@ function fenetreDeck(base: DefLutteur) {
   const grade = gradeDe(collection, base.id);
   const et = etoilesDe(collection, base.id);
   let choix: IdAction[] = [...(deckDe(collection, def.id) ?? def.actions)];
-  const verrouillees = def.deblocages.slice(0, gradeMaxDe(base) - 1).filter((a) => !def.actionsPossibles.includes(a));
-  const rang = NIVEAUX.indexOf(base.rarete);
+  const verrouillees = def.deblocages.filter((a) => !def.actionsPossibles.includes(a));
   const ligne = (a: IdAction, ouverte: boolean, gradeDeblocage = 0) => {
     const fam = ACTIONS[a].famille;
     const cout = ouverte ? coutAction(def, a) : Math.max(R_.fusion.coutMinimum, ACTIONS[a].cout - R_.fusion.reductionDeblocage);
@@ -307,13 +307,13 @@ function fenetreDeck(base: DefLutteur) {
       <button class="deck-action ${ouverte ? '' : 'verrouillee'}" ${ouverte ? `data-a="${a}" aria-pressed="false"` : 'disabled'}>
         <span class="ico f-${fam}">${ICONE[fam]}</span>
         <span class="a-nom">${echap(nomLocal(def.nation, a))} ${etoiles}${fam === def.familleSpeciale ? ' <small class="marque-spe">spéciale</small>' : ''}</span>
-        <span class="a-fr">${ouverte ? '' : `Débloquée au niveau ${NOM_RARETE[NIVEAUX[rang + gradeDeblocage - 1]]} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
+        <span class="a-fr">${ouverte ? '' : `Débloquée au niveau ${NOM_RARETE[NIVEAUX[gradeDeblocage - 1]]} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
         <span class="a-cout">${cout}</span>
       </button>`;
   };
   const f = ouvrirFenetre(`
     <h2>Actions de ${echap(def.nom)}</h2>
-    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque niveau gagné par fusion débloque une action de plus, qui coûte 1 d'endurance de moins.</p>
+    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque niveau de rareté donne une action de plus (Champion du Monde : toutes), qui coûte 1 d'endurance de moins.</p>
     <div class="deck-liste">
       ${def.actionsPossibles.map((a) => ligne(a, true)).join('')}
       ${verrouillees.map((a) => ligne(a, false, def.deblocages.indexOf(a) + 2)).join('')}
@@ -361,18 +361,46 @@ function fenetreDeck(base: DefLutteur) {
 
 // ---------- Collection ----------
 
+const TRIS: { id: TriCollection; nom: string }[] = [
+  { id: 'rarete', nom: 'Rareté de base' }, { id: 'nation', nom: 'Nation' },
+  { id: 'fusions', nom: 'Fusions' }, { id: 'niveau', nom: 'Rareté actuelle' },
+];
+
+// Les groupes de cartes de la collection, selon le tri choisi.
+function groupesCollection(): { titre: string; liste: DefLutteur[] }[] {
+  const tri = collection.tri;
+  const rangBase = (l: DefLutteur) => ORDRE_RARETE.indexOf(l.rarete);
+  if (tri === 'nation') {
+    return NATIONS.map((n) => ({ titre: n.nom, liste: LUTTEURS.filter((l) => l.nation === n.id).sort((a, b) => rangBase(a) - rangBase(b)) }));
+  }
+  if (tri === 'niveau') {
+    return [...NIVEAUX].reverse().map((niv) => ({
+      titre: NOM_RARETE[niv],
+      liste: LUTTEURS.filter((l) => (possede(collection, l.id) ? niveauDe(l.id) : l.rarete) === niv),
+    })).filter((g) => g.liste.length);
+  }
+  if (tri === 'fusions') {
+    const miens = LUTTEURS.filter((l) => possede(collection, l.id))
+      .sort((a, b) => nbFusions(collection, b.id) - nbFusions(collection, a.id) || rangBase(a) - rangBase(b));
+    const autres = LUTTEURS.filter((l) => !possede(collection, l.id));
+    return [{ titre: 'Les plus fusionnées', liste: miens }, { titre: 'À gagner', liste: autres }].filter((g) => g.liste.length);
+  }
+  return ORDRE_RARETE.map((r) => ({ titre: NOM_RARETE[r], liste: LUTTEURS.filter((l) => l.rarete === r) }));
+}
+
 function ecranCollection() {
   partie = null;
-  const groupes = ORDRE_RARETE.map((r) => {
-    const liste = LUTTEURS.filter((l) => l.rarete === r);
+  const groupes = groupesCollection().map(({ titre, liste }) => {
     const n = liste.filter((l) => possede(collection, l.id)).length;
     const cartes = liste.map((l) => miniCarteCollection(l)).join('');
-    return `<section class="groupe"><h2>${NOM_RARETE[r]} <small>${n}/${liste.length}</small></h2><div class="grille-mini">${cartes}</div></section>`;
+    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini">${cartes}</div></section>`;
   }).join('');
+  const tris = TRIS.map((t) => `<button class="puce ${collection.tri === t.id ? 'actif' : ''}" data-tri="${t.id}" aria-pressed="${collection.tri === t.id}">${t.nom}</button>`).join('');
   app.innerHTML = `
     <main class="galerie">
       ${enTete('Collection', compteur())}
       <p class="note marge">Touche une de tes cartes pour régler ses actions ou la fusionner. Boosters : classique (3 cartes) ou rare (5 cartes, 1 fois sur 4). Les communes sortent plus souvent que les légendaires.</p>
+      <nav class="puces tri" aria-label="Trier la collection"><span>Trier par</span>${tris}</nav>
       ${groupes}
       <section class="groupe reglages">
         <h2>Réglages de test</h2>
@@ -383,6 +411,13 @@ function ecranCollection() {
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-carte]').forEach((b) =>
     b.addEventListener('click', () => fenetreCarteCollection(trouverLutteur(b.dataset.carte!))),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-tri]').forEach((b) =>
+    b.addEventListener('click', () => {
+      collection.tri = b.dataset.tri as TriCollection;
+      sauver(collection);
+      ecranCollection();
+    }),
   );
   app.querySelector('[data-test]')!.addEventListener('click', () => {
     collection.toutDebloque = !collection.toutDebloque;
@@ -436,12 +471,29 @@ function miniCarteCollection(l: DefLutteur): string {
     </button>`;
 }
 
+// Champion du Monde : choix du style de carte parmi ceux débloqués par les étoiles.
+function blocStyles(def: DefLutteur): string {
+  if (nbExemplaires(collection, def.id) === 0 || niveauDe(def.id) !== 'champion') return '';
+  const n = nbStyles(collection, def.id);
+  const choisi = styleDe(collection, def.id);
+  const palier = etoilesPossibles(def) / R_.fusion.stylesCarte;
+  const et = nbEtoiles(collection, def.id);
+  const suite = n < R_.fusion.stylesCarte
+    ? `Prochain style à ${Math.ceil(palier * (n + 1))} étoiles (tu en as ${et}).`
+    : 'Tous les styles sont débloqués.';
+  const boutons = STYLES_CARTE.map((nom, i) => i <= n
+    ? `<button class="puce ${i === choisi ? 'actif' : ''}" data-style="${i}" aria-pressed="${i === choisi}">${nom}</button>`
+    : `<button class="puce" disabled>🔒 ${nom}</button>`).join('');
+  return `<div class="styles-carte"><p class="note">Style de la carte · ${n}/${R_.fusion.stylesCarte} débloqués. ${suite}</p><div class="puces">${boutons}</div></div>`;
+}
+
 function fenetreCarteCollection(def: DefLutteur) {
   const f = prochaineFusion(collection, def.id);
   const n = nbExemplaires(collection, def.id);
   const f2 = ouvrirFenetre(`
     <div class="fenetre-carte">${carteJoueur(def)}</div>
     <p class="note">${n > 0 ? `${n} exemplaire${n > 1 ? 's' : ''} · ${NOM_RARETE[niveauDe(def.id)]}${niveauDe(def.id) !== def.rarete ? ` (au départ ${NOM_RARETE[def.rarete].toLowerCase()})` : ''}` : 'Carte du mode test'}${f ? (f.doublesDispo >= f.doublesNecessaires ? ` · fusion possible (${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'})` : ` · ${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'} : ${f.doublesDispo}/${f.doublesNecessaires} doubles`) : ''}</p>
+    ${blocStyles(def)}
     <div class="deck-boutons">
       <button class="principal" data-regler>Régler les actions</button>
       ${f ? `<a class="secondaire lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a>` : ''}
@@ -449,6 +501,14 @@ function fenetreCarteCollection(def: DefLutteur) {
     </div>`, true);
   activerReflets(f2);
   f2.querySelector('[data-regler]')!.addEventListener('click', () => fenetreDeck(def));
+  f2.querySelectorAll<HTMLButtonElement>('button[data-style]').forEach((b) =>
+    b.addEventListener('click', () => {
+      collection.styles[def.id] = Number(b.dataset.style);
+      sauver(collection);
+      ecranCollection();
+      fenetreCarteCollection(def);
+    }),
+  );
 }
 
 // ---------- Fusion ----------
@@ -487,7 +547,7 @@ function ecranFusion(message = '') {
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Fusion', 'Chaque fusion fait monter la carte d\'une rareté, jusqu\'à Champion du Monde. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée. Champion du Monde : 5 doubles pour une étoile, −1 d\'endurance sur l\'action choisie (3 étoiles par action).')}
+      ${enTete('Fusion', 'Chaque fusion fait monter la carte d\'une rareté, jusqu\'à Champion du Monde. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée ; Champion du Monde, toutes les actions sont ouvertes. Ensuite, 5 doubles pour une étoile (−1 d\'endurance sur l\'action choisie, 3 par action) ; chaque quart des étoiles débloque un style de carte.')}
       ${message}
       ${miens.length ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note marge">Tu n\'as encore aucune carte.</p>'}
     </main>`;
@@ -539,14 +599,17 @@ function fenetreEtoile(id: string) {
   fe.querySelectorAll<HTMLButtonElement>('[data-etoile]').forEach((b) =>
     b.addEventListener('click', () => {
       const a = b.dataset.etoile as IdAction;
+      const stylesAvant = nbStyles(collection, id);
       const erreur = fusionner(collection, id, a);
       if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
       sauver(collection);
       ecranFusion();
+      const nouveau = nbStyles(collection, id) > stylesAvant;
       const ok = ouvrirFenetre(`
-        <h2 class="onomato rouge">ÉTOILE !</h2>
+        <h2 class="onomato rouge">${nouveau ? 'NOUVEAU STYLE !' : 'ÉTOILE !'}</h2>
         <div class="fenetre-carte eclat-fusion">${carteJoueur(trouverLutteur(id))}</div>
         <p><b>${echap(nomLocal(def.nation, a))}</b> coûte maintenant ${coutAction(defPossede(collection, id), a)} d'endurance.</p>
+        ${nouveau ? `<p>Style débloqué : <b>${STYLES_CARTE[nbStyles(collection, id)]}</b>. Tu peux changer de style dans la Collection.</p>` : ''}
         <button class="principal" data-fermer>Continuer</button>`, true);
       activerReflets(ok);
     }),

@@ -2,10 +2,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LUTTEURS, avecGrade, coutAction, exemplairesPourGrade, gradeMaxDe, niveauCarte, trouverLutteur } from '../src/moteur/config';
+import { LUTTEURS, avecGrade, coutAction, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import {
-  cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires,
+  cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires, nbFusions, nbStyles, styleDe,
   nouvelleCollection, ouvrirBooster, possede, prochaineFusion, recompenser, verifierPseudo,
 } from '../src/page/collection';
 
@@ -85,10 +85,10 @@ test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, ave
   assert.equal(fusionner(c, 'usa'), null);
   assert.equal(niveauCarte(usa, gradeDe(c, 'usa')), 'champion');
   assert.equal(prochaineFusion(c, 'usa')?.type, 'etoile');
-  // Bonus d'un seul niveau gagné, et une seule action débloquée.
+  // Bonus d'un seul niveau gagné ; Champion du Monde : toutes les actions débloquées.
   const d = defPossede(c, 'usa');
   assert.equal(d.force, Math.round(usa.force * 1.05));
-  assert.equal(d.actionsPossibles.length, usa.actions.length + 1);
+  assert.equal(d.actionsPossibles.length, usa.actions.length + usa.deblocages.length);
   assert.equal(d.niveau, 'champion');
   // Ancienne sauvegarde au-delà du maximum : ramenée au maximum.
   c.grades.usa = 5;
@@ -157,9 +157,41 @@ test('deck : enregistré seulement s\'il est valide', () => {
   const c = nouvelleCollection();
   assert.ok(choisirDeck(c, 'usa', ['sprawl', 'matraquage', 'relance', 'feinte']));
   assert.equal(c.decks.usa, undefined);
-  // simple_jambe est débloquée au grade 2 : refusée au grade 1, acceptée au grade 2.
-  assert.ok(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'matraquage', 'relance']));
-  c.exemplaires.usa = 1;
-  c.grades.usa = 2;
-  assert.equal(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'matraquage', 'relance']), null);
+  // Europe (commune) : simple_jambe s'ouvre au niveau Rare. Refusée avant, acceptée ensuite.
+  assert.ok(choisirDeck(c, 'europe', ['simple_jambe', 'defense', 'feinte', 'contre']));
+  c.grades.europe = 2;
+  assert.equal(choisirDeck(c, 'europe', ['simple_jambe', 'defense', 'feinte', 'contre']), null);
+});
+
+test('styles de carte : un par quart des étoiles possibles, une fois Champion du Monde', () => {
+  const c = nouvelleCollection();
+  const usa = trouverLutteur('usa');
+  c.exemplaires.usa = 1 + 5 * 24;
+  assert.equal(nbStyles(c, 'usa'), 0);
+  c.grades.usa = 2; // Champion du Monde
+  const possibles = defPossede(c, 'usa').actionsPossibles;
+  assert.equal(possibles.length * 3, etoilesPossibles(usa)); // 8 actions × 3 = 24 étoiles
+  const palier = etoilesPossibles(usa) / 4;
+  let n = 0;
+  for (const a of possibles) {
+    for (let k = 0; k < 3; k++) {
+      assert.equal(fusionner(c, 'usa', a), null);
+      n++;
+      assert.equal(nbStyles(c, 'usa'), Math.floor(n / palier));
+    }
+  }
+  assert.equal(nbStyles(c, 'usa'), 4);
+  assert.equal(styleDe(c, 'usa'), 4); // le dernier style débloqué s'affiche
+  assert.equal(nbFusions(c, 'usa'), 1 + 24);
+  assert.equal(stylesDebloques(usa, 1, 24), 0); // pas Champion du Monde : aucun style
+});
+
+test('collection : le tri et le style choisi sont gardés dans la sauvegarde', () => {
+  const c = nouvelleCollection();
+  assert.equal(c.tri, 'rarete');
+  c.tri = 'nation';
+  c.styles.usa = 2;
+  const r = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
+  assert.equal(r.tri, 'nation');
+  assert.equal(r.styles.usa, 2);
 });

@@ -90,7 +90,7 @@ test('coûts : les actions d\'une même famille ont le même coût de base', () 
   for (const a of Object.values(ACTIONS)) assert.equal(a.cout, COUT_FAMILLE[a.famille], a.id);
 });
 
-test('grades : chaque niveau gagné débloque une action qui coûte 1 de moins (coût minimum 1)', () => {
+test('grades : chaque niveau de rareté donne une action qui coûte 1 de moins (coût minimum 1)', () => {
   const eu = trouverLutteur('europe'); // commune ; déblocages : simple jambe, parade, matraquage, relance
   const g3 = avecGrade(eu, 3);
   assert.deepEqual(g3.actionsPossibles, [...eu.actions, 'simple_jambe', 'parade']);
@@ -101,9 +101,11 @@ test('grades : chaque niveau gagné débloque une action qui coûte 1 de moins (
   assert.equal(coutAction(g5, 'parade'), 1); // 3 − 1 (déblocage) − 3 étoiles → minimum 1
   assert.equal(coutAction(g5, 'attaque_base'), 4);
   assert.equal(coutAction(avecGrade(eu, 4, { attaque_base: 2 }), 'attaque_base'), 6); // étoiles seulement en Champion du Monde
-  // Une légendaire : une seule action débloquée, étoiles dès Champion du Monde (grade 2).
-  const usa = trouverLutteur('usa');
-  assert.deepEqual(avecGrade(usa, 5).actionsPossibles, [...usa.actions, 'simple_jambe']);
+  // Le niveau fixe le nombre d'actions : une légendaire en a 3 dès le départ, toutes en Champion du Monde.
+  const usa = trouverLutteur('usa'); // déblocages : simple jambe, feinte, défense, ceinture arrière
+  assert.deepEqual(avecGrade(usa, 1).actionsPossibles, [...usa.actions, 'simple_jambe', 'feinte', 'defense']);
+  assert.deepEqual(avecGrade(usa, 2).actionsPossibles, [...usa.actions, ...usa.deblocages]);
+  assert.deepEqual(avecGrade(eu, 5).actionsPossibles, [...eu.actions, ...eu.deblocages]);
   assert.equal(coutAction(avecGrade(usa, 2, { double_jambe: 1 }), 'double_jambe'), 5);
 });
 

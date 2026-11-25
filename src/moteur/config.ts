@@ -238,9 +238,10 @@ export const REGLES = {
   // « grade » = nombre de niveaux gagnés + 1. Le bonus et les actions débloquées suivent le grade.
   fusion: {
     reductionDeblocage: 1, // une action débloquée coûte 1 de moins que le coût de sa famille
-    doublesParEtoile: 5, // après le grade 5 : 5 doubles pour une étoile (−1 au coût d'une action)
+    doublesParEtoile: 5, // une fois Champion du Monde : 5 doubles pour une étoile (−1 au coût d'une action)
     etoilesMaxParAction: 3,
     coutMinimum: 1,
+    stylesCarte: 4, // Champion du Monde : un nouveau style de carte par quart des étoiles obtenues
     bonus: [0, 0, 0.05, 0.1, 0.15, 0.25], // indice = grade (grade 1 = carte de base, +1 par niveau gagné)
   },
 
@@ -322,7 +323,21 @@ const borner = (def: DefLutteur, grade: number) => Math.max(1, Math.min(gradeMax
 // Niveau de rareté atteint par la carte à ce grade.
 export const niveauCarte = (def: DefLutteur, grade = 1): NiveauCarte => NIVEAUX[rangDe(def) + borner(def, grade) - 1];
 
-export const actionsDebloquees = (def: DefLutteur, grade: number) => def.deblocages.slice(0, borner(def, grade) - 1);
+// Actions débloquées : le niveau atteint en fixe le nombre (Commune 0, Rare 1, Épique 2,
+// Légendaire 3, Champion du Monde 4 = toutes). Une épique en a donc 2 dès le départ.
+export const actionsDebloquees = (def: DefLutteur, grade: number) => def.deblocages.slice(0, rangDe(def) + borner(def, grade) - 1);
+
+// Champion du Monde : nombre d'étoiles possibles en tout (3 par action débloquée) et
+// styles de carte débloqués (un par quart des étoiles, jusqu'à 4).
+export function etoilesPossibles(def: DefLutteur): number {
+  const toutes = new Set([...def.actions, ...def.deblocages]);
+  return toutes.size * REGLES.fusion.etoilesMaxParAction;
+}
+export function stylesDebloques(def: DefLutteur, grade: number, nbEtoiles: number): number {
+  if (borner(def, grade) < gradeMaxDe(def)) return 0;
+  const n = REGLES.fusion.stylesCarte;
+  return Math.min(n, Math.floor((nbEtoiles * n) / etoilesPossibles(def)));
+}
 
 // Copie du lutteur à son grade (1 = carte de base) : statistiques augmentées, actions débloquées
 // (au coût de leur famille − 1), et étoiles (−1 par étoile sur une action, coût minimum 1).

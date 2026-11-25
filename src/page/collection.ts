@@ -2,7 +2,7 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, gradeMaxDe, niveauCarte, trouverLutteur, verifierDeck,
+  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte, type Rarete,
 } from '../moteur';
 
@@ -24,7 +24,11 @@ export interface Collection {
   echangesFaits: string[]; // échanges déjà appliqués (pas de double application)
   marchand: { jour: string; faits: number[] }; // offres du marchand utilisées aujourd'hui
   bonusTutoriel: boolean; // tutoriel suivi en entier : boosters doublés au prochain combat d'arène
+  styles: Record<string, number>; // style de carte choisi (0 = cadre Champion du Monde classique)
+  tri: TriCollection; // ordre d'affichage de la collection
 }
+
+export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
 
 export interface Ami {
   pseudo: string;
@@ -62,6 +66,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
+    styles: {}, tri: 'rarete',
   };
 }
 
@@ -159,6 +164,14 @@ export function prochaineFusion(c: Collection, id: string): ProchaineFusion | nu
   return { type: 'etoile', actions, doublesNecessaires: F.doublesParEtoile, doublesDispo: dispo };
 }
 
+// Styles de carte débloqués (Champion du Monde, un par quart des étoiles) et style choisi.
+export const nbStyles = (c: Collection, id: string) =>
+  nbExemplaires(c, id) > 0 ? stylesDebloques(trouverLutteur(id), gradeDe(c, id), nbEtoiles(c, id)) : 0;
+export const styleDe = (c: Collection, id: string) => Math.min(nbStyles(c, id), c.styles[id] ?? 0);
+
+// Nombre de fusions faites sur une carte (montées de rareté + étoiles).
+export const nbFusions = (c: Collection, id: string) => (nbExemplaires(c, id) > 0 ? gradeDe(c, id) - 1 + nbEtoiles(c, id) : 0);
+
 export const fusionPrete = (c: Collection, id: string) => {
   const f = prochaineFusion(c, id);
   return !!f && f.doublesDispo >= f.doublesNecessaires;
@@ -175,8 +188,10 @@ export function fusionner(c: Collection, id: string, action?: IdAction): string 
   }
   if (f.type === 'etoile') {
     if (!action || !f.actions.includes(action)) return 'Choisis l\'action qui reçoit l\'étoile.';
+    const avant = nbStyles(c, id);
     c.exemplaires[id] -= f.doublesNecessaires;
     c.etoiles[id] = { ...etoilesDe(c, id), [action]: (etoilesDe(c, id)[action] ?? 0) + 1 };
+    if (nbStyles(c, id) > avant) c.styles[id] = nbStyles(c, id); // nouveau style : on l'affiche
     return null;
   }
   c.exemplaires[id] -= f.doublesNecessaires;
@@ -218,6 +233,8 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (b.niveau === 'fort') c.niveau = 'fort';
   c.toutDebloque = b.toutDebloque === true;
   c.bonusTutoriel = b.bonusTutoriel === true;
+  if (b.styles && typeof b.styles === 'object') c.styles = { ...(b.styles as Record<string, number>) };
+  if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
   if (Array.isArray(b.recompensesEnLigne)) c.recompensesEnLigne = (b.recompensesEnLigne as string[]).slice(-50);
