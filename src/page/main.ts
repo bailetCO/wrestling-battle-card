@@ -19,6 +19,8 @@ import {
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
 } from './collection';
 import { portraitSVG } from './portrait';
+import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
+import { ouvrirBooster } from './collection';
 
 const app = document.getElementById('app')!;
 
@@ -351,6 +353,7 @@ function ecranCollection() {
       ${groupes}
       <section class="groupe reglages">
         <h2>Réglages de test</h2>
+        <button class="secondaire" data-booster-test>Ouvrir un booster (test)</button>
         <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>
         <button class="lien" data-raz>Remettre la collection à zéro</button>
       </section>
@@ -362,6 +365,14 @@ function ecranCollection() {
     collection.toutDebloque = !collection.toutDebloque;
     sauver(collection);
     ecranCollection();
+  });
+  app.querySelector('[data-booster-test]')!.addEventListener('click', () => {
+    const b = ouvrirBooster(collection, Math.random);
+    sauver(collection);
+    ecranCollection();
+    const f = ouvrirFenetre(`${htmlBoosters('Booster de test', [b])}<button class="principal" data-fermer>Fermer</button>`, true);
+    activerReflets(f);
+    f.querySelector('.fenetre')!.scrollTop = 0;
   });
   const raz = app.querySelector<HTMLButtonElement>('[data-raz]')!;
   raz.addEventListener('click', () => {
@@ -480,14 +491,173 @@ function ecranFusion(message = '') {
 
 // ---------- Club ----------
 
-function ecranClub() {
+// Petite carte simple (portrait, nom, rareté) avec une ligne en dessous.
+function miniCarteLutteur(l: DefLutteur, bas: string, attrs = ''): string {
+  return `
+    <span class="mini-carte" data-rarete="${l.rarete}" ${attrs}>
+      <span class="mc-portrait">${portrait(l)}</span>
+      <span class="mc-nom">${echap(l.nom)}</span>
+      <span class="mc-bas">${bas}</span>
+    </span>`;
+}
+
+let echange: Echange | null = null;
+let codeEchange = '';
+
+function quitterEchange() {
+  echange?.fermer();
+  echange = null;
+}
+
+function ecranClub(message = '') {
   partie = null;
+  quitterEchange();
+  const jour = jourDe();
+  const offres = offresDuJour(jour).map((o, i) => {
+    const donne = trouverLutteur(o.donne);
+    const demande = trouverLutteur(o.demande);
+    const fait = offreFaite(collection, jour, i);
+    const doubles = nbExemplaires(collection, o.demande) - 1;
+    const bouton = fait
+      ? '<button class="secondaire petit-bouton" disabled>Fait</button>'
+      : doubles > 0
+        ? `<button class="principal petit-bouton" data-offre="${i}">Échanger</button>`
+        : '<button class="secondaire petit-bouton" disabled>Pas de double</button>';
+    return `
+      <li class="offre ${fait ? 'faite' : ''}">
+        <div class="offre-cartes">
+          <div><small>Il te donne</small>${miniCarteLutteur(donne, `${echap(donne.origine)} · ${NOM_RARETE[donne.rarete]}${possede(collection, donne.id) ? '' : ' · nouvelle'}`)}</div>
+          <span class="offre-fleche" aria-hidden="true">⇄</span>
+          <div><small>Contre ton double</small>${miniCarteLutteur(demande, doubles > 0 ? `Tu en as ${doubles} en trop` : 'Aucun double')}</div>
+        </div>
+        ${bouton}
+      </li>`;
+  }).join('');
+  const amis = listeAmis(collection);
+  const listeA = amis.length
+    ? `<ul class="amis-liste">${amis.map((a) => `
+        <li>
+          <span class="avatar petit" aria-hidden="true">${echap(a.pseudo.slice(0, 1).toUpperCase())}</span>
+          <span class="ami-info"><b>${echap(a.pseudo)}</b><small>${a.victoires} victoire${a.victoires > 1 ? 's' : ''} · ${a.defaites} défaite${a.defaites > 1 ? 's' : ''} · ${a.echanges} échange${a.echanges > 1 ? 's' : ''}</small></span>
+          <small class="ami-date">${new Date(a.vu).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</small>
+        </li>`).join('')}</ul>`
+    : '<p class="note">Affronte un ami en ligne ou fais un échange avec lui : il apparaîtra ici.</p>';
+  const enLigne = acces() !== 'ailleurs';
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Club', 'Tes amis, les échanges de doubles et le marchand.')}
-      <section class="bloc"><h2>Bientôt</h2><p>La liste d'amis, l'échange de cartes en double et le marchand (3 offres par jour) arrivent dans la prochaine mise à jour.</p></section>
+      ${enTete('Club', 'Le marchand du jour, les échanges avec tes amis et ta liste d\'amis.')}
+      ${message}
+      <section class="bloc">
+        <h2>Marchand</h2>
+        <p>3 offres par jour, chacune une fois : il te donne une carte contre un de tes doubles de même rareté. Nouvelles offres demain.</p>
+        <ul class="offres">${offres}</ul>
+      </section>
+      <section class="bloc">
+        <h2>Échanger avec un ami</h2>
+        ${enLigne ? `
+          <p>Ouvrez une salle d'échange : chacun propose un de ses doubles, l'échange se fait quand vous acceptez tous les deux.</p>
+          <button class="principal" data-ouvrir-echange>Ouvrir une salle d'échange</button>
+          <form class="rejoindre" data-rejoindre-echange>
+            <label for="code-echange">Ou rejoins ton ami avec son code</label>
+            <input id="code-echange" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD">
+            <button class="secondaire" type="submit">Rejoindre</button>
+          </form>`
+        : `<p>Les échanges se font sur la version du jeu ouverte à tous.</p><a class="principal lien-bouton" href="${ADRESSE_PUBLIQUE}" target="_blank" rel="noopener">Ouvrir la version ouverte à tous</a>`}
+      </section>
+      <section class="bloc">
+        <h2>Mes amis <small>${amis.length}</small></h2>
+        ${listeA}
+      </section>
     </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-offre]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const i = Number(b.dataset.offre);
+      const o = offresDuJour(jour)[i];
+      const erreur = accepterOffre(collection, jour, i);
+      if (erreur) return ecranClub(`<p class="alerte">${echap(erreur)}</p>`);
+      sauver(collection);
+      ecranClub();
+      const f = ouvrirFenetre(`
+        <h2 class="onomato rouge">MARCHÉ CONCLU !</h2>
+        <div class="fenetre-carte eclat-fusion">${carteJoueur(trouverLutteur(o.donne))}</div>
+        <p>Tu as reçu <b>${echap(trouverLutteur(o.donne).nom)}</b> contre un double de ${echap(trouverLutteur(o.demande).nom)}.</p>
+        <button class="principal" data-fermer>Continuer</button>`, true);
+      activerReflets(f);
+    }),
+  );
+  app.querySelector('[data-ouvrir-echange]')?.addEventListener('click', () => ouvrirEchange(nouveauCode()));
+  app.querySelector('[data-rejoindre-echange]')?.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const code = (app.querySelector<HTMLInputElement>('#code-echange')!.value || '').trim().toLowerCase();
+    if (!codeValide(code)) return ecranClub('<p class="alerte">Le code fait 4 lettres, sans chiffres.</p>');
+    ouvrirEchange(code);
+  });
   window.scrollTo(0, 0);
+}
+
+function ouvrirEchange(code: string) {
+  quitterEchange();
+  const perso = relaisPerso();
+  const salle = acces() === 'local' && !perso ? salleLocale(`x${code}`) : salleRelais(`x${code}`, perso ? [perso] : RELAIS);
+  codeEchange = code;
+  echange = new Echange(salle, code, collection, () => sauver(collection));
+  let signature = '';
+  echange.surVue((v) => {
+    const sig = JSON.stringify(v) + String(salle.connecte());
+    if (sig === signature) return;
+    signature = sig;
+    ecranEchange(v, salle.connecte());
+  });
+}
+
+function ecranEchange(v: VueEchange, connecte: boolean) {
+  if (!echange) return;
+  const mes = Object.entries(v.mesDoubles);
+  const choix = mes.length
+    ? mes.map(([id, n]) => {
+        const l = trouverLutteur(id);
+        return `<button class="choix-double ${v.monOffre === id ? 'pris' : ''}" data-proposer="${id}" aria-pressed="${v.monOffre === id}">${miniCarteLutteur(l, `${n} en trop`)}</button>`;
+      }).join('')
+    : '<p class="note">Tu n\'as aucun double pour l\'instant.</p>';
+  const son = v.sonOffre ? trouverLutteur(v.sonOffre) : null;
+  const ami = v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami';
+  let bouton = '';
+  if (v.monOffre && son) {
+    bouton = v.jaiAccepte
+      ? `<button class="secondaire" data-annuler>${v.ilAccepte ? 'Échange en cours…' : `En attente de l'accord de ${echap(ami)} (annuler)`}</button>`
+      : `<button class="principal" data-accepter>Accepter : ${echap(trouverLutteur(v.monOffre).nom)} contre ${echap(son.nom)}</button>`;
+  }
+  const dernier = v.dernier
+    ? `<p class="succes">Échange réussi : tu as donné ${echap(trouverLutteur(v.dernier.donne).nom)} et reçu <b>${echap(trouverLutteur(v.dernier.recoit).nom)}</b>.</p>`
+    : '';
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete(`Échange ${echap(codeEchange.toUpperCase())}`, '', '#club')}
+      <p class="code-grand marge" aria-label="Code de la salle d'échange">${echap(codeEchange.toUpperCase())}</p>
+      <p class="marge">${!connecte ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(ami)} est dans la salle.</b>` : 'Envoie ce code à ton ami : dans le Club, il touche « Rejoindre » et tape le code.'}</p>
+      ${dernier}
+      <section class="bloc">
+        <h2>${echap(ami)} propose</h2>
+        ${son ? `<div class="offre-ami">${miniCarteLutteur(son, `${echap(son.origine)} · ${NOM_RARETE[son.rarete]}${possede(collection, son.id) ? '' : ' · nouvelle pour toi'}`)}${v.ilAccepte ? '<span class="pastille nouvelle">A accepté</span>' : ''}</div>` : `<p class="note">${v.amiPresent ? 'Il choisit une carte…' : 'En attente de ton ami.'}</p>`}
+      </section>
+      <section class="bloc">
+        <h2>Tu proposes</h2>
+        <div class="grille-mini">${choix}</div>
+      </section>
+      <div class="barre-bas">${bouton || `<p class="note">${v.monOffre ? 'En attente de la proposition de ton ami.' : 'Choisis le double que tu proposes.'}</p>`}<button class="lien" data-quitter-echange>Quitter la salle d'échange</button></div>
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-proposer]').forEach((b) =>
+    b.addEventListener('click', () => echange?.proposer(v.monOffre === b.dataset.proposer ? null : b.dataset.proposer!)),
+  );
+  app.querySelector('[data-accepter]')?.addEventListener('click', () => echange?.accepter());
+  app.querySelector('[data-annuler]')?.addEventListener('click', () => echange?.annulerAccord());
+  const sortir = (ev?: Event) => {
+    ev?.preventDefault();
+    quitterEchange();
+    ecranClub();
+  };
+  app.querySelector('[data-quitter-echange]')!.addEventListener('click', () => sortir());
+  app.querySelector('.retour')?.addEventListener('click', sortir);
 }
 
 function lancer(idHumain: string, idOrdi: string, graine: number) {
@@ -1315,6 +1485,11 @@ function ecranFinLigne() {
     }
   }
   const booster = boosterLigne.cle === cle ? boosterLigne.html : '';
+  // Liste d'amis : le combat compte une fois (victoire ou défaite).
+  if (v.amiIdCoach && (!v.abandon || e.tourGlobal >= 5)) {
+    noterAmi(collection, v.amiIdCoach, v.amiCoach, { type: gagne ? 'victoire' : 'defaite', cle: `combat-${cle}` });
+    sauver(collection);
+  }
   const revanche = v.revancheMoi
     ? (v.revancheAmi ? 'Nouvelle manche…' : 'Revanche demandée : en attente de ton ami…')
     : v.revancheAmi ? 'Ton ami veut une revanche !' : '';
@@ -1355,6 +1530,7 @@ function route() {
   if (h === '#collection' || h === '#galerie') return ecranCollection();
   if (h === '#fusion') return ecranFusion();
   if (h === '#club') return ecranClub();
+  quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
   if (h === '#arene') return ecranArene();
   if (!partie) ecranMenu();

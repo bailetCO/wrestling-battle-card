@@ -37,7 +37,7 @@ export const RELAIS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.co
 
 // Ce dont le protocole a besoin d'une salle (salle Claude, ou salle locale pour les tests).
 export interface Salle {
-  publier(etat: Presence): void; // remplace tout mon état publié
+  publier(etat: object): void; // remplace tout mon état publié
   pairs(): readonly Pair[]; // les autres personnes de la salle (pas moi)
   surChangement(fn: () => void): () => void;
   connecte(): boolean;
@@ -521,7 +521,7 @@ export function salleRelais(code: string, adresses: string[] = RELAIS): Salle {
   const autres = new Map<string, { presence: Record<string, unknown>; vu: number; recu: number }>();
   const ecouteurs = new Set<() => void>();
   const prevenir = () => ecouteurs.forEach((f) => f());
-  let mien: Presence | null = null;
+  let mien: object | null = null;
   const message = () => JSON.stringify({ p: mien, vu: Date.now() });
   const clients = adresses.map((url, i) => {
     const c = mqtt.connect(url, {
@@ -594,13 +594,13 @@ export function salleRelais(code: string, adresses: string[] = RELAIS): Salle {
 export function salleLocale(code: string): Salle {
   const canal = new BroadcastChannel(`wbc-${code}`);
   const moi = Math.random().toString(36).slice(2);
-  let mien: Presence | null = null;
-  const autres = new Map<string, { presence: Presence; vu: number }>();
+  let mien: object | null = null;
+  const autres = new Map<string, { presence: Record<string, unknown>; vu: number }>();
   const ecouteurs = new Set<() => void>();
   const prevenir = () => ecouteurs.forEach((f) => f());
   const envoyer = () => mien && canal.postMessage({ de: moi, presence: mien });
   canal.onmessage = (ev) => {
-    const d = ev.data as { de: string; presence?: Presence; bonjour?: boolean; parti?: boolean };
+    const d = ev.data as { de: string; presence?: Record<string, unknown>; bonjour?: boolean; parti?: boolean };
     if (d.parti) {
       autres.delete(d.de);
       return prevenir();
@@ -624,7 +624,7 @@ export function salleLocale(code: string): Salle {
       mien = p;
       envoyer();
     },
-    pairs: () => [...autres.entries()].map(([peer, x]) => ({ peer, presence: x.presence as unknown as Record<string, unknown> })),
+    pairs: () => [...autres.entries()].map(([peer, x]) => ({ peer, presence: x.presence })),
     surChangement(fn) {
       ecouteurs.add(fn);
       return () => ecouteurs.delete(fn);

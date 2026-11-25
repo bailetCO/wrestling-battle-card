@@ -102,6 +102,14 @@ Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 c
 - Arène : 1 booster par victoire ; toutes les 2 défaites d'affilée, un booster de consolation. En ligne (mode collection) : 2 boosters par victoire (une victoire par abandon ne compte qu'après 5 tours).
 - La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs. Un mode test débloque toutes les cartes.
 
+### Club
+
+- Marchand : 3 offres par jour (les mêmes pour tous ce jour-là, renouvelées à minuit, heure du téléphone), chacune utilisable une fois. Il donne une carte contre un double d'une autre carte de même rareté (jamais le dernier exemplaire).
+- Échange entre amis : une salle d'échange avec un code de 4 lettres. Chacun voit les doubles de l'autre et propose un de ses doubles ; l'échange se fait quand les deux acceptent les mêmes cartes. Changer d'offre annule l'accord.
+- Liste d'amis : chaque coach affronté en ligne ou avec qui on a échangé y apparaît, avec les victoires, défaites et échanges.
+- Sans serveur, ces échanges reposent sur la confiance entre amis ; Firebase les sécurisera.
+- Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
+
 ### Fusion
 
 - Passer au grade g demande g exemplaires identiques : l'original + (g − 1) doubles, qui sont consommés. Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4 (grade maximal).

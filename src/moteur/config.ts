@@ -203,6 +203,8 @@ export const REGLES = {
     // Booster de consolation (arène) : toutes les 2 défaites d'affilée.
     defaitesPourConsolation: 2,
     poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
+    // Marchand du club : offres par jour (il donne une carte contre un double de même rareté).
+    offresMarchandParJour: 3,
   },
 
   // Fusion : passer au grade g demande g exemplaires identiques (l'original + g − 1 doubles,

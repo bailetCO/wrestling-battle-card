@@ -18,6 +18,18 @@ export interface Collection {
   victoires: number;
   defaitesDeSuite: number; // remis à zéro à chaque victoire ou booster de consolation
   recompensesEnLigne: string[]; // combats en ligne déjà récompensés (pas de double récompense)
+  amis: Record<string, Ami>; // par identifiant de coach
+  combatsComptes: string[]; // combats en ligne déjà comptés dans la liste d'amis
+  echangesFaits: string[]; // échanges déjà appliqués (pas de double application)
+  marchand: { jour: string; faits: number[] }; // offres du marchand utilisées aujourd'hui
+}
+
+export interface Ami {
+  pseudo: string;
+  vu: number; // date du dernier combat ou échange (ms)
+  victoires: number; // mes victoires contre lui
+  defaites: number;
+  echanges: number;
 }
 
 export type TypeBooster = 'classique' | 'rare';
@@ -47,6 +59,7 @@ export function nouvelleCollection(): Collection {
     version: 2, coach: null, idCoach: nouvelId(),
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
+    amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] },
   };
 }
 
@@ -163,6 +176,11 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
   if (Array.isArray(b.recompensesEnLigne)) c.recompensesEnLigne = (b.recompensesEnLigne as string[]).slice(-50);
+  if (b.amis && typeof b.amis === 'object') c.amis = { ...(b.amis as Record<string, Ami>) };
+  if (Array.isArray(b.combatsComptes)) c.combatsComptes = (b.combatsComptes as string[]).slice(-100);
+  if (Array.isArray(b.echangesFaits)) c.echangesFaits = (b.echangesFaits as string[]).slice(-100);
+  const m = b.marchand as { jour?: unknown; faits?: unknown } | undefined;
+  if (m && typeof m.jour === 'string' && Array.isArray(m.faits)) c.marchand = { jour: m.jour, faits: m.faits.filter((x): x is number => typeof x === 'number') };
   // Nettoyage : cartes inconnues, decks invalides
   for (const id of Object.keys(c.exemplaires)) {
     if (!LUTTEURS.some((l) => l.id === id) || !(c.exemplaires[id] > 0)) delete c.exemplaires[id];

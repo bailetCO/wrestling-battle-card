@@ -25,6 +25,11 @@ function salleMemoire() {
 }
 
 const attendre = (ms = 2) => new Promise((r) => setTimeout(r, ms));
+// Attend qu'une condition soit vraie (au plus `max` ms) : robuste même si l'ordinateur est chargé.
+async function attendreQue(cond: () => boolean, max = 20000) {
+  const fin = Date.now() + max;
+  while (!cond() && Date.now() < fin) await attendre(1);
+}
 
 // Un joueur automatique : choisit au hasard, garde ou change avec l'initiative, annonce au hasard.
 function joueurAuto(d: Duel, graine: number) {
@@ -74,7 +79,7 @@ test('deux amis jouent des combats complets et voient exactement le même combat
     await attendre();
     a.choisirLutteur(['usa', 'japon', 'europe-technicien', 'russie-contre'][partie % 4], undefined);
     b.choisirLutteur(['afrique', 'europe', 'japon-contre', 'usa-defenseur'][partie % 4], undefined);
-    for (let i = 0; i < 4000 && !(a.vue.phase === 'fin' && b.vue.phase === 'fin'); i++) await attendre(0);
+    await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
     assert.equal(a.vue.phase, 'fin', `partie ${partie} : l'hôte n'a pas fini`);
     assert.equal(b.vue.phase, 'fin', `partie ${partie} : l'invité n'a pas fini`);
     assert.equal(resume(a.vue.etat!), resume(b.vue.etat!));
@@ -95,10 +100,10 @@ test('abandon : l\'ami gagne', async () => {
   await attendre();
   a.choisirLutteur('usa', undefined);
   b.choisirLutteur('japon', undefined);
-  await attendre(5);
+  await attendreQue(() => a.vue.phase === 'combat');
   assert.equal(a.vue.phase, 'combat');
   b.abandonner();
-  await attendre(5);
+  await attendreQue(() => a.vue.phase === 'fin');
   assert.equal(a.vue.phase, 'fin');
   assert.equal(a.vue.abandon, 'ami');
 });
@@ -110,12 +115,12 @@ test('revanche : nouvelle manche quand les deux la demandent', async () => {
   await attendre();
   a.choisirLutteur('usa', undefined);
   b.choisirLutteur('japon', undefined);
-  await attendre(5);
+  await attendreQue(() => a.vue.phase === 'combat' && b.vue.phase === 'combat');
   a.abandonner();
-  await attendre(5);
+  await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
   a.revanche();
   b.revanche();
-  await attendre(10);
+  await attendreQue(() => a.vue.phase === 'choix-lutteur' && b.vue.phase === 'choix-lutteur');
   assert.equal(a.vue.phase, 'choix-lutteur');
   assert.equal(b.vue.phase, 'choix-lutteur');
 });
@@ -130,7 +135,7 @@ test('reprise : un joueur qui recharge la page retrouve le combat et le termine'
   await attendre();
   a.choisirLutteur('usa', undefined);
   b.choisirLutteur('japon', undefined);
-  for (let i = 0; i < 600 && (b.vue.etat?.tourGlobal ?? 0) < 6; i++) await attendre(0);
+  await attendreQue(() => (b.vue.etat?.tourGlobal ?? 0) >= 6 || b.vue.phase === 'fin');
   const tourAvant = b.vue.etat!.tourGlobal;
   assert.ok(tourAvant >= 5);
   // L'invité recharge : son ancien duel disparaît, un nouveau repart de la sauvegarde.
@@ -140,7 +145,7 @@ test('reprise : un joueur qui recharge la page retrouve le combat et le termine'
   joueurAuto(b2, 3);
   await attendre(2);
   assert.ok(b2.vue.etat!.tourGlobal >= tourAvant - 1, 'le combat reprend où il en était');
-  for (let i = 0; i < 4000 && !(a.vue.phase === 'fin' && b2.vue.phase === 'fin'); i++) await attendre(0);
+  await attendreQue(() => a.vue.phase === 'fin' && b2.vue.phase === 'fin');
   assert.equal(b2.vue.phase, 'fin');
   assert.deepEqual(a.vue.etat!.journal, b2.vue.etat!.journal);
 });
