@@ -45,17 +45,25 @@ export interface TourJoue {
 export class Partie {
   etat: EtatCombat;
   readonly hasard: HasardRejouable;
+  toursJoues = 0;
 
+  // `script` : choix imposés à l'ordinateur pour les premiers tours (tutoriel).
   constructor(
     readonly idHumain: string, readonly idOrdi: string, graine: number,
-    readonly niveau: Niveau = 'normal', defHumain?: DefLutteur,
+    readonly niveau: Niveau = 'normal', defHumain?: DefLutteur, readonly script: Choix[] = [],
   ) {
     this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), idOrdi);
     this.hasard = new HasardRejouable(graine);
   }
 
+  // Le tour en cours suit-il le script ?
+  get scripte(): boolean {
+    return this.toursJoues < this.script.length;
+  }
+
   // L'ordinateur choisit en secret.
   choixOrdi(): Choix {
+    if (this.scripte) return this.script[this.toursJoues];
     return choixOrdinateur(this.etat, ORDI, this.hasard.fn, this.niveau);
   }
 
@@ -66,7 +74,7 @@ export class Partie {
 
   // Si l'ordinateur a l'initiative, il regarde 2 actions du joueur et peut changer.
   reactionOrdi(choixHumain: Choix, choixOrdi: Choix): Choix {
-    if (!this.etat.joueurs[ORDI].initiative) return choixOrdi;
+    if (this.scripte || !this.etat.joueurs[ORDI].initiative) return choixOrdi;
     apercuInitiative(this.etat, ORDI, choixHumain.action, this.hasard.fn);
     if (this.niveau === 'fort') return reagirInitiativeForte(this.etat, ORDI, choixOrdi, choixHumain, this.hasard.fn);
     return reagirInitiative(this.etat, ORDI, choixOrdi, this.hasard.fn);
@@ -87,6 +95,7 @@ export class Partie {
         },
       });
       this.etat = apres;
+      this.toursJoues++;
       return { avant, choixHumain, choixOrdi, ordiAChange, lignes: apres.journal.slice(avant.journal.length) };
     } catch (err) {
       if (err instanceof BesoinFace) {

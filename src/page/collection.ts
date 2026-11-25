@@ -23,6 +23,7 @@ export interface Collection {
   combatsComptes: string[]; // combats en ligne déjà comptés dans la liste d'amis
   echangesFaits: string[]; // échanges déjà appliqués (pas de double application)
   marchand: { jour: string; faits: number[] }; // offres du marchand utilisées aujourd'hui
+  bonusTutoriel: boolean; // tutoriel suivi en entier : boosters doublés au prochain combat d'arène
 }
 
 export interface Ami {
@@ -60,7 +61,7 @@ export function nouvelleCollection(): Collection {
     version: 2, coach: null, idCoach: nouvelId(),
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
-    amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] },
+    amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
   };
 }
 
@@ -116,10 +117,12 @@ export function ouvrirBooster(c: Collection, hasard: Hasard): Booster {
 }
 
 // Victoire : 1 booster en arène, 2 en ligne (mode collection).
-export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard): Booster[] {
+// `multiplicateur` : 2 pour le combat d'arène qui suit le tutoriel.
+export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard, multiplicateur = 1): Booster[] {
   c.victoires++;
   if (ou === 'arene') c.defaitesDeSuite = 0;
-  return Array.from({ length: REGLES.collection.boostersParVictoire[ou] }, () => ouvrirBooster(c, hasard));
+  const n = REGLES.collection.boostersParVictoire[ou] * multiplicateur;
+  return Array.from({ length: n }, () => ouvrirBooster(c, hasard));
 }
 
 // Défaite en arène. Toutes les 2 défaites d'affilée : booster de consolation.
@@ -208,6 +211,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (typeof b.idCoach === 'string') c.idCoach = b.idCoach;
   if (b.niveau === 'fort') c.niveau = 'fort';
   c.toutDebloque = b.toutDebloque === true;
+  c.bonusTutoriel = b.bonusTutoriel === true;
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
   if (Array.isArray(b.recompensesEnLigne)) c.recompensesEnLigne = (b.recompensesEnLigne as string[]).slice(-50);

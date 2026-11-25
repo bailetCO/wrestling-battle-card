@@ -21,6 +21,7 @@ import {
 import { portraitSVG } from './portrait';
 import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
 import { ouvrirBooster } from './collection';
+import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
 
@@ -48,6 +49,8 @@ let endurancesAvant: [number, number] | null = null; // pour animer les barres
 let idPortrait = 0;
 let collection: Collection = charger();
 let recompenseDonnee = false; // une seule récompense par combat
+let tuto = false; // combat guidé du tutoriel en cours
+let bonusCeCombat = false; // combat d'arène qui suit le tutoriel : boosters doublés
 // Boosters gagnés pendant le combat solo (ou message de consolation), affichés à la fin.
 let paquetSolo: Paquet | null = null;
 let messageSolo = '';
@@ -200,8 +203,13 @@ function ecranCombatMenu() {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Combat')}
+      <nav class="aide-barre" aria-label="Aide">
+        <a class="aide-btn" href="#regles"><span aria-hidden="true">?</span>Règles</a>
+        <a class="aide-btn" href="#tutoriel">Tutoriel<span aria-hidden="true">▶</span></a>
+      </nav>
       <section class="bloc">
         <h2>Arène</h2>
+        ${collection.bonusTutoriel ? '<p class="bandeau-bonus">Tutoriel terminé : ton prochain combat d\'arène rapporte 2 fois plus de boosters en cas de victoire.</p>' : ''}
         <p>Affronte l'ordinateur avec un lutteur de ta collection. Chaque victoire ouvre un booster ; toutes les 2 défaites d'affilée, un booster de consolation.</p>
         <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
           <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>Pour s'entraîner</small></button>
@@ -240,6 +248,7 @@ function ecranArene() {
   app.innerHTML = `
     <main class="choix">
       ${enTete('Arène', `Ordinateur ${collection.niveau === 'fort' ? 'fort' : 'normal'} · l'adversaire est tiré au hasard parmi les 15 lutteurs.`, '#combat')}
+      ${collection.bonusTutoriel ? '<p class="bandeau-bonus marge">Bonus du tutoriel : boosters doublés si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
       <div class="defile" tabindex="0" aria-label="Tes lutteurs">${cartes}</div>
       <div class="defile-nav">
@@ -721,7 +730,136 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   recompenseDonnee = false;
   paquetSolo = null;
   messageSolo = '';
+  tuto = false;
+  bonusCeCombat = collection.bonusTutoriel;
   ecranCombat();
+}
+
+// ---------- Règles et tutoriel ----------
+
+function ecranRegles() {
+  partie = null;
+  app.innerHTML = `
+    <main class="sous-menu regles">
+      ${enTete('Règles', 'Le combat en quelques minutes', '#combat')}
+      <div class="regles-corps">${reglesHTML()}</div>
+      <a class="principal lien-bouton marge" href="#tutoriel">Essayer avec le tutoriel</a>
+    </main>`;
+  window.scrollTo(0, 0);
+}
+
+function illustrationsTuto() {
+  const ex = (id: string) => trouverLutteur(id);
+  const cartes = `<div class="tuto-illus">${(['europe', 'russie', 'usa-defenseur', 'usa'] as const)
+    .map((id) => miniCarteLutteur(ex(id), NOM_RARETE[ex(id).rarete])).join('')}</div>`;
+  const e = ex('europe');
+  const fusion = `<div class="tuto-illus fusion-illus">
+      ${miniCarteLutteur(e, 'Grade 1')}<span class="tuto-signe">+</span>${miniCarteLutteur(e, 'double')}
+      <span class="tuto-signe">=</span>${miniCarteLutteur(e, 'Grade 2 · +5 %')}</div>`;
+  const club = `<div class="tuto-illus">
+      ${miniCarteLutteur(ex('japon'), 'ton double')}<span class="tuto-signe">⇄</span>${miniCarteLutteur(ex('afrique-explosif'), 'son double')}</div>`;
+  return { cartes, fusion, club };
+}
+
+function ecranTutoriel(i = 0) {
+  partie = null;
+  tuto = false;
+  const ecrans = ecransTutoriel(illustrationsTuto());
+  const n = ecrans.length;
+  const ec = ecrans[i];
+  const points = ecrans.map((_, k) => `<span class="${k === i ? 'actif' : ''}"></span>`).join('');
+  app.innerHTML = `
+    <main class="sous-menu tuto">
+      ${enTete('Tutoriel', `Étape ${i + 1} sur ${n + 1}`, '#combat')}
+      <section class="bloc tuto-ecran">
+        <h2>${ec.titre}</h2>
+        ${ec.html}
+      </section>
+      <div class="tuto-points" aria-hidden="true">${points}<span></span></div>
+      <div class="tuto-nav marge">
+        ${i > 0 ? '<button class="secondaire" data-precedent>Précédent</button>' : '<span></span>'}
+        ${i < n - 1
+          ? '<button class="principal" data-suivant>Suivant</button>'
+          : '<button class="principal" data-combat-guide>Jouer le combat guidé</button>'}
+      </div>
+    </main>`;
+  activerReflets(app);
+  app.querySelector('[data-precedent]')?.addEventListener('click', () => ecranTutoriel(i - 1));
+  app.querySelector('[data-suivant]')?.addEventListener('click', () => ecranTutoriel(i + 1));
+  app.querySelector('[data-combat-guide]')?.addEventListener('click', lancerTutoriel);
+  window.scrollTo(0, 0);
+}
+
+function lancerTutoriel() {
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  mode = 'solo';
+  HUMAIN = 0;
+  ORDI = 1;
+  partie = new Partie(
+    TUTO_COMBAT.moi, TUTO_COMBAT.adversaire, TUTO_COMBAT.graine, 'normal',
+    trouverLutteur(TUTO_COMBAT.moi), ETAPES_GUIDEES.map((e) => e.ordi),
+  );
+  tours = [];
+  scoresPeriodes = [];
+  enAttente = false;
+  endurancesAvant = null;
+  recompenseDonnee = true; // pas de récompense pour le combat guidé
+  paquetSolo = null;
+  messageSolo = '';
+  tuto = true;
+  bonusCeCombat = false;
+  ecranCombat();
+}
+
+// Étape guidée du tour en cours (null quand le joueur joue librement).
+function etapeGuidee(): EtapeGuidee | null {
+  return tuto && partie?.scripte ? ETAPES_GUIDEES[partie.toursJoues] : null;
+}
+
+function bulleCoach(): string {
+  if (!tuto || !partie) return '';
+  const g = etapeGuidee();
+  const texte = g ? g.texte : partie.toursJoues === ETAPES_GUIDEES.length ? TEXTE_LIBRE : TEXTE_LIBRE_SUITE;
+  return `<div class="bulle-coach" role="status"><span class="bc-qui">Coach</span><p>${texte}</p></div>`;
+}
+
+// Pendant les tours guidés : seule l'action conseillée reste jouable.
+function guiderBoutons(racine: ParentNode) {
+  const g = etapeGuidee();
+  if (!g) return;
+  racine.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((b) => {
+    const bon = b.dataset.action === g.conseil.action && (b.dataset.speciale === '1') === g.conseil.speciale;
+    b.disabled = !bon;
+    b.classList.toggle('conseille', bon);
+  });
+}
+
+function ecranFinTutoriel() {
+  if (!partie) return;
+  const e = partie.etat;
+  const h = e.joueurs[HUMAIN];
+  const o = e.joueurs[ORDI];
+  const score = scoresPeriodes[0] ?? [h.score, o.score];
+  const gagne = e.termine ? e.vainqueur === HUMAIN : h.periodesGagnees > 0;
+  tuto = false;
+  partie = null;
+  collection.bonusTutoriel = true;
+  sauver(collection);
+  app.innerHTML = `
+    <main class="sous-menu tuto">
+      ${enTete('Tutoriel terminé', '', '#combat')}
+      <section class="bloc tuto-ecran">
+        <h2>${gagne ? 'Période gagnée !' : 'Période perdue, mais tu as compris le principe !'}</h2>
+        <p class="tuto-score">${score[0]} - ${score[1]}</p>
+        <p>Un vrai combat se joue en 3 périodes : gagne-en 2, ou fais un tombé. Sans le coach, tu ne verras pas le choix de l'adversaire : à toi de deviner son jeu.</p>
+        <p><b>Bonus :</b> ton prochain combat d'arène rapporte 2 fois plus de boosters si tu gagnes.</p>
+      </section>
+      <div class="fin-boutons marge">
+        <a class="principal lien-bouton" href="#arene">Combattre l'ordinateur</a>
+        <a class="secondaire lien-bouton" href="#">Retour au menu</a>
+      </div>
+    </main>`;
+  window.scrollTo(0, 0);
 }
 
 // ---------- Écran 2 : le combat ----------
@@ -959,6 +1097,7 @@ function tableau(e: EtatCombat): string {
 function ecranCombat() {
   const e = etatEnCours();
   if (!e) return;
+  if (tuto && (e.termine || e.periode > 1)) return ecranFinTutoriel();
   if (e.termine) return mode === 'ligne' ? ecranFinLigne() : ecranFin();
   const h = e.joueurs[HUMAIN];
   const o = e.joueurs[ORDI];
@@ -978,9 +1117,10 @@ function ecranCombat() {
       <footer class="pave">
         ${h.initiative ? `<p class="spe-info init">Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.</p>` : ''}
         ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
+        ${bulleCoach()}
         ${etatSpeciale(e)}
         <div class="actions-zone">${boutonsActions(e, 'tour')}</div>
-        <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>Abandonner</button></p>
+        <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : tuto ? 'Combat guidé' : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>${tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
       </footer>
     </main>`;
 
@@ -991,6 +1131,7 @@ function ecranCombat() {
     }),
   );
   endurancesAvant = [e.joueurs[0].endurance, e.joueurs[1].endurance];
+  guiderBoutons(app);
 
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
     b.addEventListener('click', () => choisir(lireChoix(b))),
@@ -1002,6 +1143,12 @@ function ecranCombat() {
     }),
   );
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
+    if (tuto) {
+      tuto = false;
+      partie = null;
+      location.hash = '#combat';
+      return;
+    }
     if (!confirmerAbandon()) return;
     if (mode === 'ligne') duel?.abandonner();
     else ecranArene();
@@ -1101,6 +1248,7 @@ function fenetreInitiative(choixHumain: Choix, choixOrdi: Choix, apercu: (IdActi
     <button class="principal" data-garder>Garder ${choixHumain.speciale ? '★ ' : ''}${echap(mien.local)}</button>
     <p class="ou">ou changer pour :</p>
     <div class="pave-fenetre">${boutonsActions(e, 'initiative')}</div>`);
+  guiderBoutons(f);
   f.querySelector('[data-garder]')!.addEventListener('click', () => suite(choixHumain, choixOrdi));
   f.querySelectorAll<HTMLButtonElement>('[data-mode="initiative"]').forEach((b) =>
     b.addEventListener('click', () => suite(lireChoix(b), choixOrdi)),
@@ -1292,8 +1440,11 @@ function ecranFin() {
   const { idHumain, idOrdi } = partie;
   if (!recompenseDonnee) {
     recompenseDonnee = true;
+    const x = bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
+    if (bonusCeCombat) collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
+    bonusCeCombat = false;
     if (gagne) {
-      paquetSolo = { titre: 'Victoire', boosters: recompenser(collection, 'arene', Math.random), ouvert: false };
+      paquetSolo = { titre: x > 1 ? 'Victoire · boosters doublés' : 'Victoire', boosters: recompenser(collection, 'arene', Math.random, x), ouvert: false };
     } else {
       const conso = consoler(collection, Math.random);
       if (conso) paquetSolo = { titre: 'Booster de consolation', boosters: [conso], ouvert: false };
@@ -1712,6 +1863,8 @@ function route() {
   if (h === '#club') return ecranClub();
   quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
+  if (h === '#regles') return ecranRegles();
+  if (h === '#tutoriel') return ecranTutoriel();
   if (h === '#arene') return ecranArene();
   if (!partie) ecranMenu();
 }

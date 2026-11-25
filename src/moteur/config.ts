@@ -228,6 +228,8 @@ export const REGLES = {
     poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
     // Marchand du club : offres par jour (il donne une carte contre un double de même rareté).
     offresMarchandParJour: 3,
+    // Tutoriel suivi en entier : les boosters du combat d'arène suivant sont multipliés.
+    multiplicateurApresTutoriel: 2,
   },
 
   // Fusion : passer au grade g demande g exemplaires identiques (l'original + g − 1 doubles,

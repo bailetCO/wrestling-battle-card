@@ -669,3 +669,61 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Règles et tutoriel ---------- */
+.marge { margin-left: 16px; margin-right: 16px; width: auto; }
+.aide-barre { display: flex; justify-content: space-between; margin: -4px 16px 0; }
+.aide-btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+  border-radius: 999px; border: 2px solid var(--tapis-ligne); background: var(--nuit);
+  color: var(--texte); font-family: var(--police); font-weight: 700; font-size: 17px; text-decoration: none;
+}
+.aide-btn span {
+  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--orange); color: #1d1300; font-size: 12px;
+}
+.aide-btn:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.bandeau-bonus {
+  padding: 10px 12px; border-radius: 10px; background: rgba(242, 163, 58, .16);
+  border: 2px solid var(--orange); color: var(--texte) !important; font-weight: 600;
+}
+
+.regles-corps { display: grid; gap: 12px; margin: 0 16px; }
+.regle { padding: 14px; border-radius: 14px; background: var(--tapis-clair); border-left: 5px solid var(--orange); }
+.regle h2 { font-size: 22px; margin: 0 0 6px; }
+.regle p { margin: 6px 0; color: var(--doux); line-height: 1.5; }
+.regle b { color: var(--texte); }
+.liste-regles { margin: 6px 0 0; padding-left: 20px; color: var(--doux); line-height: 1.5; display: grid; gap: 6px; }
+
+.schema { margin: 4px 0; text-align: center; }
+.schema-familles { width: 100%; max-width: 300px; display: block; margin: 0 auto; }
+.schema figcaption { font-size: 14px; color: var(--doux); }
+.sf-fleches { color: var(--doux); }
+.sf-noeud circle { fill: var(--nuit); stroke: currentColor; stroke-width: 3; }
+.sf-noeud text { fill: var(--texte); font-family: var(--police); font-weight: 700; font-size: 15px; }
+
+.tuto-ecran p { line-height: 1.5; }
+.tuto-ecran b { color: var(--texte); }
+.tuto-illus { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tuto-illus .mini-carte { width: 72px; }
+.tuto-signe { font-family: var(--police); font-size: 28px; font-weight: 700; color: var(--orange); }
+.tuto-points { display: flex; justify-content: center; gap: 8px; }
+.tuto-points span { width: 9px; height: 9px; border-radius: 50%; background: var(--tapis-ligne); }
+.tuto-points span.actif { background: var(--orange); }
+.tuto-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tuto-score { font-family: var(--police); font-size: 44px; font-weight: 700; color: var(--texte) !important; text-align: center; }
+
+.bulle-coach {
+  position: relative; margin: 0 0 10px; padding: 10px 12px 10px 14px; border-radius: 12px;
+  background: var(--texte); color: var(--encre);
+}
+.bulle-coach::after {
+  content: ""; position: absolute; left: 28px; bottom: -8px; border: 8px solid transparent;
+  border-bottom: 0; border-top-color: var(--texte);
+}
+.bulle-coach p { margin: 2px 0 0; line-height: 1.4; font-size: 15px; }
+.bc-qui { font-family: var(--police); font-weight: 700; color: #b5481a; }
+.action.conseille { outline: 3px solid var(--orange); outline-offset: 2px; animation: conseil 1.4s ease-in-out infinite; }
+@keyframes conseil { 50% { outline-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .action.conseille { animation: none; } }
+.lien-bouton.secondaire { color: var(--texte); }
