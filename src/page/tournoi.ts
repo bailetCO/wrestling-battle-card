@@ -165,9 +165,22 @@ export interface Individuel {
   graine: number;
   gainsCombats: { medailles: number; dollars: number };
   recompense: Booster[] | null;
+  nom?: string; // nom de la compétition (saison : « Championnat régional »…)
+  niveaux?: NiveauxTournoi; // niveau de l'ordinateur imposé (sinon celui choisi par le joueur)
+  saison?: number; // palier de la saison sportive auquel ce tournoi compte
 }
 
+// Niveau de l'ordinateur d'un tournoi : un niveau fixe, ou « mixte » (normal ou fort selon le combat).
+export type NiveauxTournoi = Niveau | 'mixte';
+
 const I = T.individuel;
+
+// Niveau de l'ordinateur pour le combat `k` d'un tournoi (tiré de la graine pour « mixte »).
+export function niveauMatchI(t: Individuel, k: number, defaut: Niveau): Niveau {
+  if (!t.niveaux) return defaut;
+  if (t.niveaux !== 'mixte') return t.niveaux;
+  return creerHasard((t.graine * 13 + k * 7 + 5) >>> 0)() < 0.5 ? 'normal' : 'fort';
+}
 
 function melanger<X>(t: X[], h: Hasard): X[] {
   for (let i = t.length - 1; i > 0; i--) {
@@ -177,16 +190,22 @@ function melanger<X>(t: X[], h: Hasard): X[] {
   return t;
 }
 
-const NOM_TOUR: Record<number, string> = { 16: '1/8 de finale', 8: '1/4 de finale', 4: '1/2 finale' };
+const NOM_TOUR: Record<number, string> = { 64: '1/32 de finale', 32: '1/16 de finale', 16: '1/8 de finale', 8: '1/4 de finale', 4: '1/2 finale' };
 
 // Nombre de participants accepté : au moins 6 (on complète), au plus 15.
-export const nombreParticipants = (n: number) => Math.max(I.minimum, Math.min(I.maximum, Math.round(n) || I.parDefaut));
+export const nombreParticipants = (n: number, min: number = I.minimum, max: number = I.maximum) =>
+  Math.max(min, Math.min(max, Math.round(n) || I.parDefaut));
 
-export function creerIndividuel(idJoueur: string, nombre: number, graine: number): Individuel {
+// Taille du tableau principal : la plus petite puissance de 2 (8 au moins) qui contient tout le monde.
+export const tailleTableau = (n: number) => Math.max(8, 2 ** Math.ceil(Math.log2(n)));
+
+export interface OptionsIndividuel { minimum?: number; maximum?: number; nom?: string; niveaux?: NiveauxTournoi; saison?: number }
+
+export function creerIndividuel(idJoueur: string, nombre: number, graine: number, o: OptionsIndividuel = {}): Individuel {
   const h = creerHasard(graine);
-  const n = nombreParticipants(nombre);
+  const n = nombreParticipants(nombre, o.minimum, o.maximum);
   const lutteurs = [idJoueur, ...tirer(n - 1, [idJoueur], h)];
-  const S = n <= 8 ? 8 : 16; // taille du tableau principal
+  const S = tailleTableau(n); // taille du tableau principal
   const paires = S / 2;
   // Tirage : chaque paire du premier tour reçoit un lutteur ; n − paires paires (au hasard) en
   // reçoivent un second. Les autres lutteurs sont exemptés du premier tour.
@@ -243,6 +262,9 @@ export function creerIndividuel(idJoueur: string, nombre: number, graine: number
   ajouter('Finale', 'finales', 3, { v: d1 }, { v: d2 });
 
   const t: Individuel = { type: 'individuel', lutteurs, matchs, graine, gainsCombats: { medailles: 0, dollars: 0 }, recompense: null };
+  if (o.nom) t.nom = o.nom;
+  if (o.niveaux) t.niveaux = o.niveaux;
+  if (o.saison !== undefined) t.saison = o.saison;
   majIndividuel(t);
   return t;
 }
@@ -285,7 +307,7 @@ export function avancerI(t: Individuel, defs: (i: number) => DefLutteur, niveau:
   for (let k = prochainMatchI(t); k !== null; k = prochainMatchI(t)) {
     const m = t.matchs[k];
     if (avecJoueurI(m)) return k;
-    const r = simulerCombat(defs(m.a!), defs(m.b!), t.graine * 31 + k + 1, niveau);
+    const r = simulerCombat(defs(m.a!), defs(m.b!), t.graine * 31 + k + 1, niveauMatchI(t, k, niveau));
     enregistrerI(t, k, r.vainqueur === 0 ? m.a! : m.b!, r.detail);
   }
   return null;

@@ -33,6 +33,8 @@ export interface Collection {
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
   histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
+  saison: { palier: number; victoires: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub
+  scenesVues: string[]; // scènes de dialogue déjà montrées
 }
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
@@ -81,6 +83,8 @@ export function nouvelleCollection(): Collection {
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
+    saison: { palier: 0, victoires: 0 },
+    scenesVues: [],
   };
 }
 
@@ -361,6 +365,11 @@ export function depuisSauvegarde(brut: unknown): Collection {
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
   c.arene = entier(b.arene);
+  const sa = b.saison as { palier?: unknown; victoires?: unknown } | undefined;
+  if (sa && typeof sa === 'object') {
+    c.saison = { palier: Math.min(REGLES.saison.paliers.length, entier(sa.palier)), victoires: entier(sa.victoires) };
+  }
+  if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
   const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;
   if (hi && typeof hi === 'object') {
     c.histoire = {

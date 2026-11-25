@@ -32,6 +32,8 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/aide.ts` : la page Règles (textes tirés de la configuration) et le tutoriel (écrans et combat guidé).
 - `src/moteur/auto.ts` : le combat automatique (l'ordinateur joue pour les deux camps, force selon le niveau de compte).
 - `src/page/polices/` : la police des titres (Roboto Condensed, licence libre OFL), intégrée au jeu : rien n'est téléchargé chez Google.
+- `src/page/saison.ts` : la saison sportive (mode histoire 2 : interclub, régional, national, international, Mondiaux, JO), sans affichage.
+- `src/page/dialogues.ts` : les scènes de dialogue des modes histoire (Philippe et Cocoach).
 - `src/page/histoire.ts` : le mode histoire (12 étapes, validation dans l'ordre, récompenses), sans affichage.
 - `src/page/tournoi.ts` : les tournois (individuel à double tableau de 6 à 15 lutteurs, tournoi par équipe avec bonus de nation, ancienne compétition à 6, inscriptions et gains), sans affichage.
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.

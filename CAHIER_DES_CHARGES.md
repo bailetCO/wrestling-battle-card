@@ -318,6 +318,28 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
 - Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
 
+### Saison sportive (mode histoire 2)
+
+- S'ouvre quand les 12 étapes du mode histoire sont validées. 6 paliers, à valider dans l'ordre (écran « Saison sportive », bandeau du menu) :
+
+| Palier | Format | Ordinateur | Objectif | Récompense du palier |
+| --- | --- | --- | --- | --- |
+| 1. Échanges interclub | Combats rapides (1 période) contre des lutteurs d'autres nations | Facile | 3 victoires | 2 boosters |
+| 2. Championnat régional | 6 lutteurs, double tableau | Normal | 1re place | 2 boosters |
+| 3. Championnat national | 15 lutteurs, double tableau | Normal | 1re place | 3 boosters |
+| 4. Tournoi international | 30 lutteurs, double tableau | Normal ou fort selon le combat | Podium (top 3) | 3 boosters |
+| 5. Championnats du monde | 40 lutteurs, double tableau | Fort | Podium (top 3) | 4 boosters |
+| 6. Jeux Olympiques | 40 lutteurs, double tableau | Fort | Médaille d'or | 1 légendaire (une que le joueur n'a pas) + 3 boosters rares |
+
+- Les compétitions se paient comme un tournoi individuel (5 $) et rapportent les gains habituels (+1 médaille par combat gagné, médailles et $ selon la place, booster rare au vainqueur), en plus de la récompense du palier. Une compétition ratée peut être retentée (nouvelle inscription). Les combats interclub rapportent comme un combat rapide (+1 médaille par victoire).
+- Les tableaux vont jusqu'à 64 places (1/32 de finale) ; les places vides sont des exemptions tirées au sort.
+
+### Scènes de dialogue (modes histoire)
+
+- À chaque étape du mode histoire et à chaque palier de la saison, une petite scène façon BD (2 à 4 bulles) présente l'objectif. Elle s'affiche une fois, au menu ou dans l'écran du mode, et peut être revue (« Revoir la scène »).
+- Personnages : **Philippe**, le mentor (ancien champion devenu directeur technique), et **Cocoach**, le coach rival qu'on recroise jusqu'aux Jeux Olympiques.
+- Scènes : une par étape (12), une à la fin du mode histoire (ouverture de la saison), une par palier de la saison (6) et une finale (champion olympique).
+
 ### Combat automatique
 
 - À partir du niveau de compte 3, un bouton « ⚡ Combat auto » apparaît à côté de chaque bouton de combat contre l'ordinateur (arène, combat rapide, tournois, revanche, adversaire suivant). Avant, il est affiché verrouillé.

@@ -133,13 +133,18 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
   const n = H.boosters[i] ?? 0;
   if (n > 0) return Array.from({ length: n }, () => ouvrirBooster(c, hasard, 'classique'));
+  return [legendaireOfferte(c, hasard)];
+}
+
+// Une carte légendaire que le joueur n'a pas encore (s'il les a toutes : une au hasard, un double).
+export function legendaireOfferte(c: Collection, hasard: Hasard): Booster {
   const legendaires = LUTTEURS.filter((l) => l.rarete === 'legendaire');
   const manquantes = legendaires.filter((l) => nbExemplaires(c, l.id) === 0);
   const pool = manquantes.length ? manquantes : legendaires;
   const id = pool[Math.floor(hasard() * pool.length)].id;
   const nouvelle = nbExemplaires(c, id) === 0;
   c.exemplaires[id] = nbExemplaires(c, id) + 1;
-  return [{ type: 'recompense', cartes: [id], nouvelles: nouvelle ? [id] : [] }];
+  return { type: 'recompense', cartes: [id], nouvelles: nouvelle ? [id] : [] };
 }
 
 // Note un événement. Si l'étape en cours est validée, on passe à la suivante et on renvoie sa

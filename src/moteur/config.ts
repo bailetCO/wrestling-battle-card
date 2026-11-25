@@ -324,6 +324,20 @@ export const REGLES = {
     memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club
   },
 
+  // Saison sportive (mode histoire 2), ouverte quand le mode histoire 1 est fini : 6 paliers dans
+  // l'ordre. Les compétitions sont des tournois individuels à double tableau : inscription et gains
+  // habituels du tournoi individuel, plus la récompense du palier quand l'objectif est atteint.
+  saison: {
+    paliers: [
+      { nom: 'Échanges interclub', victoires: 3, participants: 0, niveau: 'facile', placeMax: 0, boosters: 2, boostersRares: 0, legendaire: false },
+      { nom: 'Championnat régional', victoires: 0, participants: 6, niveau: 'normal', placeMax: 1, boosters: 2, boostersRares: 0, legendaire: false },
+      { nom: 'Championnat national', victoires: 0, participants: 15, niveau: 'normal', placeMax: 1, boosters: 3, boostersRares: 0, legendaire: false },
+      { nom: 'Tournoi international', victoires: 0, participants: 30, niveau: 'mixte', placeMax: 3, boosters: 3, boostersRares: 0, legendaire: false },
+      { nom: 'Championnats du monde', victoires: 0, participants: 40, niveau: 'fort', placeMax: 3, boosters: 4, boostersRares: 0, legendaire: false },
+      { nom: 'Jeux Olympiques', victoires: 0, participants: 40, niveau: 'fort', placeMax: 1, boosters: 0, boostersRares: 3, legendaire: true },
+    ] as { nom: string; victoires: number; participants: number; niveau: 'facile' | 'normal' | 'fort' | 'mixte'; placeMax: number; boosters: number; boostersRares: number; legendaire: boolean }[],
+  },
+
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
   // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
   // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.

@@ -22,6 +22,9 @@ const PEAU = { claire: '#f2cfae', mate: '#dcaa82', doree: '#c98f62', brune: '#91
 const CHEVEUX = { noir: '#1d1715', brun: '#4a2f22', chatain: '#7a4f2e', blond: '#d8b46a', roux: '#a8492a' };
 
 export const APPARENCE: Record<string, Apparence> = {
+  // Personnages des modes histoire : Philippe (le mentor, ancien champion) et Cocoach (le rival).
+  'perso-philippe': { peau: PEAU.mate, cheveux: CHEVEUX.chatain, coiffure: 'chauve', pilosite: 'moustache', casque: false, oreille: true, cicatrice: true },
+  'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false },
   usa: { peau: PEAU.claire, cheveux: CHEVEUX.blond, coiffure: 'ras', pilosite: 'aucune', casque: false, oreille: true, cicatrice: false },
   'usa-explosif': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'crete', pilosite: 'aucune', casque: true, oreille: false, cicatrice: false },
   'usa-defenseur': { peau: PEAU.claire, cheveux: CHEVEUX.roux, coiffure: 'pics', pilosite: 'barbe', casque: false, oreille: true, cicatrice: true },

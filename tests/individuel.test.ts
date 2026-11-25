@@ -7,7 +7,7 @@ import { creerHasard } from '../src/moteur/hasard';
 import { nouvelleCollection } from '../src/page/collection';
 import {
   PERSONNE, avancerI, creerIndividuel, enregistrerI, exemptes, exemption, finieI, gagnerCombatTournoi,
-  joueurInvaincu, nombreParticipants, payerInscription, placesI, pretI, recompenserTournoi, type Individuel,
+  joueurInvaincu, niveauMatchI, nombreParticipants, payerInscription, tailleTableau, placesI, pretI, recompenserTournoi, type Individuel,
 } from '../src/page/tournoi';
 
 const I = REGLES.tournoi.individuel;
@@ -159,3 +159,37 @@ test('individuel : gains 1er 10 médailles + 15 $ + booster rare ; 2e 6 et 9 $ ;
     assert.ok(r2.every((b) => b.type !== 'rare'));
   }
 });
+
+test('individuel : grands tableaux de la saison (jusqu\'à 40), niveaux imposés', () => {
+  for (const n of [6, 15, 16, 17, 30, 32, 33, 40]) {
+    for (let g = 1; g <= 4; g++) {
+      const t = creerIndividuel('europe', n, g * 37 + n, { minimum: 6, maximum: 40, nom: 'Test', niveaux: 'mixte', saison: 2 });
+      assert.equal(t.lutteurs.length, n);
+      assert.equal(t.nom, 'Test');
+      assert.equal(t.saison, 2);
+      jouerTout(t, (_, k) => (g + k) % 3 !== 0);
+      assert.ok(finieI(t), `${n}`);
+      const p = placesI(t);
+      assert.equal(p.size, n);
+      assert.deepEqual([...p.values()].sort((a, b) => a - b).slice(0, 5), [1, 2, 3, 4, 5]);
+      for (const [i, d] of bilanDefaites(t)) assert.ok(d <= 2, `${n} : lutteur ${i} perd ${d} fois avant les finales`);
+    }
+  }
+  const t = creerIndividuel('europe', 40, 9, { maximum: 40, niveaux: 'mixte' });
+  const niv = new Set(t.matchs.map((_, k) => niveauMatchI(t, k, 'facile')));
+  assert.deepEqual([...niv].sort(), ['fort', 'normal']);
+  assert.equal(niveauMatchI(creerIndividuel('europe', 6, 1, { niveaux: 'fort' }), 0, 'facile'), 'fort');
+  assert.equal(niveauMatchI(creerIndividuel('europe', 6, 1), 0, 'facile'), 'facile');
+  assert.equal(tailleTableau(40), 64);
+  assert.equal(tailleTableau(6), 8);
+});
+
+function bilanDefaites(t: Individuel) {
+  const d = new Map<number, number>();
+  for (const m of t.matchs) {
+    if (exemption(m) || m.tableau === 'finales') continue;
+    const perdant = m.vainqueur === m.a ? m.b! : m.a!;
+    d.set(perdant, (d.get(perdant) ?? 0) + 1);
+  }
+  return d;
+}

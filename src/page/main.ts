@@ -27,10 +27,12 @@ import { PAR_NATION, adversairesDe, areneTerminee, etapeArene, nationsArene, vic
 import {
   NOM_MATCH, avancer, creerTournoiEquipe, enregistrer, enregistrerDuel, equipeFinie,
   finie, gagnerCombatTournoi, payerInscription, places, prochainDuel, recompenserTournoi, scoreEquipe,
-  avancerI, creerIndividuel, enregistrerI, exemptes, exemption, finieI, nombreParticipants, placesI,
+  avancerI, creerIndividuel, niveauMatchI, enregistrerI, exemptes, exemption, finieI, nombreParticipants, placesI,
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
-import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, progression, type EtapeValidee, type EvenementHistoire } from './histoire';
+import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, progression, type EvenementHistoire } from './histoire';
+import { NB_PALIERS, PALIERS, creerCompetitionSaison, noterSaison, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
+import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
@@ -174,52 +176,140 @@ function ecranAccueil(message = '') {
   window.scrollTo(0, 0);
 }
 
-// ---------- Mode histoire ----------
+// ---------- Modes histoire (histoire et saison) ----------
 
-let recompensesHistoire: EtapeValidee[] = []; // étapes validées dont les boosters restent à ouvrir
+interface RecompenseHistoire { titre: string; lien: string; boosters: Booster[] }
+let recompensesHistoire: RecompenseHistoire[] = []; // étapes ou paliers validés dont les boosters restent à ouvrir
 let paquetHistoire: Paquet | null = null;
 
 // Note un événement du jeu ; une étape validée est annoncée par une bulle.
 function histoire(ev: EvenementHistoire) {
   const r = noterHistoire(collection, ev, Math.random);
   if (!r.length) return;
-  recompensesHistoire.push(...r);
+  for (const x of r) {
+    const legendaire = x.etape === NB_ETAPES - 1;
+    recompensesHistoire.push({ titre: `Étape ${x.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, lien: '#histoire', boosters: x.boosters });
+  }
   sauver(collection);
-  annoncerHistoire(r[r.length - 1].etape);
+  const der = r[r.length - 1].etape;
+  annoncer(`Étape ${der + 1} validée : ${ETAPES[der].titre} !`, '#histoire');
 }
 
-function annoncerHistoire(etape: number) {
+// Note un événement de la saison sportive.
+function saison(ev: EvenementSaison) {
+  const r = noterSaison(collection, ev, Math.random);
+  sauver(collection);
+  if (!r) return;
+  recompensesHistoire.push({ titre: `${PALIERS[r.palier].nom} : réussi`, lien: '#saison', boosters: r.boosters });
+  annoncer(`${PALIERS[r.palier].nom} : objectif atteint !`, '#saison');
+}
+
+function annoncer(titre: string, lien: string) {
   document.querySelector('.bulle-histoire')?.remove();
   const b = document.createElement('a');
   b.className = 'bulle-histoire';
-  b.href = '#histoire';
+  b.href = lien;
   b.setAttribute('role', 'status');
-  b.innerHTML = `<b>Étape ${etape + 1} validée : ${echap(ETAPES[etape].titre)} !</b><span>Touche ici pour ta récompense</span>`;
+  b.innerHTML = `<b>${echap(titre)}</b><span>Touche ici pour ta récompense</span>`;
   document.body.append(b);
   b.addEventListener('click', () => b.remove());
   setTimeout(() => b.remove(), 7000);
 }
 
+const jauge = (p: [number, number]) => `<span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span>`;
+
 function bandeauHistoire(): string {
   if (recompensesHistoire.length) {
-    return `<a class="bandeau-histoire pret" href="#histoire"><small>Mode histoire</small><b>🎁 Récompense à ouvrir</b><span>Étape ${recompensesHistoire[0].etape + 1} validée</span></a>`;
+    const r = recompensesHistoire[0];
+    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
   }
-  if (histoireFinie(collection)) return '<a class="bandeau-histoire fini" href="#histoire"><small>Mode histoire</small><b>Histoire terminée 🏆</b></a>';
+  if (saisonOuverte(collection)) {
+    if (saisonFinie(collection)) return '<a class="bandeau-histoire fini" href="#saison"><small>Saison sportive</small><b>Champion olympique 🥇</b></a>';
+    const i = collection.saison.palier;
+    const v = PALIERS[i].victoires;
+    return `<a class="bandeau-histoire" href="#saison"><small>Saison sportive · palier ${i + 1}/${NB_PALIERS} · ${echap(PALIERS[i].nom)}</small>
+      <b>${echap(objectifPalier(i))}</b>${v ? `${jauge([collection.saison.victoires, v])}<span>${collection.saison.victoires}/${v}</span>` : ''}</a>`;
+  }
   const i = collection.histoire.etape;
   const p = progression(collection);
   return `<a class="bandeau-histoire" href="#histoire"><small>Mode histoire · étape ${i + 1}/${NB_ETAPES}</small>
-    <b>${echap(ETAPES[i].objectif)}</b>${p ? `<span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span><span>${p[0]}/${p[1]}</span>` : ''}</a>`;
+    <b>${echap(ETAPES[i].objectif)}</b>${p ? `${jauge(p)}<span>${p[0]}/${p[1]}</span>` : ''}</a>`;
+}
+
+// Prend la prochaine récompense à ouvrir pour cet écran (histoire ou saison).
+function preparerPaquet(lien: string) {
+  if (paquetHistoire) return;
+  const i = recompensesHistoire.findIndex((r) => r.lien === lien);
+  if (i < 0) return;
+  const r = recompensesHistoire.splice(i, 1)[0];
+  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false };
+}
+
+function blocPaquet(lien: string): string {
+  if (!paquetHistoire) return '';
+  const encore = recompensesHistoire.some((r) => r.lien === lien);
+  return `${sectionPaquet(paquetHistoire)}${paquetHistoire.ouvert && encore ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}`;
+}
+
+function brancherPaquet(lien: string, ecran: () => void) {
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetHistoire && revelerPaquet(paquetHistoire, ecran));
+  app.querySelector('[data-suite-histoire]')?.addEventListener('click', () => { paquetHistoire = null; ecran(); });
+  if (paquetHistoire?.ouvert && !recompensesHistoire.some((r) => r.lien === lien)) paquetHistoire = null;
+}
+
+// ---------- Scènes de dialogue ----------
+
+const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutteur('europe'), id: `perso-${qui}`, nom: PERSONNAGES[qui].nom });
+
+// Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
+function scenesAuto() {
+  if (document.querySelector('.voile, .scene, .revelation')) return;
+  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection))
+    .filter((k) => !collection.scenesVues.includes(k));
+  if (cles.length) montrerScene(cles);
+}
+
+// Une scène façon BD : les bulles apparaissent une à une (« Suite »), « Passer » ferme tout.
+function montrerScene(cles: string[]) {
+  const repliques = cles.flatMap((k) => SCENES[k] ?? []);
+  if (!repliques.length) return;
+  document.querySelector('.scene')?.remove();
+  const voile = document.createElement('div');
+  voile.className = 'scene';
+  voile.setAttribute('role', 'dialog');
+  voile.setAttribute('aria-modal', 'true');
+  voile.setAttribute('aria-label', 'Scène du mode histoire');
+  document.body.append(voile);
+  let n = 1;
+  const fermer = () => {
+    for (const k of cles) if (!collection.scenesVues.includes(k)) collection.scenesVues.push(k);
+    sauver(collection);
+    voile.remove();
+  };
+  const rendre = () => {
+    voile.innerHTML = `<div class="scene-cadre">
+      <div class="scene-bulles">${repliques.slice(0, n).map((r, i) => `
+        <div class="replique r-${r.qui} ${i === n - 1 ? 'nouvelle' : ''}">
+          <div class="replique-portrait">${portraitSVG(defPersonnage(r.qui), `sc${i}`)}</div>
+          <div class="replique-bulle"><b>${PERSONNAGES[r.qui].nom}</b><p>${echap(r.texte)}</p></div>
+        </div>`).join('')}</div>
+      <div class="scene-boutons">
+        <button class="lien" data-passer>Passer</button>
+        <button class="principal" data-suite>${n < repliques.length ? 'Suite' : 'C\'est parti !'}</button>
+      </div></div>`;
+    voile.querySelector('.scene-bulles')!.scrollTop = 1e6;
+    voile.querySelector<HTMLButtonElement>('[data-suite]')!.focus();
+    voile.querySelector('[data-suite]')!.addEventListener('click', () => { if (n < repliques.length) { n++; rendre(); } else fermer(); });
+    voile.querySelector('[data-passer]')!.addEventListener('click', fermer);
+  };
+  rendre();
 }
 
 function ecranHistoire() {
   partie = null;
   document.querySelector('.bulle-histoire')?.remove();
   histoire({ type: 'etat' });
-  if (!paquetHistoire && recompensesHistoire.length) {
-    const r = recompensesHistoire.shift()!;
-    const legendaire = r.etape === NB_ETAPES - 1;
-    paquetHistoire = { titre: `Étape ${r.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, boosters: r.boosters, ouvert: false };
-  }
+  preparerPaquet('#histoire');
   const cours = collection.histoire.etape;
   const p = progression(collection);
   const lignes = ETAPES.map((e, i) => {
@@ -228,22 +318,113 @@ function ecranHistoire() {
     return `<li class="etape-histoire ${etat}">
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
       <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
-        ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres"><span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span> ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
+        ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres">${jauge(p)} ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
+        ${i <= cours ? `<button class="lien revoir-scene" data-scene="h${i}">💬 Revoir la scène</button>` : ''}
         <small class="gain">🎁 ${recompense}</small></div></li>`;
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
-      ${paquetHistoire ? sectionPaquet(paquetHistoire) : ''}
-      ${paquetHistoire?.ouvert && recompensesHistoire.length ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}
+      ${blocPaquet('#histoire')}
+      ${histoireFinie(collection) ? '<section class="bloc saison-ouverte"><h2>La saison sportive est ouverte</h2><p>Interclub, régional, national, international, championnats du monde et Jeux Olympiques.</p><a class="principal lien-bouton" href="#saison">Commencer la saison</a></section>' : ''}
       <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club ouvert (étape 3) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
-  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetHistoire && revelerPaquet(paquetHistoire, ecranHistoire));
-  app.querySelector('[data-suite-histoire]')?.addEventListener('click', () => { paquetHistoire = null; ecranHistoire(); });
-  if (paquetHistoire?.ouvert && !recompensesHistoire.length) paquetHistoire = null;
+  brancherPaquet('#histoire', ecranHistoire);
+  app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
   window.scrollTo(0, 0);
+  scenesAuto();
+}
+
+// ---------- Saison sportive ----------
+
+function ecranSaison() {
+  partie = null;
+  document.querySelector('.bulle-histoire')?.remove();
+  if (!saisonOuverte(collection)) {
+    app.innerHTML = `<main class="sous-menu">${enTete('Saison sportive', 'Verrouillée')}
+      <section class="bloc"><p>🔒 La saison s'ouvre quand les 12 étapes du mode histoire sont validées (étape ${collection.histoire.etape + 1} en cours).</p>
+      <a class="principal lien-bouton" href="#histoire">Voir le mode histoire</a></section></main>`;
+    return;
+  }
+  preparerPaquet('#saison');
+  const cours = collection.saison.palier;
+  const enCours = !!tournoi && !tournoi.recompense;
+  const C = R_.tournoi.individuel;
+  const lignes = PALIERS.map((p, i) => {
+    const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
+    let action = '';
+    if (i === cours) {
+      if (p.victoires) {
+        action = `<p class="progres">${jauge([collection.saison.victoires, p.victoires])} ${collection.saison.victoires}/${p.victoires} victoires</p>
+          <button class="principal" data-interclub>Combat interclub</button>`;
+      } else if (enCours && tournoi?.type === 'individuel' && tournoi.saison === i) {
+        action = '<button class="principal" data-reprendre-competition>Reprendre la compétition</button>';
+      } else {
+        action = `<p class="note">Inscription ${C.inscription} $ (tu as ${collection.dollars} $). Gains habituels du tournoi individuel, plus la récompense du palier.</p>
+          <button class="principal" data-competition ${enCours ? 'disabled' : ''}>S'inscrire</button>
+          ${enCours ? '<p class="note">Un autre tournoi est en cours : termine-le d\'abord.</p>' : ''}`;
+      }
+    }
+    return `<li class="etape-histoire ${etat}">
+      <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
+      <div><b>${echap(p.nom)}</b><p>${echap(objectifPalier(i))}</p>${action}
+        ${i <= cours ? `<button class="lien revoir-scene" data-scene="${i === 0 ? 's0' : `s${i}`}">💬 Revoir la scène</button>` : ''}
+        <small class="gain">🎁 ${recompensePalier(i)}</small></div></li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Saison sportive', saisonFinie(collection) ? 'Saison terminée : champion olympique !' : `Palier ${cours + 1} sur ${NB_PALIERS} · ${PALIERS[cours].nom}`)}
+      ${blocPaquet('#saison')}
+      <ol class="etapes-histoire">${lignes}</ol>
+      ${saisonFinie(collection) ? '<button class="lien marge" data-scene="s6">💬 Revoir la scène finale</button>' : ''}
+    </main>`;
+  activerReflets(app);
+  brancherPaquet('#saison', ecranSaison);
+  app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
+  app.querySelector('[data-interclub]')?.addEventListener('click', () => ecranChoixSaison('interclub'));
+  app.querySelector('[data-competition]')?.addEventListener('click', () => ecranChoixSaison('competition'));
+  app.querySelector('[data-reprendre-competition]')?.addEventListener('click', ecranTournoiEnCours);
+  window.scrollTo(0, 0);
+  scenesAuto();
+}
+
+// Choix du lutteur pour un combat interclub ou pour s'inscrire à la compétition du palier.
+function ecranChoixSaison(quoi: 'interclub' | 'competition', message = '') {
+  const p = PALIERS[collection.saison.palier];
+  if (!p) return ecranSaison();
+  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete(p.nom, quoi === 'interclub' ? 'Combat rapide (1 période) contre un autre club' : `Inscription ${R_.tournoi.individuel.inscription} $ (tu as ${collection.dollars} $)`, '#saison')}
+      ${message}
+      ${quoi === 'interclub' && autoDispo() ? '<section class="bloc"><label class="case"><input type="checkbox" data-auto-saison> ⚡ Combat auto</label></section>' : ''}
+      <section class="bloc"><h2>Choisis ton lutteur</h2></section>
+      <div class="liste-recrues marge">${miens.map((l) => `<button data-choisir="${l.id}" aria-label="Choisir ${echap(l.nom)}">${miniCarteLutteur(l, `${echap(l.origine)} · ${NOM_RARETE[niveauDe(l.id)]}`, '', niveauDe(l.id))}</button>`).join('')}</div>
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-choisir]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.choisir!;
+      if (quoi === 'interclub') return lancerInterclub(id, !!app.querySelector<HTMLInputElement>('[data-auto-saison]')?.checked);
+      const erreur = payerInscription(collection, 'individuel');
+      if (erreur) return ecranChoixSaison(quoi, `<p class="alerte">${echap(erreur)}</p>`);
+      tournoi = creerCompetitionSaison(collection, id, nouvelleGraine());
+      paquetTournoi = null;
+      sauver(collection);
+      sauverTournoi();
+      ecranTournoiEnCours();
+    }),
+  );
+  window.scrollTo(0, 0);
+}
+
+// Combat interclub : combat rapide contre un lutteur d'une autre nation, ordinateur du palier.
+function lancerInterclub(id: string, auto: boolean) {
+  const nation = trouverLutteur(id).nation;
+  const autres = LUTTEURS.filter((l) => l.nation !== nation);
+  const ordi = autres[Math.floor(Math.random() * autres.length)].id;
+  lancer(id, ordi, nouvelleGraine(), true, PALIERS[0].niveau as Niveau, auto, null, true);
 }
 
 function ecranMenu() {
@@ -289,7 +470,8 @@ function ecranMenu() {
     oublierSession();
     ecranMenu();
   });
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0);  // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
+  scenesAuto();
 }
 
 function enTete(titre: string, sous = '', retour = '#') {
@@ -1045,6 +1227,7 @@ function sectionFinTournoi(t: Tournoi, titre: string): string {
     const premiereFois = !t.recompense;
     const boosters = recompenserTournoi(collection, t, Math.random);
     if (premiereFois && t.type === 'individuel') histoire({ type: 'tournoiIndividuel', place: placesI(t).get(0) ?? 99, invaincu: joueurInvaincu(t) });
+    if (premiereFois && t.type === 'individuel' && t.saison !== undefined) saison({ type: 'competition', palier: t.saison, place: placesI(t).get(0) ?? 99 });
     if (premiereFois && t.type === 'equipe') histoire({ type: 'tournoiEquipe', gagne: scoreEquipe(t)[0] >= R_.tournoi.equipe.victoiresPourGagner });
     sauver(collection);
     sauverTournoi();
@@ -1080,7 +1263,7 @@ function ecranIndividuel(t: Individuel) {
   const nomMatch = (x: MatchI) => (x.tableau === 'perdants' && x.nom.startsWith('Tableau') ? `Tableau des perdants, tour ${toursP.indexOf(x.tour) + 1}` : x.nom);
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Tournoi individuel', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `${t.lutteurs.length} lutteurs · ton lutteur : ${echap(trouverLutteur(t.lutteurs[0]).nom)}`, '#tournois')}
+      ${enTete(t.nom ?? 'Tournoi individuel', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `${t.lutteurs.length} lutteurs · ton lutteur : ${echap(trouverLutteur(t.lutteurs[0]).nom)}`, '#tournois')}
       ${m ? `<section class="bloc prochain-combat"><h2>${echap(nomMatch(m))}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button>${boutonAuto('data-combattre-auto')}</section>` : ''}
       ${fin ? sectionFinTournoi(t, maPlace === 1 ? 'Tournoi individuel gagné' : 'Tournoi individuel') : ''}
       ${classement}
@@ -1209,7 +1392,8 @@ function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: strin
   const bMoi = equipe ? bonusNation(equipe.mes).bonus : 0;
   const bLui = equipe ? bonusNation(equipe.leurs).bonus : 0;
   bonusEnCours = equipe ? { moi: bMoi, lui: bLui } : null;
-  partie = new Partie(idMoi, idLui, nouvelleGraine(), collection.niveau, avecBonus(defTournoi(idMoi, true), bMoi), [], false, avecBonus(defTournoi(idLui, false), bLui));
+  const niveau = tournoi?.type === 'individuel' && typeof cle === 'number' ? niveauMatchI(tournoi, cle, collection.niveau) : collection.niveau;
+  partie = new Partie(idMoi, idLui, nouvelleGraine(), niveau, avecBonus(defTournoi(idMoi, true), bMoi), [], false, avecBonus(defTournoi(idLui, false), bLui));
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1217,6 +1401,7 @@ function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: strin
   recompenseDonnee = true; // pas de récompense d'arène
   tuto = false;
   enTournoi = cle;
+  interclubEnCours = false;
   demarrer(auto);
 }
 
@@ -1562,13 +1747,14 @@ function lancerArene(idHumain: string, auto = false) {
   lancer(idHumain, e.adversaire, nouvelleGraine(), false, e.niveau, auto, { type: 'progression' });
 }
 
-function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau, auto = false, ctx: typeof areneCtx = null) {
+function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau, auto = false, ctx: typeof areneCtx = null, interclub = false) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
   partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
   areneCtx = ctx;
+  interclubEnCours = interclub;
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1585,7 +1771,8 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
 
 // ---------- Combat automatique ----------
 
-let combatEnAuto = false; // le combat en cours (ou qui vient de finir) a été joué en automatique
+let combatEnAuto = false;
+let interclubEnCours = false; // combat interclub de la saison sportive // le combat en cours (ou qui vient de finir) a été joué en automatique
 const autoDispo = () => autoOuvert(niveauCompte(collection));
 
 // Bouton « Combat auto » à côté d'un bouton de combat : actif à partir du niveau de compte 3.
@@ -2388,6 +2575,7 @@ function ecranFin() {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
       if (gagne) {
         histoire({ type: 'rapide', tombe: e.finPar === 'tombe', ecart: h.score - o.score });
+        if (interclubEnCours) saison({ type: 'interclub' });
         collection.victoires++;
         paquetSolo = { titre: 'Victoire', boosters: joindreGains([], gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
       }
@@ -2425,7 +2613,7 @@ function ecranFin() {
       <div class="fin-boutons">
         ${enArene && gagne && areneCtx?.type === 'progression'
           ? `${etapeArene(collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>${boutonAuto('data-suivant-arene-auto')}` : ''}`
-          : `<button class="principal" data-revanche>${enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto')}`}
+          : `<button class="principal" data-revanche>${interclubEnCours ? 'Combat interclub suivant' : enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto')}`}
         <button class="secondaire" data-changer>${enArene ? 'Retour à l\'arène' : 'Changer de lutteur'}</button>
       </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
@@ -2433,6 +2621,7 @@ function ecranFin() {
   activerReflets(app);
   const ctx = areneCtx;
   const revanche = (auto: boolean) => {
+    if (interclubEnCours) return lancerInterclub(idHumain, auto);
     if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide, partie?.niveau ?? collection.niveau, auto);
     if (ctx?.type === 'boss') bossChoisi = ctx.nation;
     lancerArene(idHumain, auto);
@@ -2856,6 +3045,7 @@ function route() {
   if (h === '#social') return ecranSocial();
   if (h === '#club') return ecranMonClub();
   if (h === '#histoire') return ecranHistoire();
+  if (h === '#saison') return ecranSaison();
   if (h === '#tournois') return ecranTournois();
   if (h === '#rapide') return ecranArene(true);
   quitterEchange();
