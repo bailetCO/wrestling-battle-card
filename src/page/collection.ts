@@ -3,7 +3,7 @@
 
 import {
   LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
-  type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte, type Rarete,
+  type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte,
 } from '../moteur';
 
 export interface Collection {
@@ -27,6 +27,8 @@ export interface Collection {
   styles: Record<string, number>; // style de carte choisi (0 = cadre Champion du Monde classique)
   medailles: number; // médailles gagnées (progression, jamais dépensées)
   club: string[]; // lutteurs recrutés dans Mon Club (une place, la carte reste utilisable partout)
+  fragments: Record<string, number>; // fragments de la légendaire de chaque nation
+  departComplet: boolean; // a reçu ses 20 cartes de départ (les anciennes sauvegardes sont complétées)
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
 }
@@ -52,15 +54,17 @@ export interface Booster {
   dollars?: number;
 }
 
-const ORDRE: Rarete[] = ['commune', 'rare', 'epique', 'legendaire'];
 
 // Au départ : une carte par nation, la moins rare de chaque nation.
-export function cartesDeDepart(): string[] {
-  const nations = [...new Set(LUTTEURS.map((l) => l.nation))];
-  return nations.map((n) => {
-    const deLaNation = LUTTEURS.filter((l) => l.nation === n);
-    return deLaNation.sort((a, b) => ORDRE.indexOf(a.rarete) - ORDRE.indexOf(b.rarete))[0].id;
-  });
+// Les 20 cartes de départ : tirées au hasard parmi celles débloquées dès le départ
+// (4 communes et 1 rare par nation).
+export const POOL_DEPART = () => LUTTEURS.filter((l) => l.depart).map((l) => l.id);
+export function cartesDeDepart(hasard: Hasard = Math.random, deja: string[] = []): string[] {
+  const pool = POOL_DEPART().filter((id) => !deja.includes(id));
+  const out: string[] = [];
+  const n = Math.max(0, REGLES.collection.cartesDeDepart - deja.length);
+  while (out.length < n && pool.length) out.push(pool.splice(Math.floor(hasard() * pool.length), 1)[0]);
+  return out;
 }
 
 function nouvelId(): string {
@@ -73,7 +77,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [],
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true,
   };
 }
 
@@ -150,6 +154,31 @@ export function joindreGains(boosters: Booster[], g: { medailles: number; dollar
   boosters[0].medailles = (boosters[0].medailles ?? 0) + g.medailles;
   boosters[0].dollars = (boosters[0].dollars ?? 0) + g.dollars;
   return boosters;
+}
+
+// ---------- Fragments de légende ----------
+
+export const legendaireDe = (nation: string) => LUTTEURS.find((l) => l.nation === nation && l.rarete === 'legendaire');
+
+// Transforme un double en 1 fragment de la légendaire de sa nation (jamais le dernier exemplaire).
+export function enFragment(c: Collection, id: string): string | null {
+  if (nbExemplaires(c, id) < 2) return 'Il faut un double : ton dernier exemplaire reste.';
+  const l = trouverLutteur(id);
+  if (!legendaireDe(l.nation)) return 'Cette nation n\'a pas de légendaire.';
+  c.exemplaires[id]--;
+  c.fragments[l.nation] = (c.fragments[l.nation] ?? 0) + 1;
+  return null;
+}
+
+// Avec assez de fragments : la légendaire de la nation rejoint la collection.
+export function debloquerLegendaire(c: Collection, nation: string): string | null {
+  const leg = legendaireDe(nation);
+  const n = REGLES.collection.fragmentsPourLegendaire;
+  if (!leg) return 'Cette nation n\'a pas de légendaire.';
+  if ((c.fragments[nation] ?? 0) < n) return `Il faut ${n} fragments.`;
+  c.fragments[nation] -= n;
+  c.exemplaires[leg.id] = (c.exemplaires[leg.id] ?? 0) + 1;
+  return null;
 }
 
 // Niveau de compte : 1 au départ, +1 toutes les 15 médailles (aucune récompense, juste l'expérience).
@@ -328,6 +357,15 @@ export function depuisSauvegarde(brut: unknown): Collection {
   c.bonusTutoriel = b.bonusTutoriel === true;
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
+  if (b.fragments && typeof b.fragments === 'object') {
+    c.fragments = Object.fromEntries(Object.entries(b.fragments as Record<string, unknown>).map(([k, v]) => [k, entier(v)]));
+  }
+  // Ancienne sauvegarde : on complète jusqu'à 20 cartes différentes avec des cartes de départ.
+  if (b.departComplet !== true) {
+    const miens = Object.keys(c.exemplaires).filter((id) => c.exemplaires[id] > 0);
+    for (const id of cartesDeDepart(Math.random, miens)) c.exemplaires[id] = (c.exemplaires[id] ?? 0) + 1;
+  }
+  c.departComplet = true;
   if (Array.isArray(b.club)) c.club = [...new Set((b.club as unknown[]).filter((x): x is string => typeof x === 'string' && LUTTEURS.some((l) => l.id === x)))];
   c.dollars = entier(b.dollars);
   if (b.styles && typeof b.styles === 'object') c.styles = { ...(b.styles as Record<string, number>) };

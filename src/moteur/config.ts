@@ -1,7 +1,7 @@
 // TOUS les chiffres du jeu sont ici. Pour rééquilibrer, on modifie ce fichier,
 // sans toucher aux règles.
 
-import type { DefAction, DefLutteur, Famille, IdAction, NiveauCarte } from './types';
+import type { DefAction, DefLutteur, DefNation, Famille, IdAction, Nation, NiveauCarte, Rarete } from './types';
 
 // Coût de base en endurance : le même pour toutes les actions d'une famille.
 export const COUT_FAMILLE: Record<Famille, number> = { attaque: 6, defense: 3, contre: 6, feinte: 3 };
@@ -24,127 +24,175 @@ export const ACTIONS: Record<IdAction, DefAction> = {
   matraquage: { id: 'matraquage', nom: 'Matraquage', famille: 'feinte', cout: COUT_FAMILLE.feinte, points: 0 },
 };
 
-// 15 lutteurs : 3 styles de jeu par nation. Noms fictifs, provisoires.
-// actions : le deck par défaut (les 4 actions de base). actionsPossibles : les actions parmi
-// lesquelles le joueur compose son deck de 4 (au grade 1 : les 4 de base). deblocages : les
-// 4 actions débloquées aux grades 2 à 5, dans cet ordre, qui coûtent 1 de moins que leur famille.
-// Stats rééquilibrées le 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours). Rareté = classement par taux de victoire,
-// moyenne de deux simulations (ordinateur au hasard et ordinateur fort, des deux côtés) :
-// légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 %.
-// Vérification : npm run simuler.
-const L = (d: DefLutteur): DefLutteur => d;
-export const LUTTEURS: DefLutteur[] = [
-  // ----- USA -----
-  L({
-    id: 'usa', nom: 'Tanner Briggs', origine: 'USA', nation: 'usa', style: 'Lutteur de pression, très physique',
-    enduranceMax: 69, force: 150, recuperation: 0.31, rarete: 'legendaire',
-    actions: ['double_jambe', 'sprawl', 'matraquage', 'relance'],
-    actionsPossibles: ['double_jambe', 'sprawl', 'matraquage', 'relance'],
-    deblocages: ['simple_jambe', 'feinte', 'defense', 'ceinture_arriere'], familleSpeciale: 'attaque',
-  }),
-  L({
-    id: 'usa-explosif', nom: 'Colt Ramsey', origine: 'USA', nation: 'usa', style: 'Explosif, enchaîne les attaques aux jambes',
-    enduranceMax: 67, force: 200, recuperation: 0.4, rarete: 'rare',
-    actions: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'],
-    actionsPossibles: ['simple_jambe', 'double_jambe', 'feinte', 'sprawl'],
-    deblocages: ['attaque_base', 'esquive', 'relance', 'matraquage'], familleSpeciale: 'attaque',
-  }),
-  L({
-    id: 'usa-defenseur', nom: 'Duke Halvorsen', origine: 'USA', nation: 'usa', style: 'Défenseur, un mur qui use l\'adversaire',
-    enduranceMax: 67, force: 140, recuperation: 0.39, rarete: 'epique',
-    actions: ['attaque_base', 'sprawl', 'contre', 'matraquage'],
-    actionsPossibles: ['attaque_base', 'sprawl', 'contre', 'matraquage'],
-    deblocages: ['parade', 'defense', 'double_jambe', 'relance'], familleSpeciale: 'defense',
-  }),
-  // ----- Russie -----
-  L({
-    id: 'russie', nom: 'Mikhaïl Orlov', origine: 'Russie', nation: 'russie', style: 'Technicien précis',
-    enduranceMax: 66, force: 170, recuperation: 0.35, rarete: 'rare',
-    actions: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
-    actionsPossibles: ['ceinture_arriere', 'parade', 'contre', 'feinte'],
-    deblocages: ['bras_roule', 'relance', 'esquive', 'simple_jambe'], familleSpeciale: 'contre',
-  }),
-  L({
-    id: 'russie-pression', nom: 'Rustam Kazbekov', origine: 'Russie', nation: 'russie', style: 'Lutteur de pression, infatigable',
-    enduranceMax: 68, force: 175, recuperation: 0.29, rarete: 'legendaire',
-    actions: ['double_jambe', 'matraquage', 'sprawl', 'relance'],
-    actionsPossibles: ['double_jambe', 'matraquage', 'sprawl', 'relance'],
-    deblocages: ['ceinture_arriere', 'defense', 'grande_projection', 'feinte'], familleSpeciale: 'attaque',
-  }),
-  L({
-    id: 'russie-contre', nom: 'Pavel Zorine', origine: 'Russie', nation: 'russie', style: 'Contre-attaquant patient',
-    enduranceMax: 67, force: 145, recuperation: 0.48, rarete: 'commune',
-    actions: ['attaque_base', 'esquive', 'contre', 'relance'],
-    actionsPossibles: ['attaque_base', 'esquive', 'contre', 'relance'],
-    deblocages: ['parade', 'feinte', 'simple_jambe', 'matraquage'], familleSpeciale: 'contre',
-  }),
-  // ----- Europe -----
-  L({
-    id: 'europe', nom: 'Hugo Delmas', origine: 'Europe', nation: 'europe', style: 'Équilibré, idéal pour débuter',
-    enduranceMax: 66, force: 165, recuperation: 0.42, rarete: 'commune',
-    actions: ['attaque_base', 'defense', 'feinte', 'contre'],
-    actionsPossibles: ['attaque_base', 'defense', 'feinte', 'contre'],
-    deblocages: ['simple_jambe', 'parade', 'matraquage', 'relance'], familleSpeciale: 'defense',
-  }),
-  L({
-    id: 'europe-technicien', nom: 'Lucas Ferrand', origine: 'Europe', nation: 'europe', style: 'Technicien, feintes et ceintures',
-    enduranceMax: 67, force: 160, recuperation: 0.43, rarete: 'rare',
-    actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
-    actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
-    deblocages: ['contre', 'esquive', 'bras_roule', 'matraquage'], familleSpeciale: 'feinte',
-  }),
-  L({
-    id: 'europe-puissant', nom: 'Théo Marchal', origine: 'Europe', nation: 'europe', style: 'Poids lourd, suplex dévastateur',
-    enduranceMax: 59, force: 240, recuperation: 0.43, rarete: 'epique',
-    actions: ['german_suplex', 'defense', 'matraquage', 'contre'],
-    actionsPossibles: ['german_suplex', 'defense', 'matraquage', 'contre'],
-    deblocages: ['grande_projection', 'sprawl', 'ceinture_arriere', 'relance'], familleSpeciale: 'attaque',
-  }),
-  // ----- Afrique -----
-  L({
-    id: 'afrique', nom: 'Lamine Sarr', origine: 'Afrique', nation: 'afrique', style: 'Puissant et athlétique',
-    enduranceMax: 65, force: 240, recuperation: 0.53, rarete: 'rare',
-    actions: ['grande_projection', 'sprawl', 'bras_roule', 'relance'],
-    actionsPossibles: ['grande_projection', 'sprawl', 'bras_roule', 'relance'],
-    deblocages: ['double_jambe', 'feinte', 'defense', 'german_suplex'], familleSpeciale: 'attaque',
-  }),
-  L({
-    id: 'afrique-explosif', nom: 'Ibou Ndiaye', origine: 'Afrique', nation: 'afrique', style: 'Explosif, feintes et bras roulés',
-    enduranceMax: 63, force: 180, recuperation: 0.51, rarete: 'commune',
-    actions: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'],
-    actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'bras_roule'],
-    deblocages: ['double_jambe', 'relance', 'matraquage', 'sprawl'], familleSpeciale: 'feinte',
-  }),
-  L({
-    id: 'afrique-defenseur', nom: 'Cheikh Faye', origine: 'Afrique', nation: 'afrique', style: 'Défenseur, immense réserve d\'énergie',
-    enduranceMax: 72, force: 155, recuperation: 0.37, rarete: 'rare',
-    actions: ['bras_roule', 'sprawl', 'contre', 'attaque_base'],
-    actionsPossibles: ['bras_roule', 'sprawl', 'contre', 'attaque_base'],
-    deblocages: ['parade', 'defense', 'relance', 'matraquage'], familleSpeciale: 'defense',
-  }),
-  // ----- Japon -----
-  L({
-    id: 'japon', nom: 'Kenji Arata', origine: 'Japon', nation: 'japon', style: 'Rapide et explosif',
-    enduranceMax: 59, force: 210, recuperation: 0.64, rarete: 'commune',
-    actions: ['simple_jambe', 'feinte', 'esquive', 'contre'],
-    actionsPossibles: ['simple_jambe', 'feinte', 'esquive', 'contre'],
-    deblocages: ['matraquage', 'relance', 'attaque_base', 'parade'], familleSpeciale: 'feinte',
-  }),
-  L({
-    id: 'japon-technicien', nom: 'Ryō Takamine', origine: 'Japon', nation: 'japon', style: 'Technicien, ceinture et relances',
-    enduranceMax: 61, force: 160, recuperation: 0.55, rarete: 'commune',
-    actions: ['ceinture_arriere', 'feinte', 'parade', 'relance'],
-    actionsPossibles: ['ceinture_arriere', 'feinte', 'parade', 'relance'],
-    deblocages: ['contre', 'simple_jambe', 'esquive', 'matraquage'], familleSpeciale: 'contre',
-  }),
-  L({
-    id: 'japon-contre', nom: 'Daichi Morikawa', origine: 'Japon', nation: 'japon', style: 'Contre-attaquant insaisissable',
-    enduranceMax: 63, force: 140, recuperation: 0.48, rarete: 'epique',
-    actions: ['attaque_base', 'esquive', 'contre', 'matraquage'],
-    actionsPossibles: ['attaque_base', 'esquive', 'contre', 'matraquage'],
-    deblocages: ['relance', 'parade', 'feinte', 'simple_jambe'], familleSpeciale: 'contre',
-  }),
+// Les nations du jeu. Pour en ajouter une : une ligne ici, ses lutteurs dans LIGNES ci-dessous,
+// et (facultatif) ses couleurs et son drapeau dans page/portrait.ts. Les modes de jeu s'adaptent seuls.
+export const NATIONS: DefNation[] = [
+  { id: 'usa', nom: 'USA', ordreArene: 8 },
+  { id: 'russie', nom: 'Russie', ordreArene: 9 },
+  { id: 'japon', nom: 'Japon', ordreArene: 12 },
+  { id: 'iran', nom: 'Iran', ordreArene: 4 },
+  { id: 'georgie', nom: 'Géorgie', ordreArene: 5 },
+  { id: 'azerbaidjan', nom: 'Azerbaïdjan', ordreArene: 10 },
+  { id: 'turquie', nom: 'Turquie', ordreArene: 6 },
+  { id: 'ouzbekistan', nom: 'Ouzbékistan', ordreArene: 2 },
+  { id: 'kazakhstan', nom: 'Kazakhstan', ordreArene: 11 },
+  { id: 'kirghizistan', nom: 'Kirghizistan', ordreArene: 3 },
+  { id: 'afrique', nom: 'Afrique', ordreArene: 1 },
+  { id: 'europe', nom: 'Europe', ordreArene: 7 },
 ];
+
+// 120 lutteurs : 12 nations × 10 (4 communes, 3 rares, 2 épiques, 1 légendaire), 3 styles de jeu par
+// nation répartis à chaque rareté. Noms fictifs et provisoires.
+// Une ligne : identifiant, nom, origine, nation, style, endurance, force, récupération, rareté,
+// famille spéciale, 4 actions de base (le deck par défaut), 4 déblocages (dans l'ordre des niveaux
+// de rareté, chacun coûte 1 de moins que sa famille), carte débloquée dès le départ.
+// Rareté = rang dans sa nation selon le taux de victoire moyen de deux simulations (ordinateur au
+// hasard et ordinateur fort, des deux côtés, contre des adversaires tirés parmi les 120) ;
+// fourchettes : légendaire 57,5 à 62,5 %, épique 52,5 à 57,5 %, rare 47,5 à 52,5 %, commune 42,5 à 47,5 %.
+// Vérification : npm run simuler.
+type Ligne = [string, string, string, Nation, string, number, number, number, Rarete, Famille, string, string, boolean];
+const LIGNES: Ligne[] = [
+  // ----- USA -----
+  ['usa', 'Tanner Briggs', 'USA', 'usa', 'Lutteur de pression, très physique', 62, 150, 0.31, 'legendaire', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte defense ceinture_arriere', false],
+  ['usa-7', 'Tucker Holloway', 'USA', 'usa', 'Lutteur de pression, très physique', 59, 165, 0.31, 'epique', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe defense feinte ceinture_arriere', false],
+  ['usa-6', 'Jace Dunbar', 'USA', 'usa', 'Défenseur, un mur qui use l\'adversaire', 60, 145, 0.42, 'epique', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', false],
+  ['usa-9', 'Wyatt Pruitt', 'USA', 'usa', 'Défenseur, un mur qui use l\'adversaire', 59, 145, 0.36, 'rare', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', false],
+  ['usa-5', 'Cade Whitaker', 'USA', 'usa', 'Explosif, enchaîne les attaques aux jambes', 57, 200, 0.42, 'rare', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', false],
+  ['usa-4', 'Garrett Kessler', 'USA', 'usa', 'Lutteur de pression, très physique', 57, 160, 0.29, 'rare', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte defense ceinture_arriere', true],
+  ['usa-defenseur', 'Duke Halvorsen', 'USA', 'usa', 'Défenseur, un mur qui use l\'adversaire', 57, 140, 0.39, 'commune', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', true],
+  ['usa-explosif', 'Colt Ramsey', 'USA', 'usa', 'Explosif, enchaîne les attaques aux jambes', 57, 200, 0.4, 'commune', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', true],
+  ['usa-8', 'Mason Sawyer', 'USA', 'usa', 'Explosif, enchaîne les attaques aux jambes', 57, 195, 0.4, 'commune', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive matraquage relance', true],
+  ['usa-10', 'Brody Mercer', 'USA', 'usa', 'Lutteur de pression, très physique', 57, 160, 0.3, 'commune', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte defense ceinture_arriere', true],
+  // ----- Russie -----
+  ['russie-pression', 'Rustam Kazbekov', 'Russie', 'russie', 'Lutteur de pression, infatigable', 61, 175, 0.29, 'legendaire', 'attaque', 'double_jambe matraquage sprawl relance', 'ceinture_arriere defense grande_projection feinte', false],
+  ['russie-5', 'Ilya Belov', 'Russie', 'russie', 'Lutteur de pression, infatigable', 59, 160, 0.32, 'epique', 'attaque', 'double_jambe sprawl matraquage relance', 'feinte simple_jambe defense ceinture_arriere', false],
+  ['russie-8', 'Sergueï Teplov', 'Russie', 'russie', 'Lutteur de pression, infatigable', 59, 160, 0.32, 'epique', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte ceinture_arriere defense', false],
+  ['russie-contre', 'Pavel Zorine', 'Russie', 'russie', 'Contre-attaquant patient', 65, 145, 0.48, 'rare', 'contre', 'attaque_base esquive contre relance', 'parade feinte simple_jambe matraquage', false],
+  ['russie-6', 'Dmitri Gromov', 'Russie', 'russie', 'Contre-attaquant patient', 64, 145, 0.5, 'rare', 'contre', 'attaque_base esquive contre relance', 'parade feinte simple_jambe matraquage', false],
+  ['russie-4', 'Timur Kostine', 'Russie', 'russie', 'Technicien précis', 59, 170, 0.4, 'rare', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  ['russie', 'Mikhaïl Orlov', 'Russie', 'russie', 'Technicien précis', 60, 170, 0.35, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  ['russie-9', 'Artyom Sorokine', 'Russie', 'russie', 'Contre-attaquant patient', 63, 145, 0.5, 'commune', 'contre', 'attaque_base esquive contre relance', 'parade simple_jambe feinte matraquage', true],
+  ['russie-7', 'Ruslan Vlassov', 'Russie', 'russie', 'Technicien précis', 58, 170, 0.41, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  ['russie-10', 'Nikita Panine', 'Russie', 'russie', 'Technicien précis', 59, 165, 0.36, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  // ----- Japon -----
+  ['japon-5', 'Sōta Sugawara', 'Japon', 'japon', 'Technicien, ceinture et relances', 59, 165, 0.54, 'legendaire', 'contre', 'ceinture_arriere feinte parade relance', 'contre simple_jambe esquive matraquage', false],
+  ['japon-8', 'Hayato Kurokawa', 'Japon', 'japon', 'Technicien, ceinture et relances', 56, 165, 0.53, 'epique', 'contre', 'ceinture_arriere feinte parade relance', 'contre simple_jambe matraquage esquive', false],
+  ['japon-contre', 'Daichi Morikawa', 'Japon', 'japon', 'Contre-attaquant insaisissable', 58, 140, 0.48, 'epique', 'contre', 'attaque_base esquive contre matraquage', 'relance parade feinte simple_jambe', false],
+  ['japon-4', 'Riku Okabe', 'Japon', 'japon', 'Rapide et explosif', 56, 210, 0.65, 'rare', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance parade attaque_base', false],
+  ['japon-6', 'Haruto Hanazawa', 'Japon', 'japon', 'Contre-attaquant insaisissable', 64, 145, 0.49, 'rare', 'contre', 'attaque_base esquive contre relance', 'parade feinte simple_jambe matraquage', false],
+  ['japon-technicien', 'Ryō Takamine', 'Japon', 'japon', 'Technicien, ceinture et relances', 55, 160, 0.55, 'rare', 'contre', 'ceinture_arriere feinte parade relance', 'contre simple_jambe esquive matraquage', true],
+  ['japon-10', 'Ren Minegishi', 'Japon', 'japon', 'Rapide et explosif', 55, 210, 0.61, 'commune', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance attaque_base parade', true],
+  ['japon-7', 'Yūto Tsukada', 'Japon', 'japon', 'Rapide et explosif', 55, 215, 0.61, 'commune', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage attaque_base relance parade', true],
+  ['japon-9', 'Kaito Shimura', 'Japon', 'japon', 'Contre-attaquant insaisissable', 62, 140, 0.5, 'commune', 'contre', 'attaque_base esquive contre relance', 'parade feinte matraquage simple_jambe', true],
+  ['japon', 'Kenji Arata', 'Japon', 'japon', 'Rapide et explosif', 55, 210, 0.64, 'commune', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance attaque_base parade', true],
+  // ----- Iran -----
+  ['iran-2', 'Kian Jafarzadeh', 'Iran', 'iran', 'Lutteur de pression, très physique', 62, 160, 0.31, 'legendaire', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe defense feinte ceinture_arriere', false],
+  ['iran-10', 'Navid Tavakolian', 'Iran', 'iran', 'Poids lourd, suplex dévastateur', 54, 240, 0.44, 'epique', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', false],
+  ['iran-1', 'Arash Moradian', 'Iran', 'iran', 'Poids lourd, suplex dévastateur', 53, 240, 0.45, 'epique', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl relance ceinture_arriere', false],
+  ['iran-5', 'Omid Rahbari', 'Iran', 'iran', 'Lutteur de pression, très physique', 58, 155, 0.32, 'rare', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte defense ceinture_arriere', false],
+  ['iran-8', 'Behnam Nourbakhsh', 'Iran', 'iran', 'Lutteur de pression, très physique', 59, 165, 0.28, 'rare', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe defense feinte ceinture_arriere', false],
+  ['iran-7', 'Saeed Sadeghpour', 'Iran', 'iran', 'Poids lourd, suplex dévastateur', 52, 230, 0.45, 'rare', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', true],
+  ['iran-9', 'Mehdi Ebrahimian', 'Iran', 'iran', 'Technicien précis', 58, 170, 0.38, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  ['iran-3', 'Farid Golzari', 'Iran', 'iran', 'Technicien précis', 59, 170, 0.36, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule relance esquive simple_jambe', true],
+  ['iran-4', 'Pouya Karimpour', 'Iran', 'iran', 'Poids lourd, suplex dévastateur', 52, 235, 0.41, 'commune', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection ceinture_arriere sprawl relance', true],
+  ['iran-6', 'Reza Farahmand', 'Iran', 'iran', 'Technicien précis', 59, 170, 0.37, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule esquive relance simple_jambe', true],
+  // ----- Géorgie -----
+  ['georgie-2', 'Beka Tsiklauri', 'Géorgie', 'georgie', 'Poids lourd, suplex dévastateur', 55, 240, 0.42, 'legendaire', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl relance ceinture_arriere', false],
+  ['georgie-5', 'Davit Kvirikashvili', 'Géorgie', 'georgie', 'Poids lourd, suplex dévastateur', 53, 235, 0.46, 'epique', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection ceinture_arriere sprawl relance', false],
+  ['georgie-1', 'Zurab Gvaramadze', 'Géorgie', 'georgie', 'Puissant et athlétique', 62, 230, 0.49, 'epique', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', false],
+  ['georgie-8', 'Tornike Javakhidze', 'Géorgie', 'georgie', 'Poids lourd, suplex dévastateur', 53, 240, 0.42, 'rare', 'attaque', 'german_suplex defense matraquage contre', 'sprawl grande_projection ceinture_arriere relance', false],
+  ['georgie-9', 'Levan Nadiradze', 'Géorgie', 'georgie', 'Technicien, ceinture et relances', 56, 155, 0.55, 'rare', 'contre', 'ceinture_arriere feinte parade relance', 'contre esquive simple_jambe matraquage', false],
+  ['georgie-6', 'Luka Lomidze', 'Géorgie', 'georgie', 'Technicien, ceinture et relances', 55, 160, 0.54, 'rare', 'contre', 'ceinture_arriere feinte parade relance', 'contre esquive simple_jambe matraquage', true],
+  ['georgie-3', 'Sandro Chkhartishvili', 'Géorgie', 'georgie', 'Technicien, ceinture et relances', 54, 160, 0.54, 'commune', 'contre', 'ceinture_arriere feinte parade relance', 'contre simple_jambe esquive matraquage', true],
+  ['georgie-10', 'Lasha Mchedlishvili', 'Géorgie', 'georgie', 'Puissant et athlétique', 60, 235, 0.48, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'feinte double_jambe defense german_suplex', true],
+  ['georgie-7', 'Irakli Gelashvili', 'Géorgie', 'georgie', 'Puissant et athlétique', 58, 240, 0.48, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte german_suplex defense', true],
+  ['georgie-4', 'Nika Beridzeshvili', 'Géorgie', 'georgie', 'Puissant et athlétique', 58, 230, 0.51, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'feinte double_jambe defense german_suplex', true],
+  // ----- Azerbaïdjan -----
+  ['azerbaidjan-1', 'Rashad Abbasli', 'Azerbaïdjan', 'azerbaidjan', 'Explosif, enchaîne les attaques aux jambes', 61, 195, 0.43, 'legendaire', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', false],
+  ['azerbaidjan-10', 'Murad Ismayilzade', 'Azerbaïdjan', 'azerbaidjan', 'Explosif, enchaîne les attaques aux jambes', 61, 190, 0.41, 'epique', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive matraquage relance', false],
+  ['azerbaidjan-4', 'Elvin Hasanli', 'Azerbaïdjan', 'azerbaidjan', 'Explosif, enchaîne les attaques aux jambes', 61, 195, 0.39, 'epique', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', false],
+  ['azerbaidjan-9', 'Nijat Safarli', 'Azerbaïdjan', 'azerbaidjan', 'Équilibré, solide partout', 60, 165, 0.45, 'rare', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', false],
+  ['azerbaidjan-6', 'Vugar Babayli', 'Azerbaïdjan', 'azerbaidjan', 'Équilibré, solide partout', 62, 165, 0.4, 'rare', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade relance matraquage', false],
+  ['azerbaidjan-3', 'Emil Gurbanov', 'Azerbaïdjan', 'azerbaidjan', 'Équilibré, solide partout', 61, 165, 0.44, 'rare', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', true],
+  ['azerbaidjan-2', 'Orkhan Novruzov', 'Azerbaïdjan', 'azerbaidjan', 'Contre-attaquant patient', 62, 150, 0.47, 'commune', 'contre', 'attaque_base esquive contre relance', 'parade simple_jambe feinte matraquage', true],
+  ['azerbaidjan-7', 'Ramil Huseynli', 'Azerbaïdjan', 'azerbaidjan', 'Explosif, enchaîne les attaques aux jambes', 57, 200, 0.39, 'commune', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', true],
+  ['azerbaidjan-5', 'Tural Rzayev', 'Azerbaïdjan', 'azerbaidjan', 'Contre-attaquant patient', 62, 150, 0.5, 'commune', 'contre', 'attaque_base esquive contre relance', 'parade feinte simple_jambe matraquage', true],
+  ['azerbaidjan-8', 'Farid Mammadli', 'Azerbaïdjan', 'azerbaidjan', 'Contre-attaquant patient', 63, 150, 0.49, 'commune', 'contre', 'attaque_base esquive contre relance', 'feinte parade simple_jambe matraquage', true],
+  // ----- Turquie -----
+  ['turquie-1', 'Yusuf Doğancı', 'Turquie', 'turquie', 'Lutteur de pression, très physique', 61, 160, 0.34, 'legendaire', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte ceinture_arriere defense', false],
+  ['turquie-3', 'Hakan Arslanoğlu', 'Turquie', 'turquie', 'Technicien, feintes et ceintures', 59, 165, 0.43, 'epique', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive bras_roule matraquage', false],
+  ['turquie-4', 'Burak Öztürkmen', 'Turquie', 'turquie', 'Lutteur de pression, très physique', 60, 155, 0.3, 'epique', 'attaque', 'double_jambe sprawl matraquage relance', 'feinte simple_jambe defense ceinture_arriere', false],
+  ['turquie-10', 'Ahmet Çelikkol', 'Turquie', 'turquie', 'Lutteur de pression, très physique', 57, 160, 0.32, 'rare', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe defense feinte ceinture_arriere', false],
+  ['turquie-5', 'Furkan Demirtaş', 'Turquie', 'turquie', 'Défenseur, immense réserve d\'énergie', 69, 155, 0.35, 'rare', 'defense', 'bras_roule sprawl contre attaque_base', 'parade relance defense matraquage', false],
+  ['turquie-6', 'Emre Aydınoğlu', 'Turquie', 'turquie', 'Technicien, feintes et ceintures', 57, 165, 0.44, 'rare', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive matraquage bras_roule', true],
+  ['turquie-7', 'Mert Karaca', 'Turquie', 'turquie', 'Lutteur de pression, très physique', 56, 155, 0.31, 'commune', 'attaque', 'double_jambe sprawl matraquage relance', 'simple_jambe feinte ceinture_arriere defense', true],
+  ['turquie-9', 'Kaan Kılıçarslan', 'Turquie', 'turquie', 'Technicien, feintes et ceintures', 55, 155, 0.46, 'commune', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive bras_roule matraquage', true],
+  ['turquie-2', 'Oğuz Yıldırımlı', 'Turquie', 'turquie', 'Défenseur, immense réserve d\'énergie', 67, 155, 0.35, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', true],
+  ['turquie-8', 'Serkan Koçak', 'Turquie', 'turquie', 'Défenseur, immense réserve d\'énergie', 66, 160, 0.38, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense matraquage relance', true],
+  // ----- Ouzbékistan -----
+  ['ouzbekistan-3', 'Jasur Karimjonov', 'Ouzbékistan', 'ouzbekistan', 'Explosif, feintes et bras roulés', 59, 180, 0.49, 'legendaire', 'feinte', 'simple_jambe feinte esquive bras_roule', 'relance double_jambe matraquage sprawl', false],
+  ['ouzbekistan-6', 'Farrukh Yusupjonov', 'Ouzbékistan', 'ouzbekistan', 'Explosif, feintes et bras roulés', 57, 185, 0.52, 'epique', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe relance matraquage sprawl', false],
+  ['ouzbekistan-1', 'Akmal Tursunboyev', 'Ouzbékistan', 'ouzbekistan', 'Puissant et athlétique', 62, 235, 0.5, 'epique', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', false],
+  ['ouzbekistan-7', 'Sardor Sobirjonov', 'Ouzbékistan', 'ouzbekistan', 'Puissant et athlétique', 59, 235, 0.5, 'rare', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe defense feinte german_suplex', false],
+  ['ouzbekistan-2', 'Bekzod Kholmatov', 'Ouzbékistan', 'ouzbekistan', 'Technicien précis', 59, 165, 0.36, 'rare', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule esquive relance simple_jambe', false],
+  ['ouzbekistan-10', 'Ulugbek Nazarbekov', 'Ouzbékistan', 'ouzbekistan', 'Puissant et athlétique', 59, 240, 0.5, 'rare', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', true],
+  ['ouzbekistan-9', 'Sanjar Usmonaliyev', 'Ouzbékistan', 'ouzbekistan', 'Explosif, feintes et bras roulés', 55, 175, 0.49, 'commune', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe relance matraquage sprawl', true],
+  ['ouzbekistan-4', 'Dilshod Ergashboyev', 'Ouzbékistan', 'ouzbekistan', 'Puissant et athlétique', 59, 230, 0.49, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe defense feinte german_suplex', true],
+  ['ouzbekistan-5', 'Otabek Rakhmonov', 'Ouzbékistan', 'ouzbekistan', 'Technicien précis', 60, 170, 0.37, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'relance bras_roule esquive simple_jambe', true],
+  ['ouzbekistan-8', 'Sherzod Mirzayev', 'Ouzbékistan', 'ouzbekistan', 'Technicien précis', 59, 165, 0.37, 'commune', 'contre', 'ceinture_arriere parade contre feinte', 'bras_roule esquive relance simple_jambe', true],
+  // ----- Kazakhstan -----
+  ['kazakhstan-2', 'Aidos Ermekov', 'Kazakhstan', 'kazakhstan', 'Défenseur, un mur qui use l\'adversaire', 62, 140, 0.4, 'legendaire', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', false],
+  ['kazakhstan-3', 'Dias Saparuly', 'Kazakhstan', 'kazakhstan', 'Explosif, enchaîne les attaques aux jambes', 60, 195, 0.41, 'epique', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', false],
+  ['kazakhstan-5', 'Askar Abenov', 'Kazakhstan', 'kazakhstan', 'Défenseur, un mur qui use l\'adversaire', 59, 150, 0.42, 'epique', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', false],
+  ['kazakhstan-1', 'Arman Zhaksybekov', 'Kazakhstan', 'kazakhstan', 'Poids lourd, suplex dévastateur', 54, 230, 0.41, 'rare', 'attaque', 'german_suplex defense matraquage contre', 'sprawl grande_projection ceinture_arriere relance', false],
+  ['kazakhstan-4', 'Yerlan Seitkali', 'Kazakhstan', 'kazakhstan', 'Poids lourd, suplex dévastateur', 52, 230, 0.46, 'rare', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl relance ceinture_arriere', false],
+  ['kazakhstan-6', 'Daulet Omarbekov', 'Kazakhstan', 'kazakhstan', 'Explosif, enchaîne les attaques aux jambes', 59, 195, 0.4, 'rare', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', true],
+  ['kazakhstan-7', 'Timur Beisenuly', 'Kazakhstan', 'kazakhstan', 'Poids lourd, suplex dévastateur', 50, 240, 0.45, 'commune', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection ceinture_arriere sprawl relance', true],
+  ['kazakhstan-9', 'Nurlan Nurmukhan', 'Kazakhstan', 'kazakhstan', 'Explosif, enchaîne les attaques aux jambes', 57, 195, 0.41, 'commune', 'attaque', 'simple_jambe double_jambe feinte sprawl', 'attaque_base esquive relance matraquage', true],
+  ['kazakhstan-8', 'Galym Kenzhebek', 'Kazakhstan', 'kazakhstan', 'Défenseur, un mur qui use l\'adversaire', 57, 145, 0.38, 'commune', 'defense', 'attaque_base sprawl contre matraquage', 'parade defense double_jambe relance', true],
+  ['kazakhstan-10', 'Bauyrzhan Tokhtarbayev', 'Kazakhstan', 'kazakhstan', 'Poids lourd, suplex dévastateur', 52, 235, 0.45, 'commune', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', true],
+  // ----- Kirghizistan -----
+  ['kirghizistan-1', 'Kanat Bekturov', 'Kirghizistan', 'kirghizistan', 'Rapide et explosif', 57, 215, 0.65, 'legendaire', 'feinte', 'simple_jambe feinte esquive contre', 'relance matraquage attaque_base parade', false],
+  ['kirghizistan-5', 'Aibek Osmonbekov', 'Kirghizistan', 'kirghizistan', 'Équilibré, solide partout', 63, 165, 0.4, 'epique', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', false],
+  ['kirghizistan-8', 'Azamat Asanaliev', 'Kirghizistan', 'kirghizistan', 'Équilibré, solide partout', 63, 165, 0.44, 'epique', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade relance matraquage', false],
+  ['kirghizistan-4', 'Erlan Isakbekov', 'Kirghizistan', 'kirghizistan', 'Rapide et explosif', 56, 215, 0.61, 'rare', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance attaque_base parade', false],
+  ['kirghizistan-6', 'Ruslan Jumabaev', 'Kirghizistan', 'kirghizistan', 'Défenseur, immense réserve d\'énergie', 69, 150, 0.35, 'rare', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', false],
+  ['kirghizistan-2', 'Ulan Mamytov', 'Kirghizistan', 'kirghizistan', 'Équilibré, solide partout', 61, 165, 0.42, 'rare', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', true],
+  ['kirghizistan-9', 'Talant Usenaliev', 'Kirghizistan', 'kirghizistan', 'Défenseur, immense réserve d\'énergie', 67, 150, 0.35, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', true],
+  ['kirghizistan-7', 'Nursultan Toktogulov', 'Kirghizistan', 'kirghizistan', 'Rapide et explosif', 55, 210, 0.64, 'commune', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance attaque_base parade', true],
+  ['kirghizistan-3', 'Bakyt Sadykbekov', 'Kirghizistan', 'kirghizistan', 'Défenseur, immense réserve d\'énergie', 66, 155, 0.39, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense matraquage relance', true],
+  ['kirghizistan-10', 'Adilet Abdyldaev', 'Kirghizistan', 'kirghizistan', 'Rapide et explosif', 55, 210, 0.61, 'commune', 'feinte', 'simple_jambe feinte esquive contre', 'matraquage relance attaque_base parade', true],
+  // ----- Afrique -----
+  ['afrique-4', 'Babacar Mensah', 'Sénégal', 'afrique', 'Puissant et athlétique', 62, 240, 0.5, 'legendaire', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte german_suplex defense', false],
+  ['afrique', 'Lamine Sarr', 'Afrique', 'afrique', 'Puissant et athlétique', 60, 240, 0.53, 'epique', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', false],
+  ['afrique-explosif', 'Ibou Ndiaye', 'Afrique', 'afrique', 'Explosif, feintes et bras roulés', 56, 180, 0.51, 'epique', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe relance matraquage sprawl', false],
+  ['afrique-5', 'Serge Diallo', 'Ghana', 'afrique', 'Explosif, feintes et bras roulés', 55, 175, 0.52, 'rare', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe relance matraquage sprawl', false],
+  ['afrique-defenseur', 'Cheikh Faye', 'Afrique', 'afrique', 'Défenseur, immense réserve d\'énergie', 68, 155, 0.37, 'rare', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', false],
+  ['afrique-9', 'Ousmane Kane', 'Sénégal', 'afrique', 'Défenseur, immense réserve d\'énergie', 68, 155, 0.36, 'rare', 'defense', 'bras_roule sprawl contre attaque_base', 'parade relance defense matraquage', true],
+  ['afrique-8', 'Moussa Ba', 'Cameroun', 'afrique', 'Explosif, feintes et bras roulés', 53, 185, 0.53, 'commune', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe matraquage relance sprawl', true],
+  ['afrique-10', 'Kwame Ekotto', 'Côte d\'Ivoire', 'afrique', 'Puissant et athlétique', 59, 240, 0.48, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', true],
+  ['afrique-6', 'Tunde Adeyemi', 'Nigeria', 'afrique', 'Défenseur, immense réserve d\'énergie', 67, 155, 0.35, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', true],
+  ['afrique-7', 'Amadou Ndour', 'Sénégal', 'afrique', 'Puissant et athlétique', 58, 240, 0.49, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe defense feinte german_suplex', true],
+  // ----- Europe -----
+  ['europe-technicien', 'Lucas Ferrand', 'Europe', 'europe', 'Technicien, feintes et ceintures', 60, 160, 0.43, 'legendaire', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive bras_roule matraquage', false],
+  ['europe-puissant', 'Théo Marchal', 'Europe', 'europe', 'Poids lourd, suplex dévastateur', 53, 240, 0.43, 'epique', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', false],
+  ['europe-4', 'Lukas Weber', 'France', 'europe', 'Équilibré, solide partout', 63, 160, 0.43, 'epique', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', false],
+  ['europe', 'Hugo Delmas', 'Europe', 'europe', 'Équilibré, solide partout', 61, 165, 0.42, 'rare', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', false],
+  ['europe-6', 'Victor Schmid', 'Italie', 'europe', 'Poids lourd, suplex dévastateur', 53, 230, 0.43, 'rare', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', false],
+  ['europe-5', 'Bastien Ricci', 'Allemagne', 'europe', 'Technicien, feintes et ceintures', 57, 165, 0.44, 'rare', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive matraquage bras_roule', true],
+  ['europe-8', 'Matteo Morel', 'Suisse', 'europe', 'Technicien, feintes et ceintures', 57, 160, 0.42, 'commune', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre bras_roule esquive matraquage', true],
+  ['europe-9', 'Jonas Lambert', 'France', 'europe', 'Poids lourd, suplex dévastateur', 52, 230, 0.43, 'commune', 'attaque', 'german_suplex defense matraquage contre', 'grande_projection sprawl ceinture_arriere relance', true],
+  ['europe-10', 'Antoine Lemaire', 'Belgique', 'europe', 'Équilibré, solide partout', 60, 165, 0.4, 'commune', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', true],
+  ['europe-7', 'Pierre Girard', 'France', 'europe', 'Équilibré, solide partout', 60, 170, 0.4, 'commune', 'defense', 'attaque_base defense feinte contre', 'simple_jambe parade matraquage relance', true],
+];
+
+export const LUTTEURS: DefLutteur[] = LIGNES.map(([id, nom, origine, nation, style, enduranceMax, force, recuperation, rarete, familleSpeciale, a, d, depart]) => {
+  const actions = a.split(' ') as IdAction[];
+  return {
+    id, nom, origine, nation, style, enduranceMax, force, recuperation, rarete, familleSpeciale, depart,
+    actions, actionsPossibles: actions, deblocages: d.split(' ') as IdAction[],
+  };
+});
 
 // Noms locaux des actions selon l'origine du lutteur (à valider par Corentin).
 // La mécanique reste identique : seul le nom affiché change.
@@ -224,7 +272,11 @@ export const REGLES = {
     boostersParVictoire: { arene: 1, enLigne: 2 },
     // Booster de consolation (arène) : toutes les 2 défaites d'affilée.
     defaitesPourConsolation: 2,
-    poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 5 }, // chances relatives
+    poidsRarete: { commune: 50, rare: 30, epique: 15, legendaire: 1 }, // chances relatives (légendaire : très rare)
+    cartesDeDepart: 20, // tirées au hasard parmi les cartes débloquées dès le départ
+    // Fragments : un double d'une nation se transforme en 1 fragment de sa légendaire ;
+    // assez de fragments débloquent la légendaire (même un joueur malchanceux finit par l'avoir).
+    fragmentsPourLegendaire: 10,
     // Marchand du club : offres par jour (il donne une carte contre un double de même rareté).
     offresMarchandParJour: 3,
     // Tutoriel suivi en entier : les boosters du combat d'arène suivant sont multipliés.

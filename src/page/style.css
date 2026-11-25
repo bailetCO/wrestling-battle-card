@@ -1053,3 +1053,5 @@ b.moi { color: #ff8a95; }
 .case-rapide { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 6px 0; }
 .case-rapide input { width: 22px; height: 22px; accent-color: var(--orange); }
 .case-rapide small { color: var(--doux); font-weight: 400; }
+.fragment-ligne { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 8px; border-radius: 12px; background: var(--nuit); }
+.fragment-ligne .petit-bouton small { display: block; font-size: 10.5px; opacity: .8; }

@@ -2,10 +2,10 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, LUTTEURS, NATIONS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
-  type Joueur, type Nation, type NiveauCarte,
+  type Joueur, type NiveauCarte,
   type Niveau,
 } from '../moteur';
 import { Partie, type TourJoue } from './partie';
@@ -16,7 +16,7 @@ import {
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
-  acheterBooster, cartesPossedees, charger, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
+  acheterBooster, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
@@ -90,10 +90,6 @@ const portrait = (def: DefLutteur, niveau?: NiveauCarte) => portraitSVG(def, `m$
 
 // ---------- Accueil, menu principal ----------
 
-const NATIONS: { id: Nation; nom: string }[] = [
-  { id: 'usa', nom: 'USA' }, { id: 'russie', nom: 'Russie' }, { id: 'europe', nom: 'Europe' },
-  { id: 'afrique', nom: 'Afrique' }, { id: 'japon', nom: 'Japon' },
-];
 
 function compteur(): string {
   const n = collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection);
@@ -569,6 +565,32 @@ function statsTexte(d: DefLutteur): string {
   return `Endurance ${d.enduranceMax} · force ${d.force} · récupération ${Math.round(d.recuperation * 100)} %`;
 }
 
+// Fragments de légende : chaque double d'une nation peut devenir un fragment de sa légendaire.
+function sectionFragments(): string {
+  const N = R_.collection.fragmentsPourLegendaire;
+  const lignes = NATIONS.map((n) => {
+    const leg = legendaireDe(n.id);
+    if (!leg) return '';
+    const frag = collection.fragments[n.id] ?? 0;
+    // Le double proposé : celui de la nation qu'on a en plus grand nombre (jamais le dernier exemplaire).
+    const double = LUTTEURS.filter((l) => l.nation === n.id && nbExemplaires(collection, l.id) >= 2)
+      .sort((a, b) => nbExemplaires(collection, b.id) - nbExemplaires(collection, a.id))[0];
+    if (!frag && !double) return '';
+    return `<li class="fragment-ligne">
+      <span class="vignette">${portrait(leg, 'legendaire')}</span>
+      <span class="fusion-info"><b>${echap(n.nom)} · ${echap(leg.nom)}</b>
+        <small>${frag}/${N} fragments${possede(collection, leg.id) ? ' · déjà dans ta collection (un exemplaire de plus)' : ''}</small>
+        <span class="jauge"><i style="width:${Math.min(100, (frag / N) * 100)}%"></i></span></span>
+      ${frag >= N
+        ? `<button class="principal petit-bouton" data-legende="${n.id}">Débloquer</button>`
+        : double ? `<button class="secondaire petit-bouton" data-fragment="${double.id}" title="Transformer un double de ${echap(double.nom)}">+1 fragment<small>${echap(double.nom.split(' ')[0])} ×${nbExemplaires(collection, double.id)}</small></button>` : ''}
+    </li>`;
+  }).join('');
+  return `<section class="bloc"><h2>Fragments de légende</h2>
+    <p>Transforme un double d'une nation en 1 fragment de sa légendaire. ${N} fragments la débloquent.</p>
+    ${lignes ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note">Il te faut des doubles pour gagner des fragments.</p>'}</section>`;
+}
+
 function ecranFusion(message = '') {
   partie = null;
   const miens = LUTTEURS.filter((l) => nbExemplaires(collection, l.id) > 0)
@@ -601,7 +623,28 @@ function ecranFusion(message = '') {
       ${enTete('Fusion', 'Chaque fusion fait monter la carte d\'une rareté, jusqu\'à Champion du Monde. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée ; Champion du Monde, toutes les actions sont ouvertes. Ensuite, 5 doubles pour une étoile (−1 d\'endurance sur l\'action choisie, 3 par action) ; chaque quart des étoiles débloque un style de carte.')}
       ${message}
       ${miens.length ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note marge">Tu n\'as encore aucune carte.</p>'}
+      ${sectionFragments()}
     </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-fragment]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const erreur = enFragment(collection, b.dataset.fragment!);
+      if (!erreur) sauver(collection);
+      ecranFusion(erreur ? `<p class="alerte">${echap(erreur)}</p>` : '');
+    }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-legende]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const nation = b.dataset.legende!;
+      const erreur = debloquerLegendaire(collection, nation);
+      if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
+      sauver(collection);
+      ecranFusion();
+      const leg = legendaireDe(nation)!;
+      const f = ouvrirFenetre(`<h2 class="onomato rouge">LÉGENDE !</h2><div class="fenetre-carte eclat-fusion">${carteJoueur(leg)}</div>
+        <p><b>${echap(leg.nom)}</b> rejoint ta collection.</p><button class="principal" data-fermer>Continuer</button>`, true);
+      activerReflets(f);
+    }),
+  );
   app.querySelectorAll<HTMLButtonElement>('[data-fusion]').forEach((b) =>
     b.addEventListener('click', () => {
       const id = b.dataset.fusion!;
@@ -2130,7 +2173,7 @@ function ecranAmis(message = '') {
         <p>Choisis comment vous jouez :</p>
         <label class="case-rapide"><input type="checkbox" id="rapide"> Combat rapide <small>(une période, mort subite, sans booster)</small></label>
         <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes fusionnées · 2 boosters et 2 médailles par victoire</small></button>
-        <button class="secondaire" data-creer="base">Cartes de base<small>Les 15 cartes, sans fusion · 2 médailles par victoire, pas de booster</small></button>
+        <button class="secondaire" data-creer="base">Cartes de base<small>Toutes les cartes, sans fusion · 2 médailles par victoire, pas de booster</small></button>
       </section>
       <section class="bloc">
         <h2>Rejoindre ton ami</h2>

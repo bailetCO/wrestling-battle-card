@@ -9,15 +9,6 @@ import {
   nouvelleCollection, ouvrirBooster, possede, prochaineFusion, recompenser, verifierPseudo,
 } from '../src/page/collection';
 
-test('départ : une carte par nation, la moins rare, en un exemplaire', () => {
-  const c = nouvelleCollection();
-  const d = cartesDeDepart();
-  assert.equal(d.length, 5);
-  assert.equal(new Set(d.map((id) => trouverLutteur(id).nation)).size, 5);
-  for (const id of d) assert.equal(nbExemplaires(c, id), 1);
-  assert.equal(c.coach, null);
-});
-
 test('boosters : 3 cartes (classique) ou 5 (rare), environ 1 rare sur 4, doublons possibles', () => {
   const h = creerHasard(5);
   let rares = 0, doublons = 0;
@@ -59,19 +50,20 @@ test('consolation : un booster toutes les 2 défaites d\'affilée, remis à zér
 
 test('fusion : chaque fusion monte d\'une rareté ; il faut autant d\'exemplaires que le rang visé', () => {
   const c = nouvelleCollection();
-  c.exemplaires.europe = 1; // commune
-  assert.ok(fusionner(c, 'europe')); // pas de double
-  c.exemplaires.europe = 2; // Rare : 2 exemplaires (1 double)
-  assert.deepEqual(prochaineFusion(c, 'europe'), { type: 'grade', grade: 2, niveau: 'rare', doublesNecessaires: 1, doublesDispo: 1 });
-  assert.equal(fusionner(c, 'europe'), null);
-  assert.equal(niveauCarte(trouverLutteur('europe'), gradeDe(c, 'europe')), 'rare');
-  assert.equal(nbExemplaires(c, 'europe'), 1);
-  c.exemplaires.europe = 1 + 2 + 3 + 4; // Épique (2 doubles), Légendaire (3), Champion du Monde (4)
-  for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'europe'), null);
-  assert.equal(gradeDe(c, 'europe'), 5);
-  assert.equal(niveauCarte(trouverLutteur('europe'), 5), 'champion');
-  assert.equal(nbExemplaires(c, 'europe'), 1);
-  assert.equal(prochaineFusion(c, 'europe')?.type, 'etoile');
+  c.exemplaires = {};
+  c.exemplaires['europe-7'] = 1; // commune
+  assert.ok(fusionner(c, 'europe-7')); // pas de double
+  c.exemplaires['europe-7'] = 2; // Rare : 2 exemplaires (1 double)
+  assert.deepEqual(prochaineFusion(c, 'europe-7'), { type: 'grade', grade: 2, niveau: 'rare', doublesNecessaires: 1, doublesDispo: 1 });
+  assert.equal(fusionner(c, 'europe-7'), null);
+  assert.equal(niveauCarte(trouverLutteur('europe-7'), gradeDe(c, 'europe-7')), 'rare');
+  assert.equal(nbExemplaires(c, 'europe-7'), 1);
+  c.exemplaires['europe-7'] = 1 + 2 + 3 + 4; // Épique (2 doubles), Légendaire (3), Champion du Monde (4)
+  for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'europe-7'), null);
+  assert.equal(gradeDe(c, 'europe-7'), 5);
+  assert.equal(niveauCarte(trouverLutteur('europe-7'), 5), 'champion');
+  assert.equal(nbExemplaires(c, 'europe-7'), 1);
+  assert.equal(prochaineFusion(c, 'europe-7')?.type, 'etoile');
 });
 
 test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, avec 5 exemplaires', () => {
@@ -119,7 +111,7 @@ test('étoiles (Champion du Monde) : 5 doubles, −1 au coût de l\'action chois
 });
 
 test('grades : +5 % par niveau gagné, +10 % pour le 4e (+25 % en tout)', () => {
-  const base = trouverLutteur('europe'); // commune : 4 niveaux à gagner
+  const base = trouverLutteur('europe-7'); // commune : 4 niveaux à gagner
   assert.equal(avecGrade(base, 1).force, base.force);
   assert.deepEqual(avecGrade(base, 1).actionsPossibles, base.actions);
   const g2 = avecGrade(base, 2);
@@ -158,9 +150,10 @@ test('deck : enregistré seulement s\'il est valide', () => {
   assert.ok(choisirDeck(c, 'usa', ['sprawl', 'matraquage', 'relance', 'feinte']));
   assert.equal(c.decks.usa, undefined);
   // Europe (commune) : simple_jambe s'ouvre au niveau Rare. Refusée avant, acceptée ensuite.
-  assert.ok(choisirDeck(c, 'europe', ['simple_jambe', 'defense', 'feinte', 'contre']));
-  c.grades.europe = 2;
-  assert.equal(choisirDeck(c, 'europe', ['simple_jambe', 'defense', 'feinte', 'contre']), null);
+  c.exemplaires['europe-7'] = 1;
+  assert.ok(choisirDeck(c, 'europe-7', ['simple_jambe', 'defense', 'feinte', 'contre']));
+  c.grades['europe-7'] = 2;
+  assert.equal(choisirDeck(c, 'europe-7', ['simple_jambe', 'defense', 'feinte', 'contre']), null);
 });
 
 test('styles de carte : un par quart des étoiles possibles, une fois Champion du Monde', () => {

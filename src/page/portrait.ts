@@ -39,14 +39,51 @@ export const APPARENCE: Record<string, Apparence> = {
   'japon-contre': { peau: PEAU.doree, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'moustache', casque: false, oreille: true, cicatrice: true },
 };
 
-// Couleurs de chaque nation : fond du portrait et maillot.
-export const COULEURS_NATION: Record<Nation, { fond: string; fond2: string; maillot: string; liseré: string }> = {
+// Couleurs de chaque nation : fond du portrait et maillot. Une nation sans couleurs prend les neutres.
+type Couleurs = { fond: string; fond2: string; maillot: string; liseré: string };
+const NEUTRE: Couleurs = { fond: '#3a4466', fond2: '#1a2038', maillot: '#5a6a9a', liseré: '#ffffff' };
+export const COULEURS_NATION: Record<Nation, Couleurs> = new Proxy({
+  iran: { fond: '#239f40', fond2: '#0e4a1d', maillot: '#da0000', liseré: '#ffffff' },
+  georgie: { fond: '#9b1020', fond2: '#4a0710', maillot: '#ffffff', liseré: '#e8112d' },
+  azerbaidjan: { fond: '#0092bc', fond2: '#00455a', maillot: '#e4002b', liseré: '#00af66' },
+  turquie: { fond: '#c8102e', fond2: '#5e0715', maillot: '#ffffff', liseré: '#e30a17' },
+  ouzbekistan: { fond: '#0099b5', fond2: '#004a59', maillot: '#1eb53a', liseré: '#ffffff' },
+  kazakhstan: { fond: '#00afca', fond2: '#005866', maillot: '#fec50c', liseré: '#00afca' },
+  kirghizistan: { fond: '#e8112d', fond2: '#6b0814', maillot: '#ffef00', liseré: '#e8112d' },
   usa: { fond: '#1f3a7a', fond2: '#0c1c45', maillot: '#c8283a', liseré: '#ffffff' },
   russie: { fond: '#2a5fb0', fond2: '#13305e', maillot: '#d42f2f', liseré: '#ffffff' },
   europe: { fond: '#1d4ea0', fond2: '#0d2557', maillot: '#1a49a8', liseré: '#f5c518' },
   afrique: { fond: '#14804a', fond2: '#0a3f25', maillot: '#f2c230', liseré: '#d33a2c' },
   japon: { fond: '#b3203a', fond2: '#5a0d1c', maillot: '#f4f4f4', liseré: '#c51f35' },
+} as Record<Nation, Couleurs>, { get: (t, k: string) => t[k] ?? NEUTRE });
+
+// Apparence d'un lutteur : celle définie ci-dessus, sinon une apparence tirée de son identifiant
+// (toujours la même pour un même lutteur), avec des teintes plausibles pour sa nation.
+const TEINTES: Record<string, (keyof typeof PEAU)[]> = {
+  usa: ['claire', 'mate', 'brune', 'foncee'], russie: ['claire', 'claire', 'mate'], japon: ['doree'],
+  afrique: ['foncee', 'brune', 'foncee'], europe: ['claire', 'mate', 'claire', 'brune'],
+  iran: ['mate', 'doree'], georgie: ['claire', 'mate'], azerbaidjan: ['mate', 'claire'], turquie: ['mate', 'claire', 'doree'],
+  ouzbekistan: ['mate', 'doree'], kazakhstan: ['doree', 'mate'], kirghizistan: ['doree', 'mate'],
 };
+const COIFFURES: Coiffure[] = ['ras', 'pics', 'crete', 'meche', 'chauve', 'boucles', 'tresses'];
+const PILOSITES: Pilosite[] = ['aucune', 'aucune', 'barbe', 'bouc', 'moustache'];
+export function apparenceDe(def: DefLutteur): Apparence {
+  if (APPARENCE[def.id]) return APPARENCE[def.id];
+  let x = 0;
+  for (const c of def.id) x = (x * 31 + c.charCodeAt(0)) >>> 0;
+  const tire = <T,>(liste: T[]) => { x = (x * 1103515245 + 12345) >>> 0; return liste[(x >>> 8) % liste.length]; };
+  const peau = PEAU[tire(TEINTES[def.nation] ?? ['claire', 'mate', 'doree', 'brune', 'foncee'])];
+  const foncee = peau === PEAU.foncee || peau === PEAU.brune;
+  return {
+    peau,
+    cheveux: CHEVEUX[tire<keyof typeof CHEVEUX>(foncee || def.nation === 'japon' ? ['noir'] : ['noir', 'brun', 'brun', 'chatain', 'blond', 'roux'])],
+    coiffure: tire(foncee ? COIFFURES : COIFFURES.filter((c) => c !== 'tresses')),
+    pilosite: tire(PILOSITES),
+    casque: tire([false, false, false, true]),
+    oreille: tire([false, true]),
+    cicatrice: tire([false, false, true]),
+  };
+}
 
 // Assombrit une couleur hexadécimale (ombre portée façon manga).
 function ombre(hex: string, f = 0.78): string {
@@ -218,6 +255,7 @@ function miroir(q: Pose): Pose {
 
 // Drapeau d'une nation, dans un rectangle.
 function drapeau(n: Nation, x: number, y: number, w: number, h: number): string {
+  const cx = x + w / 2, cy = y + h / 2, m = Math.min(w, h);
   const bandes = (cs: string[]) => cs.map((c, i) => `<rect x="${x}" y="${y + (i * h) / cs.length}" width="${w}" height="${h / cs.length + 0.3}" fill="${c}"/>`).join('');
   switch (n) {
     case 'usa':
@@ -235,7 +273,45 @@ function drapeau(n: Nation, x: number, y: number, w: number, h: number): string 
           const r = Math.min(w, h) * 0.3;
           return `<circle cx="${(x + w / 2 + Math.cos(ang) * r).toFixed(1)}" cy="${(y + h / 2 + Math.sin(ang) * r).toFixed(1)}" r="${Math.min(w, h) * 0.035}" fill="#f5c518"/>`;
         }).join('');
+    case 'iran':
+      return bandes(['#239f40', '#ffffff', '#da0000']) + `<circle cx="${cx}" cy="${cy}" r="${m * 0.1}" fill="none" stroke="#da0000" stroke-width="${m * 0.03}"/>`;
+    case 'georgie':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>`
+        + `<rect x="${cx - m * 0.08}" y="${y}" width="${m * 0.16}" height="${h}" fill="#e8112d"/><rect x="${x}" y="${cy - m * 0.08}" width="${w}" height="${m * 0.16}" fill="#e8112d"/>`
+        + [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]].map(([fx, fy]) => croix(x + w * fx, y + h * fy, m * 0.08, '#e8112d')).join('');
+    case 'azerbaidjan':
+      return bandes(['#0092bc', '#e4002b', '#00af66']) + croissant(cx, cy, m * 0.12, '#e4002b');
+    case 'turquie':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#e30a17"/>` + croissant(x + w * 0.4, cy, m * 0.25, '#e30a17');
+    case 'ouzbekistan':
+      return bandes(['#0099b5', '#ffffff', '#1eb53a'])
+        + `<rect x="${x}" y="${y + h / 3 - h * 0.02}" width="${w}" height="${h * 0.03}" fill="#ce1126"/><rect x="${x}" y="${y + (2 * h) / 3 - h * 0.01}" width="${w}" height="${h * 0.03}" fill="#ce1126"/>`
+        + croissant(x + w * 0.15, y + h * 0.16, m * 0.1, '#0099b5');
+    case 'kazakhstan':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#00afca"/>` + soleil(cx, cy * 0.98, m * 0.18, '#fec50c');
+    case 'kirghizistan':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#e8112d"/>` + soleil(cx, cy, m * 0.22, '#ffef00');
+    default: {
+      // Nation sans drapeau dessiné : ses couleurs en trois bandes.
+      const c = COULEURS_NATION[n];
+      return bandes([c.fond, c.liseré, c.maillot]);
+    }
   }
+}
+
+// Petits motifs des drapeaux.
+function croix(cx: number, cy: number, t: number, c: string): string {
+  return `<rect x="${cx - t * 0.18}" y="${cy - t / 2}" width="${t * 0.36}" height="${t}" fill="${c}"/><rect x="${cx - t / 2}" y="${cy - t * 0.18}" width="${t}" height="${t * 0.36}" fill="${c}"/>`;
+}
+function croissant(cx: number, cy: number, r: number, fond: string): string {
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffffff"/><circle cx="${cx + r * 0.28}" cy="${cy}" r="${r * 0.8}" fill="${fond}"/>`
+    + `<circle cx="${cx + r * 1.05}" cy="${cy}" r="${r * 0.28}" fill="#ffffff"/>`;
+}
+function soleil(cx: number, cy: number, r: number, c: string): string {
+  return Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * Math.PI * 2;
+    return `<path d="M${cx} ${cy} L${(cx + Math.cos(a - 0.08) * r * 1.6).toFixed(1)} ${(cy + Math.sin(a - 0.08) * r * 1.6).toFixed(1)} L${(cx + Math.cos(a + 0.08) * r * 1.6).toFixed(1)} ${(cy + Math.sin(a + 0.08) * r * 1.6).toFixed(1)}Z" fill="${c}"/>`;
+  }).join('') + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`;
 }
 
 // ---------- Décors ----------
@@ -432,7 +508,7 @@ function decorBuste(def: DefLutteur, niveau: NiveauCarte, uid: string): string {
 // `niveau` : la rareté atteinte (décor et scène). `scene` : la grande scène de la carte ;
 // sinon, le buste sur le décor du niveau (petits portraits, vignettes).
 export function portraitSVG(def: DefLutteur, uid: string, opts: { niveau?: NiveauCarte; scene?: boolean } = {}): string {
-  const a = APPARENCE[def.id];
+  const a = apparenceDe(def);
   if (a?.image) {
     return `<img class="portrait-img" src="${a.image}" alt="Portrait de ${def.nom}">`;
   }

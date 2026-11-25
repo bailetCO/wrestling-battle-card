@@ -9,7 +9,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 
 - [x] Étape 1 – Moteur de règles (sans graphisme), testé
 - [x] Étape 2 – Premier combat jouable dans le navigateur, contre l'ordinateur
-- [x] Étape 3 – Cartes et interface style manga : 15 lutteurs, portraits provisoires, raretés
+- [x] Étape 3 – Cartes et interface style manga : 15 lutteurs, portraits provisoires, raretés (puis 120 lutteurs, 12 nations, le 25/11/2026)
 - [x] Étape 4 – Collection, decks, niveau « fort » de l'ordinateur et rééquilibrage
 - [x] Étape 5 – Combat entre amis en ligne
 - [ ] Étape 6 – Mise en ligne, tests avec la communauté et équilibrage

@@ -29,7 +29,7 @@ C'est un concept inédit : il existe très peu de jeux de lutte en ligne.
 - 4 actions.
 - 1 action spéciale, active (attaque, contre, défense) ou passive (feinte).
 
-### Personnages de départ
+### Les 5 personnages d'origine (styles de base)
 
 | Origine | Style | Points forts | Endurance | 4 actions |
 | --- | --- | --- | --- | --- |
@@ -61,29 +61,198 @@ Une même action peut porter un nom différent selon l'origine du lutteur (par e
 | Feinte | Feinte | Fake | Finta | Feinto | Nax | Feinte |
 | Matraquage | Feinte | Snap Down | Sbivanie | Hatakikomi | Dóor-dóor | Matraquage |
 
-### Les 15 lutteurs
+### Les 120 lutteurs
 
-Trois styles de jeu par nation. Noms et dessins fictifs et provisoires.
+12 nations de 10 lutteurs : USA, Russie, Japon, Iran, Géorgie, Azerbaïdjan, Turquie, Ouzbékistan, Kazakhstan, Kirghizistan (sélection inspirée des championnats du monde 2025, à confirmer), plus l'Afrique et l'Europe, gardées. Noms inventés (jamais ceux de vrais lutteurs) et portraits dessinés en code : provisoires, à remplacer par Corentin.
 
-Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours ; endurances réajustées après la règle « le contre bat l'attaque avec plus d'endurance OU plus de force ») : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
+- Par nation : 4 communes, 3 rares, 2 épiques, 1 légendaire (au total 48, 36, 24 et 12). 3 styles de jeu par nation, répartis à chaque rareté.
+- Rareté fixée par simulation (`npm run simuler`) : chaque lutteur affronte des adversaires tirés au hasard parmi les 120, avec l'ordinateur au hasard puis l'ordinateur fort (des deux côtés). Dans chaque nation, le classement par taux de victoire moyen donne la rareté ; l'endurance est ajustée pour que chacun tombe dans sa fourchette : légendaire 57,5 à 62,5 %, épique 52,5 à 57,5 %, rare 47,5 à 52,5 %, commune 42,5 à 47,5 %. Ces fourchettes ont été relevées de 2,5 points (avant : 55 à 60, etc.) pour que leur moyenne pondérée fasse 50 %, sinon l'équilibrage ne peut pas aboutir. Mesure du 25/11/2026 (432 000 combats) : 104 lutteurs dans leur fourchette, 15 à 1 point près, 1 à 1,2 point (Riku Okabe).
+- Débloqués dès le départ : les 4 communes et la rare la moins forte de chaque nation (60 cartes). Un nouveau joueur en reçoit 20, tirées au hasard ; une ancienne sauvegarde est complétée jusqu'à 20 cartes différentes.
+- À débloquer : les 2 autres rares, les 2 épiques et la légendaire, par les boosters, l'arène et le mode histoire.
+- Ajouter une nation ou un lutteur : une ligne dans NATIONS et une ligne par lutteur dans config.ts (et, si on veut, ses couleurs et son drapeau dans page/portrait.ts ; sans cela, des couleurs neutres et un drapeau en trois bandes). Le portrait est tiré automatiquement de l'identifiant. Les modes de jeu n'ont pas à changer.
+- Noms locaux des actions : définis pour les 5 nations d'origine ; les 7 nouvelles affichent pour l'instant le nom français (à compléter et valider).
 
-| Lutteur | Nation | Style | Endurance | Force | Récupération | 4 actions de base | Déblocages (dans l'ordre des fusions) | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 68 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection, Feinte | attaque | 60,3 / 53,1 / 56,7 % | Légendaire |
-| Tanner Briggs | USA | Lutteur de pression, très physique | 69 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense, Ceinture arrière | attaque | 57,7 / 62,8 / 60,2 % | Légendaire |
-| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 67 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe, Relance | défense | 58,2 / 53,8 / 56,0 % | Épique |
-| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 63 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte, Simple jambe | contre | 48,2 / 57,4 / 52,8 % | Épique |
-| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 59 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière, Relance | attaque | 49,5 / 60,9 / 55,2 % | Épique |
-| Lamine Sarr | Afrique | Puissant et athlétique | 65 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense, German suplex | attaque | 55,4 / 42,3 / 48,9 % | Rare |
-| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 67 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé, Matraquage | feinte | 48,0 / 50,9 / 49,5 % | Rare |
-| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 72 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance, Matraquage | défense | 47,7 / 53,0 / 50,4 % | Rare |
-| Mikhaïl Orlov | Russie | Technicien précis | 66 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive, Simple jambe | contre | 48,5 / 47,6 / 48,0 % | Rare |
-| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 67 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance, Matraquage | attaque | 48,8 / 47,6 / 48,2 % | Rare |
-| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 66 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage, Relance | défense | 52,5 / 38,1 / 45,3 % | Commune |
-| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 63 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage, Sprawl | feinte | 42,4 / 44,9 / 43,6 % | Commune |
-| Pavel Zorine | Russie | Contre-attaquant patient | 67 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe, Matraquage | contre | 40,5 / 47,1 / 43,8 % | Commune |
-| Kenji Arata | Japon | Rapide et explosif | 59 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque, Parade | feinte | 48,9 / 42,1 / 45,5 % | Commune |
-| Ryō Takamine | Japon | Technicien, ceinture et relances | 61 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive, Matraquage | contre | 43,5 / 48,5 / 46,0 % | Commune |
+Légendaires (cartes « championnes ») : dans les boosters avec une chance très faible (poids 1 contre 50 pour les communes, environ 1 carte sur 100) ; par les fragments (dans Fusion, un double d'une nation devient 1 fragment de sa légendaire ; 10 fragments la débloquent) ; et dans l'arène (boss légendaire de chaque nation, 1 chance sur 3, étape suivante).
+
+#### Afrique (arène : 1e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Babacar Mensah (Sénégal) | Légendaire | Puissant et athlétique | 62 | 240 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Lamine Sarr (Afrique) | Épique | Puissant et athlétique | 60 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Ibou Ndiaye (Afrique) | Épique | Explosif, feintes et bras roulés | 56 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
+| Serge Diallo (Ghana) | Rare | Explosif, feintes et bras roulés | 55 | 175 | 52 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
+| Cheikh Faye (Afrique) | Rare | Défenseur, immense réserve d'énergie | 68 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque |  |
+| Ousmane Kane (Sénégal) | Rare | Défenseur, immense réserve d'énergie | 68 | 155 | 36 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Moussa Ba (Cameroun) | Commune | Explosif, feintes et bras roulés | 53 | 185 | 53 % | Simple jambe, Feinte, Esquive, Bras roulé | oui |
+| Kwame Ekotto (Côte d'Ivoire) | Commune | Puissant et athlétique | 59 | 240 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Tunde Adeyemi (Nigeria) | Commune | Défenseur, immense réserve d'énergie | 67 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Amadou Ndour (Sénégal) | Commune | Puissant et athlétique | 58 | 240 | 49 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+
+#### Ouzbékistan (arène : 2e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Jasur Karimjonov (Ouzbékistan) | Légendaire | Explosif, feintes et bras roulés | 59 | 180 | 49 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
+| Farrukh Yusupjonov (Ouzbékistan) | Épique | Explosif, feintes et bras roulés | 57 | 185 | 52 % | Simple jambe, Feinte, Esquive, Bras roulé |  |
+| Akmal Tursunboyev (Ouzbékistan) | Épique | Puissant et athlétique | 62 | 235 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Sardor Sobirjonov (Ouzbékistan) | Rare | Puissant et athlétique | 59 | 235 | 50 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Bekzod Kholmatov (Ouzbékistan) | Rare | Technicien précis | 59 | 165 | 36 % | Ceinture arrière, Parade, Contre, Feinte |  |
+| Ulugbek Nazarbekov (Ouzbékistan) | Rare | Puissant et athlétique | 59 | 240 | 50 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Sanjar Usmonaliyev (Ouzbékistan) | Commune | Explosif, feintes et bras roulés | 55 | 175 | 49 % | Simple jambe, Feinte, Esquive, Bras roulé | oui |
+| Dilshod Ergashboyev (Ouzbékistan) | Commune | Puissant et athlétique | 59 | 230 | 49 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Otabek Rakhmonov (Ouzbékistan) | Commune | Technicien précis | 60 | 170 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Sherzod Mirzayev (Ouzbékistan) | Commune | Technicien précis | 59 | 165 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+
+#### Kirghizistan (arène : 3e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kanat Bekturov (Kirghizistan) | Légendaire | Rapide et explosif | 57 | 215 | 65 % | Simple jambe, Feinte, Esquive, Contre |  |
+| Aibek Osmonbekov (Kirghizistan) | Épique | Équilibré, solide partout | 63 | 165 | 40 % | Attaque, Défense, Feinte, Contre |  |
+| Azamat Asanaliev (Kirghizistan) | Épique | Équilibré, solide partout | 63 | 165 | 44 % | Attaque, Défense, Feinte, Contre |  |
+| Erlan Isakbekov (Kirghizistan) | Rare | Rapide et explosif | 56 | 215 | 61 % | Simple jambe, Feinte, Esquive, Contre |  |
+| Ruslan Jumabaev (Kirghizistan) | Rare | Défenseur, immense réserve d'énergie | 69 | 150 | 35 % | Bras roulé, Sprawl, Contre, Attaque |  |
+| Ulan Mamytov (Kirghizistan) | Rare | Équilibré, solide partout | 61 | 165 | 42 % | Attaque, Défense, Feinte, Contre | oui |
+| Talant Usenaliev (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 67 | 150 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Nursultan Toktogulov (Kirghizistan) | Commune | Rapide et explosif | 55 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | oui |
+| Bakyt Sadykbekov (Kirghizistan) | Commune | Défenseur, immense réserve d'énergie | 66 | 155 | 39 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Adilet Abdyldaev (Kirghizistan) | Commune | Rapide et explosif | 55 | 210 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
+
+#### Iran (arène : 4e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kian Jafarzadeh (Iran) | Légendaire | Lutteur de pression, très physique | 62 | 160 | 31 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Navid Tavakolian (Iran) | Épique | Poids lourd, suplex dévastateur | 54 | 240 | 44 % | German suplex, Défense, Matraquage, Contre |  |
+| Arash Moradian (Iran) | Épique | Poids lourd, suplex dévastateur | 53 | 240 | 45 % | German suplex, Défense, Matraquage, Contre |  |
+| Omid Rahbari (Iran) | Rare | Lutteur de pression, très physique | 58 | 155 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Behnam Nourbakhsh (Iran) | Rare | Lutteur de pression, très physique | 59 | 165 | 28 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Saeed Sadeghpour (Iran) | Rare | Poids lourd, suplex dévastateur | 52 | 230 | 45 % | German suplex, Défense, Matraquage, Contre | oui |
+| Mehdi Ebrahimian (Iran) | Commune | Technicien précis | 58 | 170 | 38 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Farid Golzari (Iran) | Commune | Technicien précis | 59 | 170 | 36 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Pouya Karimpour (Iran) | Commune | Poids lourd, suplex dévastateur | 52 | 235 | 41 % | German suplex, Défense, Matraquage, Contre | oui |
+| Reza Farahmand (Iran) | Commune | Technicien précis | 59 | 170 | 37 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+
+#### Géorgie (arène : 5e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Beka Tsiklauri (Géorgie) | Légendaire | Poids lourd, suplex dévastateur | 55 | 240 | 42 % | German suplex, Défense, Matraquage, Contre |  |
+| Davit Kvirikashvili (Géorgie) | Épique | Poids lourd, suplex dévastateur | 53 | 235 | 46 % | German suplex, Défense, Matraquage, Contre |  |
+| Zurab Gvaramadze (Géorgie) | Épique | Puissant et athlétique | 62 | 230 | 49 % | Grande projection, Sprawl, Bras roulé, Relance |  |
+| Tornike Javakhidze (Géorgie) | Rare | Poids lourd, suplex dévastateur | 53 | 240 | 42 % | German suplex, Défense, Matraquage, Contre |  |
+| Levan Nadiradze (Géorgie) | Rare | Technicien, ceinture et relances | 56 | 155 | 55 % | Ceinture arrière, Feinte, Parade, Relance |  |
+| Luka Lomidze (Géorgie) | Rare | Technicien, ceinture et relances | 55 | 160 | 54 % | Ceinture arrière, Feinte, Parade, Relance | oui |
+| Sandro Chkhartishvili (Géorgie) | Commune | Technicien, ceinture et relances | 54 | 160 | 54 % | Ceinture arrière, Feinte, Parade, Relance | oui |
+| Lasha Mchedlishvili (Géorgie) | Commune | Puissant et athlétique | 60 | 235 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Irakli Gelashvili (Géorgie) | Commune | Puissant et athlétique | 58 | 240 | 48 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+| Nika Beridzeshvili (Géorgie) | Commune | Puissant et athlétique | 58 | 230 | 51 % | Grande projection, Sprawl, Bras roulé, Relance | oui |
+
+#### Turquie (arène : 6e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Yusuf Doğancı (Turquie) | Légendaire | Lutteur de pression, très physique | 61 | 160 | 34 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Hakan Arslanoğlu (Turquie) | Épique | Technicien, feintes et ceintures | 59 | 165 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte |  |
+| Burak Öztürkmen (Turquie) | Épique | Lutteur de pression, très physique | 60 | 155 | 30 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Ahmet Çelikkol (Turquie) | Rare | Lutteur de pression, très physique | 57 | 160 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Furkan Demirtaş (Turquie) | Rare | Défenseur, immense réserve d'énergie | 69 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque |  |
+| Emre Aydınoğlu (Turquie) | Rare | Technicien, feintes et ceintures | 57 | 165 | 44 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
+| Mert Karaca (Turquie) | Commune | Lutteur de pression, très physique | 56 | 155 | 31 % | Double jambe, Sprawl, Matraquage, Relance | oui |
+| Kaan Kılıçarslan (Turquie) | Commune | Technicien, feintes et ceintures | 55 | 155 | 46 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
+| Oğuz Yıldırımlı (Turquie) | Commune | Défenseur, immense réserve d'énergie | 67 | 155 | 35 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+| Serkan Koçak (Turquie) | Commune | Défenseur, immense réserve d'énergie | 66 | 160 | 38 % | Bras roulé, Sprawl, Contre, Attaque | oui |
+
+#### Europe (arène : 7e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Lucas Ferrand (Europe) | Légendaire | Technicien, feintes et ceintures | 60 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte |  |
+| Théo Marchal (Europe) | Épique | Poids lourd, suplex dévastateur | 53 | 240 | 43 % | German suplex, Défense, Matraquage, Contre |  |
+| Lukas Weber (France) | Épique | Équilibré, solide partout | 63 | 160 | 43 % | Attaque, Défense, Feinte, Contre |  |
+| Hugo Delmas (Europe) | Rare | Équilibré, solide partout | 61 | 165 | 42 % | Attaque, Défense, Feinte, Contre |  |
+| Victor Schmid (Italie) | Rare | Poids lourd, suplex dévastateur | 53 | 230 | 43 % | German suplex, Défense, Matraquage, Contre |  |
+| Bastien Ricci (Allemagne) | Rare | Technicien, feintes et ceintures | 57 | 165 | 44 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
+| Matteo Morel (Suisse) | Commune | Technicien, feintes et ceintures | 57 | 160 | 42 % | Simple jambe, Ceinture arrière, Parade, Feinte | oui |
+| Jonas Lambert (France) | Commune | Poids lourd, suplex dévastateur | 52 | 230 | 43 % | German suplex, Défense, Matraquage, Contre | oui |
+| Antoine Lemaire (Belgique) | Commune | Équilibré, solide partout | 60 | 165 | 40 % | Attaque, Défense, Feinte, Contre | oui |
+| Pierre Girard (France) | Commune | Équilibré, solide partout | 60 | 170 | 40 % | Attaque, Défense, Feinte, Contre | oui |
+
+#### USA (arène : 8e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Tanner Briggs (USA) | Légendaire | Lutteur de pression, très physique | 62 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Tucker Holloway (USA) | Épique | Lutteur de pression, très physique | 59 | 165 | 31 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Jace Dunbar (USA) | Épique | Défenseur, un mur qui use l'adversaire | 60 | 145 | 42 % | Attaque, Sprawl, Contre, Matraquage |  |
+| Wyatt Pruitt (USA) | Rare | Défenseur, un mur qui use l'adversaire | 59 | 145 | 36 % | Attaque, Sprawl, Contre, Matraquage |  |
+| Cade Whitaker (USA) | Rare | Explosif, enchaîne les attaques aux jambes | 57 | 200 | 42 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Garrett Kessler (USA) | Rare | Lutteur de pression, très physique | 57 | 160 | 29 % | Double jambe, Sprawl, Matraquage, Relance | oui |
+| Duke Halvorsen (USA) | Commune | Défenseur, un mur qui use l'adversaire | 57 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | oui |
+| Colt Ramsey (USA) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Mason Sawyer (USA) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 195 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Brody Mercer (USA) | Commune | Lutteur de pression, très physique | 57 | 160 | 30 % | Double jambe, Sprawl, Matraquage, Relance | oui |
+
+#### Russie (arène : 9e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Rustam Kazbekov (Russie) | Légendaire | Lutteur de pression, infatigable | 61 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance |  |
+| Ilya Belov (Russie) | Épique | Lutteur de pression, infatigable | 59 | 160 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Sergueï Teplov (Russie) | Épique | Lutteur de pression, infatigable | 59 | 160 | 32 % | Double jambe, Sprawl, Matraquage, Relance |  |
+| Pavel Zorine (Russie) | Rare | Contre-attaquant patient | 65 | 145 | 48 % | Attaque, Esquive, Contre, Relance |  |
+| Dmitri Gromov (Russie) | Rare | Contre-attaquant patient | 64 | 145 | 50 % | Attaque, Esquive, Contre, Relance |  |
+| Timur Kostine (Russie) | Rare | Technicien précis | 59 | 170 | 40 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Mikhaïl Orlov (Russie) | Commune | Technicien précis | 60 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Artyom Sorokine (Russie) | Commune | Contre-attaquant patient | 63 | 145 | 50 % | Attaque, Esquive, Contre, Relance | oui |
+| Ruslan Vlassov (Russie) | Commune | Technicien précis | 58 | 170 | 41 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+| Nikita Panine (Russie) | Commune | Technicien précis | 59 | 165 | 36 % | Ceinture arrière, Parade, Contre, Feinte | oui |
+
+#### Azerbaïdjan (arène : 10e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Rashad Abbasli (Azerbaïdjan) | Légendaire | Explosif, enchaîne les attaques aux jambes | 61 | 195 | 43 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Murad Ismayilzade (Azerbaïdjan) | Épique | Explosif, enchaîne les attaques aux jambes | 61 | 190 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Elvin Hasanli (Azerbaïdjan) | Épique | Explosif, enchaîne les attaques aux jambes | 61 | 195 | 39 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Nijat Safarli (Azerbaïdjan) | Rare | Équilibré, solide partout | 60 | 165 | 45 % | Attaque, Défense, Feinte, Contre |  |
+| Vugar Babayli (Azerbaïdjan) | Rare | Équilibré, solide partout | 62 | 165 | 40 % | Attaque, Défense, Feinte, Contre |  |
+| Emil Gurbanov (Azerbaïdjan) | Rare | Équilibré, solide partout | 61 | 165 | 44 % | Attaque, Défense, Feinte, Contre | oui |
+| Orkhan Novruzov (Azerbaïdjan) | Commune | Contre-attaquant patient | 62 | 150 | 47 % | Attaque, Esquive, Contre, Relance | oui |
+| Ramil Huseynli (Azerbaïdjan) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 200 | 39 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Tural Rzayev (Azerbaïdjan) | Commune | Contre-attaquant patient | 62 | 150 | 50 % | Attaque, Esquive, Contre, Relance | oui |
+| Farid Mammadli (Azerbaïdjan) | Commune | Contre-attaquant patient | 63 | 150 | 49 % | Attaque, Esquive, Contre, Relance | oui |
+
+#### Kazakhstan (arène : 11e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Aidos Ermekov (Kazakhstan) | Légendaire | Défenseur, un mur qui use l'adversaire | 62 | 140 | 40 % | Attaque, Sprawl, Contre, Matraquage |  |
+| Dias Saparuly (Kazakhstan) | Épique | Explosif, enchaîne les attaques aux jambes | 60 | 195 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl |  |
+| Askar Abenov (Kazakhstan) | Épique | Défenseur, un mur qui use l'adversaire | 59 | 150 | 42 % | Attaque, Sprawl, Contre, Matraquage |  |
+| Arman Zhaksybekov (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 54 | 230 | 41 % | German suplex, Défense, Matraquage, Contre |  |
+| Yerlan Seitkali (Kazakhstan) | Rare | Poids lourd, suplex dévastateur | 52 | 230 | 46 % | German suplex, Défense, Matraquage, Contre |  |
+| Daulet Omarbekov (Kazakhstan) | Rare | Explosif, enchaîne les attaques aux jambes | 59 | 195 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Timur Beisenuly (Kazakhstan) | Commune | Poids lourd, suplex dévastateur | 50 | 240 | 45 % | German suplex, Défense, Matraquage, Contre | oui |
+| Nurlan Nurmukhan (Kazakhstan) | Commune | Explosif, enchaîne les attaques aux jambes | 57 | 195 | 41 % | Simple jambe, Double jambe, Feinte, Sprawl | oui |
+| Galym Kenzhebek (Kazakhstan) | Commune | Défenseur, un mur qui use l'adversaire | 57 | 145 | 38 % | Attaque, Sprawl, Contre, Matraquage | oui |
+| Bauyrzhan Tokhtarbayev (Kazakhstan) | Commune | Poids lourd, suplex dévastateur | 52 | 235 | 45 % | German suplex, Défense, Matraquage, Contre | oui |
+
+#### Japon (arène : 12e)
+
+| Lutteur | Rareté | Style | Endurance | Force | Récupération | 4 actions de base | Départ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Sōta Sugawara (Japon) | Légendaire | Technicien, ceinture et relances | 59 | 165 | 54 % | Ceinture arrière, Feinte, Parade, Relance |  |
+| Hayato Kurokawa (Japon) | Épique | Technicien, ceinture et relances | 56 | 165 | 53 % | Ceinture arrière, Feinte, Parade, Relance |  |
+| Daichi Morikawa (Japon) | Épique | Contre-attaquant insaisissable | 58 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage |  |
+| Riku Okabe (Japon) | Rare | Rapide et explosif | 56 | 210 | 65 % | Simple jambe, Feinte, Esquive, Contre |  |
+| Haruto Hanazawa (Japon) | Rare | Contre-attaquant insaisissable | 64 | 145 | 49 % | Attaque, Esquive, Contre, Relance |  |
+| Ryō Takamine (Japon) | Rare | Technicien, ceinture et relances | 55 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | oui |
+| Ren Minegishi (Japon) | Commune | Rapide et explosif | 55 | 210 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
+| Yūto Tsukada (Japon) | Commune | Rapide et explosif | 55 | 215 | 61 % | Simple jambe, Feinte, Esquive, Contre | oui |
+| Kaito Shimura (Japon) | Commune | Contre-attaquant insaisissable | 62 | 140 | 50 % | Attaque, Esquive, Contre, Relance | oui |
+| Kenji Arata (Japon) | Commune | Rapide et explosif | 55 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | oui |
 
 ### Decks
 
@@ -101,7 +270,7 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 ### Collection
 
 - Au départ, le joueur possède 5 cartes : la moins rare de chaque nation. La collection compte les exemplaires de chaque carte et son niveau de fusion.
-- Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %). Les cartes sont tirées parmi les 15, doublons possibles, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
+- Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %). Les cartes sont tirées parmi les 120, doublons possibles, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 1 (légendaire).
 - Ouverture d'un booster : le paquet fermé s'affiche, puis chaque appui sur l'écran révèle une carte (avec « Nouvelle ! » ou « Double » et un éclat aux couleurs de sa rareté) ; à la fin, un récapitulatif montre toutes les cartes obtenues. Un bouton « Tout voir » passe directement au récapitulatif.
 - Arène : 1 booster par victoire ; toutes les 2 défaites d'affilée, un booster de consolation. En ligne (mode collection) : 2 boosters par victoire (une victoire par abandon ne compte qu'après 5 tours).
 - Tri de la collection : par rareté de base, par nation, par nombre de fusions (montées de rareté et étoiles) ou par rareté actuelle (fusion comprise). Le choix est gardé.
@@ -301,7 +470,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Le combat entre amis se joue sur la version ouverte à tous : https://bailetco.github.io/wrestling-battle-card/ (GitHub Pages, publiée automatiquement à chaque modification). Pas besoin de compte : il suffit du lien. La page sur claude.ai renvoie vers cette version.
 - Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre le même lien, touche « Combat entre amis » et tape le code.
 - Connexion : relais publics gratuits et sans compte (MQTT), deux à la fois pour plus de fiabilité. Solution provisoire, à remplacer par Firebase (au plus tard pour les comptes joueurs, étape 7). Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
-- En créant la salle, l'hôte choisit le mode : « Cartes de base » (les 15 cartes, sans fusion, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs niveaux, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
+- En créant la salle, l'hôte choisit le mode : « Cartes de base » (toutes les cartes, sans fusion, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs niveaux, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
 - Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
 - Les deux téléphones calculent le combat avec le même moteur et le même numéro de combat : ils obtiennent le même résultat, vérifié à chaque tour.

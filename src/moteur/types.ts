@@ -27,7 +27,14 @@ export interface DefAction {
   points: number; // points marqués si l'action réussit (0 si aucun)
 }
 
-export type Nation = 'usa' | 'russie' | 'europe' | 'afrique' | 'japon';
+// Identifiant d'une nation (voir NATIONS dans config.ts) : on peut en ajouter sans toucher au code.
+export type Nation = string;
+
+export interface DefNation {
+  id: Nation;
+  nom: string;
+  ordreArene: number; // ordre de passage dans l'arène (de la plus abordable à la plus forte)
+}
 export type Rarete = 'commune' | 'rare' | 'epique' | 'legendaire';
 // Niveau d'une carte : sa rareté de départ, puis celle qu'elle atteint par fusion.
 export type NiveauCarte = Rarete | 'champion';
@@ -40,6 +47,7 @@ export interface DefLutteur {
   style: string; // style de jeu, en clair
   rarete: Rarete; // rareté de départ, fixée d'après les simulations (taux de victoire)
   niveau?: NiveauCarte; // rareté atteinte par fusion (posée par avecGrade)
+  depart?: boolean; // fait partie des cartes débloquées dès le départ (4 communes et 1 rare par nation)
   enduranceMax: number; // 0 à 100
   force: number; // 10 à 250
   recuperation: number; // part de l'endurance max récupérée entre deux périodes (0,35 = 35 %)
