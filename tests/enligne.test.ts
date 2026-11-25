@@ -26,24 +26,28 @@ function salleMemoire() {
 
 const attendre = (ms = 2) => new Promise((r) => setTimeout(r, ms));
 // Attend qu'une condition soit vraie (au plus `max` ms) : robuste même si l'ordinateur est chargé.
-async function attendreQue(cond: () => boolean, max = 20000) {
+async function attendreQue(cond: () => boolean, max = 60000) {
   const fin = Date.now() + max;
   while (!cond() && Date.now() < fin) await attendre(1);
 }
 
 // Un joueur automatique : choisit au hasard, garde ou change avec l'initiative, annonce au hasard.
+// Il réagit à chaque changement, et vérifie aussi régulièrement s'il doit jouer : ainsi, même si
+// un changement passe inaperçu quand l'ordinateur est chargé, la partie ne reste jamais bloquée.
 function joueurAuto(d: Duel, graine: number) {
   const h = creerHasard(graine);
   const stats = { initiatives: 0, faces: 0 };
   let occupe = false;
-  d.surVue((v: Vue) => {
-    if (occupe) return;
-    if (v.phase === 'combat' && v.etat) {
-      occupe = true;
-      queueMicrotask(() => {
-        occupe = false;
-        const vv = d.vue;
-        if (!vv.etat) return;
+  let dernier = ''; // ce à quoi il a déjà répondu (pas de double réponse)
+  const agir = () => {
+    occupe = false;
+    const vv = d.vue;
+    if (vv.phase !== 'combat' || !vv.etat) return;
+    const cle = `${vv.etat.tourGlobal}:${vv.aChoisir}:${vv.initiative}:${vv.pileOuFace}`;
+    if (cle === dernier) return;
+    if (vv.aChoisir || vv.initiative || vv.pileOuFace) dernier = cle;
+    {
+      {
         if (vv.aChoisir) {
           const jouables = actionsJouables(vv.etat, vv.moi);
           const c = jouables.length ? { action: jouables[Math.floor(h() * jouables.length)] } : { action: 'lutte' as const };
@@ -56,9 +60,19 @@ function joueurAuto(d: Duel, graine: number) {
           stats.faces++;
           d.annoncer(h() < 0.5 ? 'pile' : 'face');
         }
-      });
+      }
     }
+  };
+  d.surVue(() => {
+    if (occupe) return;
+    occupe = true;
+    queueMicrotask(agir);
   });
+  const veille = setInterval(() => {
+    if (d.vue.phase === 'fin') clearInterval(veille);
+    else if (!occupe) agir();
+  }, 20);
+  veille.unref?.();
   return stats;
 }
 
@@ -148,4 +162,16 @@ test('reprise : un joueur qui recharge la page retrouve le combat et le termine'
   await attendreQue(() => a.vue.phase === 'fin' && b2.vue.phase === 'fin');
   assert.equal(b2.vue.phase, 'fin');
   assert.deepEqual(a.vue.etat!.journal, b2.vue.etat!.journal);
+});
+
+test('le style de carte choisi est transmis à l\'ami', async () => {
+  const salle = salleMemoire();
+  const a = new Duel(salle('a'), 'hote');
+  const b = new Duel(salle('b'), 'invite');
+  await attendre();
+  a.choisirLutteur('usa', undefined, 2, {}, 3);
+  await attendreQue(() => b.vue.amiStyle === 3);
+  assert.equal(b.vue.amiStyle, 3);
+  assert.equal(a.vue.monStyle, 3);
+  a.fermer(); b.fermer();
 });

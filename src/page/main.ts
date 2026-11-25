@@ -1215,8 +1215,14 @@ function ecranCombat() {
   );
   app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
     b.addEventListener('click', () => {
-      const j = etatEnCours()?.joueurs.find((x) => x.def.id === b.dataset.voir);
-      fenetreCarte(j ? j.def : trouverLutteur(b.dataset.voir!));
+      const e = etatEnCours();
+      const idx = e ? e.joueurs.findIndex((x) => x.def.id === b.dataset.voir) : -1;
+      if (!e || idx < 0) return fenetreCarte(trouverLutteur(b.dataset.voir!));
+      // Style de carte : le sien (collection), ou celui que l'ami a envoyé en ligne.
+      const style = mode === 'ligne'
+        ? (idx === HUMAIN ? vueLigne?.monStyle : vueLigne?.amiStyle) ?? 0
+        : idx === HUMAIN ? styleDe(collection, b.dataset.voir!) : 0;
+      fenetreCarte(e.joueurs[idx].def, style);
     }),
   );
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
@@ -1304,8 +1310,8 @@ function fermerFenetre() {
   document.querySelector('.voile')?.remove();
 }
 
-function fenetreCarte(def: DefLutteur) {
-  const f = ouvrirFenetre(`<div class="fenetre-carte">${carteHTML(def)}</div><button class="secondaire" data-fermer>Fermer</button>`, true);
+function fenetreCarte(def: DefLutteur, style = 0) {
+  const f = ouvrirFenetre(`<div class="fenetre-carte">${carteHTML(def, '', { style })}</div><button class="secondaire" data-fermer>Fermer</button>`, true);
   activerReflets(f);
 }
 
@@ -1816,7 +1822,7 @@ function ecranSalle(v: Vue) {
       <button class="lien" data-sortir>Quitter la salle</button>
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) =>
-    b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!), enCollection ? gradeDe(collection, b.dataset.l!) : 1, enCollection ? etoilesDe(collection, b.dataset.l!) : {})),
+    b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!), enCollection ? gradeDe(collection, b.dataset.l!) : 1, enCollection ? etoilesDe(collection, b.dataset.l!) : {}, enCollection ? styleDe(collection, b.dataset.l!) : 0)),
   );
   app.querySelector('[data-sortir]')!.addEventListener('click', () => {
     oublierSession();

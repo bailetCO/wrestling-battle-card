@@ -78,7 +78,8 @@ export interface Presence {
   co: string | null; // pseudo du coach
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
-  et: Record<string, number>; // étoiles par action (mode collection, grade 5)
+  et: Record<string, number>; // étoiles par action (mode collection, Champion du Monde)
+  sy?: number; // style de carte choisi (Champion du Monde, mode collection), pour l'affichage
   lu: string | null; // lutteur choisi
   dk: number[] | null; // deck (codes d'actions)
   g: number | null; // numéro de combat (graine), publié par l'hôte
@@ -149,6 +150,8 @@ export interface Vue {
   amiPresent: boolean;
   amiLutteur: string | null;
   monLutteur: string | null;
+  amiStyle: number; // style de carte de l'ami (Champion du Monde), 0 = classique
+  monStyle: number;
   etat: EtatCombat | null;
   tours: TourJoue[];
   graine: number | null;
@@ -211,9 +214,9 @@ export class Duel {
   // ----- Actions du joueur -----
 
   // grade : celui de la carte du joueur (pris en compte seulement en mode collection).
-  choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1, etoiles: Partial<Record<IdAction, number>> = {}) {
+  choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1, etoiles: Partial<Record<IdAction, number>> = {}, style = 0) {
     const def = avecDeck(avecGrade(trouverLutteur(id), grade, etoiles), deck);
-    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade, et: { ...etoiles } as Record<string, number> });
+    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade, et: { ...etoiles } as Record<string, number>, sy: style });
   }
 
   async jouer(choix: Choix) {
@@ -273,7 +276,7 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0,
       etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
@@ -311,6 +314,8 @@ export class Duel {
     v.amiIdCoach = ami?.ic ?? null;
     v.monLutteur = moi.lu;
     v.amiLutteur = ami?.lu ?? null;
+    v.monStyle = moi.sy ?? 0;
+    v.amiStyle = ami?.sy ?? 0;
     v.revancheAmi = !!ami?.rv;
     if (!ami) {
       v.phase = v.amiPresent ? 'choix-lutteur' : 'attente-ami';
