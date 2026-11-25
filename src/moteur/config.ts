@@ -298,7 +298,21 @@ export const REGLES = {
   // Tournois contre l'ordinateur. +1 médaille par combat gagné, en plus des gains de fin.
   tournoi: {
     medaillesParCombatGagne: 1,
-    // Compétition : 6 lutteurs, deux tableaux de 3, repêchage croisé, un seul 3e.
+    // Tournoi individuel à double tableau (remplace la compétition à 6) : de 6 à 15 lutteurs.
+    // Tableau principal (on avance tant qu'on gagne) ; une première défaite avant les 1/2 finales
+    // envoie dans le tableau des perdants ; une deuxième défaite élimine.
+    // 3e place : les perdants des 1/2 finales s'affrontent ; le gagnant va en petite finale ; le
+    // perdant affronte le vainqueur du tableau des perdants (barrage), dont le gagnant va en petite finale.
+    individuel: {
+      inscription: 5,
+      minimum: 6, // en dessous, on complète avec des lutteurs de l'ordinateur
+      maximum: 15,
+      parDefaut: 8,
+      medailles: { 1: 10, 2: 6, 3: 3 } as Record<number, number>,
+      dollars: { 1: 15, 2: 9, 3: 5 } as Record<number, number>,
+    },
+    // Ancienne compétition à 6 (deux tableaux de 3, repêchage croisé) : gardée seulement pour finir
+    // un tournoi déjà commencé.
     competition: {
       inscription: 5,
       medailles: { 1: 10, 2: 6, 3: 3 } as Record<number, number>,

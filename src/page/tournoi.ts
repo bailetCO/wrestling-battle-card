@@ -1,4 +1,5 @@
-// Tournois contre l'ordinateur, sans affichage : tirage, tableau, repêchage croisé, gains.
+// Tournois contre l'ordinateur, sans affichage : tournoi individuel à double tableau, tournoi par
+// équipe, ancienne compétition à 6, inscriptions et gains.
 // La page joue les combats du joueur ; ceux entre deux ordinateurs sont simulés ici.
 
 import {
@@ -135,6 +136,196 @@ export function places(c: Competition): Map<number, number> {
   return p;
 }
 
+// ---------- Tournoi individuel à double tableau ----------
+
+// D'où vient chaque côté d'un combat : un lutteur placé au tirage ({ j }), le vainqueur ({ v }) ou
+// le perdant ({ p }) d'un combat précédent (son numéro), ou personne (null : exemption).
+export type Source = { j: number } | { v: number } | { p: number } | null;
+export type PartieTableau = 'principal' | 'perdants' | 'finales';
+
+// Dans a, b et vainqueur : null = pas encore connu, PERSONNE = place vide (exemption).
+export const PERSONNE = -1;
+
+export interface MatchI {
+  nom: string;
+  tableau: PartieTableau;
+  tour: number; // numéro du tour dans sa partie du tableau
+  sa: Source;
+  sb: Source;
+  a: number | null;
+  b: number | null;
+  vainqueur: number | null;
+  detail: string;
+}
+
+export interface Individuel {
+  type: 'individuel';
+  lutteurs: string[]; // l'indice 0 est le lutteur du joueur
+  matchs: MatchI[]; // dans l'ordre où ils se jouent
+  graine: number;
+  gainsCombats: { medailles: number; dollars: number };
+  recompense: Booster[] | null;
+}
+
+const I = T.individuel;
+
+function melanger<X>(t: X[], h: Hasard): X[] {
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(h() * (i + 1));
+    [t[i], t[j]] = [t[j], t[i]];
+  }
+  return t;
+}
+
+const NOM_TOUR: Record<number, string> = { 16: '1/8 de finale', 8: '1/4 de finale', 4: '1/2 finale' };
+
+// Nombre de participants accepté : au moins 6 (on complète), au plus 15.
+export const nombreParticipants = (n: number) => Math.max(I.minimum, Math.min(I.maximum, Math.round(n) || I.parDefaut));
+
+export function creerIndividuel(idJoueur: string, nombre: number, graine: number): Individuel {
+  const h = creerHasard(graine);
+  const n = nombreParticipants(nombre);
+  const lutteurs = [idJoueur, ...tirer(n - 1, [idJoueur], h)];
+  const S = n <= 8 ? 8 : 16; // taille du tableau principal
+  const paires = S / 2;
+  // Tirage : chaque paire du premier tour reçoit un lutteur ; n − paires paires (au hasard) en
+  // reçoivent un second. Les autres lutteurs sont exemptés du premier tour.
+  const ordre = melanger([...Array(n).keys()], h);
+  const doubles = new Set(melanger([...Array(paires).keys()], h).slice(0, n - paires));
+  const places: Source[] = [];
+  let k = 0;
+  for (let i = 0; i < paires; i++) {
+    places.push({ j: ordre[k++] });
+    places.push(doubles.has(i) ? { j: ordre[k++] } : null);
+  }
+
+  const matchs: MatchI[] = [];
+  const ajouter = (nom: string, tableau: PartieTableau, tour: number, sa: Source, sb: Source) => {
+    matchs.push({ nom, tableau, tour, sa, sb, a: null, b: null, vainqueur: null, detail: '' });
+    return matchs.length - 1;
+  };
+
+  // Tableau principal, jusqu'aux 1/2 finales comprises.
+  const tours: number[][] = [];
+  let cotes = places;
+  for (let taille = S, t = 1; taille > 2; taille /= 2, t++) {
+    const ids: number[] = [];
+    for (let i = 0; i < cotes.length; i += 2) ids.push(ajouter(NOM_TOUR[taille], 'principal', t, cotes[i], cotes[i + 1]));
+    tours.push(ids);
+    cotes = ids.map((m) => ({ v: m }));
+  }
+
+  // Tableau des perdants : les perdants d'avant les 1/2 finales. Les perdants d'un même tour
+  // s'affrontent ; les vainqueurs retrouvent ensuite les perdants du tour suivant (en ordre inverse,
+  // pour éviter de revoir le même adversaire), et ainsi de suite jusqu'à un seul vainqueur.
+  let tourP = 0;
+  const tourPerdants = (c: Source[]): Source[] => {
+    tourP++;
+    const out: Source[] = [];
+    for (let i = 0; i < c.length; i += 2) out.push({ v: ajouter(`Tableau des perdants, tour ${tourP}`, 'perdants', tourP, c[i], c[i + 1]) });
+    return out;
+  };
+  let courant: Source[] = [];
+  for (const ids of tours.slice(0, -1)) {
+    const pertes: Source[] = ids.map((m) => ({ p: m }));
+    if (!courant.length) { courant = pertes; continue; }
+    while (courant.length > pertes.length) courant = tourPerdants(courant);
+    courant = tourPerdants(courant.flatMap((c, i) => [c, pertes[pertes.length - 1 - i]]));
+  }
+  while (courant.length > 1) courant = tourPerdants(courant);
+  matchs[matchs.length - 1].nom = 'Finale du tableau des perdants';
+
+  // Finales.
+  const [d1, d2] = tours[tours.length - 1];
+  const m1 = ajouter('Match des perdants des 1/2 finales', 'finales', 1, { p: d1 }, { p: d2 });
+  const m2 = ajouter('Barrage', 'finales', 2, { p: m1 }, courant[0]);
+  ajouter('Petite finale (3e place)', 'finales', 3, { v: m1 }, { v: m2 });
+  ajouter('Finale', 'finales', 3, { v: d1 }, { v: d2 });
+
+  const t: Individuel = { type: 'individuel', lutteurs, matchs, graine, gainsCombats: { medailles: 0, dollars: 0 }, recompense: null };
+  majIndividuel(t);
+  return t;
+}
+
+const perdantI = (m: MatchI) => (m.vainqueur === null ? null : m.vainqueur === PERSONNE ? PERSONNE : m.vainqueur === m.a ? m.b : m.a);
+// Combat sans adversaire (exemption) : réglé tout seul, sans combat.
+export const exemption = (m: MatchI) => m.a === PERSONNE || m.b === PERSONNE;
+
+// Place les lutteurs connus et règle les exemptions. Les sources pointent toujours vers des
+// combats précédents : un seul passage dans l'ordre suffit.
+export function majIndividuel(t: Individuel) {
+  const val = (s: Source): number | null =>
+    s === null ? PERSONNE : 'j' in s ? s.j : 'v' in s ? t.matchs[s.v].vainqueur : perdantI(t.matchs[s.p]);
+  for (const m of t.matchs) {
+    if (m.vainqueur !== null) continue;
+    m.a = val(m.sa);
+    m.b = val(m.sb);
+    if (m.a !== null && m.b !== null && exemption(m)) m.vainqueur = m.a === PERSONNE ? m.b : m.a;
+  }
+}
+
+export const pretI = (m: MatchI) => m.a !== null && m.b !== null && m.a >= 0 && m.b >= 0 && m.vainqueur === null;
+export const avecJoueurI = (m: MatchI) => m.a === 0 || m.b === 0;
+
+export function prochainMatchI(t: Individuel): number | null {
+  const i = t.matchs.findIndex(pretI);
+  return i < 0 ? null : i;
+}
+
+export function enregistrerI(t: Individuel, i: number, vainqueur: number, detail: string) {
+  const m = t.matchs[i];
+  if (!m || !pretI(m) || (vainqueur !== m.a && vainqueur !== m.b)) throw new Error(`Résultat impossible pour le combat ${i}`);
+  m.vainqueur = vainqueur;
+  m.detail = detail;
+  majIndividuel(t);
+}
+
+// Simule les combats sans le joueur jusqu'à son prochain combat (ou jusqu'à la fin).
+export function avancerI(t: Individuel, defs: (i: number) => DefLutteur, niveau: Niveau): number | null {
+  for (let k = prochainMatchI(t); k !== null; k = prochainMatchI(t)) {
+    const m = t.matchs[k];
+    if (avecJoueurI(m)) return k;
+    const r = simulerCombat(defs(m.a!), defs(m.b!), t.graine * 31 + k + 1, niveau);
+    enregistrerI(t, k, r.vainqueur === 0 ? m.a! : m.b!, r.detail);
+  }
+  return null;
+}
+
+export const finieI = (t: Individuel) => prochainMatchI(t) === null;
+
+// Lutteurs exemptés du premier tour.
+export const exemptes = (t: Individuel) =>
+  t.matchs.filter((m) => m.tableau === 'principal' && m.tour === 1 && (m.sa === null || m.sb === null))
+    .map((m) => (m.a === PERSONNE ? m.b : m.a)).filter((i): i is number => i !== null && i >= 0);
+
+// Le joueur a-t-il perdu au moins un combat ? (utile pour « gagner sans passer par les perdants »)
+export const joueurInvaincu = (t: Individuel) =>
+  t.matchs.every((m) => !avecJoueurI(m) || m.vainqueur === null || m.vainqueur === 0 || exemption(m));
+
+// Classement final : 1 (finale), 2, 3 (petite finale), 4, 5 (perdant du barrage), puis les
+// éliminés du tableau des perdants, du dernier tour au premier (ex aequo par tour).
+export function placesI(t: Individuel): Map<number, number> {
+  const p = new Map<number, number>();
+  if (!finieI(t)) return p;
+  const M = t.matchs;
+  const n = M.length;
+  const [f, pf, barrage] = [M[n - 1], M[n - 2], M[n - 3]];
+  p.set(f.vainqueur!, 1);
+  p.set(perdantI(f)!, 2);
+  p.set(pf.vainqueur!, 3);
+  p.set(perdantI(pf)!, 4);
+  if (perdantI(barrage)! >= 0) p.set(perdantI(barrage)!, 5);
+  let place = p.size + 1;
+  const toursP = [...new Set(M.filter((m) => m.tableau === 'perdants').map((m) => m.tour))].sort((x, y) => y - x);
+  for (const tr of toursP) {
+    const elimines = M.filter((m) => m.tableau === 'perdants' && m.tour === tr && !exemption(m)).map((m) => perdantI(m)!)
+      .filter((i) => i >= 0 && !p.has(i));
+    for (const i of elimines) p.set(i, place);
+    place += elimines.length;
+  }
+  return p;
+}
+
 // ---------- Tournoi par équipe ----------
 
 export interface TournoiEquipe {
@@ -191,7 +382,9 @@ export function enregistrerDuel(t: TournoiEquipe, i: number, gagne: boolean, det
 
 // ---------- Inscription et gains ----------
 
-export function payerInscription(c: Collection, type: 'competition' | 'equipe'): string | null {
+export type Tournoi = Competition | TournoiEquipe | Individuel;
+
+export function payerInscription(c: Collection, type: 'individuel' | 'competition' | 'equipe'): string | null {
   const prix = T[type].inscription;
   if (c.dollars < prix) return `L'inscription coûte ${prix} $ (tu as ${c.dollars} $).`;
   c.dollars -= prix;
@@ -199,7 +392,7 @@ export function payerInscription(c: Collection, type: 'competition' | 'equipe'):
 }
 
 // Combat du joueur gagné dans un tournoi : +1 médaille (et les $ d'un palier franchi).
-export function gagnerCombatTournoi(c: Collection, t: Competition | TournoiEquipe) {
+export function gagnerCombatTournoi(c: Collection, t: Tournoi) {
   const g = gagnerMedailles(c, T.medaillesParCombatGagne);
   t.gainsCombats.medailles += g.medailles;
   t.gainsCombats.dollars += g.dollars;
@@ -207,10 +400,15 @@ export function gagnerCombatTournoi(c: Collection, t: Competition | TournoiEquip
 
 // Gains de fin (une seule fois) : médailles et $ de la place, booster rare au vainqueur.
 // Le booster montre aussi les médailles déjà gagnées pendant les combats.
-export function recompenserTournoi(c: Collection, t: Competition | TournoiEquipe, hasard: Hasard): Booster[] {
+export function recompenserTournoi(c: Collection, t: Tournoi, hasard: Hasard): Booster[] {
   if (t.recompense) return t.recompense;
   let medailles = 0, dollars = 0, premier = false;
-  if (t.type === 'competition') {
+  if (t.type === 'individuel') {
+    const place = placesI(t).get(0) ?? 99;
+    medailles = I.medailles[place] ?? 0;
+    dollars = I.dollars[place] ?? 0;
+    premier = place === 1;
+  } else if (t.type === 'competition') {
     const place = places(t).get(0) ?? 6;
     medailles = T.competition.medailles[place] ?? 0;
     dollars = T.competition.dollars[place] ?? 0;
