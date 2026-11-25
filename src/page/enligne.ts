@@ -95,6 +95,7 @@ export interface Presence {
   ab: boolean; // abandon
   rv: boolean; // demande de revanche
   ck: string | null; // contrôle : résumé de l'état après le dernier tour
+  jt?: string; // jeton tiré au hasard : départage deux joueurs qui ont le même rôle
 }
 
 export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; au?: boolean }): Presence {
@@ -184,16 +185,18 @@ export class Duel {
   private ecouteurs = new Set<(v: Vue) => void>();
   private arret: () => void;
   vue: Vue;
+  role: Role; // peut changer : voir corrigerRole
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
   private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; au?: boolean };
 
   constructor(
-    private salle: Salle, readonly role: Role,
+    private salle: Salle, role: Role,
     depart?: Presence | null, private sauvegarder: (p: Presence) => void = () => undefined,
     ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean } = {},
   ) {
+    this.role = role;
     this.ident = {
       mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null,
       nc: ident.niveauCompte, rp: role === 'hote' ? !!ident.rapide : undefined,
@@ -204,6 +207,7 @@ export class Duel {
         nc: this.ident.nc ?? depart.nc, rp: role === 'hote' ? depart.rp ?? this.ident.rp : undefined,
       }
       : presenceVide(role, 0, this.ident);
+    this.moiP.jt ??= nouveauSel();
     this.ident.au = this.moiP.au;
     this.vue = this.vueVide();
     this.arret = salle.surChangement(() => this.avancer());
@@ -310,9 +314,30 @@ export class Duel {
     for (const f of this.ecouteurs) f(v);
   }
 
+  // Deux joueurs avec le même rôle (par exemple l'hôte a quitté la salle puis l'a rejointe avec le
+  // code, donc comme invité) : personne n'est en face, le combat ne démarrerait jamais. Le jeton le
+  // plus petit prend le rôle d'hôte, l'autre celui d'invité ; celui qui change repart d'une manche
+  // neuve (il rechoisit son lutteur).
+  private corrigerRole(): boolean {
+    const autres = this.salle.pairs().map((p) => lirePresence(p.presence)).filter((p): p is Presence => !!p);
+    if (autres.some((p) => p.role !== this.role)) return false;
+    const meme = autres.find((p) => p.role === this.role);
+    if (!meme) return false;
+    const voulu: Role = (this.moiP.jt ?? '') < (meme.jt ?? '') ? 'hote' : 'invite';
+    if (voulu === this.role) return false;
+    this.role = voulu;
+    this.ident.mo = voulu === 'hote' ? this.ident.mo ?? 'base' : null;
+    this.ident.rp = voulu === 'hote' ? !!this.ident.rp : undefined;
+    this.moiP = { ...presenceVide(voulu, Math.max(this.moiP.m, meme.m), this.ident), jt: this.moiP.jt };
+    this.secret = null;
+    this.publier();
+    return true;
+  }
+
   // Recalcule tout à partir des deux présences. Appelé à chaque changement.
   avancer(): void {
     if (this.enCours) return;
+    this.corrigerRole();
     const v = this.vueVide();
     let ami = this.ami();
     v.amiPresent = !!ami;

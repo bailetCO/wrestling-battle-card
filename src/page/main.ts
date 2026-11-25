@@ -2952,7 +2952,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide
   if (location.hash) history.replaceState(null, '', location.pathname);
   duel = new Duel(salle, role, depart, (p) => {
     try {
-      localStorage.setItem(clePresence(code, role), JSON.stringify(p));
+      localStorage.setItem(clePresence(code, p.role), JSON.stringify(p));
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
@@ -2978,6 +2978,17 @@ let minuteurAbsence: number | undefined;
 function rafraichirLigne(v: Vue) {
   vueLigne = v;
   if (mode !== 'ligne') return;
+  // Le rôle peut changer (ami revenu dans la salle avec le code) : on suit le duel.
+  if (duel && HUMAIN !== (duel.role === 'hote' ? 0 : 1)) {
+    HUMAIN = duel.role === 'hote' ? 0 : 1;
+    ORDI = HUMAIN === 0 ? 1 : 0;
+    toursAffiches = -1;
+    try {
+      localStorage.setItem(CLE_SESSION, JSON.stringify({ code: codeSalle, role: duel.role }));
+    } catch {
+      // pas de sauvegarde possible
+    }
+  }
   // Absence de l'ami pendant le combat
   if (v.phase === 'combat' && !v.amiPresent) absentDepuis ??= Date.now();
   else absentDepuis = null;

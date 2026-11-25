@@ -371,6 +371,10 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Lutteur de test **Cocoach** : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
 - Collection, réglages de test : « +10 médailles », « +50 $ », mode test (toutes les cartes), ouvrir un booster.
 
+### Salle en ligne : retour d'un joueur
+
+- Si un joueur quitte la salle puis la rejoint avec le code (il arrive alors comme invité, même s'il l'avait créée), les deux joueurs se retrouvent avec le même rôle. Le jeu le détecte et rétablit tout seul un hôte et un invité (départage par un jeton tiré au hasard) ; celui qui change de rôle rechoisit son lutteur, et le combat démarre normalement. S'il devient l'hôte, la salle repasse en mode de base, sans combat rapide.
+
 ### Combat automatique
 
 - À partir du niveau de compte 3, un bouton « ⚡ Combat auto » apparaît à côté de chaque bouton de combat contre l'ordinateur (arène, combat rapide, tournois, revanche, adversaire suivant). Avant, il est affiché verrouillé.

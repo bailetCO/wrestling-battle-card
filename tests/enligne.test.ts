@@ -239,3 +239,20 @@ test('en ligne : le lutteur de test Cocoach ne peut pas être choisi', async () 
   assert.equal(a.vue.monLutteur, null);
   a.fermer();
 });
+
+test('en ligne : l\'hôte quitte puis revient avec le code (comme invité) : les rôles se rétablissent et le combat démarre', async () => {
+  const salle = salleMemoire();
+  const hote = new Duel(salle('a'), 'hote', null, () => undefined);
+  const invite = new Duel(salle('b'), 'invite', null, () => undefined);
+  await attendreQue(() => hote.vue.amiPresent && invite.vue.amiPresent);
+  hote.fermer(); // il quitte la salle
+  await attendreQue(() => !invite.vue.amiPresent);
+  const revenu = new Duel(salle('c'), 'invite', null, () => undefined); // il revient avec le code
+  await attendreQue(() => revenu.vue.amiPresent && invite.vue.amiPresent);
+  assert.notEqual(revenu.role, invite.role);
+  revenu.choisirLutteur('usa', undefined);
+  invite.choisirLutteur('europe', undefined);
+  await attendreQue(() => revenu.vue.phase === 'combat' && invite.vue.phase === 'combat');
+  assert.equal(revenu.vue.graine, invite.vue.graine);
+  revenu.fermer(); invite.fermer();
+});
