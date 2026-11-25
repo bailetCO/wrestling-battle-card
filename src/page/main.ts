@@ -845,13 +845,15 @@ const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS];
 
 // Les groupes de cartes de la collection, selon le tri choisi ; les Champions du Monde en premier
 // (verrouillés tant qu'ils ne sont pas gagnés en fin de saison ou achetés 200 $).
-// Sans aucun Champion du Monde, leur groupe est tout en bas ; dès le premier, il remonte en haut et
-// ses cartes à gagner sont cachées derrière un bouton « Voir plus ».
+// Sans aucun Champion du Monde, leur groupe est tout en bas ; dès le premier, il remonte en haut (tris
+// par rareté seulement) et ses cartes à gagner sont cachées derrière un bouton « Voir plus ».
 let championsDeplies = false;
 function groupesCollection(): { titre: string; liste: DefLutteur[]; replie?: boolean }[] {
   const aucun = !CHAMPIONS.some((l) => possede(collection, l.id));
   const champions = { titre: 'Champions du Monde', liste: CHAMPIONS, replie: !aucun && !championsDeplies };
-  return aucun ? [...groupesBase(), champions] : [champions, ...groupesBase()];
+  // En haut seulement dans les tris par rareté (de base ou actuelle) ; ailleurs, tout en bas.
+  const enHaut = !aucun && (collection.tri === 'rarete' || collection.tri === 'niveau');
+  return enHaut ? [champions, ...groupesBase()] : [...groupesBase(), champions];
 }
 
 function groupesBase(): { titre: string; liste: DefLutteur[] }[] {
