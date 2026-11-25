@@ -254,6 +254,11 @@ function miroir(q: Pose): Pose {
 }
 
 // Drapeau d'une nation, dans un rectangle.
+// Petit drapeau d'une nation, en SVG autonome (arène, listes).
+export function drapeauSVG(n: Nation): string {
+  return `<svg class="drapeau" viewBox="0 0 30 20" aria-hidden="true">${drapeau(n, 0, 0, 30, 20)}</svg>`;
+}
+
 function drapeau(n: Nation, x: number, y: number, w: number, h: number): string {
   const cx = x + w / 2, cy = y + h / 2, m = Math.min(w, h);
   const bandes = (cs: string[]) => cs.map((c, i) => `<rect x="${x}" y="${y + (i * h) / cs.length}" width="${w}" height="${h / cs.length + 0.3}" fill="${c}"/>`).join('');

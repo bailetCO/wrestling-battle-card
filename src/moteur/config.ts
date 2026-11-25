@@ -345,6 +345,18 @@ export const REGLES = {
 
   tombe: { plusEndurance: 3 / 5, egalite: 2 / 5, moinsEndurance: 1 / 5 },
 
+  // Arène : l'ordinateur représente une nation à la fois (ordre : NATIONS.ordreArene). 5 adversaires
+  // de plus en plus forts, la légendaire en boss ; niveau de l'ordinateur selon le rang.
+  // Après une défaite, on réaffronte le même lutteur. Nation battue : 2 ou 3 boosters et 3 médailles,
+  // et 1 chance sur 3 de gagner la carte du boss (qu'on peut réaffronter ensuite pour retenter).
+  // Chaque victoire : +1 médaille (economie.medaillesParVictoire.arene) ; consolation inchangée.
+  arene: {
+    niveaux: ['facile', 'facile', 'normal', 'normal', 'fort'] as const,
+    boostersParNation: [2, 3], // tirés au hasard entre ces deux nombres
+    medaillesParNation: 3,
+    chanceCarteBoss: 1 / 3,
+  },
+
   // Combat rapide : une seule période ; victoire à 10 points d'écart, par tombé, ou aux points à la
   // fin de la période. Égalité : mort subite, le premier qui marque gagne (au bout de
   // `mortSubiteMax` tours sans point, on départage comme une période normale).

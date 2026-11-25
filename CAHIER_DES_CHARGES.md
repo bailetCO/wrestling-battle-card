@@ -454,6 +454,15 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Mesures (`npm run niveaux`, 1 000 combats par case, cartes au hasard) : joueur au hasard (débutant) 69 % contre le facile, 51 % contre le normal, 16 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 51 % contre le fort. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
 - Le choix du facile au lieu du hasard pur est voulu : un ordinateur qui joue entièrement au hasard laisse 50 % de victoires à un joueur au hasard, pas 70 %.
 
+### Arène par nation
+
+- L'ordinateur représente une nation à la fois, dans cet ordre (de la plus abordable à la plus forte) : Afrique, Ouzbékistan, Kirghizistan, Iran, Géorgie, Turquie, Europe, USA, Russie, Azerbaïdjan, Kazakhstan, Japon (champ `ordreArene` de NATIONS).
+- 5 adversaires par nation, de plus en plus forts : la commune la plus faible, la commune la plus forte, la meilleure rare, la meilleure épique, puis la légendaire en boss. Ordinateur facile pour les 2 premiers, normal pour les 3e et 4e, fort pour le boss.
+- Le joueur choisit son lutteur à chaque combat. Après une défaite, il réaffronte le même adversaire, sans recommencer la nation. La progression est sauvegardée.
+- +1 médaille par victoire. Nation battue : 2 ou 3 boosters (au hasard), 3 médailles, et 1 chance sur 3 de gagner la carte du boss. Le booster de consolation (toutes les 2 défaites d'affilée) est gardé.
+- Les boss des nations battues peuvent être réaffrontés (ordinateur fort) : +1 médaille et 1 chance sur 3 de gagner leur carte à chaque victoire.
+- Objectif : battre les 12 nations. Le bonus du tutoriel donne 2 boosters en plus à la prochaine victoire dans l'arène.
+
 ### Combat rapide
 
 - Une seule période. Victoire à 10 points d'écart, par tombé, ou aux points à la fin de la période.

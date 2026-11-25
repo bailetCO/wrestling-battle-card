@@ -20,9 +20,10 @@ import {
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
-import { portraitSVG } from './portrait';
+import { drapeauSVG, portraitSVG } from './portrait';
 import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
 import { ouvrirBooster } from './collection';
+import { PAR_NATION, adversairesDe, areneTerminee, etapeArene, nationsArene, victoireArene, victoireBossRejoue } from './arene';
 import {
   NOM_MATCH, avancer, creerCompetition, creerTournoiEquipe, enregistrer, enregistrerDuel, equipeFinie,
   finie, gagnerCombatTournoi, payerInscription, places, prochainDuel, recompenserTournoi, scoreEquipe,
@@ -60,6 +61,9 @@ let idPortrait = 0;
 let collection: Collection = charger();
 let recompenseDonnee = false; // une seule récompense par combat
 let tuto = false; // combat guidé du tutoriel en cours
+// Combat d'arène en cours : progression par nation, ou revanche contre le boss d'une nation battue.
+let areneCtx: { type: 'progression' } | { type: 'boss'; nation: string } | null = null;
+let bossChoisi: string | null = null; // nation dont on va réaffronter le boss (choix du lutteur)
 let enTournoi: CleMatch | number | null = null; // combat du joueur dans un tournoi (clé du combat ou n° du duel)
 let bonusCeCombat = false; // combat d'arène qui suit le tutoriel : boosters doublés
 // Boosters gagnés pendant le combat solo (ou message de consolation), affichés à la fin.
@@ -230,7 +234,6 @@ function choixNiveau(niv: Niveau): string {
 
 function ecranCombatMenu() {
   partie = null;
-  const niv = collection.niveau;
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Combat')}
@@ -240,10 +243,9 @@ function ecranCombatMenu() {
       </nav>
       <section class="bloc">
         <h2>Arène</h2>
-        ${collection.bonusTutoriel ? '<p class="bandeau-bonus">Tutoriel terminé : ton prochain combat d\'arène rapporte 2 fois plus de boosters en cas de victoire.</p>' : ''}
-        <p>Affronte l'ordinateur avec un lutteur de ta collection. Chaque victoire ouvre un booster et rapporte 1 médaille ; toutes les 2 défaites d'affilée, un booster de consolation.</p>
-        ${choixNiveau(niv)}
-        <a class="principal lien-bouton" href="#arene">Choisir mon lutteur</a>
+        ${collection.bonusTutoriel ? '<p class="bandeau-bonus">Tutoriel terminé : ta prochaine victoire dans l\'arène rapporte 2 boosters en bonus.</p>' : ''}
+        <p>${areneTerminee(collection) ? 'Arène terminée : réaffronte les boss pour gagner leur carte.' : `En cours : <b>${echap(etapeArene(collection).nation!.nom)}</b>, adversaire ${etapeArene(collection).rang + 1}/${PAR_NATION}.`} Bats les nations une à une : 5 lutteurs chacune, de plus en plus forts, le dernier est le boss. +1 médaille par victoire ; nation battue : 2 ou 3 boosters et ${R_.arene.medaillesParNation} médailles. Toutes les 2 défaites d'affilée, un booster de consolation.</p>
+        <a class="principal lien-bouton" href="#arene">Aller dans l'arène</a>
       </section>
       <section class="bloc">
         <h2>Combat rapide</h2>
@@ -268,6 +270,47 @@ function ecranCombatMenu() {
 }
 
 // Arène : choix du lutteur parmi ses cartes.
+const NOM_NIVEAU: Record<Niveau, string> = { facile: 'Facile', normal: 'Normal', fort: 'Fort' };
+
+// En-tête de l'arène : la nation en cours, ses 5 adversaires et l'adversaire à battre.
+function blocArene(): string {
+  if (bossChoisi) {
+    const n = nationsArene().find((x) => x.id === bossChoisi)!;
+    const boss = trouverLutteur(adversairesDe(n.id)[PAR_NATION - 1]);
+    return `<section class="bloc arene-nation">${drapeauSVG(n.id)}<h2>Revanche : ${echap(boss.nom)}</h2>
+      <p>Boss de ${echap(n.nom)}, ordinateur fort. Victoire : +1 médaille et 1 chance sur 3 de gagner sa carte.</p>
+      <button class="lien" data-annuler-boss>Revenir à l'arène</button></section>`;
+  }
+  const e = etapeArene(collection);
+  const battues = e.nationsBattues;
+  const boss = battues.length
+    ? `<section class="bloc"><h2>Boss à réaffronter</h2><p>1 chance sur 3 de gagner sa carte à chaque victoire.</p>
+        <div class="boss-liste">${battues.map((n) => {
+          const b = trouverLutteur(adversairesDe(n.id)[PAR_NATION - 1]);
+          return `<button class="boss" data-boss="${n.id}">${drapeauSVG(n.id)}<span><b>${echap(b.nom)}</b><small>${echap(n.nom)}${possede(collection, b.id) ? ' · carte obtenue' : ''}</small></span></button>`;
+        }).join('')}</div></section>`
+    : '';
+  if (!e.nation) {
+    return `<section class="bloc arene-nation"><h2>🏆 Arène terminée !</h2><p>Tu as battu les ${nationsArene().length} nations. Réaffronte leurs boss pour gagner leur carte.</p></section>${boss}`;
+  }
+  const ids = adversairesDe(e.nation.id);
+  const etapes = ids.map((id, i) => {
+    const l = trouverLutteur(id);
+    const etat = i < e.rang ? 'battu' : i === e.rang ? 'actuel' : 'a-venir';
+    return `<li class="etape-arene ${etat}"><span class="vignette">${i <= e.rang ? portrait(l) : '<span class="mystere">?</span>'}</span>
+      <small>${i === PAR_NATION - 1 ? 'Boss' : `${i + 1}`}</small></li>`;
+  }).join('');
+  const adv = trouverLutteur(e.adversaire!);
+  return `
+    <section class="bloc arene-nation">
+      <div class="arene-titre">${drapeauSVG(e.nation.id)}<h2>${echap(e.nation.nom)}</h2><small>Nation ${nationsArene().indexOf(e.nation) + 1}/${nationsArene().length}</small></div>
+      <ol class="etapes-arene">${etapes}</ol>
+      <p class="prochain">${e.rang === PAR_NATION - 1 ? '👑 Boss : ' : 'Adversaire : '}<b>${echap(adv.nom)}</b> · ${NOM_RARETE[adv.rarete]} · ordinateur ${NOM_NIVEAU[e.niveau].toLowerCase()}</p>
+      <p class="note">Bats les 5 lutteurs pour gagner 2 ou 3 boosters et ${R_.arene.medaillesParNation} médailles (+1 médaille par victoire). Le boss : 1 chance sur 3 de gagner sa carte. Choisis ton lutteur ci-dessous.</p>
+    </section>
+    ${boss}`;
+}
+
 function ecranArene(rapide = false) {
   partie = null;
   const miens = LUTTEURS.filter((l) => possede(collection, l.id));
@@ -281,9 +324,11 @@ function ecranArene(rapide = false) {
   const puces = nations.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
   app.innerHTML = `
     <main class="choix">
-      ${enTete(rapide ? 'Combat rapide' : 'Arène', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
-      ${rapide ? `<div class="marge">${choixNiveau(collection.niveau)}</div>` : ''}
-      ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : boosters doublés si tu gagnes ce combat.</p>' : ''}
+      ${rapide
+        ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
+           <div class="marge">${choixNiveau(collection.niveau)}</div>`
+        : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
+      ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
       <div class="defile" tabindex="0" aria-label="Tes lutteurs">${cartes}</div>
       <div class="defile-nav">
@@ -314,6 +359,7 @@ function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-lutteur]').forEach((b) =>
     b.addEventListener('click', () => {
       const id = b.dataset.lutteur!;
+      if (!rapide) return lancerArene(id);
       const autres = LUTTEURS.filter((l) => l.id !== id);
       const ordi = autres[Math.floor(Math.random() * autres.length)].id;
       lancer(id, ordi, nouvelleGraine(), rapide);
@@ -327,6 +373,11 @@ function ecranArene(rapide = false) {
       ecranArene(rapide);
     }),
   );
+  app.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((b) =>
+    b.addEventListener('click', () => { bossChoisi = b.dataset.boss!; ecranArene(); }),
+  );
+  app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { bossChoisi = null; ecranArene(); });
+  if (areneTerminee(collection) && !bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
   window.scrollTo(0, 0);
 }
@@ -1276,12 +1327,28 @@ function ecranEchange(v: VueEchange, connecte: boolean) {
   app.querySelector('.retour')?.addEventListener('click', sortir);
 }
 
-function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false) {
+// Combat d'arène : l'adversaire et le niveau de l'ordinateur viennent de la progression
+// (ou du boss choisi pour une revanche).
+function lancerArene(idHumain: string) {
+  if (bossChoisi) {
+    const nation = bossChoisi;
+    lancer(idHumain, adversairesDe(nation)[PAR_NATION - 1], nouvelleGraine(), false, 'fort');
+    areneCtx = { type: 'boss', nation };
+    return;
+  }
+  const e = etapeArene(collection);
+  if (!e.adversaire) return ecranArene();
+  lancer(idHumain, e.adversaire, nouvelleGraine(), false, e.niveau);
+  areneCtx = { type: 'progression' };
+}
+
+function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
-  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
+  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
+  areneCtx = null;
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1413,7 +1480,7 @@ function ecranFinTutoriel() {
         <h2>${gagne ? 'Période gagnée !' : 'Période perdue, mais tu as compris le principe !'}</h2>
         <p class="tuto-score">${score[0]} - ${score[1]}</p>
         <p>Un vrai combat se joue en 3 périodes : gagne-en 2, ou fais un tombé. Sans le coach, tu ne verras pas le choix de l'adversaire : à toi de deviner son jeu.</p>
-        <p><b>Bonus :</b> ton prochain combat d'arène rapporte 2 fois plus de boosters si tu gagnes.</p>
+        <p><b>Bonus :</b> ta prochaine victoire dans l'arène rapporte 2 boosters en plus.</p>
       </section>
       <div class="fin-boutons marge">
         <a class="principal lien-bouton" href="#arene">Combattre l'ordinateur</a>
@@ -2055,6 +2122,7 @@ function ecranFin() {
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
+  const enArene = !e.rapide && areneCtx !== null;
   if (!recompenseDonnee) {
     recompenseDonnee = true;
     const x = bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
@@ -2066,8 +2134,16 @@ function ecranFin() {
         collection.victoires++;
         paquetSolo = { titre: 'Victoire', boosters: joindreGains([], gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
       }
+    } else if (gagne && areneCtx?.type === 'boss') {
+      const r = victoireBossRejoue(collection, areneCtx.nation, Math.random);
+      paquetSolo = { titre: r.carteBoss ? 'Victoire et carte du boss gagnée' : 'Victoire', boosters: r.boosters, ouvert: false };
     } else if (gagne) {
-      paquetSolo = { titre: x > 1 ? 'Victoire · boosters doublés' : 'Victoire', boosters: recompenser(collection, 'arene', Math.random, x), ouvert: false };
+      // Arène : +1 médaille ; nation battue : 2 ou 3 boosters, 3 médailles, peut-être la carte du boss.
+      // Bonus du tutoriel : des boosters en plus sur cette victoire.
+      const bonus = x > 1 ? R_.collection.boostersParVictoire.arene * x : 0;
+      const r = victoireArene(collection, Math.random, bonus);
+      const titre = r.nationBattue ? `${r.nationBattue.nom} battue${r.carteBoss ? ' et carte du boss gagnée' : ''}` : bonus ? 'Victoire · bonus du tutoriel' : 'Victoire';
+      paquetSolo = { titre, boosters: r.boosters, ouvert: false };
     } else {
       const conso = consoler(collection, Math.random);
       if (conso) paquetSolo = { titre: 'Booster de consolation', boosters: [conso], ouvert: false };
@@ -2088,14 +2164,25 @@ function ecranFin() {
       </section>
       ${booster}
       <div class="fin-boutons">
-        <button class="principal" data-revanche>Revanche</button>
-        <button class="secondaire" data-changer>Changer de lutteur</button>
+        ${enArene && gagne && areneCtx?.type === 'progression'
+          ? `${etapeArene(collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>` : ''}`
+          : `<button class="principal" data-revanche>${enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>`}
+        <button class="secondaire" data-changer>${enArene ? 'Retour à l\'arène' : 'Changer de lutteur'}</button>
       </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
   activerReflets(app);
-  app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide));
-  app.querySelector('[data-changer]')!.addEventListener('click', () => ecranArene(e.rapide));
+  const ctx = areneCtx;
+  app.querySelector('[data-revanche]')?.addEventListener('click', () => {
+    if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide);
+    if (ctx?.type === 'boss') bossChoisi = ctx.nation;
+    lancerArene(idHumain);
+  });
+  app.querySelector('[data-suivant-arene]')?.addEventListener('click', () => { bossChoisi = null; lancerArene(idHumain); });
+  app.querySelector('[data-changer]')!.addEventListener('click', () => {
+    if (ctx?.type === 'boss' && !gagne) bossChoisi = ctx.nation; else bossChoisi = null;
+    ecranArene(e.rapide);
+  });
   app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetSolo && revelerPaquet(paquetSolo, ecranFin));
   window.scrollTo(0, 0);
 }
