@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, NATIONS, REGLES, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, LUTTEURS, NATIONS, REGLES, autoOuvert, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -394,6 +394,7 @@ function ecranArene(rapide = false) {
   const cartes = miens.map((l) => {
     const boutons = `
       <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
+      ${boutonAuto('data-lutteur-auto', l.id)}
       <button class="secondaire cl-deck" data-deck="${l.id}">Régler les actions${deckDe(collection, l.id) ? ' (perso)' : ''}</button>`;
     return `<div class="emplacement" data-nation="${l.nation}">${carteJoueur(l, boutons)}</div>`;
   }).join('');
@@ -433,15 +434,14 @@ function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-deck]').forEach((b) =>
     b.addEventListener('click', () => fenetreDeck(trouverLutteur(b.dataset.deck!))),
   );
-  app.querySelectorAll<HTMLButtonElement>('[data-lutteur]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const id = b.dataset.lutteur!;
-      if (!rapide) return lancerArene(id);
-      const autres = LUTTEURS.filter((l) => l.id !== id);
-      const ordi = autres[Math.floor(Math.random() * autres.length)].id;
-      lancer(id, ordi, nouvelleGraine(), rapide);
-    }),
-  );
+  const lutter = (id: string, auto: boolean) => {
+    if (!rapide) return lancerArene(id, auto);
+    const autres = LUTTEURS.filter((l) => l.id !== id);
+    const ordi = autres[Math.floor(Math.random() * autres.length)].id;
+    lancer(id, ordi, nouvelleGraine(), rapide, collection.niveau, auto);
+  };
+  app.querySelectorAll<HTMLButtonElement>('[data-lutteur]').forEach((b) => b.addEventListener('click', () => lutter(b.dataset.lutteur!, false)));
+  app.querySelectorAll<HTMLButtonElement>('[data-lutteur-auto]').forEach((b) => b.addEventListener('click', () => lutter(b.dataset.lutteurAuto!, true)));
   app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
     b.addEventListener('click', () => {
       const n = b.dataset.niveau;
@@ -1081,7 +1081,7 @@ function ecranIndividuel(t: Individuel) {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi individuel', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `${t.lutteurs.length} lutteurs · ton lutteur : ${echap(trouverLutteur(t.lutteurs[0]).nom)}`, '#tournois')}
-      ${m ? `<section class="bloc prochain-combat"><h2>${echap(nomMatch(m))}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
+      ${m ? `<section class="bloc prochain-combat"><h2>${echap(nomMatch(m))}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button>${boutonAuto('data-combattre-auto')}</section>` : ''}
       ${fin ? sectionFinTournoi(t, maPlace === 1 ? 'Tournoi individuel gagné' : 'Tournoi individuel') : ''}
       ${classement}
       <section class="bloc tableau-tournoi"><h2>Tableau principal</h2>
@@ -1095,6 +1095,7 @@ function ecranIndividuel(t: Individuel) {
     </main>`;
   activerReflets(app);
   app.querySelector('[data-combattre]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.lutteurs[0], t.lutteurs[adversaire!]));
+  app.querySelector('[data-combattre-auto]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.lutteurs[0], t.lutteurs[adversaire!], true));
   brancherFinTournoi();
   window.scrollTo(0, 0);
 }
@@ -1122,7 +1123,7 @@ function ecranCompetition(c: Competition) {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Compétition', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `Ton lutteur : ${echap(trouverLutteur(c.lutteurs[0]).nom)}`, '#tournois')}
-      ${prochain ? `<section class="bloc prochain-combat"><h2>${NOM_MATCH[prochain]}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
+      ${prochain ? `<section class="bloc prochain-combat"><h2>${NOM_MATCH[prochain]}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button>${boutonAuto('data-combattre-auto')}</section>` : ''}
       ${fin ? sectionFinTournoi(c, maPlace === 1 ? 'Compétition gagnée' : 'Compétition') : ''}
       ${classement}
       ${tableau(0)}${tableau(1)}
@@ -1130,10 +1131,12 @@ function ecranCompetition(c: Competition) {
       ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
     </main>`;
   activerReflets(app);
-  app.querySelector('[data-combattre]')?.addEventListener('click', () => {
+  const combattre = (auto: boolean) => {
     const m = c.matchs[prochain!];
-    lancerCombatTournoi(prochain!, c.lutteurs[0], c.lutteurs[m.a === 0 ? m.b! : m.a!]);
-  });
+    lancerCombatTournoi(prochain!, c.lutteurs[0], c.lutteurs[m.a === 0 ? m.b! : m.a!], auto);
+  };
+  app.querySelector('[data-combattre]')?.addEventListener('click', () => combattre(false));
+  app.querySelector('[data-combattre-auto]')?.addEventListener('click', () => combattre(true));
   brancherFinTournoi();
   window.scrollTo(0, 0);
 }
@@ -1157,13 +1160,14 @@ function ecranEquipe(t: TournoiEquipe) {
       <section class="bloc score-equipe"><span>${moi}</span><i>–</i><span>${eux}</span></section>
       <section class="bloc"><p class="bonus-nation">🚩 Ton bonus de nation : ${texteBonusNation(t.mes)}</p>
         <p class="bonus-nation adverse">🚩 ${echap(t.nomAdverse)} : ${texteBonusNation(t.leurs)}</p></section>
-      ${prochain !== null ? `<section class="bloc prochain-combat"><h2>Duel ${prochain + 1}</h2><p><b class="moi">${echap(trouverLutteur(t.mes[prochain]).nom)}</b> contre ${echap(trouverLutteur(t.leurs[prochain]).nom)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
+      ${prochain !== null ? `<section class="bloc prochain-combat"><h2>Duel ${prochain + 1}</h2><p><b class="moi">${echap(trouverLutteur(t.mes[prochain]).nom)}</b> contre ${echap(trouverLutteur(t.leurs[prochain]).nom)}</p><button class="principal" data-combattre>Combattre</button>${boutonAuto('data-combattre-auto')}</section>` : ''}
       ${fin ? sectionFinTournoi(t, gagne ? 'Tournoi par équipe gagné' : 'Tournoi par équipe') : ''}
       <section class="bloc"><h2>Les duels</h2><ul class="matchs">${duels}</ul></section>
       ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
     </main>`;
   activerReflets(app);
   app.querySelector('[data-combattre]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.mes[prochain!], t.leurs[prochain!]));
+  app.querySelector('[data-combattre-auto]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.mes[prochain!], t.leurs[prochain!], true));
   brancherFinTournoi();
   window.scrollTo(0, 0);
 }
@@ -1195,7 +1199,7 @@ function brancherFinTournoi() {
   });
 }
 
-function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: string) {
+function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: string, auto = false) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
@@ -1213,7 +1217,7 @@ function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: strin
   recompenseDonnee = true; // pas de récompense d'arène
   tuto = false;
   enTournoi = cle;
-  ecranCombat();
+  demarrer(auto);
 }
 
 // Fin d'un combat du joueur dans un tournoi : on note le résultat, +1 médaille s'il gagne.
@@ -1238,11 +1242,12 @@ function finCombatTournoi(abandon: boolean) {
   }
   if (gagne) {
     gagnerCombatTournoi(collection, tournoi);
-    histoire({ type: 'victoire', nation: trouverLutteur(partie.idOrdi).nation, niveau: partie.niveau });
+    histoire({ type: 'victoire', nation: trouverLutteur(partie.idOrdi).nation, niveau: partie.niveau, auto: combatEnAuto });
   }
   sauver(collection);
   sauverTournoi();
   const lutteur = e.joueurs[gagne ? HUMAIN : ORDI].def;
+  const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   partie = null;
   app.innerHTML = `
     <main class="fin">
@@ -1251,9 +1256,11 @@ function finCombatTournoi(abandon: boolean) {
         <div class="verdict-portrait">${portrait(lutteur)}</div>
         <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
         <p>${echap(lutteur.nom)} gagne ${detail}.</p>
+        ${combatEnAuto ? `<p class="hist">${texteAuto()}</p>` : ''}
         ${gagne ? `<p class="recap-gains">${ICONE_MEDAILLE}<b>+${R_.tournoi.medaillesParCombatGagne} médaille</b></p>` : ''}
       </section>
       <div class="fin-boutons"><button class="principal" data-suite-tournoi>Voir le tournoi</button></div>
+      ${anciens ? `<section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>` : ''}
     </main>`;
   app.querySelector('[data-suite-tournoi]')!.addEventListener('click', ecranTournoiEnCours);
   window.scrollTo(0, 0);
@@ -1544,26 +1551,24 @@ function ecranEchange(v: VueEchange, connecte: boolean) {
 
 // Combat d'arène : l'adversaire et le niveau de l'ordinateur viennent de la progression
 // (ou du boss choisi pour une revanche).
-function lancerArene(idHumain: string) {
+function lancerArene(idHumain: string, auto = false) {
   if (bossChoisi) {
     const nation = bossChoisi;
-    lancer(idHumain, adversairesDe(nation)[PAR_NATION - 1], nouvelleGraine(), false, 'fort');
-    areneCtx = { type: 'boss', nation };
+    lancer(idHumain, adversairesDe(nation)[PAR_NATION - 1], nouvelleGraine(), false, 'fort', auto, { type: 'boss', nation });
     return;
   }
   const e = etapeArene(collection);
   if (!e.adversaire) return ecranArene();
-  lancer(idHumain, e.adversaire, nouvelleGraine(), false, e.niveau);
-  areneCtx = { type: 'progression' };
+  lancer(idHumain, e.adversaire, nouvelleGraine(), false, e.niveau, auto, { type: 'progression' });
 }
 
-function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau) {
+function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau, auto = false, ctx: typeof areneCtx = null) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
   partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
-  areneCtx = null;
+  areneCtx = ctx;
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1575,6 +1580,37 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   enTournoi = null;
   bonusEnCours = null;
   bonusCeCombat = rapide ? false : collection.bonusTutoriel;
+  demarrer(auto);
+}
+
+// ---------- Combat automatique ----------
+
+let combatEnAuto = false; // le combat en cours (ou qui vient de finir) a été joué en automatique
+const autoDispo = () => autoOuvert(niveauCompte(collection));
+
+// Bouton « Combat auto » à côté d'un bouton de combat : actif à partir du niveau de compte 3.
+function boutonAuto(attribut: string, valeur = ''): string {
+  return autoDispo()
+    ? `<button class="secondaire bouton-auto" ${attribut}${valeur ? `="${valeur}"` : ''}>⚡ Combat auto</button>`
+    : `<button class="secondaire bouton-auto" disabled>🔒 Combat auto · niveau ${R_.auto.niveauCompteMin}</button>`;
+}
+
+function texteAuto(): string {
+  const p = Math.round(chanceFortAuto(niveauCompte(collection)) * 100);
+  return `⚡ Combat joué en automatique (${p === 0 ? 'comme l\'ordinateur normal' : p === 100 ? 'comme l\'ordinateur fort' : `fort ${p} % du temps, normal sinon`}).`;
+}
+
+// Lance l'écran de combat, ou joue tout le combat d'un coup et montre directement la fin.
+function demarrer(auto: boolean) {
+  combatEnAuto = auto && autoDispo();
+  if (!combatEnAuto || !partie) return ecranCombat();
+  const r = combatAuto(partie.etat, partie.hasard.graine, [{ chanceFort: chanceFortAuto(niveauCompte(collection)) }, { niveau: partie.niveau }]);
+  partie.etat = r.etat;
+  tours = r.tours.map((t) => ({ avant: t.avant, choixHumain: t.choix[0], choixOrdi: t.choix[1], ordiAChange: false, lignes: t.lignes }));
+  for (const t of tours) for (const l of t.lignes) {
+    const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)\.$/);
+    if (m) scoresPeriodes.push([Number(m[1]), Number(m[2])]);
+  }
   ecranCombat();
 }
 
@@ -2347,7 +2383,7 @@ function ecranFin() {
     const x = bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
     if (bonusCeCombat) collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     bonusCeCombat = false;
-    if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: partie.niveau });
+    if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: partie.niveau, auto: combatEnAuto });
     if (e.rapide) {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
       if (gagne) {
@@ -2383,24 +2419,28 @@ function ecranFin() {
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         ${scoresPeriodes.length ? `<p class="hist">${scoresPeriodes.map(([a, b], i) => `Période ${i + 1} : ${a} - ${b}`).join('<br>')}</p>` : ''}
         <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
+        ${combatEnAuto ? `<p class="hist">${texteAuto()}</p>` : ''}
       </section>
       ${booster}
       <div class="fin-boutons">
         ${enArene && gagne && areneCtx?.type === 'progression'
-          ? `${etapeArene(collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>` : ''}`
-          : `<button class="principal" data-revanche>${enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>`}
+          ? `${etapeArene(collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>${boutonAuto('data-suivant-arene-auto')}` : ''}`
+          : `<button class="principal" data-revanche>${enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto')}`}
         <button class="secondaire" data-changer>${enArene ? 'Retour à l\'arène' : 'Changer de lutteur'}</button>
       </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
   activerReflets(app);
   const ctx = areneCtx;
-  app.querySelector('[data-revanche]')?.addEventListener('click', () => {
-    if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide);
+  const revanche = (auto: boolean) => {
+    if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide, partie?.niveau ?? collection.niveau, auto);
     if (ctx?.type === 'boss') bossChoisi = ctx.nation;
-    lancerArene(idHumain);
-  });
+    lancerArene(idHumain, auto);
+  };
+  app.querySelector('[data-revanche]')?.addEventListener('click', () => revanche(false));
+  app.querySelector('[data-revanche-auto]')?.addEventListener('click', () => revanche(true));
   app.querySelector('[data-suivant-arene]')?.addEventListener('click', () => { bossChoisi = null; lancerArene(idHumain); });
+  app.querySelector('[data-suivant-arene-auto]')?.addEventListener('click', () => { bossChoisi = null; lancerArene(idHumain, true); });
   app.querySelector('[data-changer]')!.addEventListener('click', () => {
     if (ctx?.type === 'boss' && !gagne) bossChoisi = ctx.nation; else bossChoisi = null;
     ecranArene(e.rapide);
@@ -2565,7 +2605,7 @@ function rafraichirLigne(v: Vue) {
   if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
 
   if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
-    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}`;
+    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}|${v.autoMoi}|${v.autoAmi}`;
     if (sig !== signatureSalle) ecranSalle(v);
     signatureSalle = sig;
     return;
@@ -2575,6 +2615,11 @@ function rafraichirLigne(v: Vue) {
     fermerFenetre();
     fenetreLigne = '';
     tours = v.tours;
+    scoresPeriodes = [];
+    for (const t of tours) for (const l of t.lignes) {
+      const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)\.$/);
+      if (m) scoresPeriodes.push(HUMAIN === 0 ? [Number(m[1]), Number(m[2])] : [Number(m[2]), Number(m[1])]);
+    }
     return ecranFinLigne();
   }
   // Combat : on ne redessine tout que quand un nouveau tour est joué.
@@ -2669,6 +2714,14 @@ function ecranSalle(v: Vue) {
            ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
            ${v.attente ? echap(v.attente) : ''}</p>
       </header>
+      ${autoDispo() || v.autoAmi ? `<section class="bloc auto-ligne">
+        <label class="case"><input type="checkbox" data-auto-ligne ${v.autoMoi ? 'checked' : ''} ${v.monLutteur || !autoDispo() ? 'disabled' : ''}> ⚡ Combat automatique</label>
+        <p class="note">${!autoDispo() ? `Ton ami propose le combat automatique, ouvert à partir du niveau de compte ${R_.auto.niveauCompteMin}.`
+          : v.autoMoi && v.autoAmi ? 'Vous l\'avez choisi tous les deux : le combat se jouera tout seul, vous verrez directement le résultat.'
+          : v.autoMoi ? 'En attente de ton ami : il doit aussi le cocher, sinon le combat se joue normalement.'
+          : v.autoAmi ? 'Ton ami l\'a coché : coche-le aussi pour un combat automatique.'
+          : 'Il faut que vous le cochiez tous les deux, avant de choisir vos lutteurs.'}</p>
+      </section>` : ''}
       <div class="liste-l">${liste}</div>
       <p class="note">Ton deck personnalisé est utilisé s'il existe (sinon le deck de départ).</p>
       <button class="lien" data-sortir>Quitter la salle</button>
@@ -2676,6 +2729,7 @@ function ecranSalle(v: Vue) {
   app.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) =>
     b.addEventListener('click', () => duel?.choisirLutteur(b.dataset.l!, deckDe(collection, b.dataset.l!), enCollection ? gradeDe(collection, b.dataset.l!) : 1, enCollection ? etoilesDe(collection, b.dataset.l!) : {}, enCollection ? styleDe(collection, b.dataset.l!) : 0)),
   );
+  app.querySelector<HTMLInputElement>('[data-auto-ligne]')?.addEventListener('change', (ev) => duel?.choisirAuto((ev.target as HTMLInputElement).checked));
   app.querySelector('[data-sortir]')!.addEventListener('click', () => {
     oublierSession();
     quitterLigne();
@@ -2769,6 +2823,7 @@ function ecranFinLigne() {
         <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · ${echap(adv())} : ${echap(o.def.nom)} · ${e.tourGlobal} tours · salle ${echap(codeSalle.toUpperCase())}</p>
+        ${v.auto ? '<p class="hist">⚡ Combat joué en automatique : l\'ordinateur a joué pour vous deux, selon vos niveaux de compte.</p>' : ''}
       </section>
       ${booster}
       <div class="fin-boutons">

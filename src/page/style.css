@@ -1149,3 +1149,5 @@ b.moi { color: #ff8a95; }
 .etape-histoire.verrouillee { filter: saturate(.3); opacity: .55; }
 @media (prefers-reduced-motion: reduce) { .bandeau-histoire.pret, .bulle-histoire { animation: none; } }
 .boutons-test { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bouton-auto { margin-top: 6px; }
+.prochain-combat .bouton-auto, .fin-boutons .bouton-auto { width: 100%; }

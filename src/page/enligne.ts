@@ -15,7 +15,7 @@
 // Tout l'historique est dans la présence : après un rechargement, le combat reprend.
 
 import {
-  ACTIONS, apercuInitiative, avecDeck, avecGrade, creerCombat, creerHasard, jouerTour, trouverLutteur,
+  ACTIONS, apercuInitiative, avecDeck, avecGrade, chanceFortAuto, combatAuto, creerCombat, creerHasard, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
 import mqtt from 'mqtt';
@@ -78,6 +78,7 @@ export interface Presence {
   co: string | null; // pseudo du coach
   nc?: number; // niveau de compte du coach (affiché à côté de son nom)
   rp?: boolean; // combat rapide (publié par l'hôte)
+  au?: boolean; // je veux le combat automatique (il a lieu seulement si les deux le veulent)
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
   et: Record<string, number>; // étoiles par action (mode collection, Champion du Monde)
@@ -96,8 +97,8 @@ export interface Presence {
   ck: string | null; // contrôle : résumé de l'état après le dernier tour
 }
 
-export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean }): Presence {
-  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; au?: boolean }): Presence {
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, au: moi?.au, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -155,6 +156,9 @@ export interface Vue {
   amiStyle: number; // style de carte de l'ami (Champion du Monde), 0 = classique
   amiNiveau: number | null; // niveau de compte de l'ami
   rapide: boolean; // combat rapide (une période, mort subite)
+  autoMoi: boolean; // j'ai demandé le combat automatique
+  autoAmi: boolean; // mon ami l'a demandé
+  auto: boolean; // le combat a été joué en automatique (les deux l'ont demandé)
   monStyle: number;
   etat: EtatCombat | null;
   tours: TourJoue[];
@@ -183,7 +187,7 @@ export class Duel {
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
-  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean };
+  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; au?: boolean };
 
   constructor(
     private salle: Salle, readonly role: Role,
@@ -200,6 +204,7 @@ export class Duel {
         nc: this.ident.nc ?? depart.nc, rp: role === 'hote' ? depart.rp ?? this.ident.rp : undefined,
       }
       : presenceVide(role, 0, this.ident);
+    this.ident.au = this.moiP.au;
     this.vue = this.vueVide();
     this.arret = salle.surChangement(() => this.avancer());
     this.publier();
@@ -224,6 +229,13 @@ export class Duel {
   // ----- Actions du joueur -----
 
   // grade : celui de la carte du joueur (pris en compte seulement en mode collection).
+  // Combat automatique : à choisir avant son lutteur (ensuite, c'est figé pour la manche).
+  choisirAuto(oui: boolean) {
+    if (this.moiP.lu) return;
+    this.ident.au = oui;
+    this.maj({ au: oui });
+  }
+
   choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1, etoiles: Partial<Record<IdAction, number>> = {}, style = 0) {
     const def = avecDeck(avecGrade(trouverLutteur(id), grade, etoiles), deck);
     this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade, et: { ...etoiles } as Record<string, number>, sy: style });
@@ -286,7 +298,7 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false, autoMoi: false, autoAmi: false, auto: false,
       etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
@@ -324,6 +336,8 @@ export class Duel {
     v.amiNiveau = ami?.nc ?? null;
     v.rapide = this.role === 'hote' ? !!moi.rp : !!ami?.rp;
     v.amiIdCoach = ami?.ic ?? null;
+    v.autoMoi = !!moi.au;
+    v.autoAmi = !!ami?.au;
     v.monLutteur = moi.lu;
     v.amiLutteur = ami?.lu ?? null;
     v.monStyle = moi.sy ?? 0;
@@ -364,6 +378,17 @@ export class Duel {
     let defInvite = def(invite);
     if (defInvite.nom === defHote.nom) defInvite = { ...defInvite, nom: `${defInvite.nom} (2)` };
     let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp });
+    // Combat automatique (les deux l'ont demandé) : chaque téléphone calcule le même combat d'un coup.
+    // L'ordinateur joue pour chacun selon son niveau de compte.
+    if (hote.au && invite.au) {
+      const r = combatAuto(etat, graine, [{ chanceFort: chanceFortAuto(hote.nc ?? 1) }, { chanceFort: chanceFortAuto(invite.nc ?? 1) }]);
+      v.etat = r.etat;
+      v.tours = r.tours.map((t) => ({ avant: t.avant, choixHumain: t.choix[this.moi], choixOrdi: t.choix[this.moi === 0 ? 1 : 0], ordiAChange: false, lignes: t.lignes }));
+      v.auto = true;
+      v.phase = 'fin';
+      if (moi.ab || ami.ab) v.abandon = moi.ab ? 'moi' : 'ami';
+      return this.emettre(v);
+    }
     const hasard = new HasardRejouable(graine);
     const P: [Presence, Presence] = [hote, invite];
     const face = (j: Joueur, t: number): Face | undefined => P[j].fc[String(t)];

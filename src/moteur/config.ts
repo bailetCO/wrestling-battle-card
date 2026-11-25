@@ -308,6 +308,11 @@ export const REGLES = {
     },
   },
 
+  // Combat automatique : l'ordinateur joue aussi pour le joueur. Ouvert à partir du niveau de
+  // compte `niveauCompteMin` ; il joue comme l'ordinateur normal à ce niveau, puis de plus en plus
+  // souvent comme l'ordinateur fort, jusqu'à toujours jouer « fort » au niveau `niveauCompteFort`.
+  auto: { niveauCompteMin: 3, niveauCompteFort: 10 },
+
   // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
   // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
   histoire: {

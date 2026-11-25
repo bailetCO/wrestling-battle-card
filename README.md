@@ -30,6 +30,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `.github/workflows/pages.yml` : publication automatique sur GitHub Pages (tests puis construction).
 - `src/page/club.ts` : la section Social (amis, transfert de lutteur du jour, transfert entre amis), sans affichage.
 - `src/page/aide.ts` : la page Règles (textes tirés de la configuration) et le tutoriel (écrans et combat guidé).
+- `src/moteur/auto.ts` : le combat automatique (l'ordinateur joue pour les deux camps, force selon le niveau de compte).
 - `src/page/polices/` : la police des titres (Roboto Condensed, licence libre OFL), intégrée au jeu : rien n'est téléchargé chez Google.
 - `src/page/histoire.ts` : le mode histoire (12 étapes, validation dans l'ordre, récompenses), sans affichage.
 - `src/page/tournoi.ts` : les tournois (individuel à double tableau de 6 à 15 lutteurs, tournoi par équipe avec bonus de nation, ancienne compétition à 6, inscriptions et gains), sans affichage.

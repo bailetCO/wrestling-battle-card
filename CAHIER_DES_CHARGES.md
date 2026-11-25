@@ -318,6 +318,14 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
 - Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
 
+### Combat automatique
+
+- À partir du niveau de compte 3, un bouton « ⚡ Combat auto » apparaît à côté de chaque bouton de combat contre l'ordinateur (arène, combat rapide, tournois, revanche, adversaire suivant). Avant, il est affiché verrouillé.
+- L'ordinateur choisit alors les actions du lutteur du joueur (avec ses 4 actions réglées) et joue tout le combat d'un coup : le joueur arrive directement sur la page de fin (verdict, score, journal tour par tour), avec le booster, les médailles et les $ s'il doit en gagner.
+- Force de l'auto selon le niveau de compte : au niveau 3, il joue comme l'ordinateur normal ; ensuite, chaque décision est prise de plus en plus souvent comme l'ordinateur fort, jusqu'à toujours jouer « fort » au niveau 10.
+- En ligne : chaque joueur peut cocher « Combat automatique » avant de choisir son lutteur. Le combat se joue en automatique seulement si les deux l'ont coché (sinon, combat normal). Les deux téléphones calculent le même combat, l'ordinateur jouant pour chacun selon son niveau de compte.
+- Une victoire en automatique compte pour tout (médailles, boosters, mode histoire), sauf l'étape 9 du mode histoire (« Battre l'ordinateur fort »), à gagner à la main.
+
 ### Mode histoire
 
 - Un parcours de 12 étapes qui fait découvrir tout le jeu. L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
@@ -330,7 +338,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   6. Recruter dans Mon Club un lutteur qui donne au moins 3 lutteurs d'une même nation : 2 boosters.
   7. Battre une nation complète dans l'arène : 2 boosters.
   8. Faire monter une carte au niveau épique ou plus par une fusion : 2 boosters.
-  9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris) : 3 boosters.
+  9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris, mais pas en combat automatique) : 3 boosters.
   10. Gagner un combat en ligne contre un ami : 3 boosters.
   11. Terminer l'arène en battant toutes les nations : 3 boosters.
   12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : une carte légendaire au hasard parmi celles que le joueur n'a pas ; s'il les a toutes, une légendaire au hasard (un double).

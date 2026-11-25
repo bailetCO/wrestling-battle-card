@@ -3,3 +3,4 @@ export * from './config';
 export * from './hasard';
 export * from './combat';
 export * from './ia';
+export * from './auto';

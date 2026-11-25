@@ -191,3 +191,40 @@ test('combat rapide en ligne : choisi par l\'hôte, joué par les deux ; niveau 
   assert.equal(b.vue.amiNiveau, 4);
   a.fermer(); b.fermer();
 });
+
+test('combat automatique en ligne : seulement si les deux le demandent, même résultat des deux côtés', async () => {
+  // Les deux le demandent : fin directe, même combat.
+  const salle = salleMemoire();
+  const a = new Duel(salle('a'), 'hote', null, () => undefined, { niveauCompte: 10 });
+  const b = new Duel(salle('b'), 'invite', null, () => undefined, { niveauCompte: 3 });
+  await attendre();
+  a.choisirAuto(true);
+  b.choisirAuto(true);
+  await attendreQue(() => a.vue.autoAmi && b.vue.autoAmi);
+  a.choisirLutteur('usa', undefined);
+  b.choisirLutteur('europe', undefined);
+  await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
+  assert.equal(a.vue.auto, true);
+  assert.equal(b.vue.auto, true);
+  assert.ok(a.vue.etat!.termine);
+  assert.deepEqual(a.vue.etat!.journal, b.vue.etat!.journal);
+  assert.equal(a.vue.tours.length, b.vue.tours.length);
+  // Une fois le lutteur choisi, on ne peut plus changer d'avis.
+  a.choisirAuto(false);
+  assert.equal(a.vue.autoMoi, true);
+  a.fermer(); b.fermer();
+
+  // Un seul le demande : combat normal, tour par tour.
+  const salle2 = salleMemoire();
+  const c = new Duel(salle2('c'), 'hote', null, () => undefined, { niveauCompte: 5 });
+  const d = new Duel(salle2('d'), 'invite', null, () => undefined, { niveauCompte: 5 });
+  await attendre();
+  c.choisirAuto(true);
+  c.choisirLutteur('usa', undefined);
+  d.choisirLutteur('europe', undefined);
+  await attendreQue(() => c.vue.phase === 'combat' && d.vue.phase === 'combat');
+  assert.equal(c.vue.phase, 'combat');
+  assert.equal(c.vue.auto, false);
+  assert.equal(d.vue.autoAmi, true);
+  c.fermer(); d.fermer();
+});

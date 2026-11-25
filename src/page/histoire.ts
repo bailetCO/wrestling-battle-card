@@ -59,7 +59,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Le grand défi', objectif: 'Battre l\'ordinateur fort',
-    guide: 'Règle l\'ordinateur sur « fort » et gagne un combat. Il lit tes habitudes : varie tes actions ! Le champion de chaque nation dans l\'arène est aussi au niveau fort.',
+    guide: 'Règle l\'ordinateur sur « fort » et gagne un combat, en jouant toi-même (le combat auto ne compte pas pour cette étape). Il lit tes habitudes : varie tes actions ! Le champion de chaque nation dans l\'arène est aussi au niveau fort.',
     lien: '#arene', bouton: 'Aller dans l\'arène',
   },
   {
@@ -83,7 +83,7 @@ export const NB_ETAPES = ETAPES.length;
 
 // Ce qui se passe dans le jeu et peut faire avancer l'histoire.
 export type EvenementHistoire =
-  | { type: 'victoire'; nation: string; niveau: Niveau | null } // tout combat gagné (niveau null : en ligne)
+  | { type: 'victoire'; nation: string; niveau: Niveau | null; auto?: boolean } // tout combat gagné (niveau null : en ligne ; auto : combat automatique)
   | { type: 'rapide'; tombe: boolean; ecart: number } // combat rapide gagné
   | { type: 'tournoiIndividuel'; place: number; invaincu: boolean }
   | { type: 'tournoiEquipe'; gagne: boolean }
@@ -121,7 +121,7 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
     }
     case 6: return c.arene >= PAR_NATION; // au moins une nation battue, avant ou après le déblocage
     case 7: return ev.type === 'fusion' && NIVEAUX.indexOf(niveauCarte(trouverLutteur(ev.id), gradeDe(c, ev.id))) >= NIVEAUX.indexOf('epique');
-    case 8: return ev.type === 'victoire' && ev.niveau === 'fort';
+    case 8: return ev.type === 'victoire' && ev.niveau === 'fort' && !ev.auto; // à gagner à la main
     case 9: return ev.type === 'enLigne';
     case 10: return areneTerminee(c);
     case 11: return ev.type === 'tournoiIndividuel' && ev.place === 1 && ev.invaincu;
