@@ -8,6 +8,7 @@ import {
   multiplicateurSpeciale, peutJouerSpeciale, precisionDe,
 } from '../src/moteur/combat';
 import { choixAleatoire } from '../src/moteur/ia';
+import { ACTIONS } from '../src/moteur/config';
 import { creerCombat } from '../src/moteur/combat';
 import { creerHasard } from '../src/moteur/hasard';
 
@@ -217,12 +218,13 @@ describe('Action spéciale', () => {
     let e = tour(combatTest(), c('defense'), c('defense'));
     e = tour(e, c('attaque_base', true), c('feinte'), toujours(0), { choisirFace: () => 'pile' });
     assert.equal(e.joueurs[0].reductionSpeciale, true);
-    e.tour = 3; // reste dans la zone x1,5
+    e.tour = 2; // reste dans la zone x1,5
     assert.equal(multiplicateurSpeciale(e, 0), 1);
     for (let i = 0; i < 3; i++) e = tour(e, c('defense'), c('defense'));
+    // Tour 5 (impair) : pas de récupération régulière qui fausserait le calcul.
     const avant = e.joueurs[0].endurance;
     e = tour(e, c('attaque_base', true), c('attaque_base'), toujours(0.99)); // ratée
-    assert.equal(avant - e.joueurs[0].endurance, 6 * (2 - 0.5));
+    assert.equal(avant - e.joueurs[0].endurance, ACTIONS.attaque_base.cout * (2 - 0.5));
     assert.equal(e.joueurs[0].reductionSpeciale, false);
   });
 

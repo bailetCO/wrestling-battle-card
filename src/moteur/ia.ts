@@ -1,7 +1,7 @@
 // Ordinateur très simple : choisit au hasard parmi les actions jouables.
 // Un niveau « fort » est prévu plus tard.
 
-import { ACTIONS, REGLES } from './config';
+import { ACTIONS, REGLES, coutAction } from './config';
 import {
   actionsJouables, chanceReussite, comparerFamilles, coutSpeciale, peutJouerSpeciale, precisionDe,
 } from './combat';
@@ -88,7 +88,7 @@ function precision(etat: EtatCombat, j: Joueur, c: Candidat): number {
 }
 
 function coutDe(etat: EtatCombat, j: Joueur, c: Candidat): number {
-  return c.speciale ? coutSpeciale(etat, j, c.action) : ACTIONS[c.action].cout;
+  return c.speciale ? coutSpeciale(etat, j, c.action) : coutAction(etat.joueurs[j].def, c.action);
 }
 
 // Valeur moyenne d'une action face à une liste d'actions adverses possibles.

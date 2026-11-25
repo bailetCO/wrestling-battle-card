@@ -65,30 +65,30 @@ Une même action peut porter un nom différent selon l'origine du lutteur (par e
 
 Trois styles de jeu par nation. Noms et dessins fictifs et provisoires.
 
-Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
+Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours) : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
 
-| Lutteur | Nation | Style | Endurance | Force | Récupération | Deck de départ | Autres actions possibles | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
+| Lutteur | Nation | Style | Endurance | Force | Récupération | 4 actions de base | Déblocages (grades 2 à 5) | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 68 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé | feinte | 50,6 / 68,8 / 59,7 % | Légendaire |
-| Tanner Briggs | USA | Lutteur de pression, très physique | 85 | 145 | 35 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense | attaque | 72,7 / 46,4 / 59,5 % | Légendaire |
-| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 79 | 200 | 32 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection | attaque | 64,5 / 43,0 / 53,7 % | Épique |
-| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 69 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte | contre | 51,9 / 55,4 / 53,6 % | Épique |
-| Mikhaïl Orlov | Russie | Technicien précis | 71 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive | contre | 51,0 / 55,1 / 53,0 % | Épique |
-| Pavel Zorine | Russie | Contre-attaquant patient | 71 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe | contre | 43,8 / 57,2 / 50,5 % | Rare |
-| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 76 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe | défense | 58,6 / 42,1 / 50,3 % | Rare |
-| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 68 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage | défense | 48,8 / 49,3 / 49,1 % | Rare |
-| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 60 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage | feinte | 39,0 / 58,4 / 48,7 % | Rare |
-| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 78 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance | défense | 47,3 / 49,5 / 48,4 % | Rare |
-| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 66 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance | attaque | 38,7 / 53,3 / 46,0 % | Commune |
-| Kenji Arata | Japon | Rapide et explosif | 61 | 165 | 60 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque | feinte | 42,3 / 48,8 / 45,6 % | Commune |
-| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 68 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière | attaque | 49,0 / 39,7 / 44,3 % | Commune |
-| Lamine Sarr | Afrique | Puissant et athlétique | 71 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense | attaque | 54,2 / 33,4 / 43,8 % | Commune |
-| Ryō Takamine | Japon | Technicien, ceinture et relances | 61 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive | contre | 37,7 / 49,5 / 43,6 % | Commune |
+| Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 71 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection, Feinte | attaque | 65,9 / 55,4 / 60,6 % | Légendaire |
+| Tanner Briggs | USA | Lutteur de pression, très physique | 69 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense, Ceinture arrière | attaque | 54,7 / 59,5 / 57,1 % | Légendaire |
+| Duke Halvorsen | USA | Défenseur, un mur qui use l'adversaire | 69 | 140 | 39 % | Attaque, Sprawl, Contre, Matraquage | Parade, Défense, Double jambe, Relance | défense | 59,0 / 51,5 / 55,2 % | Épique |
+| Daichi Morikawa | Japon | Contre-attaquant insaisissable | 65 | 140 | 48 % | Attaque, Esquive, Contre, Matraquage | Relance, Parade, Feinte, Simple jambe | contre | 48,3 / 60,0 / 54,2 % | Épique |
+| Théo Marchal | Europe | Poids lourd, suplex dévastateur | 62 | 240 | 43 % | German suplex, Défense, Matraquage, Contre | Grande projection, Sprawl, Ceinture arrière, Relance | attaque | 53,7 / 54,5 / 54,1 % | Épique |
+| Lamine Sarr | Afrique | Puissant et athlétique | 65 | 240 | 53 % | Grande projection, Sprawl, Bras roulé, Relance | Double jambe, Feinte, Défense, German suplex | attaque | 55,3 / 45,8 / 50,5 % | Rare |
+| Lucas Ferrand | Europe | Technicien, feintes et ceintures | 65 | 160 | 43 % | Simple jambe, Ceinture arrière, Parade, Feinte | Contre, Esquive, Bras roulé, Matraquage | feinte | 45,0 / 55,6 / 50,3 % | Rare |
+| Cheikh Faye | Afrique | Défenseur, immense réserve d'énergie | 72 | 155 | 37 % | Bras roulé, Sprawl, Contre, Attaque | Parade, Défense, Relance, Matraquage | défense | 46,1 / 54,2 / 50,1 % | Rare |
+| Mikhaïl Orlov | Russie | Technicien précis | 68 | 170 | 35 % | Ceinture arrière, Parade, Contre, Feinte | Bras roulé, Relance, Esquive, Simple jambe | contre | 49,8 / 49,3 / 49,5 % | Rare |
+| Colt Ramsey | USA | Explosif, enchaîne les attaques aux jambes | 65 | 200 | 40 % | Simple jambe, Double jambe, Feinte, Sprawl | Attaque, Esquive, Relance, Matraquage | attaque | 45,3 / 50,7 / 48,0 % | Rare |
+| Hugo Delmas | Europe | Équilibré, idéal pour débuter | 69 | 165 | 42 % | Attaque, Défense, Feinte, Contre | Simple jambe, Parade, Matraquage, Relance | défense | 53,9 / 37,3 / 45,6 % | Commune |
+| Ibou Ndiaye | Afrique | Explosif, feintes et bras roulés | 61 | 180 | 51 % | Simple jambe, Feinte, Esquive, Bras roulé | Double jambe, Relance, Matraquage, Sprawl | feinte | 41,4 / 47,1 / 44,3 % | Commune |
+| Pavel Zorine | Russie | Contre-attaquant patient | 69 | 145 | 48 % | Attaque, Esquive, Contre, Relance | Parade, Feinte, Simple jambe, Matraquage | contre | 39,6 / 48,0 / 43,8 % | Commune |
+| Kenji Arata | Japon | Rapide et explosif | 62 | 210 | 64 % | Simple jambe, Feinte, Esquive, Contre | Matraquage, Relance, Attaque, Parade | feinte | 48,9 / 38,3 / 43,6 % | Commune |
+| Ryō Takamine | Japon | Technicien, ceinture et relances | 62 | 160 | 55 % | Ceinture arrière, Feinte, Parade, Relance | Contre, Simple jambe, Esquive, Matraquage | contre | 43,2 / 43,0 / 43,1 % | Commune |
 
 ### Decks
 
-- Chaque lutteur a une liste de 7 actions possibles, liée à son style. Le joueur compose son deck de 4 actions avant le combat, dont au moins une de la famille de son action spéciale.
-- Le deck de départ est celui du tableau ci-dessus ; l'équilibrage est mesuré avec lui.
+- On compose son deck de 4 actions parmi les actions débloquées de la carte (4 de base au grade 1, jusqu'à 8 au grade 5), avec au moins une action de la famille de l'action spéciale.
+- L'équilibrage est mesuré avec les 4 actions de base, au grade 1.
 
 ### Accueil et menu
 
@@ -111,10 +111,12 @@ Rééquilibrage de l'étape 4 : chaque lutteur est mesuré sur plus de 100 000 c
 - Sans serveur, ces échanges reposent sur la confiance entre amis ; Firebase les sécurisera.
 - Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
 
-### Fusion
+### Fusion, grades et étoiles
 
-- Passer au grade g demande g exemplaires identiques : l'original + (g − 1) doubles, qui sont consommés. Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4 (grade maximal).
-- Bonus sur toutes les statistiques (endurance, force, récupération) par rapport à la carte de base : +5 % aux grades 2, 3 et 4, puis +10 % au grade 5, soit +5, +10, +15 et +25 %.
+- Passer au grade g demande g exemplaires identiques : l'original + (g − 1) doubles, qui sont consommés. Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4.
+- Bonus sur toutes les statistiques par rapport à la carte de base : +5 % aux grades 2, 3 et 4, puis +10 % au grade 5 (+25 % au total).
+- Actions : au grade 1, la carte a ses 4 actions de base. Chaque grade débloque une nouvelle action, dans un ordre fixe propre à chaque carte et affiché sur la carte (4 déblocages, grades 2 à 5). Une action débloquée coûte 1 d'endurance de moins que le coût de sa famille. En combat, on joue toujours avec 4 actions, choisies parmi celles débloquées (au moins une de la famille spéciale).
+- Étoiles (après le grade 5) : chaque fusion de 5 doubles donne une étoile, qui baisse de 1 le coût d'une action choisie (coût minimum 1). 3 étoiles maximum par action ; on peut continuer jusqu'à ce que toutes les actions débloquées aient 3 étoiles.
 
 ### Style graphique
 
@@ -210,13 +212,17 @@ Version d'origine, remplacée par le rééquilibrage de l'étape 4 (voir Les 15 
 | Actions | Famille | Coût en endurance | Points |
 | --- | --- | --- | --- |
 | Feinte | Feinte | 3 | 0 (+2 sur l'attaque suivante) |
-| Matraquage | Feinte | 5 | 0 |
+| Matraquage | Feinte | 3 | 0 |
 | Défense, parade, esquive | Défense | 3 | 0 |
-| Sprawl | Défense | 4 | 2 |
+| Sprawl | Défense | 3 | 2 |
 | Contre, relance | Contre | 6 | Points de l'attaque renvoyés |
 | Attaque de base, simple jambe | Attaque | 6 | 2 |
-| Double jambe, ceinture arrière, bras roulé (bras à la volée) | Attaque | 7 | 4 |
-| Grande projection, german suplex | Attaque | 8 (10 avant l'étape 4) | 5 |
+| Double jambe, ceinture arrière, bras roulé (bras à la volée) | Attaque | 6 | 4 |
+| Grande projection, german suplex | Attaque | 6 | 5 |
+
+Depuis le 25/11/2026, toutes les actions d'une même famille ont le même coût de base : attaque 6, défense 3, contre 6, feinte 3. Une action débloquée par un grade coûte 1 de moins ; chaque étoile (grade 5) retire encore 1, sans descendre sous 1.
+
+Récupération en combat : tous les 2 tours de chaque période (tours 2, 4, 6, 8, 10), chaque lutteur récupère 5 % de son endurance actuelle ; sa chance de réussite est sa précision du moment.
 
 Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'endurance par période, ce qui permet de tenir jusqu'à la 3e période ; enchaîner les attaques fait passer sous 50 d'endurance dès la 3e période, avec une précision dégradée.
 

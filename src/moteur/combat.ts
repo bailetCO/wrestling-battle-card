@@ -1,7 +1,7 @@
 // Les règles du combat. Aucun affichage ici : ce fichier prend un état,
 // les choix des deux joueurs, et renvoie le nouvel état avec un journal en français.
 
-import { ACTIONS, BAT, REGLES, trouverLutteur } from './config';
+import { ACTIONS, BAT, REGLES, coutAction, trouverLutteur } from './config';
 import { choisirParmi, reussit, type Hasard } from './hasard';
 import type {
   Choix, DefLutteur, EtatCombat, EtatLutteur, Face, Famille, IdAction, Joueur, OptionsTour,
@@ -68,7 +68,7 @@ export function chanceReussite(precision: number): number {
 export function actionsJouables(etat: EtatCombat, j: Joueur): IdAction[] {
   const l = etat.joueurs[j];
   if (l.endurance <= 0) return [];
-  return l.def.actions.filter((id) => ACTIONS[id].cout <= l.endurance);
+  return l.def.actions.filter((id) => coutAction(l.def, id) <= l.endurance);
 }
 
 export function multiplicateurSpeciale(etat: EtatCombat, j: Joueur): number {
@@ -83,7 +83,7 @@ export function multiplicateurSpeciale(etat: EtatCombat, j: Joueur): number {
 }
 
 export function coutSpeciale(etat: EtatCombat, j: Joueur, id: IdAction): number {
-  return ACTIONS[id].cout * multiplicateurSpeciale(etat, j);
+  return coutAction(etat.joueurs[j].def, id) * multiplicateurSpeciale(etat, j);
 }
 
 export function specialeOuverte(etat: EtatCombat, j: Joueur): boolean {
@@ -360,7 +360,7 @@ export function jouerTour(
   for (const j of LES_DEUX) {
     const c = choix[j];
     if (c.action === 'lutte') continue;
-    const cout = c.speciale ? coutSpeciale(e, j, c.action) : ACTIONS[c.action].cout;
+    const cout = c.speciale ? coutSpeciale(e, j, c.action) : coutAction(J[j].def, c.action);
     if (c.speciale) {
       J[j].dernierSpecialTour = e.tourGlobal;
       J[j].reductionSpeciale = false;
@@ -544,6 +544,21 @@ export function jouerTour(
       log(e, `${l.def.nom} est épuisé depuis 3 tours et se fait tomber.`);
       finirCombat(e, autre(j), 'tombe');
       return e;
+    }
+  }
+
+  // 8 bis. Récupération régulière : tous les 2 tours, 5 % de l'endurance actuelle,
+  // avec la précision du lutteur comme chance de réussite.
+  const RR = REGLES.recuperationReguliere;
+  if (e.tour % RR.tousLesTours === 0) {
+    for (const j of LES_DEUX) {
+      const l = J[j];
+      if (l.endurance <= 0) continue;
+      if (reussit(hasard, chanceReussite(precisionDe(l.endurance)))) {
+        const gain = l.endurance * RR.part;
+        ajouterEndurance(l, gain);
+        log(e, `${l.def.nom} récupère ${Math.round(gain * 10) / 10} d'endurance (tous les ${RR.tousLesTours} tours).`);
+      }
     }
   }
 

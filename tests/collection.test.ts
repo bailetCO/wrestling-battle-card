@@ -2,10 +2,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LUTTEURS, avecGrade, trouverLutteur } from '../src/moteur/config';
+import { LUTTEURS, avecGrade, coutAction, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import {
-  cartesDeDepart, choisirDeck, consoler, depuisSauvegarde, fusionner, gradeDe, nbExemplaires,
+  cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires,
   nouvelleCollection, ouvrirBooster, possede, prochaineFusion, recompenser, verifierPseudo,
 } from '../src/page/collection';
 
@@ -62,7 +62,7 @@ test('fusion : grade g = g exemplaires identiques, les doubles sont consommés',
   c.exemplaires.usa = 1;
   assert.ok(fusionner(c, 'usa')); // pas de double
   c.exemplaires.usa = 2;
-  assert.deepEqual(prochaineFusion(c, 'usa'), { grade: 2, doublesNecessaires: 1, doublesDispo: 1 });
+  assert.deepEqual(prochaineFusion(c, 'usa'), { type: 'grade', grade: 2, doublesNecessaires: 1, doublesDispo: 1 });
   assert.equal(fusionner(c, 'usa'), null);
   assert.equal(gradeDe(c, 'usa'), 2);
   assert.equal(nbExemplaires(c, 'usa'), 1);
@@ -74,13 +74,28 @@ test('fusion : grade g = g exemplaires identiques, les doubles sont consommés',
   assert.equal(fusionner(c, 'usa'), null);
   assert.equal(gradeDe(c, 'usa'), 5);
   assert.equal(nbExemplaires(c, 'usa'), 1);
-  c.exemplaires.usa = 9;
-  assert.ok(fusionner(c, 'usa')); // grade maximal
+});
+
+test('étoiles (après le grade 5) : 5 doubles, −1 au coût de l\'action choisie, 3 maximum par action', () => {
+  const c = nouvelleCollection();
+  c.exemplaires.usa = 1 + 5 * 4;
+  c.grades.usa = 5;
+  const f = prochaineFusion(c, 'usa');
+  assert.equal(f?.type, 'etoile');
+  assert.equal(f?.doublesNecessaires, 5);
+  assert.ok(fusionner(c, 'usa')); // il faut choisir l'action
+  const cout0 = coutAction(defPossede(c, 'usa'), 'double_jambe');
+  for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'usa', 'double_jambe'), null);
+  assert.equal(coutAction(defPossede(c, 'usa'), 'double_jambe'), cout0 - 3);
+  assert.ok(fusionner(c, 'usa', 'double_jambe')); // déjà 3 étoiles
+  assert.equal(nbExemplaires(c, 'usa'), 1 + 5);
+  assert.equal(nbEtoiles(c, 'usa'), 3);
 });
 
 test('grades : +5 % par grade, +10 % pour le dernier (+25 % au grade 5)', () => {
   const base = trouverLutteur('usa');
-  assert.deepEqual(avecGrade(base, 1), base);
+  assert.equal(avecGrade(base, 1).force, base.force);
+  assert.deepEqual(avecGrade(base, 1).actionsPossibles, base.actions);
   const g2 = avecGrade(base, 2);
   assert.equal(g2.force, Math.round(base.force * 1.05));
   const g5 = avecGrade(base, 5);
@@ -116,5 +131,9 @@ test('deck : enregistré seulement s\'il est valide', () => {
   const c = nouvelleCollection();
   assert.ok(choisirDeck(c, 'usa', ['sprawl', 'matraquage', 'relance', 'feinte']));
   assert.equal(c.decks.usa, undefined);
-  assert.equal(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'feinte', 'relance']), null);
+  // simple_jambe est débloquée au grade 2 : refusée au grade 1, acceptée au grade 2.
+  assert.ok(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'matraquage', 'relance']));
+  c.exemplaires.usa = 1;
+  c.grades.usa = 2;
+  assert.equal(choisirDeck(c, 'usa', ['simple_jambe', 'sprawl', 'matraquage', 'relance']), null);
 });

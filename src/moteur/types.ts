@@ -42,6 +42,8 @@ export interface DefLutteur {
   recuperation: number; // part de l'endurance max récupérée entre deux périodes (0,35 = 35 %)
   actions: IdAction[]; // les 4 actions de la carte (le deck)
   actionsPossibles: IdAction[]; // les actions parmi lesquelles on compose le deck
+  deblocages: IdAction[]; // actions débloquées aux grades 2 à 5, dans l'ordre
+  couts?: Partial<Record<IdAction, number>>; // coûts propres à cette carte (grade, étoiles)
   familleSpeciale: Famille; // famille de l'action spéciale
 }
 

@@ -1,6 +1,7 @@
 // Une vérification pour chaque ligne du tableau « Interactions entre les actions ».
 
 import { describe, it } from 'node:test';
+import { ACTIONS } from '../src/moteur/config';
 import assert from 'node:assert/strict';
 import { c, combatTest, tour } from './outils';
 
@@ -61,7 +62,7 @@ describe('Contre contre attaque', () => {
     depart.joueurs[1].bonusFeinte = true;
     const e = tour(depart, c('contre'), c('double_jambe'));
     assert.equal(e.joueurs[0].score, 6);
-    assert.equal(e.joueurs[1].endurance, 60 - 7 - 15); // attaque à 6 points : -15 %
+    assert.equal(e.joueurs[1].endurance, 60 - ACTIONS.double_jambe.cout - 15); // attaque à 6 points : -15 %
   });
 
   it("un seul des deux (endurance OU force) : 1 point de sortie, l'attaque ne marque pas", () => {

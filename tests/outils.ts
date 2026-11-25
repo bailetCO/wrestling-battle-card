@@ -22,6 +22,7 @@ export function testeur(modif: Partial<DefLutteur> = {}): DefLutteur {
     recuperation: 0.4,
     actions: Object.keys(ACTIONS) as IdAction[],
     actionsPossibles: Object.keys(ACTIONS) as IdAction[],
+    deblocages: [],
     familleSpeciale: 'attaque' as Famille,
     ...modif,
   };

@@ -78,6 +78,7 @@ export interface Presence {
   co: string | null; // pseudo du coach
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
+  et: Record<string, number>; // étoiles par action (mode collection, grade 5)
   lu: string | null; // lutteur choisi
   dk: number[] | null; // deck (codes d'actions)
   g: number | null; // numéro de combat (graine), publié par l'hôte
@@ -93,7 +94,7 @@ export interface Presence {
 }
 
 export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null }): Presence {
-  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, gr: 1, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -210,9 +211,9 @@ export class Duel {
   // ----- Actions du joueur -----
 
   // grade : celui de la carte du joueur (pris en compte seulement en mode collection).
-  choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1) {
-    const def = avecDeck(trouverLutteur(id), deck);
-    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade });
+  choisirLutteur(id: string, deck: IdAction[] | undefined, grade = 1, etoiles: Partial<Record<IdAction, number>> = {}) {
+    const def = avecDeck(avecGrade(trouverLutteur(id), grade, etoiles), deck);
+    this.maj({ lu: id, dk: def.actions.map((a) => codeAction(a)), gr: grade, et: { ...etoiles } as Record<string, number> });
   }
 
   async jouer(choix: Choix) {
@@ -339,8 +340,8 @@ export class Duel {
     v.graine = graine;
     const enCollection = (hote.mo ?? 'base') === 'collection';
     const def = (p: Presence) => {
-      const d = avecDeck(trouverLutteur(p.lu!), p.dk!.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
-      return enCollection ? avecGrade(d, p.gr ?? 1) : d;
+      const base = enCollection ? avecGrade(trouverLutteur(p.lu!), p.gr ?? 1, (p.et ?? {}) as Partial<Record<IdAction, number>>) : trouverLutteur(p.lu!);
+      return avecDeck(base, p.dk!.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
     };
     const defHote = def(hote);
     let defInvite = def(invite);

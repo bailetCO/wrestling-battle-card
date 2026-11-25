@@ -2,8 +2,8 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  LUTTEURS, REGLES, exemplairesPourGrade, verifierDeck,
-  type Hasard, type IdAction, type Niveau, type Rarete,
+  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, trouverLutteur, verifierDeck,
+  type DefLutteur, type Hasard, type IdAction, type Niveau, type Rarete,
 } from '../moteur';
 
 export interface Collection {
@@ -12,6 +12,7 @@ export interface Collection {
   idCoach: string; // identifiant aléatoire, pour reconnaître un ami
   exemplaires: Record<string, number>; // nombre d'exemplaires de chaque carte
   grades: Record<string, number>; // grade de chaque carte possédée (1 = de base)
+  etoiles: Record<string, Partial<Record<IdAction, number>>>; // grade 5 : étoiles par action (−1 au coût chacune)
   decks: Record<string, IdAction[]>; // deck choisi pour chaque lutteur (sinon celui par défaut)
   niveau: Niveau;
   toutDebloque: boolean; // mode test : toutes les cartes disponibles
@@ -57,7 +58,7 @@ function nouvelId(): string {
 export function nouvelleCollection(): Collection {
   return {
     version: 2, coach: null, idCoach: nouvelId(),
-    exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {},
+    exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] },
   };
@@ -65,6 +66,14 @@ export function nouvelleCollection(): Collection {
 
 export const nbExemplaires = (c: Collection, id: string) => c.exemplaires[id] ?? 0;
 export const gradeDe = (c: Collection, id: string) => (nbExemplaires(c, id) > 0 ? c.grades[id] ?? 1 : 1);
+
+export const etoilesDe = (c: Collection, id: string): Partial<Record<IdAction, number>> => c.etoiles[id] ?? {};
+export const nbEtoiles = (c: Collection, id: string) => Object.values(etoilesDe(c, id)).reduce((n: number, x) => n + (x ?? 0), 0);
+
+// La carte telle que le joueur la possède : grade, actions débloquées, étoiles (deck non appliqué).
+export function defPossede(c: Collection, id: string): DefLutteur {
+  return avecGrade(trouverLutteur(id), gradeDe(c, id), etoilesDe(c, id));
+}
 
 export function possede(c: Collection, id: string): boolean {
   return c.toutDebloque || nbExemplaires(c, id) > 0;
@@ -123,18 +132,44 @@ export function consoler(c: Collection, hasard: Hasard): Booster | null {
 
 // ---------- Fusion ----------
 
-// Ce qu'il faut pour monter cette carte d'un grade : null si impossible (grade maximal).
-export function prochaineFusion(c: Collection, id: string): { grade: number; doublesNecessaires: number; doublesDispo: number } | null {
+export type ProchaineFusion =
+  | { type: 'grade'; grade: number; doublesNecessaires: number; doublesDispo: number }
+  | { type: 'etoile'; actions: IdAction[]; doublesNecessaires: number; doublesDispo: number };
+
+// Ce que permet la prochaine fusion de cette carte : monter d'un grade, ou (au grade 5)
+// ajouter une étoile à une action. null si plus rien n'est possible.
+export function prochaineFusion(c: Collection, id: string): ProchaineFusion | null {
+  if (nbExemplaires(c, id) === 0) return null;
+  const F = REGLES.fusion;
   const g = gradeDe(c, id);
-  if (g >= REGLES.fusion.gradeMax || nbExemplaires(c, id) === 0) return null;
-  return { grade: g + 1, doublesNecessaires: exemplairesPourGrade(g + 1) - 1, doublesDispo: nbExemplaires(c, id) - 1 };
+  const dispo = nbExemplaires(c, id) - 1;
+  if (g < F.gradeMax) return { type: 'grade', grade: g + 1, doublesNecessaires: exemplairesPourGrade(g + 1) - 1, doublesDispo: dispo };
+  const et = etoilesDe(c, id);
+  const actions = defPossede(c, id).actionsPossibles.filter((a) => (et[a] ?? 0) < F.etoilesMaxParAction);
+  if (!actions.length) return null;
+  return { type: 'etoile', actions, doublesNecessaires: F.doublesParEtoile, doublesDispo: dispo };
 }
 
-// Fusionne : consomme les doubles et monte la carte d'un grade. Renvoie la raison si impossible.
-export function fusionner(c: Collection, id: string): string | null {
+export const fusionPrete = (c: Collection, id: string) => {
   const f = prochaineFusion(c, id);
-  if (!f) return nbExemplaires(c, id) === 0 ? 'Tu ne possèdes pas cette carte.' : 'Cette carte est déjà au grade maximal.';
-  if (f.doublesDispo < f.doublesNecessaires) return `Il faut ${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''} pour passer au grade ${f.grade}.`;
+  return !!f && f.doublesDispo >= f.doublesNecessaires;
+};
+
+// Fusionne : consomme les doubles et monte la carte d'un grade, ou (au grade 5) ajoute une étoile
+// à l'action choisie. Renvoie la raison si impossible.
+export function fusionner(c: Collection, id: string, action?: IdAction): string | null {
+  const f = prochaineFusion(c, id);
+  if (!f) return nbExemplaires(c, id) === 0 ? 'Tu ne possèdes pas cette carte.' : 'Cette carte est au maximum : toutes ses actions ont 3 étoiles.';
+  if (f.doublesDispo < f.doublesNecessaires) {
+    const quoi = f.type === 'grade' ? `passer au grade ${f.grade}` : 'gagner une étoile';
+    return `Il faut ${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''} pour ${quoi}.`;
+  }
+  if (f.type === 'etoile') {
+    if (!action || !f.actions.includes(action)) return 'Choisis l\'action qui reçoit l\'étoile.';
+    c.exemplaires[id] -= f.doublesNecessaires;
+    c.etoiles[id] = { ...etoilesDe(c, id), [action]: (etoilesDe(c, id)[action] ?? 0) + 1 };
+    return null;
+  }
   c.exemplaires[id] -= f.doublesNecessaires;
   c.grades[id] = f.grade;
   return null;
@@ -147,9 +182,8 @@ export function deckDe(c: Collection, id: string): IdAction[] | undefined {
 }
 
 export function choisirDeck(c: Collection, id: string, actions: IdAction[]): string | null {
-  const def = LUTTEURS.find((l) => l.id === id);
-  if (!def) return 'Lutteur inconnu.';
-  const erreur = verifierDeck(def, actions);
+  if (!LUTTEURS.some((l) => l.id === id)) return 'Lutteur inconnu.';
+  const erreur = verifierDeck(defPossede(c, id), actions);
   if (!erreur) c.decks[id] = [...actions];
   return erreur;
 }
@@ -168,6 +202,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   }
   if (b.exemplaires && typeof b.exemplaires === 'object') c.exemplaires = { ...(b.exemplaires as Record<string, number>) };
   if (b.grades && typeof b.grades === 'object') c.grades = { ...(b.grades as Record<string, number>) };
+  if (b.etoiles && typeof b.etoiles === 'object') c.etoiles = { ...(b.etoiles as Collection['etoiles']) };
   if (b.decks && typeof b.decks === 'object') c.decks = { ...(b.decks as Record<string, IdAction[]>) };
   if (typeof b.coach === 'string' && !verifierPseudo(b.coach)) c.coach = b.coach.trim();
   if (typeof b.idCoach === 'string') c.idCoach = b.idCoach;
@@ -186,8 +221,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
     if (!LUTTEURS.some((l) => l.id === id) || !(c.exemplaires[id] > 0)) delete c.exemplaires[id];
   }
   for (const [id, deck] of Object.entries(c.decks)) {
-    const def = LUTTEURS.find((l) => l.id === id);
-    if (!def || verifierDeck(def, deck)) delete c.decks[id];
+    if (!LUTTEURS.some((l) => l.id === id) || verifierDeck(defPossede(c, id), deck)) delete c.decks[id];
   }
   return c;
 }
