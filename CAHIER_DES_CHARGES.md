@@ -131,6 +131,16 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 - Une place par niveau (5 places au niveau 5). On y recrute ses propres lutteurs ; ce n'est qu'une place dans l'équipe : la carte reste utilisable partout. On peut libérer une place.
 - Il faut un club de niveau 5 (5 lutteurs) pour le tournoi par équipe.
 
+### Tournois
+
+- Tuile « Tournois » du menu. Contre l'ordinateur pour l'instant ; en ligne plus tard (avec Firebase).
+- Chaque combat gagné dans un tournoi rapporte +1 médaille, même si le tournoi est perdu ; les médailles de fin s'ajoutent.
+- Compétition (inscription 5 $) : le joueur choisit un de ses lutteurs ; 5 adversaires tirés au hasard. Deux tableaux de 3 (places tirées au sort) : dans chaque tableau, un lutteur est qualifié d'office pour la 1/2 finale, les deux autres font le 1/4 de finale. Les vainqueurs des deux 1/2 finales font la finale (1re et 2e places). Repêchage croisé : le perdant du 1/4 d'un tableau affronte le perdant de la 1/2 de l'autre tableau ; les deux vainqueurs du repêchage font la finale du repêchage (3e et 4e places) ; les perdants du repêchage sont 5es. Un lutteur fait de 2 à 4 combats.
+- Gains de la compétition : 1er 10 médailles, 15 $ et un booster rare ; 2e 6 médailles et 9 $ ; 3e 3 médailles et 5 $.
+- Tournoi par équipe (inscription 10 $, Mon Club niveau 5 avec 5 lutteurs) : le joueur ordonne ses 5 lutteurs ; ils affrontent dans l'ordre les 5 lutteurs d'un club adverse. La première équipe à 3 victoires gagne : 10 médailles, 30 $ et un booster rare. Défaite : aucun gain de fin.
+- Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
+- Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
+
 ### Fusion, niveaux de rareté et étoiles
 
 - Une carte a une rareté de départ (celle du booster) et un niveau, qui monte par fusion : Commune → Rare → Épique → Légendaire → Champion du Monde. Champion du Monde ne s'obtient que par fusion. Une commune peut donc monter 4 fois, une rare 3, une épique 2, une légendaire 1.

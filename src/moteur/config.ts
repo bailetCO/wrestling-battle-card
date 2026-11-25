@@ -243,6 +243,19 @@ export const REGLES = {
   // maximum). Le niveau donne le nombre de places pour les lutteurs recrutés (1 place par niveau).
   club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 5, placesParNiveau: 1, niveauTournoiEquipe: 5 },
 
+  // Tournois contre l'ordinateur. +1 médaille par combat gagné, en plus des gains de fin.
+  tournoi: {
+    medaillesParCombatGagne: 1,
+    // Compétition : 6 lutteurs, deux tableaux de 3, repêchage croisé, un seul 3e.
+    competition: {
+      inscription: 5,
+      medailles: { 1: 10, 2: 6, 3: 3 } as Record<number, number>,
+      dollars: { 1: 15, 2: 9, 3: 5 } as Record<number, number>,
+    },
+    // Par équipe : 5 duels (lutteur n°1 contre n°1, etc.), la première équipe à 3 victoires gagne.
+    equipe: { inscription: 10, duels: 5, victoiresPourGagner: 3, medailles: 10, dollars: 30 },
+  },
+
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
   // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
   // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.

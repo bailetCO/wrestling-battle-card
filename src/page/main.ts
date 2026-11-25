@@ -22,6 +22,11 @@ import {
 import { portraitSVG } from './portrait';
 import { Echange, accepterOffre, jourDe, listeAmis, noterAmi, offreFaite, offresDuJour, type VueEchange } from './club';
 import { ouvrirBooster } from './collection';
+import {
+  NOM_MATCH, avancer, creerCompetition, creerTournoiEquipe, enregistrer, enregistrerDuel, equipeFinie,
+  finie, gagnerCombatTournoi, payerInscription, places, prochainDuel, recompenserTournoi, scoreEquipe,
+  type CleMatch, type Competition, type TournoiEquipe,
+} from './tournoi';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
@@ -51,6 +56,7 @@ let idPortrait = 0;
 let collection: Collection = charger();
 let recompenseDonnee = false; // une seule récompense par combat
 let tuto = false; // combat guidé du tutoriel en cours
+let enTournoi: CleMatch | number | null = null; // combat du joueur dans un tournoi (clé du combat ou n° du duel)
 let bonusCeCombat = false; // combat d'arène qui suit le tutoriel : boosters doublés
 // Boosters gagnés pendant le combat solo (ou message de consolation), affichés à la fin.
 let paquetSolo: Paquet | null = null;
@@ -124,6 +130,7 @@ function carteJoueur(def: DefLutteur, bouton = ''): string {
 const ICONES_MENU: Record<string, string> = {
   collection: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="10" width="20" height="28" rx="3" transform="rotate(-12 18 24)" fill="none" stroke="currentColor" stroke-width="3"/><rect x="20" y="10" width="20" height="28" rx="3" transform="rotate(10 30 24)" fill="currentColor" opacity=".9"/></svg>',
   combat: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 40 30 18M14 12l6 6M40 40 18 18M34 12l-6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2" opacity=".4"/></svg>',
+  tournois: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v12a10 10 0 0 1-20 0z" fill="currentColor"/><path d="M14 10H7c0 7 3 11 8 11M34 10h7c0 7-3 11-8 11" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 28v8M16 42h16l-2-6H18z" fill="currentColor"/></svg>',
   club: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3l17 6v13c0 11-8 19-17 23C15 41 7 33 7 22V9z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 13l3 6.2 6.8.9-5 4.7 1.3 6.7L24 28.2l-6.1 3.3 1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>',
   social: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
   fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -173,6 +180,7 @@ function ecranMenu() {
       ${cadenas ? `<span class="tuile-cadenas">🔒 ${cadenas}</span>` : ''}
     </a>`;
   const nivClub = niveauClub(collection);
+  const tournoiActif = !!tournoi && !tournoi.recompense;
   app.innerHTML = `
     <main class="menu">
       <header class="menu-tete">
@@ -185,6 +193,7 @@ function ecranMenu() {
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
+        ${tuile('tournois', 'Tournois', 'Compétition et tournoi par équipe', '#tournois', tournoiActif ? 'En cours' : '')}
         ${tuile('collection', 'Collection', `${collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection)}/${LUTTEURS.length} cartes · régler les actions`, '#collection')}
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${collection.club.length}/${placesClub(collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
@@ -633,6 +642,289 @@ function fenetreEtoile(id: string) {
   );
 }
 
+// ---------- Tournois ----------
+
+const CLE_TOURNOI = 'wbc-tournoi-v1';
+let tournoi: Competition | TournoiEquipe | null = chargerTournoi();
+let paquetTournoi: Paquet | null = null;
+
+function chargerTournoi(): Competition | TournoiEquipe | null {
+  try {
+    const t = JSON.parse(localStorage.getItem(CLE_TOURNOI) ?? 'null');
+    return t && (t.type === 'competition' || t.type === 'equipe') ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+function sauverTournoi() {
+  try {
+    if (tournoi) localStorage.setItem(CLE_TOURNOI, JSON.stringify(tournoi));
+    else localStorage.removeItem(CLE_TOURNOI);
+  } catch { /* stockage indisponible : le tournoi vit seulement dans cette page */ }
+}
+
+// La carte de mes lutteurs (avec fusion et deck) ; celles de l'ordinateur sont les cartes de base.
+const defTournoi = (id: string, moi: boolean) => (moi ? defJoueur(trouverLutteur(id)) : trouverLutteur(id));
+
+function ecranTournois(message = '') {
+  partie = null;
+  const C = R_.tournoi.competition;
+  const Q = R_.tournoi.equipe;
+  const niv = niveauClub(collection);
+  const equipeOk = niv >= R_.club.niveauTournoiEquipe && collection.club.length >= Q.duels;
+  const enCours = tournoi && !tournoi.recompense;
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Tournois', 'Inscription en $, médailles à chaque combat gagné.')}
+      ${porteMonnaie()}
+      ${message}
+      ${enCours ? `<section class="bloc reprise-tournoi"><h2>Tournoi en cours</h2><p>${tournoi!.type === 'competition' ? 'Compétition' : 'Tournoi par équipe'} : reprends là où tu t'es arrêté.</p><button class="principal" data-reprendre-tournoi>Reprendre</button></section>` : ''}
+      <section class="bloc">
+        <h2>Compétition <small>${C.inscription} $</small></h2>
+        <p>Ton lutteur contre 5 adversaires, en deux tableaux de 3 avec repêchage. De 2 à 4 combats. +${R_.tournoi.medaillesParCombatGagne} médaille par combat gagné.</p>
+        <ul class="liste-regles gains">
+          <li>🥇 1er : ${C.medailles[1]} médailles, ${C.dollars[1]} $ et un booster rare</li>
+          <li>🥈 2e : ${C.medailles[2]} médailles et ${C.dollars[2]} $</li>
+          <li>🥉 3e : ${C.medailles[3]} médailles et ${C.dollars[3]} $</li>
+        </ul>
+        <button class="principal" data-competition ${enCours ? 'disabled' : ''}>Contre l'ordinateur</button>
+        <button class="secondaire" disabled>En ligne · bientôt</button>
+      </section>
+      <section class="bloc">
+        <h2>Tournoi par équipe <small>${Q.inscription} $</small></h2>
+        <p>Tes 5 lutteurs de Mon Club contre 5 lutteurs d'un club adverse, un duel chacun. La première équipe à ${Q.victoiresPourGagner} victoires gagne : ${Q.medailles} médailles, ${Q.dollars} $ et un booster rare.</p>
+        ${equipeOk ? '' : `<p class="alerte-douce">🔒 Il faut Mon Club au niveau ${R_.club.niveauTournoiEquipe} avec ${Q.duels} lutteurs (niveau actuel : ${niv || 'fermé'}, ${collection.club.length} lutteur${collection.club.length > 1 ? 's' : ''}).</p>`}
+        <button class="principal" data-equipe ${equipeOk && !enCours ? '' : 'disabled'}>Contre l'ordinateur</button>
+        <button class="secondaire" disabled>En ligne · bientôt</button>
+      </section>
+    </main>`;
+  app.querySelector('[data-reprendre-tournoi]')?.addEventListener('click', ecranTournoiEnCours);
+  app.querySelector('[data-competition]')?.addEventListener('click', ecranInscriptionCompetition);
+  app.querySelector('[data-equipe]')?.addEventListener('click', () => ecranInscriptionEquipe([...collection.club]));
+  window.scrollTo(0, 0);
+}
+
+function ecranInscriptionCompetition() {
+  const miens = LUTTEURS.filter((l) => possede(collection, l.id));
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Compétition', `Choisis ton lutteur · inscription ${R_.tournoi.competition.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}
+      <div class="liste-recrues marge">${miens.map((l) => `<button data-inscrire="${l.id}" aria-label="Inscrire ${echap(l.nom)}">${miniCarteLutteur(l, `${echap(l.origine)} · ${NOM_RARETE[niveauDe(l.id)]}`, '', niveauDe(l.id))}</button>`).join('')}</div>
+    </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-inscrire]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.inscrire!;
+      const erreur = payerInscription(collection, 'competition');
+      if (erreur) return ecranTournois(`<p class="alerte">${echap(erreur)}</p>`);
+      tournoi = creerCompetition(id, nouvelleGraine());
+      paquetTournoi = null;
+      sauver(collection);
+      sauverTournoi();
+      ecranTournoiEnCours();
+    }),
+  );
+  window.scrollTo(0, 0);
+}
+
+function ecranInscriptionEquipe(ordre: string[]) {
+  const n = R_.tournoi.equipe.duels;
+  const liste = ordre.slice(0, n).map((id, i) => {
+    const l = trouverLutteur(id);
+    return `<li class="ordre-ligne"><span class="ordre-n">${i + 1}</span><span class="vignette">${portrait(l, niveauDe(id))}</span>
+      <span class="ordre-nom"><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[niveauDe(id)]}</small></span>
+      <button class="rond" data-monter="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
+      <button class="rond" data-descendre="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Tournoi par équipe', `Ordre des duels · inscription ${R_.tournoi.equipe.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}
+      <section class="bloc"><p>Ton lutteur n°1 affronte leur n°1, etc. Place tes meilleurs où tu veux.</p><ol class="ordre-liste">${liste}</ol>
+        <button class="principal" data-valider-equipe>Inscrire mon équipe</button></section>
+    </main>`;
+  const echanger = (i: number, j: number) => {
+    const o = [...ordre];
+    [o[i], o[j]] = [o[j], o[i]];
+    ecranInscriptionEquipe(o);
+  };
+  app.querySelectorAll<HTMLButtonElement>('[data-monter]').forEach((b) => b.addEventListener('click', () => echanger(Number(b.dataset.monter), Number(b.dataset.monter) - 1)));
+  app.querySelectorAll<HTMLButtonElement>('[data-descendre]').forEach((b) => b.addEventListener('click', () => echanger(Number(b.dataset.descendre), Number(b.dataset.descendre) + 1)));
+  app.querySelector('[data-valider-equipe]')!.addEventListener('click', () => {
+    const erreur = payerInscription(collection, 'equipe');
+    if (erreur) return ecranTournois(`<p class="alerte">${echap(erreur)}</p>`);
+    tournoi = creerTournoiEquipe(ordre, nouvelleGraine());
+    paquetTournoi = null;
+    sauver(collection);
+    sauverTournoi();
+    ecranTournoiEnCours();
+  });
+  window.scrollTo(0, 0);
+}
+
+function ecranTournoiEnCours() {
+  partie = null;
+  if (!tournoi) return ecranTournois();
+  if (tournoi.type === 'competition') return ecranCompetition(tournoi);
+  return ecranEquipe(tournoi);
+}
+
+// Gains de fin : donnés une seule fois, puis montrés dans un booster.
+function sectionFinTournoi(t: Competition | TournoiEquipe, titre: string): string {
+  if (!paquetTournoi) {
+    const boosters = recompenserTournoi(collection, t, Math.random);
+    sauver(collection);
+    sauverTournoi();
+    paquetTournoi = boosters.length ? { titre, boosters, ouvert: false } : null;
+  }
+  return paquetTournoi ? sectionPaquet(paquetTournoi) : '<section class="booster"><p>Pas de gain cette fois. Retente ta chance !</p></section>';
+}
+
+function ecranCompetition(c: Competition) {
+  const prochain = avancer(c, (i) => defTournoi(c.lutteurs[i], i === 0), collection.niveau);
+  sauverTournoi();
+  const nom = (i: number | null) => (i === null ? '…' : i === 0 ? `<b class="moi">${echap(trouverLutteur(c.lutteurs[0]).nom)}</b>` : echap(trouverLutteur(c.lutteurs[i]).nom));
+  const ligne = (k: CleMatch) => {
+    const m = c.matchs[k];
+    const v = m.vainqueur;
+    const cote = (i: number | null) => `<span class="${v !== null ? (v === i ? 'gagnant' : 'perdant') : ''}">${nom(i)}</span>`;
+    return `<li class="match ${m.a === 0 || m.b === 0 ? 'avec-moi' : ''} ${k === prochain ? 'prochain' : ''}">
+      <small>${NOM_MATCH[k]}</small>${cote(m.a)}<i>contre</i>${cote(m.b)}${m.detail ? `<small class="detail">${echap(m.detail)}</small>` : ''}</li>`;
+  };
+  const tableau = (t: 0 | 1) => `
+    <section class="bloc tableau-tournoi"><h2>Tableau ${t === 0 ? 'A' : 'B'}</h2>
+      <p class="note">Qualifié d'office pour la 1/2 finale : ${nom(c.tableaux[t][0])}</p>
+      <ul class="matchs">${ligne(t === 0 ? 'QA' : 'QB')}${ligne(t === 0 ? 'SA' : 'SB')}</ul></section>`;
+  const fin = finie(c);
+  const p = places(c);
+  const classement = fin ? `<section class="bloc"><h2>Classement</h2><ol class="classement">${[...p.entries()].sort((x, y) => x[1] - y[1]).map(([i, pl]) => `<li class="${i === 0 ? 'moi' : ''}"><span class="place p${pl}">${pl === 1 ? '🥇' : pl === 2 ? '🥈' : pl === 3 ? '🥉' : `${pl}e`}</span>${nom(i)}</li>`).join('')}</ol></section>` : '';
+  const maPlace = p.get(0);
+  const adversaire = prochain ? (c.matchs[prochain].a === 0 ? c.matchs[prochain].b : c.matchs[prochain].a) : null;
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Compétition', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `Ton lutteur : ${echap(trouverLutteur(c.lutteurs[0]).nom)}`, '#tournois')}
+      ${prochain ? `<section class="bloc prochain-combat"><h2>${NOM_MATCH[prochain]}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
+      ${fin ? sectionFinTournoi(c, maPlace === 1 ? 'Compétition gagnée' : 'Compétition') : ''}
+      ${classement}
+      ${tableau(0)}${tableau(1)}
+      <section class="bloc"><h2>Repêchage et finales</h2><ul class="matchs">${(['R1', 'R2', 'F', 'R3'] as CleMatch[]).map(ligne).join('')}</ul></section>
+      ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
+    </main>`;
+  activerReflets(app);
+  app.querySelector('[data-combattre]')?.addEventListener('click', () => {
+    const m = c.matchs[prochain!];
+    lancerCombatTournoi(prochain!, c.lutteurs[0], c.lutteurs[m.a === 0 ? m.b! : m.a!]);
+  });
+  brancherFinTournoi();
+  window.scrollTo(0, 0);
+}
+
+function ecranEquipe(t: TournoiEquipe) {
+  const [moi, eux] = scoreEquipe(t);
+  const prochain = prochainDuel(t);
+  const fin = equipeFinie(t);
+  const gagne = moi > eux;
+  const duels = t.mes.map((id, i) => {
+    const r = t.resultats[i];
+    const a = trouverLutteur(id), b = trouverLutteur(t.leurs[i]);
+    return `<li class="match avec-moi ${i === prochain ? 'prochain' : ''}"><small>Duel ${i + 1}</small>
+      <span class="${r === true ? 'gagnant' : r === false ? 'perdant' : ''}"><b class="moi">${echap(a.nom)}</b></span><i>contre</i>
+      <span class="${r === false ? 'gagnant' : r === true ? 'perdant' : ''}">${echap(b.nom)}</span>
+      ${t.details[i] ? `<small class="detail">${echap(t.details[i])}</small>` : r === null && fin ? '<small class="detail">Pas joué</small>' : ''}</li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Tournoi par équipe', `Club de ${echap(collection.coach ?? '')} contre ${echap(t.nomAdverse)}`, '#tournois')}
+      <section class="bloc score-equipe"><span>${moi}</span><i>–</i><span>${eux}</span></section>
+      ${prochain !== null ? `<section class="bloc prochain-combat"><h2>Duel ${prochain + 1}</h2><p><b class="moi">${echap(trouverLutteur(t.mes[prochain]).nom)}</b> contre ${echap(trouverLutteur(t.leurs[prochain]).nom)}</p><button class="principal" data-combattre>Combattre</button></section>` : ''}
+      ${fin ? sectionFinTournoi(t, gagne ? 'Tournoi par équipe gagné' : 'Tournoi par équipe') : ''}
+      <section class="bloc"><h2>Les duels</h2><ul class="matchs">${duels}</ul></section>
+      ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
+    </main>`;
+  activerReflets(app);
+  app.querySelector('[data-combattre]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.mes[prochain!], t.leurs[prochain!]));
+  brancherFinTournoi();
+  window.scrollTo(0, 0);
+}
+
+function allerAuxTournois() {
+  if (location.hash === '#tournois') ecranTournois();
+  else location.hash = '#tournois';
+}
+
+function brancherFinTournoi() {
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetTournoi && revelerPaquet(paquetTournoi, ecranTournoiEnCours));
+  app.querySelector('[data-terminer]')?.addEventListener('click', () => {
+    tournoi = null;
+    paquetTournoi = null;
+    sauverTournoi();
+    allerAuxTournois();
+  });
+  const ab = app.querySelector<HTMLButtonElement>('[data-abandonner-tournoi]');
+  ab?.addEventListener('click', () => {
+    if (!ab.dataset.confirme) {
+      ab.dataset.confirme = '1';
+      ab.textContent = 'Appuie encore : l\'inscription est perdue (les médailles gagnées restent)';
+      return;
+    }
+    tournoi = null;
+    paquetTournoi = null;
+    sauverTournoi();
+    allerAuxTournois();
+  });
+}
+
+function lancerCombatTournoi(cle: CleMatch | number, idMoi: string, idLui: string) {
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  mode = 'solo';
+  HUMAIN = 0;
+  ORDI = 1;
+  partie = new Partie(idMoi, idLui, nouvelleGraine(), collection.niveau, defTournoi(idMoi, true));
+  tours = [];
+  scoresPeriodes = [];
+  enAttente = false;
+  endurancesAvant = null;
+  recompenseDonnee = true; // pas de récompense d'arène
+  tuto = false;
+  enTournoi = cle;
+  ecranCombat();
+}
+
+// Fin d'un combat du joueur dans un tournoi : on note le résultat, +1 médaille s'il gagne.
+function finCombatTournoi(abandon: boolean) {
+  const cle = enTournoi;
+  enTournoi = null;
+  if (!partie || !tournoi || cle === null) return ecranTournois();
+  const e = partie.etat;
+  const gagne = !abandon && e.vainqueur === HUMAIN;
+  const detail = abandon ? 'par abandon' : e.finPar === 'tombe' ? 'par tombé'
+    : `${Math.max(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)} périodes à ${Math.min(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)}`;
+  if (tournoi.type === 'competition' && typeof cle === 'string') {
+    const m = tournoi.matchs[cle];
+    const lui = m.a === 0 ? m.b! : m.a!;
+    enregistrer(tournoi, cle, gagne ? 0 : lui, detail);
+  } else if (tournoi.type === 'equipe' && typeof cle === 'number') {
+    enregistrerDuel(tournoi, cle, gagne, detail);
+  }
+  if (gagne) gagnerCombatTournoi(collection, tournoi);
+  sauver(collection);
+  sauverTournoi();
+  const lutteur = e.joueurs[gagne ? HUMAIN : ORDI].def;
+  partie = null;
+  app.innerHTML = `
+    <main class="fin">
+      <section class="verdict ${gagne ? 'rouge' : 'bleu'}">
+        <div class="rayons" aria-hidden="true"></div>
+        <div class="verdict-portrait">${portrait(lutteur)}</div>
+        <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
+        <p>${echap(lutteur.nom)} gagne ${detail}.</p>
+        ${gagne ? `<p class="recap-gains">${ICONE_MEDAILLE}<b>+${R_.tournoi.medaillesParCombatGagne} médaille</b></p>` : ''}
+      </section>
+      <div class="fin-boutons"><button class="principal" data-suite-tournoi>Voir le tournoi</button></div>
+    </main>`;
+  app.querySelector('[data-suite-tournoi]')!.addEventListener('click', ecranTournoiEnCours);
+  window.scrollTo(0, 0);
+}
+
 // ---------- Mon Club ----------
 
 function ecranMonClub(message = '') {
@@ -930,6 +1222,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   paquetSolo = null;
   messageSolo = '';
   tuto = false;
+  enTournoi = null;
   bonusCeCombat = collection.bonusTutoriel;
   ecranCombat();
 }
@@ -1006,6 +1299,7 @@ function lancerTutoriel() {
   paquetSolo = null;
   messageSolo = '';
   tuto = true;
+  enTournoi = null;
   bonusCeCombat = false;
   ecranCombat();
 }
@@ -1301,6 +1595,7 @@ function ecranCombat() {
   const e = etatEnCours();
   if (!e) return;
   if (tuto && (e.termine || e.periode > 1)) return ecranFinTutoriel();
+  if (enTournoi !== null && e.termine) return finCombatTournoi(false);
   if (e.termine) return mode === 'ligne' ? ecranFinLigne() : ecranFin();
   const h = e.joueurs[HUMAIN];
   const o = e.joueurs[ORDI];
@@ -1365,6 +1660,7 @@ function ecranCombat() {
     }
     if (!confirmerAbandon()) return;
     if (mode === 'ligne') duel?.abandonner();
+    else if (enTournoi !== null) finCombatTournoi(true);
     else ecranArene();
   });
   if (mode === 'ligne') majStatutLigne();
@@ -2112,6 +2408,7 @@ function route() {
   if (h === '#fusion') return ecranFusion();
   if (h === '#social') return ecranSocial();
   if (h === '#club') return ecranMonClub();
+  if (h === '#tournois') return ecranTournois();
   quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
   if (h === '#regles') return ecranRegles();

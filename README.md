@@ -30,8 +30,9 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `.github/workflows/pages.yml` : publication automatique sur GitHub Pages (tests puis construction).
 - `src/page/club.ts` : la section Social (amis, transfert de lutteur du jour, transfert entre amis), sans affichage.
 - `src/page/aide.ts` : la page Règles (textes tirés de la configuration) et le tutoriel (écrans et combat guidé).
+- `src/page/tournoi.ts` : les tournois (tableau à 6 avec repêchage croisé, tournoi par équipe, inscriptions et gains), sans affichage.
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.
-- Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
+- Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `tournois`, `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
 - `tests/` : un test par règle.
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
 
