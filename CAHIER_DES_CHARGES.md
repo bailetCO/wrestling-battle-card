@@ -132,6 +132,13 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 - Style manga semi-réaliste, entre réalisme et anime (esprit Baki, Hajime no Ippo).
 - Visuel propre à chaque rareté : cadre simple (commune), reflets brillants (rare), effet holographique (épique), illustration animée (légendaire).
 - Cartes spéciales possibles en éditions limitées.
+- Illustration selon le niveau de la carte (dessins provisoires faits en code, à remplacer par les vrais dessins) :
+  - Commune : dans une salle de lutte (tapis, lutteurs à l'entraînement au fond), le lutteur au premier plan tient son dossier de licence.
+  - Rare : au centre du tapis, en garde face à un adversaire.
+  - Épique : en train de placer une souplesse arrière.
+  - Légendaire : au bord du tapis, il saute dans les bras de son coach ; sur le côté, le tableau de score affiche le score et son nom de vainqueur.
+  - Champion du Monde : à la première place du podium, médaille d'or au cou, devant le tapis et le drapeau de sa nation qui descend du plafond.
+  - Petits portraits (mini-cartes, vignettes, combat) : le buste du lutteur sur le décor de son niveau (médaille d'or pour un Champion du Monde).
 
 ## 4. Système de combat
 

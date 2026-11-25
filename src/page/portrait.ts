@@ -2,7 +2,7 @@
 // Pour mettre une vraie illustration plus tard : renseigner `image` dans APPARENCE
 // (chemin d'une image), elle remplacera le dessin.
 
-import type { DefLutteur, Nation } from '../moteur';
+import type { DefLutteur, Nation, NiveauCarte } from '../moteur';
 
 type Coiffure = 'ras' | 'pics' | 'crete' | 'meche' | 'chauve' | 'boucles' | 'tresses';
 type Pilosite = 'aucune' | 'barbe' | 'bouc' | 'moustache';
@@ -96,23 +96,14 @@ function pilosite(a: Apparence): string {
   }
 }
 
-// Dessin complet. `uid` rend les identifiants SVG uniques quand plusieurs portraits sont affichés.
-export function portraitSVG(def: DefLutteur, uid: string): string {
-  const a = APPARENCE[def.id];
-  const col = COULEURS_NATION[def.nation];
-  if (a?.image) {
-    return `<img class="portrait-img" src="${a.image}" alt="Portrait de ${def.nom}">`;
-  }
-  if (!a) return '';
-  const w = 62 + ((def.force - 140) / 100) * 34; // carrure selon la force
+// ---------- Morceaux de dessin ----------
+
+const ENCRE = '#120c08';
+
+// La tête du lutteur, dans le repère 200 × 200 du buste (centre du visage vers 100, 95).
+function tete(a: Apparence, uid: string): string {
   const p = a.peau;
   const po = ombre(p);
-  const rayons = Array.from({ length: 28 }, (_, i) => {
-    const ang = (i / 28) * Math.PI * 2;
-    const x = 100 + Math.cos(ang) * 260;
-    const y = 95 + Math.sin(ang) * 260;
-    return `<path d="M100 95 L${x.toFixed(0)} ${y.toFixed(0)}" stroke="#fff" stroke-width="${i % 3 === 0 ? 2.5 : 1}" opacity=".16"/>`;
-  }).join('');
   const oreilleG = a.oreille
     ? `<path d="M64 88 C54 84 52 100 56 110 C60 116 66 112 66 106 C58 104 60 94 64 96Z" fill="${p}" stroke="${po}" stroke-width="2"/><path d="M58 96 Q62 100 59 106" stroke="${po}" stroke-width="2" fill="none"/>`
     : `<ellipse cx="62" cy="100" rx="6" ry="11" fill="${p}" stroke="${po}" stroke-width="1.5"/>`;
@@ -124,37 +115,338 @@ export function portraitSVG(def: DefLutteur, uid: string): string {
        <path d="M60 116 C70 146 130 146 140 116" stroke="#20232b" stroke-width="4" fill="none"/>`
     : '';
   return `
-  <svg class="portrait-svg" viewBox="16 22 168 178" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Portrait de ${def.nom}">
-    <defs>
-      <linearGradient id="f${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col.fond}"/><stop offset="1" stop-color="${col.fond2}"/></linearGradient>
-      <pattern id="t${uid}" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.3" fill="#000" opacity=".28"/></pattern>
-      <clipPath id="c${uid}"><path d="M66 80 C64 120 80 146 100 151 C120 146 136 120 134 80 C134 46 66 46 66 80Z"/></clipPath>
-    </defs>
-    <rect width="200" height="200" fill="url(#f${uid})"/>
-    <g class="aura">${rayons}</g>
-    <rect y="120" width="200" height="80" fill="url(#t${uid})"/>
-    <path d="M${100 - w} 200 C${100 - w} 172 ${100 - w * 0.8} 158 84 150 L116 150 C${100 + w * 0.8} 158 ${100 + w} 172 ${100 + w} 200Z" fill="${p}" stroke="#120c08" stroke-width="2.5"/>
-    <path d="M${100 + w * 0.15} 152 C${100 + w * 0.7} 160 ${100 + w} 176 ${100 + w} 200 L${100 + w * 0.35} 200Z" fill="${po}"/>
-    <path d="M82 128 L82 156 Q100 166 118 156 L118 128Z" fill="${p}" stroke="#120c08" stroke-width="2.5"/>
-    <path d="M100 130 L118 128 L118 156 Q110 162 100 163Z" fill="${po}"/>
-    <path d="M${100 - w * 0.62} 200 L${100 - w * 0.5} 166 L${100 - w * 0.36} 166 L${100 - w * 0.3} 186 Q100 176 ${100 + w * 0.3} 186 L${100 + w * 0.36} 166 L${100 + w * 0.5} 166 L${100 + w * 0.62} 200Z" fill="${col.maillot}" stroke="#120c08" stroke-width="2.5"/>
-    <path d="M${100 - w * 0.3} 190 Q100 180 ${100 + w * 0.3} 190" stroke="${col.liseré}" stroke-width="3" fill="none"/>
+    <defs><clipPath id="c${uid}"><path d="M66 80 C64 120 80 146 100 151 C120 146 136 120 134 80 C134 46 66 46 66 80Z"/></clipPath></defs>
     ${oreilleG}${oreilleD}
-    <path d="M66 80 C64 120 80 146 100 151 C120 146 136 120 134 80 C134 46 66 46 66 80Z" fill="${p}" stroke="#120c08" stroke-width="2.8"/>
+    <path d="M66 80 C64 120 80 146 100 151 C120 146 136 120 134 80 C134 46 66 46 66 80Z" fill="${p}" stroke="${ENCRE}" stroke-width="2.8"/>
     <g clip-path="url(#c${uid})"><path d="M104 40 C122 60 128 100 112 160 L150 160 L150 40Z" fill="${po}"/></g>
     <path d="M82 138 Q100 146 118 138" stroke="${po}" stroke-width="2" fill="none"/>
-    <path d="M72 84 L94 92" stroke="#120c08" stroke-width="5" stroke-linecap="round"/>
-    <path d="M128 84 L106 92" stroke="#120c08" stroke-width="5" stroke-linecap="round"/>
-    <path d="M75 98 L93 95 L90 102 Q82 104 75 98Z" fill="#fff" stroke="#120c08" stroke-width="2"/>
-    <path d="M125 98 L107 95 L110 102 Q118 104 125 98Z" fill="#fff" stroke="#120c08" stroke-width="2"/>
-    <circle cx="87" cy="98.5" r="2.8" fill="#120c08"/><circle cx="113" cy="98.5" r="2.8" fill="#120c08"/>
+    <path d="M72 84 L94 92" stroke="${ENCRE}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M128 84 L106 92" stroke="${ENCRE}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M75 98 L93 95 L90 102 Q82 104 75 98Z" fill="#fff" stroke="${ENCRE}" stroke-width="2"/>
+    <path d="M125 98 L107 95 L110 102 Q118 104 125 98Z" fill="#fff" stroke="${ENCRE}" stroke-width="2"/>
+    <circle cx="87" cy="98.5" r="2.8" fill="${ENCRE}"/><circle cx="113" cy="98.5" r="2.8" fill="${ENCRE}"/>
     <circle cx="88" cy="97.5" r=".9" fill="#fff" class="eclat"/><circle cx="114" cy="97.5" r=".9" fill="#fff" class="eclat"/>
-    <path d="M101 100 L96 117 L104 118" stroke="#120c08" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
-    <path d="M90 130 L111 128" stroke="#120c08" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M101 100 L96 117 L104 118" stroke="${ENCRE}" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+    <path d="M90 130 L111 128" stroke="${ENCRE}" stroke-width="2.6" stroke-linecap="round"/>
     <path d="M78 110 L82 112 M80 114 L84 116" stroke="${po}" stroke-width="1.6"/>
     ${a.cicatrice ? '<path d="M118 84 L124 104 M117 92 L123 90 M119 98 L125 96" stroke="#7a2b22" stroke-width="1.8"/>' : ''}
     ${pilosite(a)}
     ${coiffure(a)}
-    ${casque}
+    ${casque}`;
+}
+
+// Buste : cou, épaules, maillot (même repère que la tête).
+function buste(def: DefLutteur, a: Apparence, uid: string, medaille = false): string {
+  const col = COULEURS_NATION[def.nation];
+  const w = 62 + ((def.force - 140) / 100) * 34; // carrure selon la force
+  const p = a.peau;
+  const po = ombre(p);
+  return `
+    <path d="M${100 - w} 200 C${100 - w} 172 ${100 - w * 0.8} 158 84 150 L116 150 C${100 + w * 0.8} 158 ${100 + w} 172 ${100 + w} 200Z" fill="${p}" stroke="${ENCRE}" stroke-width="2.5"/>
+    <path d="M${100 + w * 0.15} 152 C${100 + w * 0.7} 160 ${100 + w} 176 ${100 + w} 200 L${100 + w * 0.35} 200Z" fill="${po}"/>
+    <path d="M82 128 L82 156 Q100 166 118 156 L118 128Z" fill="${p}" stroke="${ENCRE}" stroke-width="2.5"/>
+    <path d="M100 130 L118 128 L118 156 Q110 162 100 163Z" fill="${po}"/>
+    <path d="M${100 - w * 0.62} 200 L${100 - w * 0.5} 166 L${100 - w * 0.36} 166 L${100 - w * 0.3} 186 Q100 176 ${100 + w * 0.3} 186 L${100 + w * 0.36} 166 L${100 + w * 0.5} 166 L${100 + w * 0.62} 200Z" fill="${col.maillot}" stroke="${ENCRE}" stroke-width="2.5"/>
+    <path d="M${100 - w * 0.3} 190 Q100 180 ${100 + w * 0.3} 190" stroke="${col.liseré}" stroke-width="3" fill="none"/>
+    ${medaille ? `<path d="M86 152 L100 184 L114 152" fill="none" stroke="#c8102e" stroke-width="5"/><circle cx="100" cy="188" r="10" fill="#ffd76a" stroke="${ENCRE}" stroke-width="2"/><circle cx="100" cy="188" r="6" fill="none" stroke="#b8860b" stroke-width="1.5"/>` : ''}
+    ${tete(a, uid)}`;
+}
+
+// Une tête simple, pour l'adversaire, le coach et les silhouettes.
+function teteSimple(x: number, y: number, r: number, peau: string, cheveux: string, sourire = false): string {
+  return `<g>
+    <circle cx="${x}" cy="${y}" r="${r}" fill="${peau}" stroke="${ENCRE}" stroke-width="1.6"/>
+    <path d="M${x - r} ${y - r * 0.1} C${x - r} ${y - r * 1.3} ${x + r} ${y - r * 1.3} ${x + r} ${y - r * 0.1} C${x + r * 0.5} ${y - r * 0.6} ${x - r * 0.5} ${y - r * 0.6} ${x - r} ${y - r * 0.1}Z" fill="${cheveux}"/>
+    <circle cx="${x - r * 0.35}" cy="${y + r * 0.1}" r="${r * 0.11}" fill="${ENCRE}"/><circle cx="${x + r * 0.35}" cy="${y + r * 0.1}" r="${r * 0.11}" fill="${ENCRE}"/>
+    ${sourire ? `<path d="M${x - r * 0.4} ${y + r * 0.45} Q${x} ${y + r * 0.85} ${x + r * 0.4} ${y + r * 0.45}" fill="none" stroke="${ENCRE}" stroke-width="1.4"/>` : `<path d="M${x - r * 0.3} ${y + r * 0.5} L${x + r * 0.3} ${y + r * 0.5}" stroke="${ENCRE}" stroke-width="1.4"/>`}
+  </g>`;
+}
+
+type Pt = [number, number];
+interface Pose {
+  tete: [number, number, number]; // centre de la tête et rotation (degrés)
+  cou: Pt; hanche: Pt;
+  coudeA: Pt; mainA: Pt; coudeB: Pt; mainB: Pt;
+  genouA: Pt; piedA: Pt; genouB: Pt; piedB: Pt;
+}
+
+// Un membre : contour noir, puis la couleur.
+function membre(pts: Pt[], couleur: string, epaisseur: number): string {
+  const d = `M${pts.map(([x, y]) => `${x} ${y}`).join(' L')}`;
+  return `<path d="${d}" fill="none" stroke="${ENCRE}" stroke-width="${epaisseur + 3}" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${d}" fill="none" stroke="${couleur}" stroke-width="${epaisseur}" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+// Un personnage entier. `teteHTML` : la tête déjà dessinée (dans le repère du buste) ou une tête simple.
+function personnage(o: {
+  pose: Pose; peau: string; maillot: string; liseré?: string; bas?: string; echelle?: number;
+  teteDetaillee?: string; teteSimple?: string; medaille?: boolean;
+}): string {
+  const { pose: q, peau, maillot } = o;
+  const k = o.echelle ?? 1;
+  const bas = o.bas ?? maillot; // couleur du short (ou du pantalon du coach)
+  const mi = (a: Pt, b: Pt): Pt => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const jambe = (g: Pt, p: Pt) => membre([q.hanche, g, p], peau, 8 * k) + membre([q.hanche, mi(q.hanche, g)], bas, 9 * k)
+    + `<ellipse cx="${p[0]}" cy="${p[1]}" rx="${4.5 * k}" ry="${2.6 * k}" fill="#22252e" stroke="${ENCRE}" stroke-width="1.2"/>`;
+  const bras = (c: Pt, m: Pt) => membre([q.cou, c, m], peau, 6 * k);
+  const [tx, ty, tr] = q.tete;
+  const teteG = o.teteDetaillee
+    ? `<g transform="translate(${tx} ${ty}) rotate(${tr}) scale(${0.25 * k}) translate(-100 -98)">${o.teteDetaillee}</g>`
+    : o.teteSimple ?? '';
+  return `<g>
+    ${bras(q.coudeB, q.mainB)}
+    ${jambe(q.genouB, q.piedB)}
+    ${membre([q.cou, q.hanche], maillot, 17 * k)}
+    ${o.liseré ? `<path d="M${q.cou[0]} ${q.cou[1]} L${q.hanche[0]} ${q.hanche[1]}" stroke="${o.liseré}" stroke-width="${2 * k}" opacity=".8"/>` : ''}
+    ${jambe(q.genouA, q.piedA)}
+    ${o.medaille ? `<circle cx="${(q.cou[0] * 2 + q.hanche[0]) / 3}" cy="${(q.cou[1] * 2 + q.hanche[1]) / 3}" r="${3.6 * k}" fill="#ffd76a" stroke="${ENCRE}" stroke-width="1"/>
+      <path d="M${q.cou[0] - 3 * k} ${q.cou[1]} L${(q.cou[0] * 2 + q.hanche[0]) / 3} ${(q.cou[1] * 2 + q.hanche[1]) / 3 - 3 * k} L${q.cou[0] + 3 * k} ${q.cou[1]}" fill="none" stroke="#c8102e" stroke-width="${1.6 * k}"/>` : ''}
+    ${teteG}
+    ${bras(q.coudeA, q.mainA)}
+  </g>`;
+}
+
+// Miroir horizontal d'une pose (dans un repère de 200 de large).
+function miroir(q: Pose): Pose {
+  const m = (p: Pt): Pt => [200 - p[0], p[1]];
+  return {
+    tete: [200 - q.tete[0], q.tete[1], -q.tete[2]], cou: m(q.cou), hanche: m(q.hanche),
+    coudeA: m(q.coudeA), mainA: m(q.mainA), coudeB: m(q.coudeB), mainB: m(q.mainB),
+    genouA: m(q.genouA), piedA: m(q.piedA), genouB: m(q.genouB), piedB: m(q.piedB),
+  };
+}
+
+// Drapeau d'une nation, dans un rectangle.
+function drapeau(n: Nation, x: number, y: number, w: number, h: number): string {
+  const bandes = (cs: string[]) => cs.map((c, i) => `<rect x="${x}" y="${y + (i * h) / cs.length}" width="${w}" height="${h / cs.length + 0.3}" fill="${c}"/>`).join('');
+  switch (n) {
+    case 'usa':
+      return Array.from({ length: 7 }, (_, i) => `<rect x="${x}" y="${y + (i * h) / 7}" width="${w}" height="${h / 7 + 0.3}" fill="${i % 2 ? '#ffffff' : '#c8283a'}"/>`).join('')
+        + `<rect x="${x}" y="${y}" width="${w * 0.45}" height="${h * 0.5}" fill="#1f3a7a"/>`
+        + Array.from({ length: 6 }, (_, i) => `<circle cx="${x + w * 0.08 + (i % 3) * w * 0.14}" cy="${y + h * 0.12 + Math.floor(i / 3) * h * 0.2}" r="${w * 0.025}" fill="#fff"/>`).join('');
+    case 'russie': return bandes(['#ffffff', '#1c57b5', '#d42f2f']);
+    case 'afrique': return bandes(['#14804a', '#f2c230', '#d33a2c']);
+    case 'japon':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f7f7f7"/><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) * 0.28}" fill="#c51f35"/>`;
+    case 'europe':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#1d4ea0"/>`
+        + Array.from({ length: 12 }, (_, i) => {
+          const ang = (i / 12) * Math.PI * 2;
+          const r = Math.min(w, h) * 0.3;
+          return `<circle cx="${(x + w / 2 + Math.cos(ang) * r).toFixed(1)}" cy="${(y + h / 2 + Math.sin(ang) * r).toFixed(1)}" r="${Math.min(w, h) * 0.035}" fill="#f5c518"/>`;
+        }).join('');
+  }
+}
+
+// ---------- Décors ----------
+
+// Salle de lutte : mur, bandeau, et tapis en perspective (repère 200 × 137,5).
+function salle(uid: string, tapisY = 96): string {
+  return `
+    <defs>
+      <linearGradient id="m${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2544"/><stop offset="1" stop-color="#31406b"/></linearGradient>
+      <radialGradient id="l${uid}" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="200" height="138" fill="url(#m${uid})"/>
+    ${[30, 100, 170].map((x) => `<rect x="${x - 18}" y="6" width="36" height="5" rx="2" fill="#fffbe6" opacity=".7"/>`).join('')}
+    <rect width="200" height="138" fill="url(#l${uid})"/>
+    <rect x="0" y="${tapisY - 26}" width="200" height="10" fill="#c8102e" opacity=".55"/>
+    <path d="M0 ${tapisY} H200 V138 H0Z" fill="#1d5fc4"/>
+    <path d="M-30 138 Q100 ${tapisY - 4} 230 138" fill="#f07c2a"/>
+    <path d="M-5 138 Q100 ${tapisY + 6} 205 138" fill="#2a72d8"/>
+    <path d="M70 138 Q100 ${tapisY + 26} 130 138" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>`;
+}
+
+// Arène sombre avec projecteurs.
+function arene(uid: string, tapisY = 100): string {
+  return `
+    <defs>
+      <linearGradient id="a${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#090d1f"/><stop offset="1" stop-color="#1c2550"/></linearGradient>
+    </defs>
+    <rect width="200" height="138" fill="url(#a${uid})"/>
+    ${[20, 60, 140, 180].map((x) => `<path d="M${x} 0 L${x - 22} ${tapisY} L${x + 22} ${tapisY}Z" fill="#fff" opacity=".06"/><circle cx="${x}" cy="3" r="3" fill="#fffbe6"/>`).join('')}
+    ${Array.from({ length: 22 }, (_, i) => `<circle cx="${5 + i * 9.2}" cy="${tapisY - 8 - (i % 3) * 3}" r="3.4" fill="#000" opacity=".35"/>`).join('')}
+    <path d="M0 ${tapisY} H200 V138 H0Z" fill="#1d5fc4"/>
+    <path d="M-40 138 Q100 ${tapisY - 6} 240 138" fill="#f07c2a"/>
+    <path d="M-12 138 Q100 ${tapisY + 6} 212 138" fill="#2a72d8"/>`;
+}
+
+// ---------- Scènes de la grande carte (repère 200 × 137,5) ----------
+
+const ADVERSAIRE = { peau: '#c98f62', cheveux: '#1d1715' };
+
+function sceneCommune(def: DefLutteur, a: Apparence, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  // Deux lutteurs qui s'entraînent au fond.
+  const fond = (x: number, sens: 1 | -1) => {
+    const q: Pose = { tete: [x, 66, 0], cou: [x, 72], hanche: [x - 4 * sens, 86], coudeA: [x + 8 * sens, 76], mainA: [x + 13 * sens, 72], coudeB: [x + 6 * sens, 80], mainB: [x + 12 * sens, 80], genouA: [x + 4 * sens, 94], piedA: [x + 2 * sens, 104], genouB: [x - 10 * sens, 94], piedB: [x - 14 * sens, 104] };
+    return `<g opacity=".45">${personnage({ pose: q, peau: '#8a7a70', maillot: '#2b2f3a', echelle: 0.55, teteSimple: teteSimple(x, 66, 4.5, '#8a7a70', '#2b2f3a') })}</g>`;
+  };
+  return `${salle(uid)}${fond(24, 1)}${fond(46, -1)}${fond(160, 1)}${fond(182, -1)}
+    <g transform="translate(34 4) scale(.66)">${buste(def, a, uid)}
+      <g transform="rotate(-6 100 190)">
+        <rect x="62" y="168" width="76" height="52" rx="4" fill="#f4efe2" stroke="${ENCRE}" stroke-width="2.5"/>
+        <rect x="62" y="168" width="76" height="12" rx="4" fill="${col.maillot}" stroke="${ENCRE}" stroke-width="2"/>
+        <text x="100" y="177.5" text-anchor="middle" font-size="8.5" font-weight="800" fill="${col.liseré === '#ffffff' ? '#fff' : col.liseré}" font-family="Arial, sans-serif" letter-spacing="1">LICENCE</text>
+        <rect x="68" y="184" width="16" height="20" fill="${col.fond}" stroke="${ENCRE}" stroke-width="1.2"/>
+        <circle cx="76" cy="191" r="4" fill="${a.peau}"/>
+        ${[188, 194, 200].map((y) => `<path d="M90 ${y} H130" stroke="#9a9384" stroke-width="2"/>`).join('')}
+        <circle cx="62" cy="196" r="7" fill="${a.peau}" stroke="${ENCRE}" stroke-width="2"/>
+        <circle cx="138" cy="196" r="7" fill="${a.peau}" stroke="${ENCRE}" stroke-width="2"/>
+      </g>
+    </g>`;
+}
+
+function sceneRare(def: DefLutteur, a: Apparence, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  const garde: Pose = {
+    tete: [72, 54, 8], cou: [75, 66], hanche: [66, 94],
+    coudeA: [90, 74], mainA: [100, 68], coudeB: [86, 82], mainB: [97, 80],
+    genouA: [84, 106], piedA: [80, 126], genouB: [56, 108], piedB: [46, 126],
+  };
+  const adv = miroir(garde);
+  const maillotAdv = col.maillot.toLowerCase() === '#1a49a8' ? '#c8283a' : '#1a49a8';
+  return `${salle(uid, 88)}
+    <ellipse cx="100" cy="124" rx="74" ry="10" fill="none" stroke="#fff" stroke-width="1.2" opacity=".5"/>
+    ${personnage({ pose: adv, peau: ADVERSAIRE.peau, maillot: maillotAdv, teteSimple: teteSimple(adv.tete[0], adv.tete[1], 11, ADVERSAIRE.peau, ADVERSAIRE.cheveux) })}
+    ${personnage({ pose: garde, peau: a.peau, maillot: col.maillot, liseré: col.liseré, teteDetaillee: tete(a, uid) })}`;
+}
+
+function sceneEpique(def: DefLutteur, a: Apparence, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  const lanceur: Pose = {
+    tete: [128, 84, 150], cou: [114, 70], hanche: [86, 92],
+    coudeA: [116, 52], mainA: [108, 40], coudeB: [122, 54], mainB: [116, 42],
+    genouA: [76, 110], piedA: [66, 128], genouB: [66, 108], piedB: [52, 128],
+  };
+  const vole: Pose = {
+    tete: [150, 64, 150], cou: [140, 52], hanche: [108, 36],
+    coudeA: [154, 40], mainA: [164, 34], coudeB: [150, 34], mainB: [158, 26],
+    genouA: [92, 20], piedA: [78, 10], genouB: [100, 16], piedB: [92, 4],
+  };
+  const maillotAdv = col.maillot.toLowerCase() === '#1a49a8' ? '#c8283a' : '#1a49a8';
+  return `${arene(uid, 104)}
+    <g fill="none" stroke="#fff" stroke-linecap="round" opacity=".55">
+      <path d="M60 30 Q110 -10 170 50" stroke-width="2.5" stroke-dasharray="10 6"/>
+      <path d="M52 44 Q112 4 176 64" stroke-width="1.5" stroke-dasharray="6 8"/>
+    </g>
+    ${personnage({ pose: vole, peau: ADVERSAIRE.peau, maillot: maillotAdv, teteSimple: teteSimple(vole.tete[0], vole.tete[1], 10, ADVERSAIRE.peau, ADVERSAIRE.cheveux) })}
+    ${personnage({ pose: lanceur, peau: a.peau, maillot: col.maillot, liseré: col.liseré, teteDetaillee: tete(a, uid) })}
+    <text x="20" y="30" font-size="15" font-weight="900" fill="#ffd76a" stroke="${ENCRE}" stroke-width="1" font-family="Arial Black, Arial, sans-serif" transform="rotate(-12 20 30)">SOUPLESSE !</text>`;
+}
+
+function sceneLegendaire(def: DefLutteur, a: Apparence, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  const saut: Pose = {
+    tete: [116, 46, 18], cou: [110, 58], hanche: [92, 78],
+    coudeA: [126, 50], mainA: [138, 44], coudeB: [124, 58], mainB: [136, 54],
+    genouA: [80, 88], piedA: [66, 82], genouB: [86, 94], piedB: [72, 102],
+  };
+  const coach: Pose = {
+    tete: [158, 50, -4], cou: [158, 62], hanche: [158, 94],
+    coudeA: [140, 56], mainA: [134, 44], coudeB: [178, 56], mainB: [186, 44],
+    genouA: [152, 112], piedA: [150, 130], genouB: [164, 112], piedB: [168, 130],
+  };
+  const score = `${8 + (def.nom.length % 5)} - ${def.nom.length % 4}`;
+  const nom = def.nom.length > 16 ? def.nom.split(' ').slice(-1)[0] : def.nom;
+  return `${arene(uid, 104)}
+    <g>
+      <rect x="6" y="12" width="68" height="50" rx="4" fill="#050608" stroke="#ffd76a" stroke-width="1.5"/>
+      <text x="40" y="22" text-anchor="middle" font-size="6" font-weight="700" fill="#ffd76a" font-family="Arial, sans-serif" letter-spacing=".8">VAINQUEUR</text>
+      <text x="40" y="33" text-anchor="middle" font-size="7" font-weight="800" fill="#fff" font-family="Arial, sans-serif">${nom.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text>
+      <text x="40" y="55" text-anchor="middle" font-size="17" font-weight="900" fill="#ff5a3c" font-family="'Courier New', monospace">${score}</text>
+    </g>
+    <path d="M0 108 H200" stroke="#f07c2a" stroke-width="3"/>
+    <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".5"><path d="M52 70 H70 M48 80 H66 M54 90 H72"/></g>
+    ${personnage({ pose: coach, peau: '#dcaa82', maillot: '#2b2f3a', bas: '#2b2f3a', teteSimple: teteSimple(158, 50, 10, '#dcaa82', '#4a2f22', true) })}
+    ${personnage({ pose: saut, peau: a.peau, maillot: col.maillot, liseré: col.liseré, teteDetaillee: tete(a, uid) })}`;
+}
+
+function sceneChampion(def: DefLutteur, a: Apparence, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  const podium: Pose = {
+    tete: [100, 30, 0], cou: [100, 42], hanche: [100, 66],
+    coudeA: [84, 36], mainA: [78, 22], coudeB: [114, 54], mainB: [104, 50],
+    genouA: [96, 76], piedA: [95, 86], genouB: [104, 76], piedB: [105, 86],
+  };
+  const bloc = (x: number, y: number, w: number, n: string, c: string) => `
+    <rect x="${x}" y="${y}" width="${w}" height="${138 - y}" fill="${c}" stroke="${ENCRE}" stroke-width="1.6"/>
+    <rect x="${x}" y="${y}" width="${w}" height="4" fill="#fff" opacity=".35"/>
+    <text x="${x + w / 2}" y="${y + 24}" text-anchor="middle" font-size="18" font-weight="900" fill="#fff" stroke="${ENCRE}" stroke-width=".8" font-family="Arial Black, Arial, sans-serif">${n}</text>`;
+  const confettis = Array.from({ length: 26 }, (_, i) => {
+    const x = (i * 37) % 200, y = (i * 23) % 80;
+    const c = ['#ffd76a', '#ff5a6e', '#79f2c0', '#6cc8ff', '#fff'][i % 5];
+    return `<rect x="${x}" y="${y}" width="3" height="1.6" fill="${c}" transform="rotate(${(i * 47) % 180} ${x} ${y})"/>`;
+  }).join('');
+  return `${arene(uid, 96)}
+    <path d="M48 0 H152" stroke="#888" stroke-width="2"/>
+    <g>
+      ${drapeau(def.nation, 52, 0, 96, 58)}
+      <rect x="52" y="0" width="96" height="58" fill="url(#pli${uid})" opacity=".35"/>
+      <defs><linearGradient id="pli${uid}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#000" stop-opacity=".4"/><stop offset=".25" stop-color="#fff" stop-opacity=".3"/>
+        <stop offset=".5" stop-color="#000" stop-opacity=".25"/><stop offset=".75" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></linearGradient></defs>
+      <rect x="52" y="0" width="96" height="58" fill="none" stroke="${ENCRE}" stroke-width="1.2"/>
+    </g>
+    ${confettis}
+    ${bloc(36, 102, 42, '2', '#9aa3b2')}
+    ${bloc(122, 110, 42, '3', '#b07a4a')}
+    ${bloc(78, 86, 44, '1', '#d9a520')}
+    <defs><filter id="g${uid}" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="1.6" flood-color="#fff6c8" flood-opacity="1"/></filter></defs>
+    <g filter="url(#g${uid})" transform="translate(100 86) scale(1.18) translate(-100 -86)">
+      ${personnage({ pose: podium, peau: a.peau, maillot: col.maillot, liseré: col.liseré, medaille: true, teteDetaillee: tete(a, uid) })}
+    </g>`;
+}
+
+// ---------- Décor des petits portraits (buste) ----------
+
+function decorBuste(def: DefLutteur, niveau: NiveauCarte, uid: string): string {
+  const col = COULEURS_NATION[def.nation];
+  const rayons = (opacite: number) => Array.from({ length: 28 }, (_, i) => {
+    const ang = (i / 28) * Math.PI * 2;
+    return `<path d="M100 95 L${(100 + Math.cos(ang) * 260).toFixed(0)} ${(95 + Math.sin(ang) * 260).toFixed(0)}" stroke="#fff" stroke-width="${i % 3 === 0 ? 2.5 : 1}" opacity="${opacite}"/>`;
+  }).join('');
+  switch (niveau) {
+    case 'commune':
+      return `<rect width="200" height="200" fill="#25305a"/>${[40, 100, 160].map((x) => `<rect x="${x - 20}" y="26" width="40" height="6" rx="2" fill="#fffbe6" opacity=".6"/>`).join('')}
+        <rect y="140" width="200" height="60" fill="#1d5fc4"/><path d="M-20 200 Q100 130 220 200" fill="#f07c2a"/>`;
+    case 'rare':
+      return `<rect width="200" height="200" fill="#1b2544"/><radialGradient id="s${uid}" cx=".5" cy=".3" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <rect width="200" height="200" fill="url(#s${uid})"/><ellipse cx="100" cy="190" rx="130" ry="40" fill="#f07c2a"/><ellipse cx="100" cy="194" rx="104" ry="30" fill="#2a72d8"/>`;
+    case 'epique':
+      return `<rect width="200" height="200" fill="#2a0f3d"/><g class="aura">${rayons(0.22)}</g>`;
+    case 'legendaire':
+      return `<rect width="200" height="200" fill="#120c02"/><g class="aura">${rayons(0.2)}</g>
+        <rect x="18" y="28" width="56" height="34" rx="3" fill="#050608" stroke="#ffd76a" stroke-width="1.5"/>
+        <text x="46" y="52" text-anchor="middle" font-size="16" font-weight="900" fill="#ff5a3c" font-family="'Courier New', monospace">${8 + (def.nom.length % 5)}-${def.nom.length % 4}</text>`;
+    case 'champion':
+      return `<rect width="200" height="200" fill="#0b1030"/>${drapeau(def.nation, 16, 22, 168, 110)}
+        <rect x="16" y="22" width="168" height="110" fill="#000" opacity=".25"/>`;
+  }
+  return `<rect width="200" height="200" fill="${col.fond}"/>`;
+}
+
+// ---------- Portrait ----------
+
+// Dessin complet. `uid` rend les identifiants SVG uniques quand plusieurs portraits sont affichés.
+// `niveau` : la rareté atteinte (décor et scène). `scene` : la grande scène de la carte ;
+// sinon, le buste sur le décor du niveau (petits portraits, vignettes).
+export function portraitSVG(def: DefLutteur, uid: string, opts: { niveau?: NiveauCarte; scene?: boolean } = {}): string {
+  const a = APPARENCE[def.id];
+  if (a?.image) {
+    return `<img class="portrait-img" src="${a.image}" alt="Portrait de ${def.nom}">`;
+  }
+  if (!a) return '';
+  const niveau = opts.niveau ?? def.niveau ?? def.rarete;
+  if (opts.scene) {
+    const scenes = { commune: sceneCommune, rare: sceneRare, epique: sceneEpique, legendaire: sceneLegendaire, champion: sceneChampion };
+    return `<svg class="portrait-svg scene" viewBox="0 0 200 137.5" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${def.nom}">${scenes[niveau](def, a, uid)}</svg>`;
+  }
+  return `
+  <svg class="portrait-svg" viewBox="16 22 168 178" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Portrait de ${def.nom}">
+    <defs><pattern id="t${uid}" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.3" fill="#000" opacity=".28"/></pattern></defs>
+    ${decorBuste(def, niveau, uid)}
+    <rect y="120" width="200" height="80" fill="url(#t${uid})" opacity=".6"/>
+    ${buste(def, a, uid, niveau === 'champion')}
   </svg>`;
 }

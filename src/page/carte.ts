@@ -117,7 +117,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
           <span class="cl-rarete" title="${NOM_RARETE[niveau]}">${gemmes}</span>
         </header>
         <div class="cl-portrait">
-          ${portraitSVG(def, uid)}
+          ${portraitSVG(def, uid, { niveau, scene: true })}
           <span class="cl-nation">${echap(def.origine)}</span>
           <span class="cl-niveau">${NOM_RARETE[niveau]}</span>
         </div>

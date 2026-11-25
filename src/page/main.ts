@@ -76,7 +76,7 @@ function nouvelleGraine(): number {
   return Math.floor(Math.random() * 1_000_000) + 1;
 }
 
-const portrait = (def: DefLutteur) => portraitSVG(def, `m${idPortrait++}`);
+const portrait = (def: DefLutteur, niveau?: NiveauCarte) => portraitSVG(def, `m${idPortrait++}`, { niveau });
 
 // ---------- Accueil, menu principal ----------
 
@@ -472,7 +472,7 @@ function miniCarteCollection(l: DefLutteur): string {
   }
   return `
     <button class="mini-carte" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
-      <span class="mc-portrait">${portrait(l)}</span>
+      <span class="mc-portrait">${portrait(l, niv)}</span>
       ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
       <span class="mc-nom">${echap(l.nom)}</span>
       <span class="mc-bas">${echap(l.origine)} ${etoiles}</span>
@@ -543,7 +543,7 @@ function ecranFusion(message = '') {
     const prog = f ? Math.min(100, (f.doublesDispo / f.doublesNecessaires) * 100) : 100;
     return `
       <li class="fusion-ligne ${pret ? 'pret' : ''}" data-rarete="${niv}">
-        <span class="vignette">${portrait(l)}</span>
+        <span class="vignette">${portrait(l, niv)}</span>
         <span class="fusion-info">
           <b>${echap(l.nom)}</b>
           <span class="grades" aria-label="${NOM_RARETE[niv]}, niveau ${rangAtteint + 1} sur ${NIVEAUX.length}">${etoiles}<em>${NOM_RARETE[niv]}</em></span>
