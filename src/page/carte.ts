@@ -19,9 +19,13 @@ const EMBLEMES: string[] = [
    <ellipse cx="50" cy="50" rx="24" ry="22" fill="currentColor"/>
    <ellipse cx="50" cy="50" rx="17" ry="15" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2.5"/>
    <path d="M50 39l3.3 7 7.6.8-5.7 5.1 1.6 7.5L50 55.6l-6.8 3.8 1.6-7.5-5.7-5.1 7.6-.8z" fill="#000" fill-opacity=".35"/>`,
-  // Or massif : trois lingots empilés.
-  `<path d="M14 82h34l-6-20H20z M52 82h34l-6-20H58z M33 58h34l-6-20H39z" fill="currentColor"/>
-   <path d="M20 62h22 M58 62h22 M39 38h22" stroke="#fff" stroke-opacity=".6" stroke-width="2.5"/>`,
+  // Or massif : médaille d'or olympique, ruban et couronne de laurier.
+  `<path d="M30 4h14l10 30h-14z M70 4H56L46 34h14z" fill="currentColor" opacity=".6"/>
+   <circle cx="50" cy="62" r="30" fill="currentColor"/>
+   <circle cx="50" cy="62" r="22" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2.5"/>
+   <path d="M36 74c-6-6-7-15-3-22 M64 74c6-6 7-15 3-22" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2.5"/>
+   <path d="M33 58l-5-2 M34 66l-5 0 M37 72l-4 3 M67 58l5-2 M66 66l5 0 M63 72l4 3" stroke="#000" stroke-opacity=".3" stroke-width="2.5" stroke-linecap="round"/>
+   <text x="50" y="69" text-anchor="middle" font-size="20" font-weight="700" fill="#000" fill-opacity=".35" font-family="sans-serif">1</text>`,
   // Nuit étoilée : croissant de lune et étoiles.
   `<path d="M58 14a34 34 0 1 0 28 54A28 28 0 1 1 58 14z" fill="currentColor"/>
    <path d="M78 16l2.4 5 5.4.6-4 3.7 1.1 5.4-4.9-2.7-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z M88 42l1.6 3.3 3.6.4-2.7 2.5.8 3.6-3.3-1.8-3.3 1.8.8-3.6-2.7-2.5 3.6-.4z M66 6l1.2 2.5 2.7.3-2 1.9.5 2.7-2.4-1.4-2.4 1.4.5-2.7-2-1.9 2.7-.3z" fill="currentColor"/>`,
@@ -95,6 +99,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
         ${bouton}
       </div>
       ${niveau === 'champion' ? filigrane(opts.style ?? 0) : ''}
+      ${niveau === 'champion' && opts.style === 2 ? '<div class="etoiles-filantes" aria-hidden="true"><i></i><i></i><i></i></div>' : ''}
       <div class="cl-reflet" aria-hidden="true"></div>
     </article>`;
 }
