@@ -949,22 +949,27 @@ function badges(e: EtatCombat, j: Joueur): string {
   return b.map((t) => `<span class="badge">${echap(t)}</span>`).join('');
 }
 
+// Jauge d'endurance façon jeu de combat : la barre se vide vers l'extérieur, une trace claire
+// montre ce qui vient d'être perdu, un repère marque le seuil de 50 (précision en baisse).
 function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquette: string): string {
   const max = l.def.enduranceMax;
-  const cible = (l.endurance / max) * 100;
-  const depart = endurancesAvant ? (endurancesAvant[j] / max) * 100 : cible;
+  const cible = Math.max(0, (l.endurance / max) * 100);
+  const depart = endurancesAvant ? Math.max(0, (endurancesAvant[j] / max) * 100) : cible;
   const repere = (50 / max) * 100;
   const chance = chanceReussite(precisionDe(l.endurance));
+  const etatPrecision = chance >= 1 ? 'pleine' : chance >= 0.6 ? 'moyenne' : 'faible';
   return `
     <div class="endu ${coin}">
       <div class="endu-ligne">
-        <span>${etiquette}</span>
-        <span><b>${fmt(l.endurance)}</b> / ${max} · réussite ${pct(chance)}</span>
+        <span class="endu-qui">${etiquette}</span>
+        <span class="endu-val"><b>${fmt(l.endurance)}</b><small>/${max}</small></span>
       </div>
       <div class="endu-barre" role="meter" aria-label="Endurance ${etiquette}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${fmt(l.endurance)}">
+        <div class="endu-trace" style="width:${Math.max(depart, cible)}%" data-cible="${cible}"></div>
         <div class="endu-rempli ${l.endurance < 50 ? 'bas' : ''}" style="width:${depart}%" data-cible="${cible}"></div>
-        ${repere < 100 ? `<div class="endu-repere" style="left:${repere}%" title="Sous 50, la précision baisse"></div>` : ''}
+        ${repere < 100 ? `<div class="endu-repere" style="${coin === 'bleu' ? 'right' : 'left'}:${repere}%" title="Sous 50, la précision baisse"></div>` : ''}
       </div>
+      <span class="endu-precision ${etatPrecision}">Réussite ${pct(chance)}</span>
     </div>`;
 }
 
@@ -1173,11 +1178,16 @@ function ecranCombat() {
 
   app.innerHTML = `
     <main class="combat">
-      ${tableau(e)}
-      <section class="jauges">
-        ${barre(h, HUMAIN, 'rouge', 'Toi')}
+      <div class="haut-combat">
+        ${tableau(e)}
+        <section class="jauges" aria-label="Endurance">
+          ${barre(h, HUMAIN, 'rouge', 'Toi')}
+          <span class="jauges-vs" aria-hidden="true">VS</span>
+          ${barre(o, ORDI, 'bleu', adv())}
+        </section>
+      </div>
+      <section class="badges-ligne">
         <div class="badges rouge">${badges(e, HUMAIN)}</div>
-        ${barre(o, ORDI, 'bleu', adv())}
         <div class="badges bleu">${badges(e, ORDI)}</div>
       </section>
       ${caseDernierTour(e)}
@@ -1194,7 +1204,7 @@ function ecranCombat() {
 
   // Les barres partent de l'endurance d'avant le tour et glissent vers la nouvelle valeur.
   requestAnimationFrame(() =>
-    app.querySelectorAll<HTMLElement>('.endu-rempli[data-cible]').forEach((b) => {
+    app.querySelectorAll<HTMLElement>('.endu-barre [data-cible]').forEach((b) => {
       b.style.width = `${b.dataset.cible}%`;
     }),
   );
