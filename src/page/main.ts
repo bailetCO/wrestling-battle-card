@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -254,20 +254,19 @@ function preparerPaquet(lien: string) {
   const i = recompensesHistoire.findIndex((r) => r.lien === lien);
   if (i < 0) return;
   const r = recompensesHistoire.splice(i, 1)[0];
-  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false };
+  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false, sansRecap: true };
   paquetHistoireLien = lien;
 }
 
+// Récompense à ouvrir ; une fois ouverte, pas de récapitulatif : on passe à la suivante (ou plus rien).
 function blocPaquet(lien: string): string {
-  if (!paquetHistoire || paquetHistoireLien !== lien) return '';
-  const encore = recompensesHistoire.some((r) => r.lien === lien);
-  return `${sectionPaquet(paquetHistoire)}${paquetHistoire.ouvert && encore ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}`;
+  if (!paquetHistoire || paquetHistoireLien !== lien || paquetHistoire.ouvert) return '';
+  return sectionPaquet(paquetHistoire);
 }
 
-function brancherPaquet(lien: string, ecran: () => void) {
-  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetHistoire && revelerPaquet(paquetHistoire, ecran));
-  app.querySelector('[data-suite-histoire]')?.addEventListener('click', () => { paquetHistoire = null; ecran(); });
-  if (paquetHistoire?.ouvert && !recompensesHistoire.some((r) => r.lien === lien)) paquetHistoire = null;
+function brancherPaquet(_lien: string, ecran: () => void) {
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () =>
+    paquetHistoire && revelerPaquet(paquetHistoire, () => { paquetHistoire = null; ecran(); }));
 }
 
 // ---------- Scènes de dialogue ----------
@@ -341,7 +340,7 @@ function ecranHistoire() {
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
       ${blocPaquet('#histoire')}
       ${histoireFinie(collection) ? '<section class="bloc saison-ouverte"><h2>La saison sportive est ouverte</h2><p>Interclub, régional, national, international, championnats du monde et Jeux Olympiques.</p><a class="principal lien-bouton" href="#saison">Commencer la saison</a></section>' : ''}
-      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club ouvert (étape 3) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
+      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
@@ -1296,7 +1295,7 @@ function ecranIndividuel(t: Individuel) {
         ${ex.length ? `<p class="note">Exempté${ex.length > 1 ? 's' : ''} du premier tour : ${ex.map(nom).join(', ')}</p>` : ''}
         <ul class="matchs">${visibles('principal').map(ligne).join('')}</ul></section>
       <section class="bloc tableau-tournoi perdants"><h2>Tableau des perdants</h2>
-        <p class="note">Une première défaite avant les 1/2 finales mène ici ; une deuxième élimine. Le vainqueur va au barrage : au mieux 3e.</p>
+        <p class="note">Une première défaite avant les 1/2 finales mène ici (côté A pour le haut du tableau, côté B pour le bas) ; une deuxième élimine. Le vainqueur de chaque côté affronte le perdant de la 1/2 finale opposée pour aller en petite finale : au mieux 3e.</p>
         <ul class="matchs">${perdants.length ? perdants.map(ligne).join('') : '<li class="match"><small>En attente des premiers perdants</small></li>'}</ul></section>
       <section class="bloc"><h2>Finales</h2><ul class="matchs">${visibles('finales').map(ligne).join('')}</ul></section>
       ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
@@ -1809,13 +1808,20 @@ function boutonAuto(attribut: string, valeur = ''): string {
 
 function texteAuto(): string {
   const p = Math.round(chanceFortAuto(niveauCompte(collection)) * 100);
-  return `⚡ Combat joué en automatique (${p === 0 ? 'comme l\'ordinateur normal' : p === 100 ? 'comme l\'ordinateur fort' : `fort ${p} % du temps, normal sinon`}).`;
+  const expert = partie && bonusAutoExpert(niveauCompte(collection), partie.niveau) ? ', avec le bonus de niveau 10+' : '';
+  return `⚡ Combat joué en automatique${expert} (${p === 0 ? 'comme l\'ordinateur normal' : p === 100 ? 'comme l\'ordinateur fort' : `fort ${p} % du temps, normal sinon`}).`;
 }
 
 // Lance l'écran de combat, ou joue tout le combat d'un coup et montre directement la fin.
 function demarrer(auto: boolean) {
   combatEnAuto = auto && autoDispo();
   if (!combatEnAuto || !partie) return ecranCombat();
+  // Au-dessus du niveau 10, l'auto gagne environ 3 fois sur 4 contre l'ordinateur.
+  const bonus = bonusAutoExpert(niveauCompte(collection), partie.niveau);
+  if (bonus) {
+    const [moi, lui] = partie.etat.joueurs;
+    partie.etat = creerCombat(avecBonus(moi.def, bonus), lui.def, { rapide: partie.etat.rapide });
+  }
   const r = combatAuto(partie.etat, partie.hasard.graine, [{ chanceFort: chanceFortAuto(niveauCompte(collection)) }, { niveau: partie.niveau }]);
   partie.etat = r.etat;
   tours = r.tours.map((t) => ({ avant: t.avant, choixHumain: t.choix[0], choixOrdi: t.choix[1], ordiAChange: false, lignes: t.lignes }));
@@ -2393,6 +2399,7 @@ interface Paquet {
   titre: string; // « Victoire », « Booster de consolation »…
   boosters: Booster[];
   ouvert: boolean;
+  sansRecap?: boolean; // pas de récapitulatif des cartes à la fin (récompenses des modes histoire)
 }
 
 interface CarteTiree { id: string; nouvelle: boolean; booster: number }
@@ -2509,6 +2516,7 @@ function revelerPaquet(p: Paquet, fin: () => void) {
   const afficher = () => {
     const e = etapes[i];
     if (e.type === 'recap') {
+      if (p.sansRecap) return terminer();
       el.innerHTML = `
         <div class="rev-recap">
           <h2>${echap(p.titre)} : ${cartes.length ? 'tes cartes' : 'tes gains'}</h2>
@@ -2533,7 +2541,7 @@ function revelerPaquet(p: Paquet, fin: () => void) {
     } else if (e.type === 'gain') {
       const bo = p.boosters[b];
       scene = `<div class="rev-carte rev-gain"><div class="rev-eclat" aria-hidden="true"></div>${jetonGain(e.quoi, (e.quoi === 'medailles' ? bo.medailles : bo.dollars) ?? 0)}</div>`;
-      aide = derniere ? 'Touche l\'écran pour voir le récapitulatif' : 'Touche l\'écran pour la suite';
+      aide = derniere ? (p.sansRecap ? 'Touche l\'écran pour terminer' : 'Touche l\'écran pour voir le récapitulatif') : 'Touche l\'écran pour la suite';
     } else {
       const c = cartes[e.k];
       const def = trouverLutteur(c.id);
@@ -2543,7 +2551,7 @@ function revelerPaquet(p: Paquet, fin: () => void) {
           <span class="pastille ${c.nouvelle ? 'nouvelle' : 'nombre'}">${c.nouvelle ? 'Nouvelle !' : 'Double'}</span>
           ${carteHTML(def)}
         </div>`;
-      aide = derniere ? 'Touche l\'écran pour voir le récapitulatif' : 'Touche l\'écran pour la carte suivante';
+      aide = derniere ? (p.sansRecap ? 'Touche l\'écran pour terminer' : 'Touche l\'écran pour voir le récapitulatif') : 'Touche l\'écran pour la carte suivante';
     }
     el.innerHTML = `
       <header class="rev-tete"><span>${info}</span><button class="lien" data-tout>Tout voir</button></header>

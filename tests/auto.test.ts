@@ -45,3 +45,20 @@ test('auto : au niveau 10 du compte, il gagne bien plus souvent qu\'au niveau 3 
   assert.ok(t10 > t3 + 0.15, `niveau 3 : ${t3}, niveau 10 : ${t10}`);
   assert.ok(t10 > 0.35 && t10 < 0.65, `niveau 10 contre fort : ${t10}`);
 });
+
+test('auto : au-dessus du niveau 10, environ 3 victoires sur 4 contre l\'ordinateur fort', async () => {
+  const { bonusAutoExpert } = await import('../src/moteur/auto');
+  const { avecBonus } = await import('../src/moteur/config');
+  assert.equal(bonusAutoExpert(10, 'fort'), 0);
+  assert.equal(bonusAutoExpert(9, 'fort'), 0);
+  assert.ok(bonusAutoExpert(11, 'fort') > 0);
+  assert.equal(bonusAutoExpert(11, 'normal'), 0);
+  let v = 0;
+  const N = 800;
+  for (let g = 1; g <= N; g++) {
+    const a = LUTTEURS[(g * 31) % LUTTEURS.length], b = LUTTEURS[(g * 17 + 5) % LUTTEURS.length];
+    const r = combatAuto(creerCombat(avecBonus(a, bonusAutoExpert(11, 'fort')), b), g * 7919, [{ chanceFort: chanceFortAuto(11) }, { niveau: 'fort' }]);
+    if (r.etat.vainqueur === 0) v++;
+  }
+  assert.ok(v / N > 0.68 && v / N < 0.82, `${v / N}`);
+});

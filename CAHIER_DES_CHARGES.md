@@ -305,10 +305,10 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Tuile « Tournois » du menu. Contre l'ordinateur pour l'instant ; en ligne plus tard (avec Firebase).
 - Chaque combat gagné dans un tournoi rapporte +1 médaille, même si le tournoi est perdu ; les médailles de fin s'ajoutent.
 - Tournoi individuel à double tableau (inscription 5 $) : le joueur choisit un de ses lutteurs et le nombre de participants, de 6 à 15 (en dessous de 6, on complète avec des lutteurs de l'ordinateur). Les adversaires sont tirés au hasard, les places aussi.
-  - Tableau principal de 8 places (6 à 8 lutteurs) ou de 16 (9 à 15) : tant qu'un lutteur gagne, il avance jusqu'à la finale. Les places vides sont des exemptions : le lutteur tiré au sort en face passe directement au tour suivant (jamais deux places vides face à face).
-  - Tableau des perdants : une première défaite avant les 1/2 finales y envoie. Les perdants d'un même tour s'affrontent ; les vainqueurs retrouvent ensuite les perdants du tour suivant (en ordre inverse, pour éviter de revoir le même adversaire), jusqu'à un seul vainqueur. Une deuxième défaite élimine.
+  - Tableau principal de 8, 16, 32 ou 64 places selon le nombre de lutteurs : tant qu'un lutteur gagne, il avance jusqu'à la finale. Les places vides sont des exemptions : le lutteur tiré au sort en face passe directement au tour suivant (jamais deux places vides face à face).
+  - Tableau des perdants : une première défaite avant les 1/2 finales y envoie. Il a deux côtés : A pour les perdants du haut du tableau principal, B pour ceux du bas. Dans chaque côté, les perdants d'un même tour s'affrontent ; les vainqueurs retrouvent ensuite les perdants du tour suivant (en ordre inverse, pour éviter de revoir le même adversaire), jusqu'à un vainqueur par côté. Une deuxième défaite élimine.
   - Finale : les deux vainqueurs des 1/2 finales. Le vainqueur est 1er, le perdant 2e.
-  - 3e place : les deux perdants des 1/2 finales s'affrontent ; le gagnant va en petite finale. Le perdant affronte le vainqueur du tableau des perdants (barrage) ; le gagnant du barrage va en petite finale. Le vainqueur de la petite finale est 3e, le perdant 4e ; le perdant du barrage est 5e. Le vainqueur du tableau des perdants ne peut donc pas faire mieux que 3e.
+  - 3e place : les deux perdants des 1/2 finales ne s'affrontent pas. Chacun joue une qualification pour la 3e place contre le vainqueur du tableau des perdants du côté opposé (perdant de la 1/2 finale du haut contre vainqueur du côté B, et inversement). Les deux gagnants jouent la petite finale : le vainqueur est 3e, le perdant 4e ; les deux perdants des qualifications sont 5es ex aequo. Un vainqueur du tableau des perdants ne peut donc pas faire mieux que 3e. Si un côté du tableau des perdants est vide (exemptions), le perdant de 1/2 finale opposé passe directement en petite finale.
   - Les autres sont classés selon le tour du tableau des perdants où ils sont éliminés (ex aequo dans un même tour).
 - Gains du tournoi individuel : 1er 10 médailles, 15 $ et un booster rare ; 2e 6 médailles et 9 $ ; 3e 3 médailles et 5 $.
 - Création par les administrateurs : un écran « Créer un tournoi » (nom, date, joueurs au maximum, inscription) existe déjà, mais seulement en aperçu ; il fonctionnera avec les comptes en ligne (Firebase).
@@ -333,6 +333,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Les compétitions se paient comme un tournoi individuel (5 $) et rapportent les gains habituels (+1 médaille par combat gagné, médailles et $ selon la place, booster rare au vainqueur), en plus de la récompense du palier. Une compétition ratée peut être retentée (nouvelle inscription). Les combats interclub rapportent comme un combat rapide (+1 médaille par victoire).
 - Les tableaux vont jusqu'à 64 places (1/32 de finale) ; les places vides sont des exemptions tirées au sort.
+- Récompenses des modes histoire : le booster s'ouvre carte par carte, sans récapitulatif à la fin.
 
 ### Scènes de dialogue (modes histoire)
 
@@ -351,19 +352,20 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - À partir du niveau de compte 3, un bouton « ⚡ Combat auto » apparaît à côté de chaque bouton de combat contre l'ordinateur (arène, combat rapide, tournois, revanche, adversaire suivant). Avant, il est affiché verrouillé.
 - L'ordinateur choisit alors les actions du lutteur du joueur (avec ses 4 actions réglées) et joue tout le combat d'un coup : le joueur arrive directement sur la page de fin (verdict, score, journal tour par tour), avec le booster, les médailles et les $ s'il doit en gagner.
 - Force de l'auto selon le niveau de compte : au niveau 3, il joue comme l'ordinateur normal ; ensuite, chaque décision est prise de plus en plus souvent comme l'ordinateur fort, jusqu'à toujours jouer « fort » au niveau 10.
+- Au-dessus du niveau 10, contre l'ordinateur, l'auto gagne environ 3 combats sur 4 : contre l'ordinateur fort, son lutteur reçoit +14 % d'endurance, de force et de récupération (mesuré : environ 75 % de victoires) ; contre le normal (environ 80 %) et le facile (environ 92 %), il dépasse déjà 3 sur 4 sans bonus. En ligne, jamais de bonus.
 - En ligne : chaque joueur peut cocher « Combat automatique » avant de choisir son lutteur. Le combat se joue en automatique seulement si les deux l'ont coché (sinon, combat normal). Les deux téléphones calculent le même combat, l'ordinateur jouant pour chacun selon son niveau de compte.
 - Une victoire en automatique compte pour tout (médailles, boosters, mode histoire), sauf l'étape 9 du mode histoire (« Battre l'ordinateur fort »), à gagner à la main.
 
 ### Mode histoire
 
 - Un parcours de 12 étapes qui fait découvrir tout le jeu. L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
-- Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf pour les étapes 3, 7 et 11 : elles sont validées dès leur déblocage si le joueur remplit déjà la condition (Mon Club ouvert, une nation battue dans l'arène, arène terminée).
+- Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf pour les étapes 3, 6, 7 et 11 : elles sont validées dès leur déblocage si le joueur remplit déjà la condition (Mon Club ouvert, 3 lutteurs d'une même nation dans Mon Club, une nation battue dans l'arène, arène terminée).
   1. Gagner 3 combats contre des lutteurs de 3 nations différentes (tous les combats comptent : ordinateur, arène, combat rapide, tournoi, en ligne) : 1 booster.
   2. Gagner un tournoi individuel : 1 booster.
   3. Ouvrir Mon Club : 1 booster.
   4. Gagner un tournoi par équipe : 1 booster.
   5. Gagner un combat rapide par tombé ou par 10 points d'écart : 2 boosters.
-  6. Recruter dans Mon Club un lutteur qui donne au moins 3 lutteurs d'une même nation : 2 boosters.
+  6. Avoir au moins 3 lutteurs d'une même nation dans Mon Club : 2 boosters (validée dès le déblocage si c'est déjà le cas).
   7. Battre une nation complète dans l'arène : 2 boosters.
   8. Faire monter une carte au niveau épique ou plus par une fusion : 2 boosters.
   9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris, mais pas en combat automatique) : 3 boosters.
@@ -454,6 +456,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 - Marquent des points : une attaque, un contre ou un sprawl réussis (sprawl : 2 points techniques pour le défenseur).
 - Attaque réussie : 2, 4 ou 5 points selon l'action (voir Chiffrage) ; +2 points avec au moins le double d'endurance.
+- Supériorité technique : l'écart ne dépasse jamais 10 points. Dès qu'il atteint 10, les points marqués sont plafonnés (par exemple, à 8-0, une prise de 5 points ne compte que pour 2), plus rien ne compte jusqu'à la fin du tour, et la période (ou le combat rapide) est gagnée.
 - Bonus de feinte : une feinte réussie donne +2 points à la prochaine attaque ou au prochain contre réussi, pendant 2 tours. Le bonus sert une seule fois ; une attaque ou un contre raté ne le consomme pas ; un contre réussi en profite même sans points de base (contre une défense) ; une nouvelle feinte réussie le relance pour 2 tours. Un contre renvoie la valeur de l'attaque adverse, bonus de l'attaquant compris (l'attaquant garde alors son bonus).
 - Contre réussi : il renvoie les points de l'attaque adverse.
 

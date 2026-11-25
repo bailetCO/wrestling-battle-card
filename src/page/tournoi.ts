@@ -234,31 +234,41 @@ export function creerIndividuel(idJoueur: string, nombre: number, graine: number
     cotes = ids.map((m) => ({ v: m }));
   }
 
-  // Tableau des perdants : les perdants d'avant les 1/2 finales. Les perdants d'un même tour
-  // s'affrontent ; les vainqueurs retrouvent ensuite les perdants du tour suivant (en ordre inverse,
-  // pour éviter de revoir le même adversaire), et ainsi de suite jusqu'à un seul vainqueur.
-  let tourP = 0;
-  const tourPerdants = (c: Source[]): Source[] => {
-    tourP++;
-    const out: Source[] = [];
-    for (let i = 0; i < c.length; i += 2) out.push({ v: ajouter(`Tableau des perdants, tour ${tourP}`, 'perdants', tourP, c[i], c[i + 1]) });
-    return out;
+  // Tableau des perdants, en deux côtés (A : haut du tableau principal, B : bas) : les perdants
+  // d'avant les 1/2 finales. Dans chaque côté, les perdants d'un même tour s'affrontent ; les
+  // vainqueurs retrouvent ensuite les perdants du tour suivant (en ordre inverse, pour éviter de
+  // revoir le même adversaire), et ainsi de suite jusqu'à un vainqueur par côté.
+  const avantDemies = tours.slice(0, -1);
+  const vainqueurDuCote = (cote: 0 | 1): Source => {
+    const lettre = cote === 0 ? 'A' : 'B';
+    let tourP = 0;
+    const tourPerdants = (c: Source[]): Source[] => {
+      tourP++;
+      const out: Source[] = [];
+      for (let i = 0; i < c.length; i += 2) out.push({ v: ajouter(`Tableau des perdants ${lettre}, tour ${tourP}`, 'perdants', tourP, c[i], c[i + 1]) });
+      return out;
+    };
+    let courant: Source[] = [];
+    for (const ids of avantDemies) {
+      const moitie = cote === 0 ? ids.slice(0, ids.length / 2) : ids.slice(ids.length / 2);
+      const pertes: Source[] = moitie.map((m) => ({ p: m }));
+      if (!courant.length) { courant = pertes; continue; }
+      while (courant.length > pertes.length) courant = tourPerdants(courant);
+      courant = tourPerdants(courant.flatMap((c, i) => [c, pertes[pertes.length - 1 - i]]));
+    }
+    while (courant.length > 1) courant = tourPerdants(courant);
+    if (tourP) matchs[matchs.length - 1].nom = `Finale du tableau des perdants ${lettre}`;
+    return courant[0] ?? null;
   };
-  let courant: Source[] = [];
-  for (const ids of tours.slice(0, -1)) {
-    const pertes: Source[] = ids.map((m) => ({ p: m }));
-    if (!courant.length) { courant = pertes; continue; }
-    while (courant.length > pertes.length) courant = tourPerdants(courant);
-    courant = tourPerdants(courant.flatMap((c, i) => [c, pertes[pertes.length - 1 - i]]));
-  }
-  while (courant.length > 1) courant = tourPerdants(courant);
-  matchs[matchs.length - 1].nom = 'Finale du tableau des perdants';
+  const gagnantA = vainqueurDuCote(0);
+  const gagnantB = vainqueurDuCote(1);
 
-  // Finales.
+  // Finales. Chaque perdant de 1/2 finale affronte le vainqueur du tableau des perdants du côté
+  // opposé ; les deux gagnants se disputent la 3e place (petite finale).
   const [d1, d2] = tours[tours.length - 1];
-  const m1 = ajouter('Match des perdants des 1/2 finales', 'finales', 1, { p: d1 }, { p: d2 });
-  const m2 = ajouter('Barrage', 'finales', 2, { p: m1 }, courant[0]);
-  ajouter('Petite finale (3e place)', 'finales', 3, { v: m1 }, { v: m2 });
+  const q1 = ajouter('Qualification pour la 3e place', 'finales', 1, { p: d1 }, gagnantB);
+  const q2 = ajouter('Qualification pour la 3e place', 'finales', 1, { p: d2 }, gagnantA);
+  ajouter('Petite finale (3e place)', 'finales', 2, { v: q1 }, { v: q2 });
   ajouter('Finale', 'finales', 3, { v: d1 }, { v: d2 });
 
   const t: Individuel = { type: 'individuel', lutteurs, matchs, graine, gainsCombats: { medailles: 0, dollars: 0 }, recompense: null };
@@ -324,19 +334,20 @@ export const exemptes = (t: Individuel) =>
 export const joueurInvaincu = (t: Individuel) =>
   t.matchs.every((m) => !avecJoueurI(m) || m.vainqueur === null || m.vainqueur === 0 || exemption(m));
 
-// Classement final : 1 (finale), 2, 3 (petite finale), 4, 5 (perdant du barrage), puis les
-// éliminés du tableau des perdants, du dernier tour au premier (ex aequo par tour).
+// Classement final : 1 (finale), 2, 3 (petite finale), 4, 5 ex aequo (perdants des deux
+// qualifications pour la 3e place), puis les éliminés du tableau des perdants, du dernier tour au
+// premier (ex aequo par tour, les deux côtés ensemble).
 export function placesI(t: Individuel): Map<number, number> {
   const p = new Map<number, number>();
   if (!finieI(t)) return p;
   const M = t.matchs;
   const n = M.length;
-  const [f, pf, barrage] = [M[n - 1], M[n - 2], M[n - 3]];
+  const [f, pf] = [M[n - 1], M[n - 2]];
   p.set(f.vainqueur!, 1);
   p.set(perdantI(f)!, 2);
   p.set(pf.vainqueur!, 3);
   p.set(perdantI(pf)!, 4);
-  if (perdantI(barrage)! >= 0) p.set(perdantI(barrage)!, 5);
+  for (const q of [M[n - 4], M[n - 3]]) if (perdantI(q)! >= 0) p.set(perdantI(q)!, 5);
   let place = p.size + 1;
   const toursP = [...new Set(M.filter((m) => m.tableau === 'perdants').map((m) => m.tour))].sort((x, y) => y - x);
   for (const tr of toursP) {

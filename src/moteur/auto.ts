@@ -14,6 +14,11 @@ export function chanceFortAuto(niveauCompte: number): number {
   return Math.max(0, Math.min(1, (niveauCompte - A.niveauCompteMin) / (A.niveauCompteFort - A.niveauCompteMin)));
 }
 
+// Bonus de statistiques de l'auto au-dessus du niveau de compte 10, contre l'ordinateur (0 sinon).
+export function bonusAutoExpert(niveauCompte: number, niveauOrdi: Niveau): number {
+  return niveauCompte > REGLES.auto.niveauCompteFort ? REGLES.auto.bonusExpert[niveauOrdi] : 0;
+}
+
 export const autoOuvert = (niveauCompte: number) => niveauCompte >= REGLES.auto.niveauCompteMin;
 
 // Comment joue chaque camp : un niveau fixe (l'ordinateur adverse) ou un mélange normal / fort.

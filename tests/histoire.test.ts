@@ -72,15 +72,19 @@ test('étapes 4 et 5 : tournoi par équipe gagné, combat rapide par tombé ou 1
   assert.equal(noter(d, { type: 'rapide', tombe: true, ecart: 0 }).length, 1);
 });
 
-test('étape 6 : un recrutement qui donne 3 lutteurs d\'une même nation', () => {
+test('étape 6 : 3 lutteurs d\'une même nation dans Mon Club (déjà le cas = validée dès le déblocage)', () => {
   const c = nouvelleCollection();
   c.histoire.etape = 5;
   const t = deNation('turquie');
   c.club = [t[0].id, t[1].id, 'usa'];
-  assert.deepEqual(noter(c, { type: 'etat' }), []); // déjà le cas avant : il faut recruter
   assert.deepEqual(noter(c, { type: 'recrutement' }), []);
   c.club.push(t[2].id);
   assert.equal(noter(c, { type: 'recrutement' }).length, 1);
+  // Déjà 3 lutteurs d'une même nation : l'étape 6 suit aussitôt la validation de l'étape 5.
+  const d = nouvelleCollection();
+  d.histoire.etape = 4;
+  d.club = [t[0].id, t[1].id, t[2].id];
+  assert.deepEqual(noter(d, { type: 'rapide', tombe: true, ecart: 0 }).map((x) => x.etape), [4, 5]);
 });
 
 test('étapes 7 à 11 : arène, fusion épique, ordinateur fort, en ligne, arène finie', () => {

@@ -1,6 +1,7 @@
 // Mode histoire, sans affichage : 12 étapes dans l'ordre. Une étape ne se valide qu'une fois
-// débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 7 (une
-// nation battue dans l'arène) et 11 (arène terminée), validées tout de suite si c'est déjà le cas.
+// débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 6 (3 lutteurs
+// d'une même nation dans Mon Club), 7 (une nation battue dans l'arène) et 11 (arène terminée), validées
+// tout de suite si c'est déjà le cas.
 
 import { LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
 import { PAR_NATION, areneTerminee } from './arene';
@@ -44,7 +45,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Fierté nationale', objectif: 'Recruter 3 lutteurs d\'une même nation dans Mon Club',
-    guide: 'Dans Mon Club, recrute un lutteur pour avoir au moins 3 lutteurs de la même nation : c\'est le bonus de nation du tournoi par équipe. Si c\'est déjà le cas, libère une place et recrute à nouveau.',
+    guide: 'Dans Mon Club, recrute des lutteurs pour avoir au moins 3 lutteurs de la même nation : c\'est le bonus de nation du tournoi par équipe. Si ton club les a déjà, l\'étape est validée tout de suite.',
     lien: '#club', bouton: 'Voir Mon Club',
   },
   {
@@ -91,7 +92,7 @@ export type EvenementHistoire =
   | { type: 'nationArene' } // une nation battue dans l'arène
   | { type: 'fusion'; id: string }
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
-  | { type: 'etat' }; // simple vérification (Mon Club ouvert, arène)
+  | { type: 'etat' }; // simple vérification (Mon Club, arène)
 
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
 
@@ -114,7 +115,7 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
     case 3: return ev.type === 'tournoiEquipe' && ev.gagne;
     case 4: return ev.type === 'rapide' && (ev.tombe || Math.abs(ev.ecart) >= REGLES.ecartSuperiorite);
     case 5: {
-      if (ev.type !== 'recrutement') return false;
+      // Validée dès le déblocage si Mon Club compte déjà 3 lutteurs d'une même nation.
       const parNation = new Map<string, number>();
       for (const id of c.club) parNation.set(trouverLutteur(id).nation, (parNation.get(trouverLutteur(id).nation) ?? 0) + 1);
       return Math.max(0, ...parNation.values()) >= H.memeNationEtape6;

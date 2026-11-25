@@ -70,20 +70,25 @@ test('individuel : de 6 à 15 lutteurs, tableau complet, double élimination et 
       const nb = (pl: number) => v.filter((x) => x === pl).length;
       assert.equal(nb(1) + nb(2) + nb(3), 3);
       const M = t.matchs;
-      const finale = M[M.length - 1], petite = M[M.length - 2], barrage = M[M.length - 3], m1 = M[M.length - 4];
+      const finale = M[M.length - 1], petite = M[M.length - 2], q2 = M[M.length - 3], q1 = M[M.length - 4];
       const demies = M.filter((m) => m.nom === '1/2 finale');
       // La finale oppose les deux vainqueurs des 1/2 finales.
       assert.deepEqual([finale.a, finale.b].sort(), demies.map((d) => d.vainqueur).sort());
-      // Les perdants des 1/2 s'affrontent ; le gagnant va en petite finale, le perdant au barrage.
-      const perdu = (m: typeof m1) => (m.vainqueur === m.a ? m.b : m.a);
-      assert.equal(petite.a, m1.vainqueur);
-      assert.equal(barrage.a, perdu(m1));
-      assert.equal(petite.b, barrage.vainqueur);
-      // Le barrage oppose le vainqueur du tableau des perdants.
-      const finP = M.filter((m) => m.tableau === 'perdants').at(-1)!;
-      assert.equal(barrage.b, finP.vainqueur);
-      // Le vainqueur du tableau des perdants ne fait pas mieux que 3e.
-      assert.ok(p.get(finP.vainqueur!)! >= 3);
+      // Les perdants des 1/2 finales ne s'affrontent pas : chacun joue la qualification pour la 3e place
+      // contre le vainqueur du tableau des perdants du côté opposé.
+      const perdu = (m: typeof q1) => (m.vainqueur === m.a ? m.b : m.a);
+      assert.equal(q1.nom, 'Qualification pour la 3e place');
+      assert.equal(q1.a, perdu(demies[0]));
+      assert.equal(q2.a, perdu(demies[1]));
+      const finA = M.filter((m) => m.nom.startsWith('Tableau des perdants A') || m.nom === 'Finale du tableau des perdants A').at(-1);
+      const finB = M.filter((m) => m.nom.startsWith('Tableau des perdants B') || m.nom === 'Finale du tableau des perdants B').at(-1);
+      if (finB) assert.equal(q1.b, finB.vainqueur);
+      if (finA) assert.equal(q2.b, finA.vainqueur);
+      assert.ok(!(perdu(demies[0]) === q2.a || perdu(demies[1]) === q1.a));
+      // Les gagnants des deux qualifications jouent la petite finale.
+      assert.deepEqual([petite.a, petite.b], [q1.vainqueur, q2.vainqueur]);
+      // Un vainqueur du tableau des perdants ne fait pas mieux que 3e.
+      for (const fp of [finA, finB]) if (fp && fp.vainqueur! >= 0) assert.ok(p.get(fp.vainqueur!)! >= 3);
       // Double élimination : avant les finales, personne ne perd deux fois et continue ; personne
       // n'est éliminé du tableau principal sans passer par les perdants (sauf les 1/2 finalistes).
       for (const [i, d] of bilan(t)) {
@@ -119,19 +124,18 @@ test('individuel : tout gagner = 1er sans défaite ; perdre la 1/2 puis tout gag
     const noms = jouerTout(t2, (nom) => nom !== '1/2 finale');
     assert.equal(placesI(t2).get(0), 3, noms.join(', '));
     assert.ok(!joueurInvaincu(t2));
-    assert.ok(noms.includes('Match des perdants des 1/2 finales'));
     assert.equal(noms.at(-1), 'Petite finale (3e place)');
   }
 });
 
-test('individuel : perdre au premier combat puis tout gagner mène au barrage, au mieux 3e', () => {
+test('individuel : perdre au premier combat puis tout gagner mène à la qualification pour la 3e place, au mieux 3e', () => {
   let vus = 0;
   for (let g = 1; g <= 30; g++) {
     const t = creerIndividuel('europe', 12, g);
     const noms = jouerTout(t, (_, k) => k > 0);
     if (exemptes(t).includes(0)) continue; // exempté : son 1er combat est un 1/4
     vus++;
-    assert.ok(noms.includes('Barrage'), noms.join(', '));
+    assert.ok(noms.includes('Qualification pour la 3e place'), noms.join(', '));
     assert.equal(placesI(t).get(0), 3);
   }
   assert.ok(vus > 0);

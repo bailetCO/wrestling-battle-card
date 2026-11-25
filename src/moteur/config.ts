@@ -299,8 +299,8 @@ export const REGLES = {
     // Tournoi individuel à double tableau (remplace la compétition à 6) : de 6 à 15 lutteurs.
     // Tableau principal (on avance tant qu'on gagne) ; une première défaite avant les 1/2 finales
     // envoie dans le tableau des perdants ; une deuxième défaite élimine.
-    // 3e place : les perdants des 1/2 finales s'affrontent ; le gagnant va en petite finale ; le
-    // perdant affronte le vainqueur du tableau des perdants (barrage), dont le gagnant va en petite finale.
+    // 3e place : chaque perdant de 1/2 finale affronte le vainqueur du tableau des perdants du côté
+    // opposé (qualification) ; les deux gagnants jouent la petite finale.
     individuel: {
       inscription: 5,
       minimum: 6, // en dessous, on complète avec des lutteurs de l'ordinateur
@@ -328,7 +328,10 @@ export const REGLES = {
   // Combat automatique : l'ordinateur joue aussi pour le joueur. Ouvert à partir du niveau de
   // compte `niveauCompteMin` ; il joue comme l'ordinateur normal à ce niveau, puis de plus en plus
   // souvent comme l'ordinateur fort, jusqu'à toujours jouer « fort » au niveau `niveauCompteFort`.
-  auto: { niveauCompteMin: 3, niveauCompteFort: 10 },
+  // Au-dessus du niveau `niveauCompteFort`, contre l'ordinateur seulement, l'auto gagne environ 3 fois
+  // sur 4 : il joue déjà « fort » et gagne ~80 % contre l'ordinateur normal et ~92 % contre le facile ;
+  // contre le fort, son lutteur reçoit un bonus de statistiques (mesuré : +14 % ≈ 75 % de victoires).
+  auto: { niveauCompteMin: 3, niveauCompteFort: 10, bonusExpert: { facile: 0, normal: 0, fort: 0.14 } as Record<'facile' | 'normal' | 'fort', number> },
 
   // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
   // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
