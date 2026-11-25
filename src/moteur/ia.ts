@@ -71,7 +71,7 @@ function gain(etat: EtatCombat, qui: Joueur, c: Candidat, autre: Candidat | null
       return pts;
     }
     case 'contre': {
-      let pts = l.bonusEnchainement ? S.bonusEnchainementFeinte : 0;
+      let pts = (l.bonusEnchainement ? S.bonusEnchainementFeinte : 0) + (l.bonusFeinte ? REGLES.bonusFeinte : 0);
       if (autre && famAutre === 'attaque') pts += ACTIONS[autre.action].points;
       if (c.speciale && (famAutre === 'attaque' || famAutre === 'feinte')) pts += tombe;
       return pts;

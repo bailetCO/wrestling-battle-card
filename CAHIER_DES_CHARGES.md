@@ -425,7 +425,8 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 ### Points
 
 - Marquent des points : une attaque, un contre ou un sprawl réussis (sprawl : 2 points techniques pour le défenseur).
-- Attaque réussie : 2, 4 ou 5 points selon l'action (voir Chiffrage) ; +2 points si elle suit une feinte réussie ; +2 points avec au moins le double d'endurance.
+- Attaque réussie : 2, 4 ou 5 points selon l'action (voir Chiffrage) ; +2 points avec au moins le double d'endurance.
+- Bonus de feinte : une feinte réussie donne +2 points à la prochaine attaque ou au prochain contre réussi, pendant 2 tours. Le bonus sert une seule fois ; une attaque ou un contre raté ne le consomme pas ; un contre réussi en profite même sans points de base (contre une défense) ; une nouvelle feinte réussie le relance pour 2 tours. Un contre renvoie la valeur de l'attaque adverse, bonus de l'attaquant compris (l'attaquant garde alors son bonus).
 - Contre réussi : il renvoie les points de l'attaque adverse.
 
 ### Avantages
@@ -463,7 +464,7 @@ Version d'origine, remplacée par le rééquilibrage de l'étape 4 (voir Les 15 
 
 | Actions | Famille | Coût en endurance | Points |
 | --- | --- | --- | --- |
-| Feinte | Feinte | 3 | 0 (+2 sur l'attaque suivante) |
+| Feinte | Feinte | 3 | 0 (+2 sur la prochaine attaque ou le prochain contre réussi, pendant 2 tours) |
 | Matraquage | Feinte | 3 | 0 |
 | Défense, parade, esquive | Défense | 3 | 0 |
 | Sprawl | Défense | 3 | 2 |

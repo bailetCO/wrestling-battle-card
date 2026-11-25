@@ -48,11 +48,47 @@ describe('Points', () => {
     assert.equal(e.joueurs[0].score, 6);
   });
 
-  it("le bonus de feinte ne vaut que pour le tour suivant", () => {
+  it('le bonus de feinte reste actif 2 tours : il sert encore au 2e tour', () => {
     let e = tour(combatTest(), c('feinte'), c('contre'));
     e = tour(e, c('defense'), c('defense'));
+    assert.equal(e.joueurs[0].bonusFeinte, 1);
     e = tour(e, c('attaque_base'), c('feinte'));
+    assert.equal(e.joueurs[0].score, 4);
+    assert.equal(e.joueurs[0].bonusFeinte, 0);
+  });
+
+  it('le bonus de feinte expire après 2 tours sans attaque ni contre réussi', () => {
+    let e = tour(combatTest(), c('feinte'), c('contre'));
+    e = tour(e, c('defense'), c('defense'));
+    e = tour(e, c('defense'), c('defense'));
+    assert.equal(e.joueurs[0].bonusFeinte, 0);
+    const avant = e.journal.length;
+    e = tour(e, c('attaque_base'), c('feinte'));
+    const lignes = e.journal.slice(avant);
+    assert.ok(lignes.some((l) => /marque 2 points \(Attaque/.test(l)), lignes.join(' | '));
+    assert.ok(!lignes.some((l) => l.includes('bonus de feinte')));
+  });
+
+  it('le bonus de feinte ne sert qu\'une fois', () => {
+    let e = tour(combatTest(), c('feinte'), c('contre'));
+    e = tour(e, c('attaque_base'), c('feinte'));
+    assert.equal(e.joueurs[0].score, 4);
+    e = tour(e, c('attaque_base'), c('feinte'));
+    assert.equal(e.joueurs[0].score, 6);
+  });
+
+  it('le bonus de feinte vaut aussi pour un contre réussi, même contre une défense', () => {
+    let e = tour(combatTest(), c('feinte'), c('contre'));
+    e = tour(e, c('contre'), c('defense'));
     assert.equal(e.joueurs[0].score, 2);
+    assert.equal(e.joueurs[0].bonusFeinte, 0);
+  });
+
+  it('une attaque ratée (bloquée) ne consomme pas le bonus de feinte', () => {
+    let e = tour(combatTest(), c('feinte'), c('contre'));
+    e = tour(e, c('attaque_base'), c('defense'));
+    assert.equal(e.joueurs[0].score, 0);
+    assert.equal(e.joueurs[0].bonusFeinte, 1);
   });
 
   it('grande projection : 5 points', () => {
@@ -240,7 +276,7 @@ describe('Action spéciale', () => {
     let e = tour(def, c('defense'), c('defense'));
     e = tour(e, c('feinte', true), c('contre'));
     assert.equal(e.joueurs[0].score, 2);
-    assert.equal(e.joueurs[0].bonusFeinte, false);
+    assert.equal(e.joueurs[0].bonusFeinte, 0);
     assert.equal(e.joueurs[0].bonusEnchainement, true);
   });
 

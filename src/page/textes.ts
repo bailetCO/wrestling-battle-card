@@ -12,7 +12,7 @@ export const NOM_FAMILLE: Record<Famille, string> = {
 export function effetAction(id: IdAction, bonus: { feinte?: boolean; enchainement?: boolean } = {}): string {
   const a = ACTIONS[id];
   const pc = (x: number) => `${Math.round(x * 100)} %`;
-  const extra = (bonus.feinte && a.famille === 'attaque' ? REGLES.bonusFeinte : 0)
+  const extra = (bonus.feinte && (a.famille === 'attaque' || a.famille === 'contre') ? REGLES.bonusFeinte : 0)
     + (bonus.enchainement && (a.famille === 'attaque' || a.famille === 'contre') ? REGLES.speciale.bonusEnchainementFeinte : 0);
   const plus = extra ? ` (+${extra})` : '';
   switch (a.famille) {

@@ -21,7 +21,7 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
     score: 0,
     prises: [],
     periodesGagnees: 0,
-    bonusFeinte: false,
+    bonusFeinte: 0,
     bonusEnchainement: false,
     malusPrecisionTours: 0,
     toursSansAttaque: 0,
@@ -147,10 +147,12 @@ function ajouterEndurance(l: EtatLutteur, quantite: number) {
   l.endurance = Math.min(l.def.enduranceMax, l.endurance + quantite);
 }
 
+// Valeur d'une attaque, bonus compris. Un contre renvoie cette valeur (bonus de l'attaquant compris,
+// sans que l'attaquant perde son bonus de feinte : son attaque n'a pas réussi).
 function valeurAttaque(e: EtatCombat, j: Joueur, id: IdAction, endDebut: [number, number]): number {
   const l = e.joueurs[j];
   let pts = ACTIONS[id].points;
-  if (l.bonusFeinte) pts += REGLES.bonusFeinte;
+  if (l.bonusFeinte > 0) pts += REGLES.bonusFeinte;
   if (l.bonusEnchainement) pts += REGLES.speciale.bonusEnchainementFeinte;
   if (endDebut[j] >= 2 * endDebut[autre(j)]) pts += REGLES.bonusDoubleEndurance;
   return pts;
@@ -331,7 +333,7 @@ function finirPeriode(e: EtatCombat, g: Joueur, raison: string) {
   for (const x of e.joueurs) {
     x.score = 0;
     x.prises = [];
-    x.bonusFeinte = false;
+    x.bonusFeinte = 0;
     x.bonusEnchainement = false;
     x.malusPrecisionTours = 0;
     x.toursSansAttaque = 0;
@@ -441,6 +443,7 @@ export function jouerTour(
 
   // 4. Effets.
   const bonusSuivant: [boolean, boolean] = [false, false];
+  const bonusUtilise: [boolean, boolean] = [false, false]; // bonus de feinte servi ce tour
   const enchainementSuivant: [boolean, boolean] = [false, false];
   const initiativeSuivante: [boolean, boolean] = [false, false];
   const tombe = new Set<Joueur>();
@@ -469,7 +472,8 @@ export function jouerTour(
 
     switch (a.famille) {
       case 'attaque':
-        marquer(e, j, valeurAttaque(e, j, a.id, endDebut), a.nom);
+        if (l.bonusFeinte > 0) bonusUtilise[j] = true;
+        marquer(e, j, valeurAttaque(e, j, a.id, endDebut), `${a.nom}${l.bonusFeinte > 0 ? ' + bonus de feinte' : ''}`);
         if (c.speciale) tombe.add(j);
         break;
 
@@ -486,14 +490,17 @@ export function jouerTour(
 
       case 'contre': {
         const ench = l.bonusEnchainement ? REGLES.speciale.bonusEnchainementFeinte : 0;
+        const bf = l.bonusFeinte > 0 ? REGLES.bonusFeinte : 0; // bonus de feinte : sert aussi au contre
+        if (bf) bonusUtilise[j] = true;
+        const extras = `${ench ? ' + enchaînement' : ''}${bf ? ' + bonus de feinte' : ''}`;
         if (opposee?.famille === 'attaque') {
           const v = valeurAttaque(e, o, opposee.id, endDebut);
-          marquer(e, j, v + ench, `${a.nom} : points de l'attaque renvoyés${ench ? ' + enchaînement' : ''}`);
+          marquer(e, j, v + ench + bf, `${a.nom} : points de l'attaque renvoyés${extras}`);
           const perte = perteDesequilibre(v);
           retirerEndurance(adv, perte * adv.def.enduranceMax);
           log(e, `${adv.def.nom} est déséquilibré et perd ${Math.round(perte * 100)} % d'endurance.`);
-        } else if (ench) {
-          marquer(e, j, ench, 'enchaînement après la feinte spéciale');
+        } else if (ench || bf) {
+          marquer(e, j, ench + bf, `${a.nom} réussi :${extras.slice(2)}`);
         }
         if (c.speciale) {
           const famAdv = actionAdv === 'lutte' ? null : ACTIONS[actionAdv].famille;
@@ -595,7 +602,8 @@ export function jouerTour(
 
   // 9. Préparation du tour suivant.
   for (const j of LES_DEUX) {
-    J[j].bonusFeinte = bonusSuivant[j];
+    // Bonus de feinte : relancé pour 2 tours par une feinte réussie, retiré une fois servi, sinon un tour de moins.
+    J[j].bonusFeinte = bonusSuivant[j] ? REGLES.toursBonusFeinte : bonusUtilise[j] ? 0 : Math.max(0, J[j].bonusFeinte - 1);
     J[j].bonusEnchainement = enchainementSuivant[j];
     J[j].initiative = initiativeSuivante[j];
   }

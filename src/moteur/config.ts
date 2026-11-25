@@ -223,7 +223,10 @@ export const REGLES = {
     chanceMinimale: 1 / 3, // à 0,5 ou moins
   },
 
+  // Feinte réussie : +2 points sur la prochaine attaque ou le prochain contre réussi, pendant 2 tours
+  // (le bonus sert une seule fois ; une nouvelle feinte réussie le relance pour 2 tours).
   bonusFeinte: 2,
+  toursBonusFeinte: 2,
   bonusDoubleEndurance: 2,
 
   feinteSurDefense: { perteEndurance: 0.1, chanceInitiative: 2 / 3 },

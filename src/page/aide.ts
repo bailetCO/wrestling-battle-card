@@ -56,7 +56,7 @@ export function reglesHTML(): string {
       <ul class="liste-regles">
         <li><b>Attaque</b> (coût ${COUT_FAMILLE.attaque}) : marque des points (2 à 5 selon la prise).</li>
         <li><b>Défense</b> (coût ${COUT_FAMILLE.defense}) : bloque l'attaque et fait récupérer de l'endurance. Le Sprawl marque aussi 2 points.</li>
-        <li><b>Feinte</b> (coût ${COUT_FAMILLE.feinte}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque vaut +${R.bonusFeinte}.</li>
+        <li><b>Feinte</b> (coût ${COUT_FAMILLE.feinte}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque ou ton prochain contre réussi vaut +${R.bonusFeinte}, pendant ${R.toursBonusFeinte} tours.</li>
         <li><b>Contre</b> (coût ${COUT_FAMILLE.contre}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>ou</i> plus de force que l'attaquant (sinon l'attaque passe).</li>
         <li>Deux actions de la même famille s'annulent, sauf si l'un a au moins le double d'endurance de l'autre.</li>
       </ul>

@@ -72,7 +72,7 @@ export interface EtatLutteur {
   score: number; // points de la période en cours
   prises: number[]; // valeur de chaque prise marquée dans la période
   periodesGagnees: number;
-  bonusFeinte: boolean; // +2 sur l'attaque de ce tour (feinte réussie au tour précédent)
+  bonusFeinte: number; // tours restants du bonus de feinte (+2 sur la prochaine attaque ou le prochain contre réussi ; 0 = aucun)
   bonusEnchainement: boolean; // +4 si l'attaque ou le contre de ce tour réussit (feinte spéciale au tour précédent)
   malusPrecisionTours: number; // tours restants avec -5 % de précision sur les attaques (matraquage)
   toursSansAttaque: number; // compteur pour la pénalité de passivité

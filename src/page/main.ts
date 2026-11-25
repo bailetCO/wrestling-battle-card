@@ -1751,7 +1751,7 @@ function badges(e: EtatCombat, j: Joueur): string {
   const l = e.joueurs[j];
   const b: string[] = [];
   if (l.initiative) b.push('Initiative');
-  if (l.bonusFeinte) b.push('+2 sur la prochaine attaque');
+  if (l.bonusFeinte > 0) b.push(`+${REGLES.bonusFeinte} sur la prochaine attaque ou le prochain contre réussi (${l.bonusFeinte} tour${l.bonusFeinte > 1 ? 's' : ''})`);
   if (l.bonusEnchainement) b.push('Enchaînement : +4 si attaque ou contre réussi');
   if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % de précision (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
   let serie = 0;
@@ -1832,7 +1832,7 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
       <button class="action" data-action="${a}" data-mode="${mode}" ${ok ? '' : 'disabled'}>
         <span class="ico f-${f}">${ICONE[f]}</span>
         <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
-        <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte, enchainement: l.bonusEnchainement })}</b></span>
+        <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement })}</b></span>
         <span class="a-cout">−${fmt(coutAction(l.def, a))}</span>
       </button>`;
   }).join('');

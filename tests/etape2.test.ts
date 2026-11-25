@@ -40,7 +40,7 @@ test('feinte contre attaque ratée : la feinte est dissipée, sans bonus ni init
   const tirages = [0, 0.99]; // la feinte passe, l'attaque rate
   let i = 0;
   const apres = jouerTour(e, c('feinte'), c('double_jambe'), () => tirages[i++] ?? 0.5);
-  assert.equal(apres.joueurs[0].bonusFeinte, false);
+  assert.equal(apres.joueurs[0].bonusFeinte, 0);
   assert.equal(apres.joueurs[0].initiative, false);
   assert.ok(apres.journal.some((l) => l.includes('la feinte de Kenji Arata est dissipée')));
 });
