@@ -28,8 +28,9 @@ import {
   NOM_MATCH, avancer, creerTournoiEquipe, enregistrer, enregistrerDuel, equipeFinie,
   finie, gagnerCombatTournoi, payerInscription, places, prochainDuel, recompenserTournoi, scoreEquipe,
   avancerI, creerIndividuel, enregistrerI, exemptes, exemption, finieI, nombreParticipants, placesI,
-  type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
+  joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
+import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, progression, type EtapeValidee, type EvenementHistoire } from './histoire';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
@@ -173,8 +174,81 @@ function ecranAccueil(message = '') {
   window.scrollTo(0, 0);
 }
 
+// ---------- Mode histoire ----------
+
+let recompensesHistoire: EtapeValidee[] = []; // étapes validées dont les boosters restent à ouvrir
+let paquetHistoire: Paquet | null = null;
+
+// Note un événement du jeu ; une étape validée est annoncée par une bulle.
+function histoire(ev: EvenementHistoire) {
+  const r = noterHistoire(collection, ev, Math.random);
+  if (!r.length) return;
+  recompensesHistoire.push(...r);
+  sauver(collection);
+  annoncerHistoire(r[r.length - 1].etape);
+}
+
+function annoncerHistoire(etape: number) {
+  document.querySelector('.bulle-histoire')?.remove();
+  const b = document.createElement('a');
+  b.className = 'bulle-histoire';
+  b.href = '#histoire';
+  b.setAttribute('role', 'status');
+  b.innerHTML = `<b>Étape ${etape + 1} validée : ${echap(ETAPES[etape].titre)} !</b><span>Touche ici pour ta récompense</span>`;
+  document.body.append(b);
+  b.addEventListener('click', () => b.remove());
+  setTimeout(() => b.remove(), 7000);
+}
+
+function bandeauHistoire(): string {
+  if (recompensesHistoire.length) {
+    return `<a class="bandeau-histoire pret" href="#histoire"><small>Mode histoire</small><b>🎁 Récompense à ouvrir</b><span>Étape ${recompensesHistoire[0].etape + 1} validée</span></a>`;
+  }
+  if (histoireFinie(collection)) return '<a class="bandeau-histoire fini" href="#histoire"><small>Mode histoire</small><b>Histoire terminée 🏆</b></a>';
+  const i = collection.histoire.etape;
+  const p = progression(collection);
+  return `<a class="bandeau-histoire" href="#histoire"><small>Mode histoire · étape ${i + 1}/${NB_ETAPES}</small>
+    <b>${echap(ETAPES[i].objectif)}</b>${p ? `<span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span><span>${p[0]}/${p[1]}</span>` : ''}</a>`;
+}
+
+function ecranHistoire() {
+  partie = null;
+  document.querySelector('.bulle-histoire')?.remove();
+  histoire({ type: 'etat' });
+  if (!paquetHistoire && recompensesHistoire.length) {
+    const r = recompensesHistoire.shift()!;
+    const legendaire = r.etape === NB_ETAPES - 1;
+    paquetHistoire = { titre: `Étape ${r.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, boosters: r.boosters, ouvert: false };
+  }
+  const cours = collection.histoire.etape;
+  const p = progression(collection);
+  const lignes = ETAPES.map((e, i) => {
+    const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
+    const recompense = R_.histoire.boosters[i] ? `${R_.histoire.boosters[i]} booster${R_.histoire.boosters[i] > 1 ? 's' : ''}` : '1 carte légendaire';
+    return `<li class="etape-histoire ${etat}">
+      <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
+      <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
+        ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres"><span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span> ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
+        <small class="gain">🎁 ${recompense}</small></div></li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
+      ${paquetHistoire ? sectionPaquet(paquetHistoire) : ''}
+      ${paquetHistoire?.ouvert && recompensesHistoire.length ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}
+      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas (sauf l'ouverture de Mon Club). Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
+      <ol class="etapes-histoire">${lignes}</ol>
+    </main>`;
+  activerReflets(app);
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetHistoire && revelerPaquet(paquetHistoire, ecranHistoire));
+  app.querySelector('[data-suite-histoire]')?.addEventListener('click', () => { paquetHistoire = null; ecranHistoire(); });
+  if (paquetHistoire?.ouvert && !recompensesHistoire.length) paquetHistoire = null;
+  window.scrollTo(0, 0);
+}
+
 function ecranMenu() {
   partie = null;
+  histoire({ type: 'etat' });
   const session = sessionLigne();
   const fusions = LUTTEURS.filter((l) => fusionPrete(collection, l.id)).length;
   const tuile = (id: string, titre: string, sous: string, href: string, alerte = '', cadenas = '') => `
@@ -197,6 +271,7 @@ function ecranMenu() {
       ${porteMonnaie()}
       <p class="compteur menu-stats">${compteur()}</p>
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
+      ${bandeauHistoire()}
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
         ${tuile('tournois', 'Tournois', 'Individuel et par équipe', '#tournois', tournoiActif ? 'En cours' : '')}
@@ -707,6 +782,7 @@ function ecranFusion(message = '') {
       const erreur = fusionner(collection, id);
       if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
       sauver(collection);
+      histoire({ type: 'fusion', id });
       const apres = defJoueur(def);
       ecranFusion();
       const f = ouvrirFenetre(`
@@ -947,7 +1023,10 @@ function ecranTournoiEnCours() {
 // Gains de fin : donnés une seule fois, puis montrés dans un booster.
 function sectionFinTournoi(t: Tournoi, titre: string): string {
   if (!paquetTournoi) {
+    const premiereFois = !t.recompense;
     const boosters = recompenserTournoi(collection, t, Math.random);
+    if (premiereFois && t.type === 'individuel') histoire({ type: 'tournoiIndividuel', place: placesI(t).get(0) ?? 99, invaincu: joueurInvaincu(t) });
+    if (premiereFois && t.type === 'equipe') histoire({ type: 'tournoiEquipe', gagne: scoreEquipe(t)[0] >= R_.tournoi.equipe.victoiresPourGagner });
     sauver(collection);
     sauverTournoi();
     paquetTournoi = boosters.length ? { titre, boosters, ouvert: false } : null;
@@ -1138,7 +1217,10 @@ function finCombatTournoi(abandon: boolean) {
   } else if (tournoi.type === 'equipe' && typeof cle === 'number') {
     enregistrerDuel(tournoi, cle, gagne, detail);
   }
-  if (gagne) gagnerCombatTournoi(collection, tournoi);
+  if (gagne) {
+    gagnerCombatTournoi(collection, tournoi);
+    histoire({ type: 'victoire', nation: trouverLutteur(partie.idOrdi).nation, niveau: partie.niveau });
+  }
   sauver(collection);
   sauverTournoi();
   const lutteur = e.joueurs[gagne ? HUMAIN : ORDI].def;
@@ -1241,7 +1323,7 @@ function fenetreRecruter() {
     b.addEventListener('click', () => {
       const erreur = recruter(collection, b.dataset.recrue!);
       fermerFenetre();
-      if (!erreur) sauver(collection);
+      if (!erreur) { sauver(collection); histoire({ type: 'recrutement' }); }
       ecranMonClub(erreur ? `<p class="alerte">${echap(erreur)}</p>` : '');
     }),
   );
@@ -1597,9 +1679,11 @@ function ecranFinTutoriel() {
         <p class="tuto-score">${score[0]} - ${score[1]}</p>
         <p>Un vrai combat se joue en 3 périodes : gagne-en 2, ou fais un tombé. Sans le coach, tu ne verras pas le choix de l'adversaire : à toi de deviner son jeu.</p>
         <p><b>Bonus :</b> ta prochaine victoire dans l'arène rapporte 2 boosters en plus.</p>
+        <p><b>Et maintenant ?</b> Le mode histoire te guide pas à pas. Première étape : ${echap(ETAPES[0].objectif.toLowerCase())}.</p>
       </section>
       <div class="fin-boutons marge">
-        <a class="principal lien-bouton" href="#arene">Combattre l'ordinateur</a>
+        <a class="principal lien-bouton" href="#histoire">Commencer le mode histoire</a>
+        <a class="secondaire lien-bouton" href="#arene">Combattre l'ordinateur</a>
         <a class="secondaire lien-bouton" href="#">Retour au menu</a>
       </div>
     </main>`;
@@ -2071,9 +2155,9 @@ function texteGains(g: { medailles?: number; dollars?: number }): string {
 }
 
 function visuelPaquet(b: Booster, extra = ''): string {
-  const contenu = b.type === 'recompense'
+  const contenu = b.type === 'recompense' && !b.cartes.length
     ? texteGains(b)
-    : `${b.cartes.length} cartes${b.medailles || b.dollars ? ` · ${texteGains(b)}` : ''}`;
+    : `${b.cartes.length} carte${b.cartes.length > 1 ? 's' : ''}${b.medailles || b.dollars ? ` · ${texteGains(b)}` : ''}`;
   return `
     <span class="paquet p-${b.type}">
       <span class="paquet-logo">Wrestling<br>Battle Card</span>
@@ -2244,20 +2328,24 @@ function ecranFin() {
     const x = bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
     if (bonusCeCombat) collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     bonusCeCombat = false;
+    if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: partie.niveau });
     if (e.rapide) {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
       if (gagne) {
+        histoire({ type: 'rapide', tombe: e.finPar === 'tombe', ecart: h.score - o.score });
         collection.victoires++;
         paquetSolo = { titre: 'Victoire', boosters: joindreGains([], gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
       }
     } else if (gagne && areneCtx?.type === 'boss') {
       const r = victoireBossRejoue(collection, areneCtx.nation, Math.random);
+      histoire({ type: 'nationArene', finie: areneTerminee(collection) });
       paquetSolo = { titre: r.carteBoss ? 'Victoire et carte du boss gagnée' : 'Victoire', boosters: r.boosters, ouvert: false };
     } else if (gagne) {
       // Arène : +1 médaille ; nation battue : 2 ou 3 boosters, 3 médailles, peut-être la carte du boss.
       // Bonus du tutoriel : des boosters en plus sur cette victoire.
       const bonus = x > 1 ? R_.collection.boostersParVictoire.arene * x : 0;
       const r = victoireArene(collection, Math.random, bonus);
+      if (r.nationBattue) histoire({ type: 'nationArene', finie: areneTerminee(collection) });
       const titre = r.nationBattue ? `${r.nationBattue.nom} battue${r.carteBoss ? ' et carte du boss gagnée' : ''}` : bonus ? 'Victoire · bonus du tutoriel' : 'Victoire';
       paquetSolo = { titre, boosters: r.boosters, ouvert: false };
     } else {
@@ -2640,6 +2728,8 @@ function ecranFinLigne() {
   if (gagne && (!v.abandon || e.tourGlobal >= 5) && paquetLigne?.cle !== cle) {
     if (!collection.recompensesEnLigne.includes(cle)) {
       collection.recompensesEnLigne = [...collection.recompensesEnLigne, cle].slice(-50);
+      histoire({ type: 'victoire', nation: o.def.nation, niveau: null });
+      histoire({ type: 'enLigne' });
       paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(collection, 'enLigne', Math.random, 1, v.modeSalle === 'collection' && !v.rapide), ouvert: false } };
       sauver(collection);
     }
@@ -2692,6 +2782,7 @@ function route() {
   if (h === '#fusion') return ecranFusion();
   if (h === '#social') return ecranSocial();
   if (h === '#club') return ecranMonClub();
+  if (h === '#histoire') return ecranHistoire();
   if (h === '#tournois') return ecranTournois();
   if (h === '#rapide') return ecranArene(true);
   quitterEchange();

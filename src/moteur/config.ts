@@ -327,6 +327,14 @@ export const REGLES = {
     },
   },
 
+  // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
+  // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
+  histoire: {
+    boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 0],
+    nationsEtape1: 3, // victoires contre des lutteurs de 3 nations différentes
+    memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club
+  },
+
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
   // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
   // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.

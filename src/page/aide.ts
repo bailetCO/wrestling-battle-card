@@ -93,6 +93,18 @@ export function reglesHTML(): string {
         <li><b>Initiative</b> : tu vois 2 actions possibles de l'adversaire (dont la vraie) et tu peux changer la tienne.</li>
         <li>À égalité en fin de période, c'est la plus grosse prise qui départage.</li>
       </ul>
+    </section>
+    <section class="regle">
+      <h2>Les modes de jeu</h2>
+      <ul class="liste-regles">
+        <li><b>Combat rapide</b> : une seule période. Victoire par tombé, à ${R.ecartSuperiorite} points d'écart, ou aux points à la fin. Égalité : mort subite, le premier qui marque gagne.</li>
+        <li><b>Arène</b> : ${R.arene.niveaux.length} lutteurs par nation, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur. Chaque nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion (on peut le réaffronter).</li>
+        <li><b>Tournoi individuel</b> (${R.tournoi.individuel.inscription} $) : de ${R.tournoi.individuel.minimum} à ${R.tournoi.individuel.maximum} lutteurs, en double tableau. Tu avances tant que tu gagnes ; une défaite avant les 1/2 finales t'envoie dans le tableau des perdants, une deuxième t'élimine. Les perdants des 1/2 finales s'affrontent : le gagnant va en petite finale, le perdant joue un barrage contre le vainqueur du tableau des perdants. Gains : ${R.tournoi.individuel.medailles[1]}, ${R.tournoi.individuel.medailles[2]} et ${R.tournoi.individuel.medailles[3]} médailles, ${R.tournoi.individuel.dollars[1]}, ${R.tournoi.individuel.dollars[2]} et ${R.tournoi.individuel.dollars[3]} $, booster rare au vainqueur.</li>
+        <li><b>Tournoi par équipe</b> (${R.tournoi.equipe.inscription} $) : tes ${R.tournoi.equipe.duels} lutteurs de Mon Club, un duel chacun ; la première équipe à ${R.tournoi.equipe.victoiresPourGagner} victoires gagne. <b>Bonus de nation</b> : 3 lutteurs d'une même nation donnent ${pct(R.tournoi.equipe.bonusNation[3])} à toute l'équipe, 4 : ${pct(R.tournoi.equipe.bonusNation[4])}, 5 : ${pct(R.tournoi.equipe.bonusNation[5])}.</li>
+        <li><b>Mon Club</b> : ouvre à ${R.club.medaillesOuverture} médailles, puis une place de plus toutes les ${R.club.medaillesParNiveau} médailles (${R.club.niveauMax} places).</li>
+        <li><b>Mode histoire</b> : 12 étapes qui font découvrir tout le jeu, à valider dans l'ordre. Chaque étape rapporte des boosters ; la dernière, une carte légendaire.</li>
+        <li><b>Médailles et niveau</b> : +1 médaille par victoire contre l'ordinateur ou en tournoi, +2 en ligne ; toutes les ${R.economie.medaillesParPalier} médailles, ${R.economie.dollarsParPalier} $. Un niveau de compte toutes les ${R.compte.medaillesParNiveau} médailles.</li>
+      </ul>
     </section>`;
 }
 
@@ -127,6 +139,16 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
       html: `${illus.club}
         <p>Chaque victoire rapporte des <b>médailles</b> : +1 contre l'ordinateur, +2 en ligne. Toutes les 5 médailles, tu gagnes <b>10 $</b>.</p>
         <p>Dans <b>Social</b>, dépense tes $ en boosters, profite des 3 <b>transferts de lutteur</b> du jour (une carte contre un de tes doubles de même rareté) et fais des <b>transferts entre amis</b>.</p>`,
+    },
+    {
+      titre: 'Les modes de jeu',
+      html: `<ul class="liste-regles">
+          <li><b>Arène</b> : bats les nations une par une, ${R.arene.niveaux.length} lutteurs chacune.</li>
+          <li><b>Combat rapide</b> : une seule période, pour une partie express.</li>
+          <li><b>Tournois</b> : individuel en double tableau, ou par équipe avec ton club (bonus si 3 lutteurs ou plus d'une même nation).</li>
+          <li><b>En ligne</b> : affronte un ami avec un code de salle.</li>
+        </ul>
+        <p>Le <b>mode histoire</b> te guide étape par étape à travers tout ça, avec des boosters à chaque étape et une carte légendaire à la fin. Ton objectif du moment est toujours affiché en haut du menu.</p>`,
     },
     {
       titre: 'Le combat',

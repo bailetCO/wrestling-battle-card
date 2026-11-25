@@ -318,6 +318,26 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
 - Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
 
+### Mode histoire
+
+- Un parcours de 12 étapes qui fait découvrir tout le jeu. L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
+- Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf l'ouverture de Mon Club (étape 3, validée tout de suite si le club est déjà ouvert).
+  1. Gagner 3 combats contre des lutteurs de 3 nations différentes (tous les combats comptent : ordinateur, arène, combat rapide, tournoi, en ligne) : 1 booster.
+  2. Gagner un tournoi individuel : 1 booster.
+  3. Ouvrir Mon Club : 1 booster.
+  4. Gagner un tournoi par équipe : 1 booster.
+  5. Gagner un combat rapide par tombé ou par 10 points d'écart : 2 boosters.
+  6. Recruter dans Mon Club un lutteur qui donne au moins 3 lutteurs d'une même nation : 2 boosters.
+  7. Battre une nation complète dans l'arène (ou, si l'arène est finie, battre à nouveau un champion) : 2 boosters.
+  8. Faire monter une carte au niveau épique ou plus par une fusion : 2 boosters.
+  9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris) : 3 boosters.
+  10. Gagner un combat en ligne contre un ami : 3 boosters.
+  11. Terminer l'arène en battant toutes les nations (ou, si elle était déjà finie, battre à nouveau un champion) : 3 boosters.
+  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : une carte légendaire au hasard parmi celles que le joueur n'a pas ; s'il les a toutes, une légendaire au hasard (un double).
+- Les boosters des étapes 1 à 11 sont des boosters classiques. Une bulle annonce chaque étape validée ; la récompense s'ouvre dans l'écran du mode histoire. Le mode histoire ne donne pas de médailles.
+- Le tutoriel présente les modes de jeu et se termine sur le mode histoire ; la page des règles décrit tous les modes.
+
+
 ### Fusion, niveaux de rareté et étoiles
 
 - Une carte a une rareté de départ (celle du booster) et un niveau, qui monte par fusion : Commune → Rare → Épique → Légendaire → Champion du Monde. Champion du Monde ne s'obtient que par fusion. Une commune peut donc monter 4 fois, une rare 3, une épique 2, une légendaire 1.

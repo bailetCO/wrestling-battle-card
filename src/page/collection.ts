@@ -32,6 +32,7 @@ export interface Collection {
   departComplet: boolean; // a reçu ses 20 cartes de départ (les anciennes sauvegardes sont complétées)
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
+  histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
 }
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
@@ -79,6 +80,7 @@ export function nouvelleCollection(): Collection {
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true, arene: 0,
+    histoire: { etape: 0, nations: [] },
   };
 }
 
@@ -359,6 +361,13 @@ export function depuisSauvegarde(brut: unknown): Collection {
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
   c.arene = entier(b.arene);
+  const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;
+  if (hi && typeof hi === 'object') {
+    c.histoire = {
+      etape: Math.min(REGLES.histoire.boosters.length, entier(hi.etape)),
+      nations: Array.isArray(hi.nations) ? hi.nations.filter((x): x is string => typeof x === 'string') : [],
+    };
+  }
   if (b.fragments && typeof b.fragments === 'object') {
     c.fragments = Object.fromEntries(Object.entries(b.fragments as Record<string, unknown>).map(([k, v]) => [k, entier(v)]));
   }

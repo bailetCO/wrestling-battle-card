@@ -1093,3 +1093,38 @@ b.moi { color: #ff8a95; }
   border: 1px solid var(--tapis-ligne); border-radius: 10px; padding: 10px 12px; min-height: 44px;
 }
 .formulaire-admin input:focus-visible, .formulaire-admin select:focus-visible { outline: 2px solid var(--orange); outline-offset: 1px; }
+
+/* Mode histoire : bandeau du menu, bulle d'étape validée, liste des étapes. */
+.bandeau-histoire {
+  display: grid; gap: 4px; margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; text-decoration: none; color: var(--texte);
+  background: linear-gradient(100deg, rgba(242, 163, 58, .22), rgba(242, 163, 58, .06)); border: 2px solid var(--orange);
+  box-shadow: 4px 4px 0 var(--encre);
+}
+.bandeau-histoire small { color: var(--orange); font: 700 13px var(--police); }
+.bandeau-histoire b { font-size: 16px; line-height: 1.25; }
+.bandeau-histoire span:not(.jauge-histoire) { font-size: 13px; color: var(--doux); }
+.bandeau-histoire.pret { animation: pulse-histoire 1.6s ease-in-out infinite; }
+.bandeau-histoire.fini { border-color: #ffd76a; }
+@keyframes pulse-histoire { 50% { box-shadow: 4px 4px 0 var(--encre), 0 0 0 4px rgba(242, 163, 58, .35); } }
+.jauge-histoire { display: inline-block; width: 100%; max-width: 220px; height: 8px; border-radius: 99px; background: var(--nuit); overflow: hidden; vertical-align: middle; }
+.jauge-histoire i { display: block; width: var(--p); height: 100%; background: var(--orange); }
+.bulle-histoire {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60;
+  display: grid; gap: 2px; width: min(92vw, 420px); padding: 12px 16px; border-radius: 14px; text-decoration: none;
+  background: var(--orange); color: var(--encre); box-shadow: 4px 4px 0 var(--encre); animation: bulle-entree .35s ease-out;
+}
+.bulle-histoire span { font-size: 13px; }
+@keyframes bulle-entree { from { transform: translate(-50%, 30px); opacity: 0; } }
+.etapes-histoire { list-style: none; margin: 0 16px 24px; padding: 0; display: grid; gap: 10px; }
+.etape-histoire { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 12px; border-radius: 14px; background: var(--tapis-clair); border: 1px solid var(--tapis-ligne); }
+.etape-histoire p { margin: 4px 0; font-size: 14px; color: var(--doux); }
+.etape-histoire .guide { color: var(--texte); }
+.etape-histoire .gain { display: block; margin-top: 6px; font-size: 13px; color: #ffe9a0; }
+.etape-histoire .bouton-etape { display: block; margin-top: 10px; text-align: center; text-decoration: none; }
+.etape-n { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--nuit); font: 900 18px var(--police); }
+.etape-histoire.faite { opacity: .7; }
+.etape-histoire.faite .etape-n { background: var(--defense); color: var(--encre); }
+.etape-histoire.en-cours { border: 2px solid var(--orange); background: linear-gradient(160deg, rgba(242, 163, 58, .16), var(--tapis-clair)); }
+.etape-histoire.en-cours .etape-n { background: var(--orange); color: var(--encre); }
+.etape-histoire.verrouillee { filter: saturate(.3); opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .bandeau-histoire.pret, .bulle-histoire { animation: none; } }
