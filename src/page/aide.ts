@@ -21,7 +21,7 @@ export function schemaFamilles(): string {
     </g>`;
   return `
     <figure class="schema">
-      <svg class="schema-familles" viewBox="0 0 320 256" role="img" aria-label="L'attaque bat la feinte. La feinte bat la défense et le contre. La défense bat l'attaque. Le contre bat la défense.">
+      <svg class="schema-familles" viewBox="0 0 320 256" role="img" aria-label="L'attaque bat la feinte. La feinte bat la défense et le contre. La défense bat l'attaque. Le contre bat la défense, et bat l'attaque sous condition.">
         <defs><marker id="sf-pointe" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="currentColor"/></marker></defs>
         <g class="sf-fleches" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" marker-end="url(#sf-pointe)">
           <path d="M106 60 L210 60" />
@@ -29,13 +29,14 @@ export function schemaFamilles(): string {
           <path d="M248 94 L248 162" />
           <path d="M72 162 L72 94" />
           <path d="M212 196 L110 196" />
+          <path d="M224 176 L98 82" stroke-dasharray="7 6" class="sf-condition" />
         </g>
         ${bulle('attaque', 'Attaque', 72, 60, true)}
         ${bulle('feinte', 'Feinte', 248, 60, true)}
         ${bulle('defense', 'Défense', 72, 196, false)}
         ${bulle('contre', 'Contre', 248, 196, false)}
       </svg>
-      <figcaption>La flèche va du gagnant vers le perdant.</figcaption>
+      <figcaption>La flèche va du gagnant vers le perdant. En pointillés (violet) : le contre bat l'attaque seulement avec plus d'endurance <i>et</i> plus de force.</figcaption>
     </figure>`;
 }
 

@@ -727,3 +727,6 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 @keyframes conseil { 50% { outline-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .action.conseille { animation: none; } }
 .lien-bouton.secondaire { color: var(--texte); }
+.sf-condition { color: var(--contre); stroke: var(--contre); }
+.sf-legende { fill: var(--contre); font-family: var(--police); font-size: 13px; font-weight: 700; }
+.schema figcaption { padding: 4px 8px 0; line-height: 1.4; }
