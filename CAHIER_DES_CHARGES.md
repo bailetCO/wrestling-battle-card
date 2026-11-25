@@ -293,6 +293,8 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 
 - Vérifier que le nom Wrestling Battle Card est libre (marque, nom de domaine).
 - Valider les noms locaux des actions selon l'origine.
+- Police du jeu (Roboto Condensed) chargée depuis Google Fonts : à héberger avec le jeu avant le lancement public (vie privée, RGPD, fonctionnement hors ligne).
+- Dépôt GitHub public : le code est visible de tous. Le passer en privé demanderait un abonnement GitHub payant pour garder GitHub Pages, ou un autre hébergement (Firebase Hosting à l'étape 7).
 
 ### Idée mise de côté
 

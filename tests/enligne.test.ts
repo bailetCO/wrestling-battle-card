@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { actionsJouables } from '../src/moteur/combat';
 import { creerHasard } from '../src/moteur/hasard';
-import { Duel, coder, decoder, resume, type Presence, type Salle, type Vue } from '../src/page/enligne';
+import { Duel, coder, decoder, resume, type Presence, type Salle } from '../src/page/enligne';
 
 function salleMemoire() {
   const presences = new Map<string, Presence>();

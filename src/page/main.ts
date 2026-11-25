@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, gradeMaxDe, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation, type NiveauCarte,
 } from '../moteur';
@@ -106,14 +106,6 @@ function etiquettesCarte(def: DefLutteur): string {
 
 function carteJoueur(def: DefLutteur, bouton = ''): string {
   return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton, { grade: gradeDe(collection, def.id), etoiles: etoilesDe(collection, def.id), style: styleDe(collection, def.id) })}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
-}
-
-function carteVerrouillee(def: DefLutteur): string {
-  return `
-    <div class="verrou">
-      ${carteHTML(def)}
-      <p class="verrou-texte"><b>Carte ${NOM_RARETE[def.rarete].toLowerCase()} à gagner</b>Gagne des combats pour ouvrir des boosters.</p>
-    </div>`;
 }
 
 const ICONES_MENU: Record<string, string> = {
@@ -534,7 +526,6 @@ function ecranFusion(message = '') {
     });
   const lignes = miens.map((l) => {
     const f = prochaineFusion(collection, l.id);
-    const g = gradeDe(collection, l.id);
     const niv = niveauDe(l.id);
     // Les 5 niveaux de Commune à Champion du Monde ; remplis jusqu'au niveau atteint.
     const rangAtteint = NIVEAUX.indexOf(niv);
@@ -1308,6 +1299,7 @@ function ouvrirFenetre(html: string, fermable = false): HTMLElement {
 
 function fermerFenetre() {
   document.querySelector('.voile')?.remove();
+  document.querySelector('.revelation')?.remove(); // ouverture de booster interrompue (changement d'écran)
 }
 
 function fenetreCarte(def: DefLutteur, style = 0) {

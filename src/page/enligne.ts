@@ -15,7 +15,7 @@
 // Tout l'historique est dans la présence : après un rechargement, le combat reprend.
 
 import {
-  ACTIONS, LUTTEURS, apercuInitiative, avecDeck, avecGrade, creerCombat, creerHasard, jouerTour, trouverLutteur,
+  ACTIONS, apercuInitiative, avecDeck, avecGrade, creerCombat, creerHasard, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
 import mqtt from 'mqtt';
@@ -489,7 +489,7 @@ export class Duel {
   }
 
   private resoudre(
-    etat: EtatCombat, _h: HasardRejouable, t: number, moi: Presence, codeAmi: number, v: Vue,
+    _etat: EtatCombat, _h: HasardRejouable, t: number, moi: Presence, codeAmi: number, v: Vue,
     jouerT: (t: number, c0: Choix, c1: Choix) => EtatCombat,
   ) {
     const monCode = moi.rev!.c;
@@ -644,53 +644,6 @@ export function salleLocale(code: string): Salle {
   };
 }
 
-// ---------- Salle Claude (connexion en direct de la page publiée) ----------
-
-interface RoomPeer { peer: string; isMe: boolean; presence: Readonly<Record<string, unknown>> }
-interface NamedRoomLike {
-  presence(p: Record<string, unknown>): Promise<void>;
-  peers(): readonly RoomPeer[];
-  onPeers(fn: () => void, onError?: (e: { code: string }) => void): () => void;
-  connected(): boolean;
-  leave(): Promise<void>;
-}
-export interface RoomLike { join(name: string): Promise<NamedRoomLike> }
-
-// La connexion en direct de claude.ai. Renvoie la salle, ou la raison de l'échec.
-export type RaisonEchec = 'hors-claude' | 'non-admis';
-export async function obtenirRoom(): Promise<RoomLike | RaisonEchec> {
-  const c = (window as unknown as { claude?: { use?: (n: string) => Promise<unknown> } }).claude;
-  if (!c?.use) return 'hors-claude';
-  try {
-    const r = (await c.use('room')) as RoomLike | null;
-    return r ?? 'non-admis';
-  } catch {
-    return 'non-admis';
-  }
-}
-
-export async function salleClaude(room: RoomLike, code: string): Promise<Salle> {
-  const r = await room.join(`wbc-${code}`);
-  const ecouteurs = new Set<() => void>();
-  const stop = r.onPeers(() => ecouteurs.forEach((f) => f()));
-  return {
-    publier(p) {
-      // La présence fusionne champ par champ : on envoie tout, à chaque fois.
-      r.presence({ ...p } as unknown as Record<string, unknown>).catch(() => undefined);
-    },
-    pairs: () => r.peers().filter((p) => !p.isMe),
-    surChangement(fn) {
-      ecouteurs.add(fn);
-      return () => ecouteurs.delete(fn);
-    },
-    connecte: () => r.connected(),
-    quitter() {
-      stop();
-      r.leave().catch(() => undefined);
-    },
-  };
-}
-
 // Code de salle : 4 lettres faciles à dicter (sans I, O, L).
 export function nouveauCode(): string {
   const lettres = 'abcdefghjkmnpqrstuvwxyz';
@@ -699,5 +652,3 @@ export function nouveauCode(): string {
 
 export const codeValide = (c: string) => /^[a-z]{4}$/.test(c);
 
-// Liste des lutteurs pour le choix en ligne (toutes les cartes sont permises entre amis).
-export const LUTTEURS_EN_LIGNE = LUTTEURS;

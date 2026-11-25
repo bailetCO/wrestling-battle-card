@@ -26,6 +26,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Vérification des types
+        run: npm run verifier-types
       - name: Tests
         run: npm test
       - name: Construction du jeu

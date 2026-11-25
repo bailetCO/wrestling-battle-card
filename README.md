@@ -25,13 +25,13 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/` : la page du jeu (écran de choix, combat, fin). Elle n'applique aucune règle elle-même, elle appelle le moteur.
 - `src/page/partie.ts` : le déroulé d'une partie contre l'ordinateur (initiative, pile ou face).
 - `src/page/carte.ts` : la carte d'un lutteur et ses cadres de rareté.
-- `src/page/portrait.ts` : les portraits manga provisoires, dessinés en code. Pour une vraie illustration, renseigner `image` dans `APPARENCE`.
+- `src/page/portrait.ts` : les portraits et scènes manga provisoires (une scène par niveau de carte), dessinés en code. Pour une vraie illustration, renseigner `image` dans `APPARENCE`.
 - `src/page/enligne.ts` : le combat entre amis (salle, choix secrets, initiative, pile ou face, reprise), sans affichage, et la connexion par relais public.
 - `.github/workflows/pages.yml` : publication automatique sur GitHub Pages (tests puis construction).
 - `src/page/club.ts` : le Club (amis, marchand du jour, échange de doubles entre amis), sans affichage.
 - `src/page/aide.ts` : la page Règles (textes tirés de la configuration) et le tutoriel (écrans et combat guidé).
 - `src/page/collection.ts` : la collection (cartes, boosters, decks), gardée dans le navigateur.
-- Page `#galerie` : les 15 cartes rangées par rareté, la collection et le mode test.
+- Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
 - `tests/` : un test par règle.
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
 
