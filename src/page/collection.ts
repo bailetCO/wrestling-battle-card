@@ -152,6 +152,9 @@ export function joindreGains(boosters: Booster[], g: { medailles: number; dollar
   return boosters;
 }
 
+// Niveau de compte : 1 au départ, +1 toutes les 15 médailles (aucune récompense, juste l'expérience).
+export const niveauCompte = (c: Collection) => 1 + Math.floor(c.medailles / REGLES.compte.medaillesParNiveau);
+
 // ---------- Mon Club ----------
 
 // Niveau du club : 0 tant qu'il est fermé, puis 1 à 5 selon les médailles.
@@ -320,7 +323,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (b.decks && typeof b.decks === 'object') c.decks = { ...(b.decks as Record<string, IdAction[]>) };
   if (typeof b.coach === 'string' && !verifierPseudo(b.coach)) c.coach = b.coach.trim();
   if (typeof b.idCoach === 'string') c.idCoach = b.idCoach;
-  if (b.niveau === 'fort') c.niveau = 'fort';
+  if (b.niveau === 'fort' || b.niveau === 'facile') c.niveau = b.niveau;
   c.toutDebloque = b.toutDebloque === true;
   c.bonusTutoriel = b.bonusTutoriel === true;
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);

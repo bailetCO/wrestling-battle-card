@@ -73,6 +73,7 @@ export interface EtatLutteur {
   dernierSpecialTour: number | null; // numéro de tour global de la dernière action spéciale
   reductionSpeciale: boolean; // prochaine action spéciale moins chère (non cumulable)
   initiative: boolean; // peut voir 2 actions adverses et changer la sienne ce tour
+  habitudes: Famille[]; // familles des dernières actions jouées (l'ordinateur fort s'en sert)
 }
 
 export interface EtatCombat {
@@ -85,6 +86,8 @@ export interface EtatCombat {
   vainqueur: Joueur | null;
   finPar: 'periodes' | 'tombe' | null;
   journal: string[];
+  rapide: boolean; // combat rapide : une seule période, mort subite en cas d'égalité
+  mortSubite: boolean; // combat rapide à égalité après la période : le premier qui marque gagne
 }
 
 export interface OptionsTour {

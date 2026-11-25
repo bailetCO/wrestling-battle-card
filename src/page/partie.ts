@@ -2,8 +2,7 @@
 // La page appelle ces fonctions ; toutes les règles restent dans src/moteur.
 
 import {
-  apercuInitiative, choixOrdinateur, creerCombat, creerHasard, jouerTour, reagirInitiative,
-  reagirInitiativeForte, trouverLutteur,
+  apercuInitiative, choixOrdinateur, creerCombat, creerHasard, jouerTour, reactionOrdinateur, trouverLutteur,
   type Choix, type DefLutteur, type EtatCombat, type Face, type Hasard, type IdAction, type Niveau,
 } from '../moteur';
 
@@ -50,9 +49,9 @@ export class Partie {
   // `script` : choix imposés à l'ordinateur pour les premiers tours (tutoriel).
   constructor(
     readonly idHumain: string, readonly idOrdi: string, graine: number,
-    readonly niveau: Niveau = 'normal', defHumain?: DefLutteur, readonly script: Choix[] = [],
+    readonly niveau: Niveau = 'normal', defHumain?: DefLutteur, readonly script: Choix[] = [], rapide = false,
   ) {
-    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), idOrdi);
+    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), idOrdi, { rapide });
     this.hasard = new HasardRejouable(graine);
   }
 
@@ -76,8 +75,7 @@ export class Partie {
   reactionOrdi(choixHumain: Choix, choixOrdi: Choix): Choix {
     if (this.scripte || !this.etat.joueurs[ORDI].initiative) return choixOrdi;
     apercuInitiative(this.etat, ORDI, choixHumain.action, this.hasard.fn);
-    if (this.niveau === 'fort') return reagirInitiativeForte(this.etat, ORDI, choixOrdi, choixHumain, this.hasard.fn);
-    return reagirInitiative(this.etat, ORDI, choixOrdi, this.hasard.fn);
+    return reactionOrdinateur(this.etat, ORDI, choixOrdi, choixHumain, this.hasard.fn, this.niveau);
   }
 
   // Joue le tour. Si l'ordinateur réussit sa tentative de tombé, le joueur doit

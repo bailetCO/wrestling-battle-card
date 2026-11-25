@@ -6,6 +6,7 @@ import {
   peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type Nation, type NiveauCarte,
+  type Niveau,
 } from '../moteur';
 import { Partie, type TourJoue } from './partie';
 import {
@@ -15,7 +16,7 @@ import {
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
-  acheterBooster, cartesPossedees, charger, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
+  acheterBooster, cartesPossedees, charger, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
@@ -47,6 +48,9 @@ let toursAffiches = -1;
 let absentDepuis: number | null = null;
 const adv = () => (mode === 'ligne' ? vueLigne?.amiCoach || 'Ami' : 'Ordi');
 const moiNom = () => collection.coach || 'Toi';
+// Pastille du niveau de compte, à côté du nom d'un coach.
+const pastilleNiveau = (n: number | null | undefined) => (n ? `<span class="niv-compte" title="Niveau de compte ${n}">Niv. ${n}</span>` : '');
+const niveauOrdi = (n: Niveau | undefined) => (n === 'fort' ? 'fort' : n === 'facile' ? 'facile' : 'normal');
 const etatEnCours = (): EtatCombat | null => (mode === 'ligne' ? vueLigne?.etat ?? null : partie?.etat ?? null);
 let tours: TourJoue[] = [];
 let scoresPeriodes: [number, number][] = [];
@@ -185,7 +189,7 @@ function ecranMenu() {
     <main class="menu">
       <header class="menu-tete">
         <span class="avatar" aria-hidden="true">${echap((collection.coach ?? '?').slice(0, 1).toUpperCase())}</span>
-        <span class="menu-coach"><small>Coach</small><b>${echap(collection.coach ?? '')}</b></span>
+        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(collection.coach ?? '')} ${pastilleNiveau(niveauCompte(collection))}</b></span>
         <a class="lien petit" href="#pseudo">Modifier</a>
       </header>
       ${porteMonnaie()}
@@ -219,6 +223,15 @@ function enTete(titre: string, sous = '', retour = '#') {
     </header>`;
 }
 
+// Les 3 niveaux de l'ordinateur.
+function choixNiveau(niv: Niveau): string {
+  const b = (n: Niveau, nom: string, sous: string) =>
+    `<button class="${niv === n ? 'actif' : ''}" data-niveau="${n}" aria-pressed="${niv === n}">${nom}<small>${sous}</small></button>`;
+  return `<div class="niveau trois" role="group" aria-label="Niveau de l'ordinateur">
+    ${b('facile', 'Facile', 'Pour débuter')}${b('normal', 'Normal', 'Pour s\'entraîner')}${b('fort', 'Fort', 'Il lit ton jeu')}
+  </div>`;
+}
+
 function ecranCombatMenu() {
   partie = null;
   const niv = collection.niveau;
@@ -233,11 +246,13 @@ function ecranCombatMenu() {
         <h2>Arène</h2>
         ${collection.bonusTutoriel ? '<p class="bandeau-bonus">Tutoriel terminé : ton prochain combat d\'arène rapporte 2 fois plus de boosters en cas de victoire.</p>' : ''}
         <p>Affronte l'ordinateur avec un lutteur de ta collection. Chaque victoire ouvre un booster et rapporte 1 médaille ; toutes les 2 défaites d'affilée, un booster de consolation.</p>
-        <div class="niveau" role="group" aria-label="Niveau de l'ordinateur">
-          <button class="${niv === 'normal' ? 'actif' : ''}" data-niveau="normal" aria-pressed="${niv === 'normal'}">Normal<small>Pour s'entraîner</small></button>
-          <button class="${niv === 'fort' ? 'actif' : ''}" data-niveau="fort" aria-pressed="${niv === 'fort'}">Fort<small>Il lit ton jeu</small></button>
-        </div>
+        ${choixNiveau(niv)}
         <a class="principal lien-bouton" href="#arene">Choisir mon lutteur</a>
+      </section>
+      <section class="bloc">
+        <h2>Combat rapide</h2>
+        <p>Une seule période : victoire à 10 points d'écart, par tombé, ou aux points. Égalité à la fin : mort subite, le premier qui marque gagne. +1 médaille par victoire, sans booster.</p>
+        <a class="principal lien-bouton" href="#rapide">Combat rapide contre l'ordinateur</a>
       </section>
       <section class="bloc">
         <h2>En ligne</h2>
@@ -247,7 +262,8 @@ function ecranCombatMenu() {
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
     b.addEventListener('click', () => {
-      collection.niveau = b.dataset.niveau === 'fort' ? 'fort' : 'normal';
+      const n = b.dataset.niveau;
+      collection.niveau = n === 'fort' || n === 'facile' ? n : 'normal';
       sauver(collection);
       ecranCombatMenu();
     }),
@@ -256,7 +272,7 @@ function ecranCombatMenu() {
 }
 
 // Arène : choix du lutteur parmi ses cartes.
-function ecranArene() {
+function ecranArene(rapide = false) {
   partie = null;
   const miens = LUTTEURS.filter((l) => possede(collection, l.id));
   const cartes = miens.map((l) => {
@@ -269,8 +285,9 @@ function ecranArene() {
   const puces = nations.map((n) => `<button class="puce" data-aller="${n.id}">${n.nom}</button>`).join('');
   app.innerHTML = `
     <main class="choix">
-      ${enTete('Arène', `Ordinateur ${collection.niveau === 'fort' ? 'fort' : 'normal'} · l'adversaire est tiré au hasard parmi les 15 lutteurs.`, '#combat')}
-      ${collection.bonusTutoriel ? '<p class="bandeau-bonus marge">Bonus du tutoriel : boosters doublés si tu gagnes ce combat.</p>' : ''}
+      ${enTete(rapide ? 'Combat rapide' : 'Arène', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
+      ${rapide ? `<div class="marge">${choixNiveau(collection.niveau)}</div>` : ''}
+      ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : boosters doublés si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
       <div class="defile" tabindex="0" aria-label="Tes lutteurs">${cartes}</div>
       <div class="defile-nav">
@@ -303,7 +320,15 @@ function ecranArene() {
       const id = b.dataset.lutteur!;
       const autres = LUTTEURS.filter((l) => l.id !== id);
       const ordi = autres[Math.floor(Math.random() * autres.length)].id;
-      lancer(id, ordi, nouvelleGraine());
+      lancer(id, ordi, nouvelleGraine(), rapide);
+    }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const n = b.dataset.niveau;
+      collection.niveau = n === 'fort' || n === 'facile' ? n : 'normal';
+      sauver(collection);
+      ecranArene(rapide);
     }),
   );
   activerReflets(app);
@@ -1208,12 +1233,12 @@ function ecranEchange(v: VueEchange, connecte: boolean) {
   app.querySelector('.retour')?.addEventListener('click', sortir);
 }
 
-function lancer(idHumain: string, idOrdi: string, graine: number) {
+function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
-  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)));
+  partie = new Partie(idHumain, idOrdi, graine, collection.niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
   tours = [];
   scoresPeriodes = [];
   enAttente = false;
@@ -1223,7 +1248,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   messageSolo = '';
   tuto = false;
   enTournoi = null;
-  bonusCeCombat = collection.bonusTutoriel;
+  bonusCeCombat = rapide ? false : collection.bonusTutoriel;
   ecranCombat();
 }
 
@@ -1576,18 +1601,21 @@ function tableau(e: EtatCombat): string {
       <button class="coin ${c}" data-voir="${l.def.id}" aria-label="Voir la carte de ${echap(l.def.nom)}">
         <span class="coin-tete"><span class="vignette">${portrait(l.def)}</span><span class="qui">${qui}<br><small>${echap(l.def.nom)}</small></span></span>
         <span class="score">${l.score}</span>
-        <span class="periodes" aria-label="Périodes gagnées : ${l.periodesGagnees}">${pastilles(l.periodesGagnees)}</span>
+        ${e.rapide ? '' : `<span class="periodes" aria-label="Périodes gagnées : ${l.periodesGagnees}">${pastilles(l.periodesGagnees)}</span>`}
       </button>`;
   return `
     <header class="tableau">
-      ${coin(h, 'rouge', echap(moiNom()))}
+      ${coin(h, 'rouge', `${echap(moiNom())} ${pastilleNiveau(niveauCompte(collection))}`)}
       <div class="centre">
-        <span class="per">Période <b>${e.periode}</b>/3</span>
-        <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>
+        ${e.rapide
+          ? `<span class="per">${e.mortSubite ? '<b class="mort-subite">Mort subite</b>' : 'Combat <b>rapide</b>'}</span>
+             <span class="trn">Tour <b>${e.tour}</b>${e.mortSubite ? '' : `/${REGLES.toursParPeriode}`}</span>`
+          : `<span class="per">Période <b>${e.periode}</b>/3</span>
+             <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>`}
         ${historique}
-        <span class="niv">${mode === 'ligne' ? 'Entre amis' : `Ordi ${partie?.niveau === 'fort' ? 'fort' : 'normal'}`}</span>
+        <span class="niv">${mode === 'ligne' ? 'Entre amis' : `Ordi ${niveauOrdi(partie?.niveau)}`}</span>
       </div>
-      ${coin(o, 'bleu', echap(adv()))}
+      ${coin(o, 'bleu', `${echap(adv())} ${mode === 'ligne' ? pastilleNiveau(vueLigne?.amiNiveau) : ''}`)}
     </header>`;
 }
 
@@ -1661,7 +1689,7 @@ function ecranCombat() {
     if (!confirmerAbandon()) return;
     if (mode === 'ligne') duel?.abandonner();
     else if (enTournoi !== null) finCombatTournoi(true);
-    else ecranArene();
+    else ecranArene(!!partie?.etat.rapide);
   });
   if (mode === 'ligne') majStatutLigne();
 }
@@ -1980,6 +2008,7 @@ function ecranFin() {
   const vainqueur = gagne ? h : o;
   const comment = e.finPar === 'tombe'
     ? 'par tombé'
+    : e.rapide ? `${Math.max(h.score, o.score)} à ${Math.min(h.score, o.score)}${e.mortSubite ? ' en mort subite' : ''}`
     : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   const anciens = tours.slice().reverse().map((t) => htmlTourAncien(t, e)).join('');
   const { idHumain, idOrdi } = partie;
@@ -1988,7 +2017,13 @@ function ecranFin() {
     const x = bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
     if (bonusCeCombat) collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     bonusCeCombat = false;
-    if (gagne) {
+    if (e.rapide) {
+      // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
+      if (gagne) {
+        collection.victoires++;
+        paquetSolo = { titre: 'Victoire', boosters: joindreGains([], gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
+      }
+    } else if (gagne) {
       paquetSolo = { titre: x > 1 ? 'Victoire · boosters doublés' : 'Victoire', boosters: recompenser(collection, 'arene', Math.random, x), ouvert: false };
     } else {
       const conso = consoler(collection, Math.random);
@@ -2016,8 +2051,8 @@ function ecranFin() {
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
   activerReflets(app);
-  app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine()));
-  app.querySelector('[data-changer]')!.addEventListener('click', ecranArene);
+  app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide));
+  app.querySelector('[data-changer]')!.addEventListener('click', () => ecranArene(e.rapide));
   app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetSolo && revelerPaquet(paquetSolo, ecranFin));
   window.scrollTo(0, 0);
 }
@@ -2093,6 +2128,7 @@ function ecranAmis(message = '') {
       <section class="bloc">
         <h2>Créer une salle</h2>
         <p>Choisis comment vous jouez :</p>
+        <label class="case-rapide"><input type="checkbox" id="rapide"> Combat rapide <small>(une période, mort subite, sans booster)</small></label>
         <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes fusionnées · 2 boosters et 2 médailles par victoire</small></button>
         <button class="secondaire" data-creer="base">Cartes de base<small>Les 15 cartes, sans fusion · 2 médailles par victoire, pas de booster</small></button>
       </section>
@@ -2107,7 +2143,7 @@ function ecranAmis(message = '') {
       <a class="lien" href="#">Retour</a>
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
-    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base')),
+    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', app.querySelector<HTMLInputElement>('#rapide')?.checked)),
   );
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -2118,7 +2154,7 @@ function ecranAmis(message = '') {
   window.scrollTo(0, 0);
 }
 
-async function connecter(code: string, role: Role, modeSalle?: ModeSalle) {
+async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
@@ -2147,7 +2183,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle) {
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
-  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach });
+  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide });
   duel.surVue(rafraichirLigne);
 }
 
@@ -2265,6 +2301,7 @@ function ecranSalle(v: Vue) {
     </button>`;
   }).join('');
   const modeTexte = v.modeSalle === null ? 'Connexion à la salle…'
+    : v.rapide ? `Combat rapide (une période, mort subite) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : enCollection ? 'Mode : vos collections (fusions comprises) · 2 boosters et 2 médailles par victoire.'
     : 'Mode : cartes de base, toutes permises · 2 médailles par victoire, pas de booster.';
   const ami = v.amiLutteur ? trouverLutteur(v.amiLutteur) : null;
@@ -2274,7 +2311,7 @@ function ecranSalle(v: Vue) {
         <h1>Salle ${echap(codeSalle.toUpperCase())}</h1>
         <p class="code-grand" aria-label="Code de la salle">${echap(codeSalle.toUpperCase())}</p>
         <p class="note">${modeTexte}</p>
-        <p>${!salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami')} est dans la salle.</b>` : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
+        <p>${!salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami')} ${pastilleNiveau(v.amiNiveau)} est dans la salle.</b>` : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
         <p>${v.monLutteur ? `Tu as choisi <b>${echap(trouverLutteur(v.monLutteur).nom)}</b>.` : 'Choisis ton lutteur ci-dessous.'}
            ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
            ${v.attente ? echap(v.attente) : ''}</p>
@@ -2356,7 +2393,7 @@ function ecranFinLigne() {
   if (gagne && (!v.abandon || e.tourGlobal >= 5) && paquetLigne?.cle !== cle) {
     if (!collection.recompensesEnLigne.includes(cle)) {
       collection.recompensesEnLigne = [...collection.recompensesEnLigne, cle].slice(-50);
-      paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(collection, 'enLigne', Math.random, 1, v.modeSalle === 'collection'), ouvert: false } };
+      paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(collection, 'enLigne', Math.random, 1, v.modeSalle === 'collection' && !v.rapide), ouvert: false } };
       sauver(collection);
     }
   }
@@ -2409,6 +2446,7 @@ function route() {
   if (h === '#social') return ecranSocial();
   if (h === '#club') return ecranMonClub();
   if (h === '#tournois') return ecranTournois();
+  if (h === '#rapide') return ecranArene(true);
   quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
   if (h === '#regles') return ecranRegles();

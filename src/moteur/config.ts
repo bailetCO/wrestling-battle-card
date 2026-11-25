@@ -271,10 +271,16 @@ export const REGLES = {
 
   // Ordinateur.
   ia: {
-    // Niveau normal : avec l'initiative, chance de changer d'action (au hasard).
-    chanceChangerInitiative: 1 / 2,
-    // Niveau fort.
+    // Niveaux facile et normal : actions au hasard ; avec l'initiative, chance de changer d'action.
+    chanceChangerInitiative: { facile: 1 / 4, normal: 1 / 2 },
+    // Niveau facile : en plus du hasard, il fait parfois l'action la moins bonne (un débutant qui
+    // se trompe), pour qu'un joueur débutant gagne environ 7 fois sur 10. Jamais d'action spéciale.
+    facile: { chanceMaladresse: 0.45 },
+    // Niveau fort : avec l'initiative, contre ton action 3 fois sur 4 ; sans l'initiative, joue
+    // contre tes habitudes (les familles d'actions que tu as jouées le plus récemment).
     fort: {
+      memoireHabitudes: 6, // nombre de tes dernières actions retenues
+      poidsHabitude: 2, // une famille souvent jouée compte d'autant plus dans ses prévisions
       chanceContrerInitiative: 3 / 4, // avec l'initiative, joue l'action qui contre la tienne
       chanceMeilleureAction: 0.9, // sinon la 2e meilleure, pour rester imprévisible
       valeurTombe: 10, // valeur d'un tombé réussi, comptée en points
@@ -286,6 +292,14 @@ export const REGLES = {
   },
 
   tombe: { plusEndurance: 3 / 5, egalite: 2 / 5, moinsEndurance: 1 / 5 },
+
+  // Combat rapide : une seule période ; victoire à 10 points d'écart, par tombé, ou aux points à la
+  // fin de la période. Égalité : mort subite, le premier qui marque gagne (au bout de
+  // `mortSubiteMax` tours sans point, on départage comme une période normale).
+  rapide: { mortSubiteMax: 10 },
+
+  // Niveau de compte : +1 toutes les 15 médailles, seulement pour montrer l'expérience du joueur.
+  compte: { medaillesParNiveau: 15 },
 
   lutte: { chance: 1 / 10, pointsMin: 1, pointsMax: 2 },
   toursSansEnduranceAvantTombe: 3,

@@ -76,6 +76,8 @@ export interface Presence {
   m: number; // numéro de la manche (revanche = +1)
   mo: ModeSalle | null; // mode de la salle (publié par l'hôte)
   co: string | null; // pseudo du coach
+  nc?: number; // niveau de compte du coach (affiché à côté de son nom)
+  rp?: boolean; // combat rapide (publié par l'hôte)
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
   et: Record<string, number>; // étoiles par action (mode collection, Champion du Monde)
@@ -94,8 +96,8 @@ export interface Presence {
   ck: string | null; // contrôle : résumé de l'état après le dernier tour
 }
 
-export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null }): Presence {
-  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean }): Presence {
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -151,6 +153,8 @@ export interface Vue {
   amiLutteur: string | null;
   monLutteur: string | null;
   amiStyle: number; // style de carte de l'ami (Champion du Monde), 0 = classique
+  amiNiveau: number | null; // niveau de compte de l'ami
+  rapide: boolean; // combat rapide (une période, mort subite)
   monStyle: number;
   etat: EtatCombat | null;
   tours: TourJoue[];
@@ -179,16 +183,22 @@ export class Duel {
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
-  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null };
+  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean };
 
   constructor(
     private salle: Salle, readonly role: Role,
     depart?: Presence | null, private sauvegarder: (p: Presence) => void = () => undefined,
-    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null } = {},
+    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean } = {},
   ) {
-    this.ident = { mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null };
+    this.ident = {
+      mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null,
+      nc: ident.niveauCompte, rp: role === 'hote' ? !!ident.rapide : undefined,
+    };
     this.moiP = depart && depart.role === role && depart.v === 1
-      ? { ...presenceVide(role), ...depart, co: this.ident.co ?? depart.co ?? null, ic: this.ident.ic ?? depart.ic ?? null }
+      ? {
+        ...presenceVide(role), ...depart, co: this.ident.co ?? depart.co ?? null, ic: this.ident.ic ?? depart.ic ?? null,
+        nc: this.ident.nc ?? depart.nc, rp: role === 'hote' ? depart.rp ?? this.ident.rp : undefined,
+      }
       : presenceVide(role, 0, this.ident);
     this.vue = this.vueVide();
     this.arret = salle.surChangement(() => this.avancer());
@@ -276,7 +286,7 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false,
       etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
@@ -311,6 +321,8 @@ export class Duel {
     const moi = this.moiP;
     v.modeSalle = this.role === 'hote' ? moi.mo ?? 'base' : ami?.mo ?? null;
     v.amiCoach = ami?.co ?? null;
+    v.amiNiveau = ami?.nc ?? null;
+    v.rapide = this.role === 'hote' ? !!moi.rp : !!ami?.rp;
     v.amiIdCoach = ami?.ic ?? null;
     v.monLutteur = moi.lu;
     v.amiLutteur = ami?.lu ?? null;
@@ -351,7 +363,7 @@ export class Duel {
     const defHote = def(hote);
     let defInvite = def(invite);
     if (defInvite.nom === defHote.nom) defInvite = { ...defInvite, nom: `${defInvite.nom} (2)` };
-    let etat = creerCombat(defHote, defInvite);
+    let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp });
     const hasard = new HasardRejouable(graine);
     const P: [Presence, Presence] = [hote, invite];
     const face = (j: Joueur, t: number): Face | undefined => P[j].fc[String(t)];

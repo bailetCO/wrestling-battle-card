@@ -10,7 +10,8 @@
     "apercu": "vite preview",
     "test": "tsx --test tests/*.test.ts",
     "simuler": "tsx scripts/simuler.ts",
-    "verifier-types": "tsc --noEmit"
+    "verifier-types": "tsc --noEmit",
+    "niveaux": "tsx scripts/niveaux.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

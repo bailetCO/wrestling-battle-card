@@ -275,10 +275,26 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 - À 0 d'endurance, la seule action possible est « Lutte » : 1 chance sur 10 de marquer 1 ou 2 points (tirés au hasard).
 - Après 3 tours sans endurance, le lutteur a 100 % de chance de se faire tomber.
 
-### Ordinateur
+### Ordinateur (3 niveaux)
 
-- Niveau normal : il choisit au hasard parmi ses actions jouables. Avec l'initiative, il change d'action une fois sur deux, au hasard.
-- Niveau fort : il estime ce que rapporte chacune de ses actions (et spéciales) face à tout ce que l'adversaire peut jouer : points, chances de tombé, coût en endurance, risque de passer sous 50, passivité. Il joue la meilleure 9 fois sur 10, sinon la deuxième, pour rester imprévisible. Avec l'initiative, il joue l'action qui contre celle de l'adversaire 3 fois sur 4. Il gagne environ 78 % de ses combats contre le niveau normal.
+L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que le joueur, aucun bonus de stats. Il ne voit jamais l'action du joueur avant qu'elle soit jouée, sauf les 2 actions montrées par l'initiative (comme pour le joueur).
+
+- Facile : au hasard, sans action spéciale, et 45 % du temps l'action la moins bonne (comme un débutant qui se trompe) ; avec l'initiative, change d'action 1 fois sur 4.
+- Normal : au hasard ; avec l'initiative, change d'action 1 fois sur 2.
+- Fort : il retient les 6 dernières familles d'actions du joueur et estime ce que rapporte chacune de ses actions (points, tombé, endurance, passivité) face à ce que le joueur joue d'habitude ; il joue la meilleure 9 fois sur 10. Avec l'initiative, il joue l'action qui contre celle du joueur 3 fois sur 4. Varier ses actions ou feinter permet de le piéger.
+- Mesures (`npm run niveaux`, 1 000 combats par case, cartes au hasard) : joueur au hasard (débutant) 69 % contre le facile, 51 % contre le normal, 16 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 51 % contre le fort. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
+- Le choix du facile au lieu du hasard pur est voulu : un ordinateur qui joue entièrement au hasard laisse 50 % de victoires à un joueur au hasard, pas 70 %.
+
+### Combat rapide
+
+- Une seule période. Victoire à 10 points d'écart, par tombé, ou aux points à la fin de la période.
+- Égalité à la fin de la période : mort subite, le premier qui marque gagne. Au bout de 10 tours de mort subite sans point, on départage comme une période normale.
+- Contre l'ordinateur (niveau au choix) : +1 médaille par victoire, sans booster ni consolation. Entre amis (case « Combat rapide » à la création de la salle) : +2 médailles par victoire, sans booster.
+
+### Niveau de compte
+
+- +1 niveau toutes les 15 médailles (niveau 1 au départ). Il montre seulement l'expérience du joueur : aucune récompense.
+- Affiché dans le menu, à côté du nom en combat et dans la salle en ligne (envoyé à l'ami).
 
 ### Combat entre amis (étape 5)
 

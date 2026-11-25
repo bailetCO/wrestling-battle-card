@@ -1040,3 +1040,16 @@ b.moi { color: #ff8a95; }
 .ordre-n { font: 900 22px var(--police); color: var(--orange); width: 20px; text-align: center; }
 .ordre-nom { display: grid; }
 .ordre-nom small { color: var(--doux); font-size: 12px; }
+
+/* Niveau de compte, à côté du nom d'un coach. */
+.niv-compte {
+  display: inline-block; padding: 0 6px; border-radius: 6px; vertical-align: middle;
+  background: linear-gradient(160deg, #ffe9a0, #c99a2e); color: var(--encre);
+  font: 800 11px/1.5 var(--police); letter-spacing: 0; white-space: nowrap;
+}
+.menu-coach b .niv-compte { font-size: 13px; }
+.niveau.trois { grid-template-columns: repeat(3, 1fr); }
+.mort-subite { color: #ff5a3c; animation: faiblesse 1s ease-in-out infinite; }
+.case-rapide { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 6px 0; }
+.case-rapide input { width: 22px; height: 22px; accent-color: var(--orange); }
+.case-rapide small { color: var(--doux); font-weight: 400; }

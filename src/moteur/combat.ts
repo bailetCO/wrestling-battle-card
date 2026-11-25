@@ -30,10 +30,11 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
     dernierSpecialTour: null,
     reductionSpeciale: false,
     initiative: false,
+    habitudes: [],
   };
 }
 
-export function creerCombat(a: string | DefLutteur, b: string | DefLutteur): EtatCombat {
+export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean } = {}): EtatCombat {
   const defA = typeof a === 'string' ? trouverLutteur(a) : a;
   const defB = typeof b === 'string' ? trouverLutteur(b) : b;
   return {
@@ -46,6 +47,8 @@ export function creerCombat(a: string | DefLutteur, b: string | DefLutteur): Eta
     vainqueur: null,
     finPar: null,
     journal: [],
+    rapide: !!opts.rapide,
+    mortSubite: false,
   };
 }
 
@@ -339,6 +342,34 @@ function finirPeriode(e: EtatCombat, g: Joueur, raison: string) {
   }
 }
 
+// Combat rapide : une seule période, puis mort subite en cas d'égalité.
+function finTourRapide(e: EtatCombat, ecart: number, hasard: Hasard): EtatCombat {
+  const meneur: Joueur = ecart > 0 ? 0 : 1;
+  if (Math.abs(ecart) >= REGLES.ecartSuperiorite) {
+    log(e, `Supériorité technique (${e.joueurs[0].score} - ${e.joueurs[1].score}).`);
+    finirCombat(e, meneur, 'periodes');
+  } else if (e.mortSubite && ecart !== 0) {
+    log(e, `Mort subite : ${e.joueurs[meneur].def.nom} marque le premier.`);
+    finirCombat(e, meneur, 'periodes');
+  } else if (e.mortSubite && e.tour >= REGLES.toursParPeriode + REGLES.rapide.mortSubiteMax) {
+    const g = gagnantPeriode(e, hasard);
+    log(e, `Toujours personne en mort subite : ${e.joueurs[g].def.nom} l'emporte au départage.`);
+    finirCombat(e, g, 'periodes');
+  } else if (!e.mortSubite && e.tour >= REGLES.toursParPeriode) {
+    if (ecart !== 0) {
+      log(e, `Fin de la période : ${e.joueurs[0].score} - ${e.joueurs[1].score}.`);
+      finirCombat(e, meneur, 'periodes');
+    } else {
+      e.mortSubite = true;
+      log(e, `Égalité ${e.joueurs[0].score} - ${e.joueurs[1].score} : mort subite, le premier qui marque gagne !`);
+      e.tour++;
+    }
+  } else {
+    e.tour++;
+  }
+  return e;
+}
+
 // ---------- Le tour ----------
 
 export function jouerTour(
@@ -353,7 +384,14 @@ export function jouerTour(
     Famille | null, Famille | null,
   ];
 
-  log(e, `Période ${e.periode}, tour ${e.tour} : ${nomChoix(J[0], choix[0])} contre ${nomChoix(J[1], choix[1])}.`);
+  log(e, `${e.mortSubite ? 'Mort subite' : `Période ${e.periode}`}, tour ${e.tour} : ${nomChoix(J[0], choix[0])} contre ${nomChoix(J[1], choix[1])}.`);
+  // Habitudes : les familles d'actions jouées récemment.
+  for (const j of LES_DEUX) {
+    const f = fam[j];
+    if (!f) continue;
+    J[j].habitudes.push(f);
+    if (J[j].habitudes.length > REGLES.ia.fort.memoireHabitudes) J[j].habitudes.shift();
+  }
 
   // 1. Paiement de l'endurance.
   for (const j of LES_DEUX) {
@@ -564,6 +602,8 @@ export function jouerTour(
   e.tourGlobal++;
 
   const ecart = J[0].score - J[1].score;
+  if (e.termine) return e;
+  if (e.rapide) return finTourRapide(e, ecart, hasard);
   if (Math.abs(ecart) >= REGLES.ecartSuperiorite) {
     finirPeriode(e, ecart > 0 ? 0 : 1, 'supériorité technique');
   } else if (e.tour >= REGLES.toursParPeriode) {

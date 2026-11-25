@@ -1,5 +1,9 @@
-// Ordinateur très simple : choisit au hasard parmi les actions jouables.
-// Un niveau « fort » est prévu plus tard.
+// L'ordinateur, en 3 niveaux. Il ne voit jamais l'action du joueur avant qu'elle soit jouée
+// (sauf les 2 actions montrées par l'initiative, comme pour le joueur) et n'a aucun bonus de stats :
+// seule sa façon de choisir change.
+// - Facile : au hasard ; avec l'initiative, change d'action 1 fois sur 4.
+// - Normal : au hasard ; avec l'initiative, change d'action 1 fois sur 2.
+// - Fort : joue contre tes habitudes ; avec l'initiative, contre ton action 3 fois sur 4.
 
 import { ACTIONS, REGLES, coutAction } from './config';
 import {
@@ -20,12 +24,12 @@ export function choixAleatoire(etat: EtatCombat, j: Joueur, hasard: Hasard, chan
 }
 
 // Quand l'ordinateur a l'initiative, il voit 2 actions possibles de l'adversaire.
-// Niveau normal : une fois sur deux, il change pour une autre action jouable, au hasard.
+// Niveaux facile et normal : il change parfois pour une autre action jouable, au hasard.
 export function reagirInitiative(
-  etat: EtatCombat, j: Joueur, choixActuel: Choix, hasard: Hasard,
+  etat: EtatCombat, j: Joueur, choixActuel: Choix, hasard: Hasard, niveau: 'facile' | 'normal' = 'normal',
 ): Choix {
   if (choixActuel.action === 'lutte') return choixActuel;
-  if (!reussit(hasard, REGLES.ia.chanceChangerInitiative)) return choixActuel;
+  if (!reussit(hasard, REGLES.ia.chanceChangerInitiative[niveau])) return choixActuel;
   const autres = actionsJouables(etat, j).filter((a) => a !== choixActuel.action);
   if (autres.length === 0) return choixActuel;
   return { action: choisirParmi(hasard, autres), speciale: false };
@@ -152,10 +156,18 @@ function meilleur(etat: EtatCombat, j: Joueur, adverses: Candidat[], hasard: Has
   return { action: pris.c.action, speciale: pris.c.speciale };
 }
 
-// Choix secret de l'ordinateur fort : la meilleure action en moyenne face à tout ce que l'adversaire peut jouer.
+// Choix secret de l'ordinateur fort : la meilleure action face à ce que l'adversaire joue
+// d'habitude. Chaque action jouable de l'adversaire compte d'autant plus que sa famille revient
+// souvent dans ses dernières actions ; sans habitudes connues, toutes comptent pareil.
 export function choixFort(etat: EtatCombat, j: Joueur, hasard: Hasard): Choix {
   const o: Joueur = j === 0 ? 1 : 0;
-  const adverses = actionsJouables(etat, o).map((action) => ({ action, speciale: false }));
+  const F = REGLES.ia.fort;
+  const habitudes = etat.joueurs[o].habitudes;
+  const adverses: Candidat[] = [];
+  for (const action of actionsJouables(etat, o)) {
+    const n = habitudes.filter((f) => f === ACTIONS[action].famille).length;
+    for (let k = 0; k < 1 + n * F.poidsHabitude; k++) adverses.push({ action, speciale: false });
+  }
   return meilleur(etat, j, adverses, hasard);
 }
 
@@ -168,8 +180,31 @@ export function reagirInitiativeForte(
   return meilleur(etat, j, [{ action: choixAdverse.action, speciale: !!choixAdverse.speciale }], hasard, true);
 }
 
-export type Niveau = 'normal' | 'fort';
+export type Niveau = 'facile' | 'normal' | 'fort';
+export const NIVEAUX_ORDI: Niveau[] = ['facile', 'normal', 'fort'];
+
+// Choix secret de l'ordinateur facile : au hasard, sans spéciale, et parfois la moins bonne action.
+export function choixFacile(etat: EtatCombat, j: Joueur, hasard: Hasard): Choix {
+  if (!reussit(hasard, REGLES.ia.facile.chanceMaladresse)) return choixAleatoire(etat, j, hasard, 0);
+  const liste = actionsJouables(etat, j).map((action) => ({ action, speciale: false }));
+  if (liste.length === 0) return { action: 'lutte' };
+  const o: Joueur = j === 0 ? 1 : 0;
+  const adverses = actionsJouables(etat, o).map((action) => ({ action, speciale: false }));
+  const adv = adverses.length ? adverses : [{ action: etat.joueurs[o].def.actions[0], speciale: false }];
+  const pire = liste.map((c) => ({ c, v: valeurAction(etat, j, c, adv) })).sort((x, y) => x.v - y.v)[0];
+  return { action: pire.c.action, speciale: false };
+}
 
 export function choixOrdinateur(etat: EtatCombat, j: Joueur, hasard: Hasard, niveau: Niveau): Choix {
-  return niveau === 'fort' ? choixFort(etat, j, hasard) : choixAleatoire(etat, j, hasard);
+  if (niveau === 'fort') return choixFort(etat, j, hasard);
+  return niveau === 'facile' ? choixFacile(etat, j, hasard) : choixAleatoire(etat, j, hasard);
+}
+
+// Réaction de l'ordinateur quand il a l'initiative et voit 2 actions possibles du joueur.
+export function reactionOrdinateur(
+  etat: EtatCombat, j: Joueur, choixActuel: Choix, choixAdverse: Choix, hasard: Hasard, niveau: Niveau,
+): Choix {
+  return niveau === 'fort'
+    ? reagirInitiativeForte(etat, j, choixActuel, choixAdverse, hasard)
+    : reagirInitiative(etat, j, choixActuel, hasard, niveau);
 }

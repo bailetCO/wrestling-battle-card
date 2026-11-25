@@ -175,3 +175,19 @@ test('le style de carte choisi est transmis à l\'ami', async () => {
   assert.equal(a.vue.monStyle, 3);
   a.fermer(); b.fermer();
 });
+
+test('combat rapide en ligne : choisi par l\'hôte, joué par les deux ; niveau de compte transmis', async () => {
+  const salle = salleMemoire();
+  const a = new Duel(salle('a'), 'hote', null, () => undefined, { rapide: true, niveauCompte: 4 });
+  const b = new Duel(salle('b'), 'invite', null, () => undefined, { niveauCompte: 2 });
+  await attendre();
+  a.choisirLutteur('usa', undefined);
+  b.choisirLutteur('europe', undefined);
+  await attendreQue(() => !!a.vue.etat && !!b.vue.etat);
+  assert.equal(b.vue.rapide, true);
+  assert.equal(a.vue.etat!.rapide, true);
+  assert.equal(b.vue.etat!.rapide, true);
+  assert.equal(a.vue.amiNiveau, 2);
+  assert.equal(b.vue.amiNiveau, 4);
+  a.fermer(); b.fermer();
+});
