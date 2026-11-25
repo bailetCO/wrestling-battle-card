@@ -599,6 +599,67 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .barre-bas .note { margin: 0; }
 .succes { margin: 0 16px; padding: 10px 12px; border-radius: 10px; background: #12402a; border: 2px solid var(--defense); }
 
+
+/* ---------- Ouverture des boosters ---------- */
+
+.paquet {
+  --p1: #2b5fb8; --p2: #0f2d66;
+  position: relative; display: grid; place-items: center; align-content: center; gap: 6px;
+  width: 150px; height: 210px; border-radius: 10px; color: #fff; text-align: center;
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, .08) 0 8px, transparent 8px 22px),
+    linear-gradient(160deg, var(--p1), var(--p2));
+  border: 3px solid var(--encre); box-shadow: 5px 5px 0 var(--encre), inset 0 0 0 3px rgba(255, 255, 255, .25);
+}
+.paquet::before, .paquet::after { content: ''; position: absolute; left: 6px; right: 6px; height: 10px; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .35) 0 4px, transparent 4px 8px); }
+.paquet::before { top: 6px; }
+.paquet::after { bottom: 6px; }
+.p-rare { --p1: #f2a33a; --p2: #8a3d10; }
+.paquet-logo { font: 900 italic 22px/.95 var(--police); -webkit-text-stroke: 1.5px var(--encre); paint-order: stroke fill; text-shadow: 2px 2px 0 var(--encre); }
+.paquet-type { font: 800 16px var(--police); padding: 1px 10px; border-radius: 999px; background: var(--encre); }
+.p-rare .paquet-type { color: var(--orange); }
+.paquet-nb { font-size: 13px; opacity: .9; }
+.paquet-x { position: absolute; top: -12px; right: -12px; padding: 2px 9px; border-radius: 999px; background: var(--orange); color: var(--encre); font: 800 16px var(--police); border: 2px solid var(--encre); }
+.paquet-bouton { display: block; margin: 6px auto 4px; padding: 0; border: 0; background: none; animation: paquet-balance 2.4s ease-in-out infinite; }
+@keyframes paquet-balance { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg) translateY(-4px); } }
+
+.revelation {
+  position: fixed; inset: 0; z-index: 40; overflow-y: auto; outline: none;
+  display: grid; grid-template-rows: auto 1fr auto; gap: 6px;
+  padding: calc(10px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+  background: radial-gradient(circle at 50% 45%, #1d4a96, var(--nuit) 70%);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.rev-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 700 15px var(--police); color: var(--doux); }
+.rev-scene { display: grid; place-items: center; min-height: 0; }
+.rev-paquet .paquet { width: 200px; height: 280px; animation: paquet-balance 1.6s ease-in-out infinite; }
+.rev-paquet .paquet-logo { font-size: 30px; }
+.rev-carte { position: relative; display: grid; place-items: center; width: min(80vw, 300px, 46dvh); animation: rev-entree .55s cubic-bezier(.2, 1.3, .4, 1) both; }
+.rev-carte .carte-l { position: relative; z-index: 1; }
+.rev-carte > .pastille { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); z-index: 3; font-size: 16px; }
+.rev-eclat {
+  --e: rgba(255, 255, 255, .5);
+  position: absolute; inset: -60%; z-index: 0; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, var(--e) 0 6deg, transparent 6deg 18deg);
+  mask: radial-gradient(circle, #000 20%, transparent 65%); -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%);
+  animation: rev-tourne 9s linear infinite;
+}
+.r-rare .rev-eclat { --e: rgba(159, 208, 255, .65); }
+.r-epique .rev-eclat { --e: rgba(226, 184, 255, .75); }
+.r-legendaire .rev-eclat { --e: rgba(255, 215, 106, .9); inset: -80%; }
+@keyframes rev-entree { from { transform: rotateY(90deg) scale(.6); opacity: 0; } }
+@keyframes rev-tourne { to { transform: rotate(360deg); } }
+.rev-aide { margin: 0; text-align: center; font: 700 16px var(--police); color: var(--orange); animation: rev-clignote 1.6s ease-in-out infinite; }
+@keyframes rev-clignote { 50% { opacity: .45; } }
+.rev-recap { grid-row: 1 / -1; display: grid; gap: 12px; align-content: start; cursor: default; max-width: 560px; width: 100%; margin: 0 auto; }
+.rev-recap h2 { font-size: 30px; color: var(--orange); }
+.recap-resume { margin: 0; font-size: 16px; }
+.recap-resume b { color: var(--orange); font: 800 20px var(--police); }
+.recap-carte { position: relative; }
+.recap-carte .mini-carte { display: grid; }
+.recap-carte > .pastille { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); z-index: 2; white-space: nowrap; }
+.grille-mini.recap { padding-top: 6px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

@@ -48,7 +48,9 @@ let endurancesAvant: [number, number] | null = null; // pour animer les barres
 let idPortrait = 0;
 let collection: Collection = charger();
 let recompenseDonnee = false; // une seule récompense par combat
-let partieBooster = ''; // ce qu'affiche l'écran de fin (booster ou message)
+// Boosters gagnés pendant le combat solo (ou message de consolation), affichés à la fin.
+let paquetSolo: Paquet | null = null;
+let messageSolo = '';
 
 // ---------- Outils ----------
 
@@ -369,10 +371,7 @@ function ecranCollection() {
   app.querySelector('[data-booster-test]')!.addEventListener('click', () => {
     const b = ouvrirBooster(collection, Math.random);
     sauver(collection);
-    ecranCollection();
-    const f = ouvrirFenetre(`${htmlBoosters('Booster de test', [b])}<button class="principal" data-fermer>Fermer</button>`, true);
-    activerReflets(f);
-    f.querySelector('.fenetre')!.scrollTop = 0;
+    revelerPaquet({ titre: 'Booster de test', boosters: [b], ouvert: false }, () => ecranCollection());
   });
   const raz = app.querySelector<HTMLButtonElement>('[data-raz]')!;
   raz.addEventListener('click', () => {
@@ -671,7 +670,8 @@ function lancer(idHumain: string, idOrdi: string, graine: number) {
   enAttente = false;
   endurancesAvant = null;
   recompenseDonnee = false;
-  partieBooster = '';
+  paquetSolo = null;
+  messageSolo = '';
   ecranCombat();
 }
 
@@ -1074,29 +1074,159 @@ function fenetrePileOuFace(choixHumain: Choix, choixOrdi: Choix, change: boolean
 
 // ---------- Écran 3 : fin du combat ----------
 
-// Les cartes d'un ou plusieurs boosters, retournées l'une après l'autre.
-function htmlBoosters(titre: string, boosters: Booster[]): string {
-  let k = 0;
-  const blocs = boosters.map((b) => {
+// ---------- Ouverture des boosters ----------
+
+interface Paquet {
+  titre: string; // « Victoire », « Booster de consolation »…
+  boosters: Booster[];
+  ouvert: boolean;
+}
+
+interface CarteTiree { id: string; nouvelle: boolean; booster: number }
+
+function cartesDuPaquet(p: Paquet): CarteTiree[] {
+  const liste: CarteTiree[] = [];
+  p.boosters.forEach((b, k) => {
     const nouvelles = new Set(b.nouvelles);
-    const cartes = b.cartes.map((id) => {
+    for (const id of b.cartes) {
       const nouvelle = nouvelles.has(id);
       nouvelles.delete(id);
-      return `<div class="tirage" style="--delai:${300 + k++ * 350}ms">${carteHTML(trouverLutteur(id))}<span class="pastille ${nouvelle ? 'nouvelle' : 'nombre'}">${nouvelle ? 'Nouvelle !' : 'Double'}</span></div>`;
-    }).join('');
-    return `
-      <div class="un-booster b-${b.type}">
-        <h3>${b.type === 'rare' ? 'Booster rare · 5 cartes' : 'Booster classique · 3 cartes'}</h3>
-        <div class="booster-cartes">${cartes}</div>
-      </div>`;
-  }).join('');
+      liste.push({ id, nouvelle, booster: k });
+    }
+  });
+  return liste;
+}
+
+const nomBooster = (b: Booster) => (b.type === 'rare' ? 'Booster rare · 5 cartes' : 'Booster classique · 3 cartes');
+
+function visuelPaquet(b: Booster, extra = ''): string {
   return `
-    <section class="booster">
-      <h2>${titre} : ${boosters.length > 1 ? `${boosters.length} boosters` : 'un booster'} !</h2>
-      ${blocs}
-      <p class="compteur">${compteur()}</p>
-      <p class="note">Tes doubles servent à la fusion et aux échanges.</p>
-    </section>`;
+    <span class="paquet p-${b.type}">
+      <span class="paquet-logo">Wrestling<br>Battle Card</span>
+      <span class="paquet-type">${b.type === 'rare' ? 'Rare' : 'Classique'}</span>
+      <span class="paquet-nb">${b.cartes.length} cartes</span>
+      ${extra}
+    </span>`;
+}
+
+function recapPaquet(p: Paquet): string {
+  const cartes = cartesDuPaquet(p);
+  const nouvelles = cartes.filter((c) => c.nouvelle).length;
+  return `
+    <p class="recap-resume"><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''} carte${nouvelles > 1 ? 's' : ''} · <b>${cartes.length - nouvelles}</b> double${cartes.length - nouvelles > 1 ? 's' : ''}</p>
+    <div class="grille-mini recap">${cartes.map((c) => `
+      <div class="recap-carte">
+        ${miniCarteLutteur(trouverLutteur(c.id), NOM_RARETE[trouverLutteur(c.id).rarete])}
+        <span class="pastille ${c.nouvelle ? 'nouvelle' : 'nombre'}">${c.nouvelle ? 'Nouvelle !' : 'Double'}</span>
+      </div>`).join('')}</div>
+    <p class="note">${compteur()} · tes doubles servent à la fusion et aux échanges.</p>`;
+}
+
+// Section de l'écran de fin : le booster fermé à ouvrir, ou le récapitulatif une fois ouvert.
+function sectionPaquet(p: Paquet | null, message = ''): string {
+  if (!p) return message ? `<section class="booster"><p>${message}</p></section>` : '';
+  if (!p.ouvert) {
+    return `
+      <section class="booster">
+        <h2>${echap(p.titre)} : ${p.boosters.length > 1 ? `${p.boosters.length} boosters` : 'un booster'} !</h2>
+        <button class="paquet-bouton" data-ouvrir-paquet aria-label="Ouvrir le booster">
+          ${visuelPaquet(p.boosters[0], p.boosters.length > 1 ? `<span class="paquet-x">×${p.boosters.length}</span>` : '')}
+        </button>
+        <p class="note">Touche le booster pour l'ouvrir.</p>
+      </section>`;
+  }
+  return `<section class="booster"><h2>${echap(p.titre)} : tes cartes</h2>${recapPaquet(p)}</section>`;
+}
+
+// Ouverture en plein écran : le paquet, puis une carte par appui, puis le récapitulatif.
+function revelerPaquet(p: Paquet, fin: () => void) {
+  document.querySelector('.revelation')?.remove();
+  const cartes = cartesDuPaquet(p);
+  type Etape = { type: 'paquet'; b: number } | { type: 'carte'; k: number } | { type: 'recap' };
+  const etapes: Etape[] = [];
+  p.boosters.forEach((_, b) => {
+    etapes.push({ type: 'paquet', b });
+    cartes.forEach((c, k) => { if (c.booster === b) etapes.push({ type: 'carte', k }); });
+  });
+  etapes.push({ type: 'recap' });
+  let i = 0;
+  const el = document.createElement('div');
+  el.className = 'revelation';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-label', 'Ouverture du booster');
+  el.tabIndex = -1;
+  document.body.appendChild(el);
+  const plusieurs = p.boosters.length > 1;
+  const terminer = () => {
+    el.remove();
+    p.ouvert = true;
+    fin();
+  };
+  const afficher = () => {
+    const e = etapes[i];
+    if (e.type === 'recap') {
+      el.innerHTML = `
+        <div class="rev-recap">
+          <h2>${echap(p.titre)} : tes cartes</h2>
+          ${recapPaquet(p)}
+          <button class="principal" data-fin>Continuer</button>
+        </div>`;
+      el.querySelector('[data-fin]')!.addEventListener('click', terminer);
+      activerReflets(el);
+      (el.querySelector('[data-fin]') as HTMLElement).focus();
+      return;
+    }
+    const b = e.type === 'paquet' ? e.b : cartes[e.k].booster;
+    const dansBooster = cartes.filter((c) => c.booster === b);
+    const rang = e.type === 'carte' ? dansBooster.indexOf(cartes[e.k]) + 1 : 0;
+    const info = `${plusieurs ? `Booster ${b + 1}/${p.boosters.length} · ` : ''}${nomBooster(p.boosters[b])}${rang ? ` · carte ${rang}/${dansBooster.length}` : ''}`;
+    let scene: string;
+    let aide: string;
+    if (e.type === 'paquet') {
+      scene = `<div class="rev-paquet">${visuelPaquet(p.boosters[b])}</div>`;
+      aide = 'Touche l\'écran pour ouvrir le booster';
+    } else {
+      const c = cartes[e.k];
+      const def = trouverLutteur(c.id);
+      scene = `
+        <div class="rev-carte r-${def.rarete}">
+          <div class="rev-eclat" aria-hidden="true"></div>
+          <span class="pastille ${c.nouvelle ? 'nouvelle' : 'nombre'}">${c.nouvelle ? 'Nouvelle !' : 'Double'}</span>
+          ${carteHTML(def)}
+        </div>`;
+      const derniere = etapes[i + 1]?.type === 'recap';
+      aide = derniere ? 'Touche l\'écran pour voir le récapitulatif' : 'Touche l\'écran pour la carte suivante';
+    }
+    el.innerHTML = `
+      <header class="rev-tete"><span>${info}</span><button class="lien" data-tout>Tout voir</button></header>
+      <div class="rev-scene">${scene}</div>
+      <p class="rev-aide">${aide}</p>`;
+    el.querySelector('[data-tout]')!.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      i = etapes.length - 1;
+      afficher();
+    });
+    activerReflets(el);
+    el.focus();
+  };
+  const suivant = () => {
+    if (etapes[i].type === 'recap') return;
+    i++;
+    afficher();
+  };
+  el.addEventListener('click', (ev) => {
+    if ((ev.target as HTMLElement).closest('button')) return;
+    suivant();
+  });
+  el.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      if ((ev.target as HTMLElement).closest('button')) return;
+      ev.preventDefault();
+      suivant();
+    }
+  });
+  afficher();
 }
 
 function ecranFin() {
@@ -1114,16 +1244,15 @@ function ecranFin() {
   if (!recompenseDonnee) {
     recompenseDonnee = true;
     if (gagne) {
-      partieBooster = htmlBoosters('Victoire', recompenser(collection, 'arene', Math.random));
+      paquetSolo = { titre: 'Victoire', boosters: recompenser(collection, 'arene', Math.random), ouvert: false };
     } else {
       const conso = consoler(collection, Math.random);
-      partieBooster = conso
-        ? htmlBoosters('Booster de consolation', [conso])
-        : `<section class="booster"><p>Encore une défaite d'affilée et tu reçois un booster de consolation.</p></section>`;
+      if (conso) paquetSolo = { titre: 'Booster de consolation', boosters: [conso], ouvert: false };
+      else messageSolo = 'Encore une défaite d\'affilée et tu reçois un booster de consolation.';
     }
     sauver(collection);
   }
-  const booster = partieBooster;
+  const booster = sectionPaquet(paquetSolo, messageSolo);
   app.innerHTML = `
     <main class="fin">
       <section class="verdict ${gagne ? 'rouge' : 'bleu'}">
@@ -1144,6 +1273,7 @@ function ecranFin() {
   activerReflets(app);
   app.querySelector('[data-revanche]')!.addEventListener('click', () => lancer(idHumain, idOrdi, nouvelleGraine()));
   app.querySelector('[data-changer]')!.addEventListener('click', ecranArene);
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetSolo && revelerPaquet(paquetSolo, ecranFin));
   window.scrollTo(0, 0);
 }
 
@@ -1288,7 +1418,7 @@ function quitterLigne() {
 }
 
 let signatureSalle = '';
-let boosterLigne: { cle: string; html: string } = { cle: '', html: '' };
+let paquetLigne: { cle: string; paquet: Paquet } | null = null;
 let minuteurAbsence: number | undefined;
 
 function rafraichirLigne(v: Vue) {
@@ -1477,14 +1607,14 @@ function ecranFinLigne() {
   // Récompense (mode collection) : 2 boosters par victoire, une seule fois par combat.
   // Une victoire par abandon ne compte qu'après 5 tours joués.
   const cle = `${codeSalle}-${v.graine}`;
-  if (v.modeSalle === 'collection' && gagne && (!v.abandon || e.tourGlobal >= 5) && boosterLigne.cle !== cle) {
+  if (v.modeSalle === 'collection' && gagne && (!v.abandon || e.tourGlobal >= 5) && paquetLigne?.cle !== cle) {
     if (!collection.recompensesEnLigne.includes(cle)) {
       collection.recompensesEnLigne = [...collection.recompensesEnLigne, cle].slice(-50);
-      boosterLigne = { cle, html: htmlBoosters('Victoire en ligne', recompenser(collection, 'enLigne', Math.random)) };
+      paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(collection, 'enLigne', Math.random), ouvert: false } };
       sauver(collection);
     }
   }
-  const booster = boosterLigne.cle === cle ? boosterLigne.html : '';
+  const booster = paquetLigne?.cle === cle ? sectionPaquet(paquetLigne.paquet) : '';
   // Liste d'amis : le combat compte une fois (victoire ou défaite).
   if (v.amiIdCoach && (!v.abandon || e.tourGlobal >= 5)) {
     noterAmi(collection, v.amiIdCoach, v.amiCoach, { type: gagne ? 'victoire' : 'defaite', cle: `combat-${cle}` });
@@ -1512,6 +1642,7 @@ function ecranFinLigne() {
     </main>`;
   activerReflets(app);
   app.querySelector('[data-revanche]')!.addEventListener('click', () => duel?.revanche());
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetLigne && revelerPaquet(paquetLigne.paquet, ecranFinLigne));
   app.querySelector('[data-sortir]')!.addEventListener('click', () => {
     oublierSession();
     quitterLigne();
