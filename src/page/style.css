@@ -1195,3 +1195,20 @@ b.moi { color: #ff8a95; }
 .liste-champions li { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; background: var(--nuit); border-radius: 12px; padding: 6px 8px; }
 .liste-champions .vignette { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; display: block; border: 2px solid #ffd76a; }
 .liste-champions .vignette svg { width: 100%; height: 100%; display: block; }
+
+/* Quêtes du jour : encart du menu et écran des quêtes. */
+.bloc-quetes {
+  display: grid; gap: 4px; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; text-decoration: none; color: var(--texte);
+  background: var(--tapis-clair); border: 1px solid var(--tapis-ligne); box-shadow: 4px 4px 0 var(--encre);
+}
+.bq-titre { font: 800 14px var(--police); color: var(--doux); }
+.bq-titre b { color: var(--orange); }
+.bq-ligne { display: flex; gap: 8px; align-items: baseline; font-size: 14px; line-height: 1.3; }
+.bq-ligne i { font-style: normal; color: var(--orange); width: 1em; flex: none; text-align: center; }
+.bq-ligne small { color: var(--doux); white-space: nowrap; }
+.bq-ligne.faite { color: var(--doux); text-decoration: line-through; }
+.bq-ligne.faite i { color: var(--defense); text-decoration: none; }
+.q-diff { display: block; margin-bottom: 2px; font: 800 12px var(--police); color: var(--doux); }
+.q-unique .q-diff, .q-unique .etape-n { color: #ffd76a; }
+.q-difficile .q-diff { color: var(--attaque); }
+.bouton-changer { display: block; width: 100%; margin-top: 8px; font-size: 14px; }

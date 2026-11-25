@@ -335,6 +335,18 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les tableaux vont jusqu'à 64 places (1/32 de finale) ; les places vides sont des exemptions tirées au sort.
 - Récompenses des modes histoire : le booster s'ouvre carte par carte avec son récapitulatif ; une fois revenu sur l'écran du mode histoire ou de la saison, les cartes de la dernière récompense ne sont plus affichées.
 
+### Quêtes journalières
+
+- Chaque jour (à minuit, heure du téléphone), 3 quêtes tirées parmi celles du niveau de compte : une facile, une moyenne, une difficile. Tant qu'il reste des quêtes uniques à faire pour son niveau, l'une d'elles remplace la quête facile. Une quête non finie disparaît à minuit.
+- Récompenses : facile 5 $ ; moyenne 10 $ + 1 médaille ; difficile 1 booster + 2 médailles ; les 3 quêtes du jour réussies : 1 booster rare en bonus. Les quêtes uniques ont leur propre récompense.
+- Changer une quête : une seule fois par jour, 5 $, contre une autre quête de même difficulté. Les quêtes uniques ne peuvent pas être changées.
+- Affichage : encart « Quêtes du jour » dans le menu (progression), écran « Quêtes du jour » (récompenses, changement, boosters à ouvrir), bulle quand une quête est réussie.
+- Quêtes répétables (niveau minimum) :
+  - faciles : lancer un combat dans l'arène (1), gagner 1 combat contre l'ordinateur (1), jouer 1 combat rapide (1), ouvrir 1 booster (1), réussir 3 feintes (1), réussir 2 contres qui marquent (1), régler les actions d'un lutteur (2) ;
+  - moyennes : gagner 3 combats contre l'ordinateur (1), gagner avec un lutteur d'une nation tirée au hasard (1), marquer 20 points au total (1), gagner par tombé (2), gagner un combat rapide par 10 points d'écart (2), gagner 2 combats en auto (3), faire une fusion (3), avancer de 2 adversaires dans l'arène (4) ;
+  - difficiles : gagner contre l'ordinateur fort en jouant soi-même (2), gagner avec une carte commune contre l'ordinateur normal ou fort (3), podium d'un tournoi individuel (4), gagner un tournoi individuel (5), gagner un duel d'un tournoi par équipe (5), battre le champion d'une nation dans l'arène (6), gagner un combat en ligne contre un ami (6), gagner 3 combats d'affilée contre l'ordinateur fort (8 ; une défaite contre le fort remet la série à zéro).
+- Quêtes uniques (niveau minimum, récompense) : finir le tutoriel (1, 1 booster) ; posséder 30 cartes différentes (1, 1 booster) ; première étoile (2, 20 $) ; ouvrir Mon Club (3, 1 booster rare) ; premier combat auto (3, 10 $) ; premier ami (4, 1 booster) ; remplir les 5 places de Mon Club (5, 1 booster rare) ; bonus de nation de +10 % (5, 2 boosters) ; une carte de chaque nation (6, 1 booster rare) ; légendaire débloquée par les fragments (7, 50 $) ; 60 cartes différentes (8, 2 boosters rares) ; une carte Champion du Monde (10, 100 $) ; un style de carte (10, 2 boosters rares) ; les 120 cartes (12, 1 Champion du Monde au hasard). Les quêtes uniques sur la collection sont validées dès qu'elles apparaissent si c'est déjà le cas.
+
 ### Saisons à répétition et cartes Champion du Monde
 
 - Une saison finie, le joueur peut en commencer une nouvelle (écran Saison, bandeau du menu). La 1re saison se termine aux Jeux Olympiques ; les suivantes aux championnats du monde ; les JO reviennent toutes les 4 saisons (saisons 1, 5, 9…), comme dans la vie réelle.

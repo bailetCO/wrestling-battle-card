@@ -35,6 +35,7 @@ export interface Collection {
   histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
+  quetes: { jour: string; liste: { id: string; param: string; progres: number; faite: boolean }[]; change: boolean; bonus: boolean; uniques: string[] }; // quêtes journalières
 }
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
@@ -85,6 +86,7 @@ export function nouvelleCollection(): Collection {
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: [],
+    quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
 }
 
@@ -385,6 +387,16 @@ export function depuisSauvegarde(brut: unknown): Collection {
     };
     // Ancienne sauvegarde : la 1re saison finie aux JO compte comme terminée.
     if (!sa.terminees && c.saison.palier >= REGLES.saison.paliers.length) c.saison.terminees = 1;
+  }
+  const qu = b.quetes as Record<string, unknown> | undefined;
+  if (qu && typeof qu === 'object') {
+    const liste = Array.isArray(qu.liste) ? qu.liste.filter((q): q is { id: string; param: string; progres: number; faite: boolean } =>
+      !!q && typeof q === 'object' && typeof (q as { id?: unknown }).id === 'string').slice(0, 3)
+      .map((q) => ({ id: q.id, param: typeof q.param === 'string' ? q.param : '', progres: entier(q.progres), faite: q.faite === true })) : [];
+    c.quetes = {
+      jour: typeof qu.jour === 'string' ? qu.jour : '', liste, change: qu.change === true, bonus: qu.bonus === true,
+      uniques: Array.isArray(qu.uniques) ? qu.uniques.filter((x): x is string => typeof x === 'string') : [],
+    };
   }
   if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
   const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;

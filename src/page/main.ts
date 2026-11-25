@@ -30,6 +30,7 @@ import {
   avancerI, creerIndividuel, niveauMatchI, enregistrerI, exemptes, exemption, finieI, nombreParticipants, placesI,
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
+import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from './quetes';
 import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
@@ -229,7 +230,7 @@ const jauge = (p: [number, number]) => `<span class="jauge-histoire" style="--p:
 function bandeauHistoire(): string {
   if (recompensesHistoire.length) {
     const r = recompensesHistoire[0];
-    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
+    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : r.lien === '#quetes' ? 'Quêtes du jour' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
   }
   if (saisonOuverte(collection)) {
     const num = collection.saison.numero;
@@ -269,6 +270,90 @@ function blocPaquet(lien: string): string {
 function brancherPaquet(_lien: string, ecran: () => void) {
   app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () =>
     paquetHistoire && revelerPaquet(paquetHistoire, () => { paquetHistoire = null; ecran(); }));
+}
+
+// ---------- Quêtes journalières ----------
+
+// Note un événement pour les quêtes du jour ; une quête réussie est annoncée par une bulle.
+function quete(ev: EvenementQuete) {
+  const r = noterQuete(collection, ev, jourDe(), Math.random);
+  sauver(collection);
+  if (!r.length) return;
+  for (const x of r) if (x.boosters.length) recompensesHistoire.push({ titre: `Quête réussie : ${x.titre}`, lien: '#quetes', boosters: x.boosters });
+  annoncer(r.length > 1 ? `${r.length} quêtes réussies !` : `Quête réussie : ${r[0].titre}`, '#quetes');
+}
+
+// Événement « combat terminé » pour les quêtes, calculé à partir des tours joués.
+function queteCombat(e: EtatCombat, mode: 'arene' | 'rapide' | 'tournoi' | 'equipe' | 'enLigne', niveau: Niveau | null, champion = false) {
+  const moi = e.joueurs[HUMAIN];
+  const nom = moi.def.nom;
+  let feintes = 0, contres = 0, points = 0;
+  tours.forEach((t, i) => {
+    const apres = tours[i + 1]?.avant ?? e;
+    const fam = t.choixHumain.action === 'lutte' ? null : ACTIONS[t.choixHumain.action].famille;
+    const marque = t.lignes.filter((l) => l.startsWith(`${nom} marque `));
+    for (const l of marque) points += Number(l.match(/marque (\d+)/)?.[1] ?? 0);
+    if (fam === 'feinte' && apres.joueurs[HUMAIN].bonusFeinte === REGLES.toursBonusFeinte) feintes++;
+    if (fam === 'contre' && marque.length) contres++;
+  });
+  quete({
+    type: 'combat', mode, gagne: e.vainqueur === HUMAIN, niveau, auto: combatEnAuto, tombe: e.finPar === 'tombe',
+    ecart: moi.score - e.joueurs[HUMAIN === 0 ? 1 : 0].score, points, nation: moi.def.nation,
+    niveauCarte: niveauDe(moi.def.id), feintes, contres, champion,
+  });
+}
+
+function blocQuetes(): string {
+  const liste = quetesDuJour(collection, jourDe());
+  const faites = liste.filter((q) => q.faite).length;
+  return `<a class="bloc-quetes" href="#quetes"><span class="bq-titre">Quêtes du jour <b>${faites}/${liste.length}</b></span>
+    ${liste.map((q) => {
+      const d = queteDe(q.id);
+      return `<span class="bq-ligne ${q.faite ? 'faite' : ''}"><i>${q.faite ? '✓' : d.difficulte === 'unique' ? '★' : '•'}</i>${echap(d.texte(q.param))}${d.but > 1 && !q.faite ? ` <small>${q.progres}/${d.but}</small>` : ''}</span>`;
+    }).join('')}</a>`;
+}
+
+const NOM_DIFFICULTE: Record<string, string> = { facile: 'Facile', moyenne: 'Moyenne', difficile: 'Difficile', unique: 'Unique' };
+
+function ecranQuetes(message = '') {
+  partie = null;
+  document.querySelector('.bulle-histoire')?.remove();
+  quete({ type: 'etat' });
+  preparerPaquet('#quetes');
+  const jour = jourDe();
+  const liste = quetesDuJour(collection, jour);
+  const P = R_.quetes.prixChangement;
+  const lignes = liste.map((q, i) => {
+    const d = queteDe(q.id);
+    const peutChanger = !q.faite && d.difficulte !== 'unique' && !collection.quetes.change;
+    return `<li class="etape-histoire ${q.faite ? 'faite' : 'en-cours'} q-${d.difficulte}">
+      <span class="etape-n">${q.faite ? '✓' : d.difficulte === 'unique' ? '★' : i + 1}</span>
+      <div><small class="q-diff">${NOM_DIFFICULTE[d.difficulte]}</small><b>${echap(d.texte(q.param))}</b>
+        ${d.but > 1 ? `<p class="progres">${jauge([q.progres, d.but])} ${q.progres}/${d.but}</p>` : ''}
+        <small class="gain">🎁 ${texteRecompense(d)}</small>
+        ${peutChanger ? `<button class="secondaire bouton-changer" data-changer="${i}" ${collection.dollars >= P ? '' : 'disabled'}>Changer cette quête (${P} $)</button>` : ''}
+      </div></li>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Quêtes du jour', 'Trois nouvelles quêtes chaque jour à minuit. Celles qui ne sont pas finies disparaissent.')}
+      ${message}
+      ${blocPaquet('#quetes')}
+      <ol class="etapes-histoire">${lignes}</ol>
+      <section class="bloc"><p class="note">🎁 Les 3 quêtes réussies : ${collection.quetes.bonus ? 'bonus reçu ✓' : '1 booster rare en bonus'}.
+        ${collection.quetes.change ? 'Tu as déjà changé une quête aujourd\'hui.' : `Tu peux changer une quête par jour (${P} $), sauf une quête unique.`}
+        Les quêtes uniques (★) ne reviennent jamais une fois réussies.</p></section>
+    </main>`;
+  activerReflets(app);
+  brancherPaquet('#quetes', () => ecranQuetes());
+  app.querySelectorAll<HTMLButtonElement>('[data-changer]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const erreur = changerQuete(collection, jour, Number(b.dataset.changer));
+      sauver(collection);
+      ecranQuetes(erreur ? `<p class="alerte">${echap(erreur)}</p>` : '');
+    }),
+  );
+  window.scrollTo(0, 0);
 }
 
 // ---------- Scènes de dialogue ----------
@@ -466,6 +551,7 @@ function lancerInterclub(id: string, auto: boolean) {
 function ecranMenu() {
   partie = null;
   histoire({ type: 'etat' });
+  quete({ type: 'etat' });
   const session = sessionLigne();
   const fusions = CARTES.filter((l) => fusionPrete(collection, l.id)).length;
   const tuile = (id: string, titre: string, sous: string, href: string, alerte = '', cadenas = '') => `
@@ -489,6 +575,7 @@ function ecranMenu() {
       <p class="compteur menu-stats">${compteur()}</p>
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
       ${bandeauHistoire()}
+      ${blocQuetes()}
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
         ${tuile('tournois', 'Tournois', 'Individuel et par équipe', '#tournois', tournoiActif ? 'En cours' : '')}
@@ -733,6 +820,7 @@ function fenetreDeck(base: DefLutteur) {
   f.querySelector('[data-enregistrer]')!.addEventListener('click', () => {
     if (choisirDeck(collection, def.id, choix)) return;
     sauver(collection);
+    quete({ type: 'deck' });
     fermerFenetre();
     route();
   });
@@ -1011,6 +1099,7 @@ function ecranFusion(message = '') {
       const erreur = debloquerLegendaire(collection, nation);
       if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
       sauver(collection);
+      quete({ type: 'fragments' });
       ecranFusion();
       const leg = legendaireDe(nation)!;
       const f = ouvrirFenetre(`<h2 class="onomato rouge">LÉGENDE !</h2><div class="fenetre-carte eclat-fusion">${carteJoueur(leg)}</div>
@@ -1027,6 +1116,7 @@ function ecranFusion(message = '') {
       const erreur = fusionner(collection, id);
       if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
       sauver(collection);
+      quete({ type: 'fusion', etoile: false });
       histoire({ type: 'fusion', id });
       const apres = defJoueur(def);
       ecranFusion();
@@ -1071,6 +1161,7 @@ function fenetreEtoile(id: string) {
       const erreur = fusionner(collection, id, a);
       if (erreur) return ecranFusion(`<p class="alerte">${echap(erreur)}</p>`);
       sauver(collection);
+      quete({ type: 'fusion', etoile: true });
       ecranFusion();
       const nouveau = nbStyles(collection, id) > stylesAvant;
       const ok = ouvrirFenetre(`
@@ -1271,6 +1362,7 @@ function sectionFinTournoi(t: Tournoi, titre: string): string {
     const premiereFois = !t.recompense;
     const boosters = recompenserTournoi(collection, t, Math.random);
     if (premiereFois && t.type === 'individuel') histoire({ type: 'tournoiIndividuel', place: placesI(t).get(0) ?? 99, invaincu: joueurInvaincu(t) });
+    if (premiereFois && t.type === 'individuel') quete({ type: 'tournoi', place: placesI(t).get(0) ?? 99 });
     if (premiereFois && t.type === 'individuel' && t.saison !== undefined) saison({ type: 'competition', palier: t.saison, place: placesI(t).get(0) ?? 99 });
     if (premiereFois && t.type === 'equipe') histoire({ type: 'tournoiEquipe', gagne: scoreEquipe(t)[0] >= R_.tournoi.equipe.victoiresPourGagner });
     sauver(collection);
@@ -1457,6 +1549,7 @@ function finCombatTournoi(abandon: boolean) {
   if (!partie || !tournoi || cle === null) return ecranTournois();
   const e = partie.etat;
   const gagne = !abandon && e.vainqueur === HUMAIN;
+  if (!abandon) queteCombat(e, tournoi.type === 'equipe' ? 'equipe' : 'tournoi', partie.niveau);
   const detail = abandon ? 'par abandon' : e.finPar === 'tombe' ? 'par tombé'
     : `${Math.max(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)} périodes à ${Math.min(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)}`;
   if (tournoi.type === 'individuel' && typeof cle === 'number') {
@@ -1835,7 +1928,8 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
 // ---------- Combat automatique ----------
 
 let combatEnAuto = false;
-let interclubEnCours = false; // combat interclub de la saison sportive // le combat en cours (ou qui vient de finir) a été joué en automatique
+let interclubEnCours = false;
+const quetesLigneComptees = new Set<string>(); // combats en ligne déjà comptés pour les quêtes // combat interclub de la saison sportive // le combat en cours (ou qui vient de finir) a été joué en automatique
 const autoDispo = () => autoOuvert(niveauCompte(collection));
 
 // Bouton « Combat auto » à côté d'un bouton de combat : actif à partir du niveau de compte 3.
@@ -1983,6 +2077,7 @@ function ecranFinTutoriel() {
   partie = null;
   collection.bonusTutoriel = true;
   sauver(collection);
+  quete({ type: 'tutoriel' });
   app.innerHTML = `
     <main class="sous-menu tuto">
       ${enTete('Tutoriel terminé', '', '#combat')}
@@ -2528,6 +2623,8 @@ function sectionPaquet(p: Paquet | null, message = ''): string {
 // Ouverture en plein écran : le paquet, puis une carte par appui, puis le récapitulatif.
 function revelerPaquet(p: Paquet, fin: () => void) {
   document.querySelector('.revelation')?.remove();
+  const nb = p.boosters.filter((b) => b.cartes.length).length;
+  if (!p.ouvert && nb) setTimeout(() => quete({ type: 'booster', n: nb }), 0);
   const cartes = cartesDuPaquet(p);
   type Etape = { type: 'paquet'; b: number } | { type: 'carte'; k: number } | { type: 'gain'; b: number; quoi: 'medailles' | 'dollars' } | { type: 'recap' };
   const etapes: Etape[] = [];
@@ -2643,6 +2740,7 @@ function ecranFin() {
     if (bonusCeCombat) collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     bonusCeCombat = false;
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: partie.niveau, auto: combatEnAuto });
+    let championBattu = gagne && areneCtx?.type === 'boss'; // champion d'une nation battu dans l'arène
     if (e.rapide) {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
       if (gagne) {
@@ -2660,6 +2758,8 @@ function ecranFin() {
       const bonus = x > 1 ? R_.collection.boostersParVictoire.arene * x : 0;
       const r = victoireArene(collection, Math.random, bonus);
       if (r.nationBattue) histoire({ type: 'nationArene' });
+      quete({ type: 'arene' });
+      if (r.nationBattue) championBattu = true;
       const titre = r.nationBattue ? `${r.nationBattue.nom} battue${r.carteBoss ? ' et carte du boss gagnée' : ''}` : bonus ? 'Victoire · bonus du tutoriel' : 'Victoire';
       paquetSolo = { titre, boosters: r.boosters, ouvert: false };
     } else {
@@ -2667,6 +2767,7 @@ function ecranFin() {
       if (conso) paquetSolo = { titre: 'Booster de consolation', boosters: [conso], ouvert: false };
       else messageSolo = 'Encore une défaite d\'affilée et tu reçois un booster de consolation.';
     }
+    queteCombat(e, e.rapide ? 'rapide' : 'arene', partie.niveau, championBattu);
     sauver(collection);
   }
   const booster = sectionPaquet(paquetSolo, messageSolo);
@@ -3068,6 +3169,13 @@ function ecranFinLigne() {
     }
   }
   const booster = paquetLigne?.cle === cle ? sectionPaquet(paquetLigne.paquet) : '';
+  // Quêtes : le combat compte une fois.
+  if (!v.abandon && !quetesLigneComptees.has(cle)) {
+    quetesLigneComptees.add(cle);
+    combatEnAuto = v.auto;
+    queteCombat(e, 'enLigne', null);
+    combatEnAuto = false;
+  }
   // Liste d'amis : le combat compte une fois (victoire ou défaite).
   if (v.amiIdCoach && (!v.abandon || e.tourGlobal >= 5)) {
     noterAmi(collection, v.amiIdCoach, v.amiCoach, { type: gagne ? 'victoire' : 'defaite', cle: `combat-${cle}` });
@@ -3118,6 +3226,7 @@ function route() {
   if (h === '#club') return ecranMonClub();
   if (h === '#histoire') return ecranHistoire();
   if (h === '#saison') return ecranSaison();
+  if (h === '#quetes') return ecranQuetes();
   if (h === '#tournois') return ecranTournois();
   if (h === '#rapide') return ecranArene(true);
   quitterEchange();

@@ -366,6 +366,18 @@ export const REGLES = {
     memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club
   },
 
+  // Quêtes journalières : récompenses par difficulté (les quêtes uniques ont la leur), bonus quand
+  // les 3 quêtes du jour sont réussies, prix pour changer une quête (une fois par jour).
+  quetes: {
+    recompenses: {
+      facile: { dollars: 5 },
+      moyenne: { dollars: 10, medailles: 1 },
+      difficile: { boosters: 1, medailles: 2 },
+    } as Record<'facile' | 'moyenne' | 'difficile', { dollars?: number; medailles?: number; boosters?: number; boostersRares?: number; champion?: boolean }>,
+    bonus: { boostersRares: 1 } as { boostersRares: number },
+    prixChangement: 5,
+  },
+
   // Saison sportive (mode histoire 2), ouverte quand le mode histoire 1 est fini : 6 paliers dans
   // l'ordre. Les compétitions sont des tournois individuels à double tableau : inscription et gains
   // habituels du tournoi individuel, plus la récompense du palier quand l'objectif est atteint.
