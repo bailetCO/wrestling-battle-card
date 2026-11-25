@@ -26,6 +26,7 @@ export interface Collection {
   bonusTutoriel: boolean; // tutoriel suivi en entier : boosters doublés au prochain combat d'arène
   styles: Record<string, number>; // style de carte choisi (0 = cadre Champion du Monde classique)
   medailles: number; // médailles gagnées (progression, jamais dépensées)
+  club: string[]; // lutteurs recrutés dans Mon Club (une place, la carte reste utilisable partout)
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
 }
@@ -72,7 +73,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0,
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [],
   };
 }
 
@@ -149,6 +150,38 @@ export function joindreGains(boosters: Booster[], g: { medailles: number; dollar
   boosters[0].medailles = (boosters[0].medailles ?? 0) + g.medailles;
   boosters[0].dollars = (boosters[0].dollars ?? 0) + g.dollars;
   return boosters;
+}
+
+// ---------- Mon Club ----------
+
+// Niveau du club : 0 tant qu'il est fermé, puis 1 à 5 selon les médailles.
+export function niveauClub(c: Collection): number {
+  const K = REGLES.club;
+  if (c.medailles < K.medaillesOuverture) return 0;
+  return Math.min(K.niveauMax, 1 + Math.floor((c.medailles - K.medaillesOuverture) / K.medaillesParNiveau));
+}
+
+export const placesClub = (c: Collection) => niveauClub(c) * REGLES.club.placesParNiveau;
+
+// Médailles à atteindre pour le niveau suivant (null au niveau maximum).
+export function medaillesNiveauSuivant(c: Collection): number | null {
+  const K = REGLES.club;
+  const n = niveauClub(c);
+  if (n >= K.niveauMax) return null;
+  return K.medaillesOuverture + n * K.medaillesParNiveau;
+}
+
+export function recruter(c: Collection, id: string): string | null {
+  if (niveauClub(c) === 0) return `Mon Club s'ouvre à ${REGLES.club.medaillesOuverture} médailles.`;
+  if (!possede(c, id)) return 'Tu ne possèdes pas ce lutteur.';
+  if (c.club.includes(id)) return 'Ce lutteur est déjà dans ton club.';
+  if (c.club.length >= placesClub(c)) return 'Plus de place : fais monter ton club de niveau.';
+  c.club = [...c.club, id];
+  return null;
+}
+
+export function libererPlace(c: Collection, id: string) {
+  c.club = c.club.filter((x) => x !== id);
 }
 
 // Boutique (Social) : acheter un booster avec des $. Renvoie le booster, ou la raison.
@@ -292,6 +325,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   c.bonusTutoriel = b.bonusTutoriel === true;
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
+  if (Array.isArray(b.club)) c.club = [...new Set((b.club as unknown[]).filter((x): x is string => typeof x === 'string' && LUTTEURS.some((l) => l.id === x)))];
   c.dollars = entier(b.dollars);
   if (b.styles && typeof b.styles === 'object') c.styles = { ...(b.styles as Record<string, number>) };
   if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;

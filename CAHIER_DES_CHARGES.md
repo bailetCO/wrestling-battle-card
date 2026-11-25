@@ -125,6 +125,12 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 - Les récompenses en boosters restent (arène, en ligne, consolation, bonus du tutoriel).
 - Médailles et $ s'affichent en haut du menu et de Social. Au départ : 0 médaille, 0 $.
 
+### Mon Club
+
+- Tuile du menu, verrouillée jusqu'à 10 médailles. Ensuite, un niveau de plus toutes les 5 médailles : niveau 1 à 10, 2 à 15, 3 à 20, 4 à 25, 5 à 30 (maximum). Les médailles ne sont jamais dépensées.
+- Une place par niveau (5 places au niveau 5). On y recrute ses propres lutteurs ; ce n'est qu'une place dans l'équipe : la carte reste utilisable partout. On peut libérer une place.
+- Il faut un club de niveau 5 (5 lutteurs) pour le tournoi par équipe.
+
 ### Fusion, niveaux de rareté et étoiles
 
 - Une carte a une rareté de départ (celle du booster) et un niveau, qui monte par fusion : Commune → Rare → Épique → Légendaire → Champion du Monde. Champion du Monde ne s'obtient que par fusion. Une commune peut donc monter 4 fois, une rare 3, une épique 2, une légendaire 1.

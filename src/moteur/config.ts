@@ -239,6 +239,10 @@ export const REGLES = {
     prixBooster: { classique: 10, rare: 25 },
   },
 
+  // Mon Club : s'ouvre à 10 médailles, puis +1 niveau toutes les 5 médailles de plus (niveau 5 au
+  // maximum). Le niveau donne le nombre de places pour les lutteurs recrutés (1 place par niveau).
+  club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 5, placesParNiveau: 1, niveauTournoiEquipe: 5 },
+
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
   // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
   // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.

@@ -15,7 +15,7 @@ import {
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
-  acheterBooster, cartesPossedees, charger, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
+  acheterBooster, cartesPossedees, charger, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
@@ -124,6 +124,7 @@ function carteJoueur(def: DefLutteur, bouton = ''): string {
 const ICONES_MENU: Record<string, string> = {
   collection: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="10" width="20" height="28" rx="3" transform="rotate(-12 18 24)" fill="none" stroke="currentColor" stroke-width="3"/><rect x="20" y="10" width="20" height="28" rx="3" transform="rotate(10 30 24)" fill="currentColor" opacity=".9"/></svg>',
   combat: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 40 30 18M14 12l6 6M40 40 18 18M34 12l-6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2" opacity=".4"/></svg>',
+  club: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3l17 6v13c0 11-8 19-17 23C15 41 7 33 7 22V9z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 13l3 6.2 6.8.9-5 4.7 1.3 6.7L24 28.2l-6.1 3.3 1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>',
   social: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
   fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
@@ -163,13 +164,15 @@ function ecranMenu() {
   partie = null;
   const session = sessionLigne();
   const fusions = LUTTEURS.filter((l) => fusionPrete(collection, l.id)).length;
-  const tuile = (id: string, titre: string, sous: string, href: string, alerte = '') => `
-    <a class="tuile t-${id}" href="${href}">
+  const tuile = (id: string, titre: string, sous: string, href: string, alerte = '', cadenas = '') => `
+    <a class="tuile t-${id} ${cadenas ? 'verrouillee' : ''}" href="${href}">
       <span class="tuile-ico">${ICONES_MENU[id]}</span>
       <span class="tuile-titre">${titre}</span>
       <span class="tuile-sous">${sous}</span>
       ${alerte ? `<span class="tuile-alerte">${alerte}</span>` : ''}
+      ${cadenas ? `<span class="tuile-cadenas">🔒 ${cadenas}</span>` : ''}
     </a>`;
+  const nivClub = niveauClub(collection);
   app.innerHTML = `
     <main class="menu">
       <header class="menu-tete">
@@ -184,6 +187,7 @@ function ecranMenu() {
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
         ${tuile('collection', 'Collection', `${collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection)}/${LUTTEURS.length} cartes · régler les actions`, '#collection')}
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
+        ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${collection.club.length}/${placesClub(collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
       </nav>
     </main>`;
@@ -625,6 +629,95 @@ function fenetreEtoile(id: string) {
         ${nouveau ? `<p>Style débloqué : <b>${STYLES_CARTE[nbStyles(collection, id)]}</b>. Tu peux changer de style dans la Collection.</p>` : ''}
         <button class="principal" data-fermer>Continuer</button>`, true);
       activerReflets(ok);
+    }),
+  );
+}
+
+// ---------- Mon Club ----------
+
+function ecranMonClub(message = '') {
+  partie = null;
+  const K = R_.club;
+  const niv = niveauClub(collection);
+  if (!niv) {
+    const pct2 = Math.min(100, (collection.medailles / K.medaillesOuverture) * 100);
+    app.innerHTML = `
+      <main class="sous-menu">
+        ${enTete('Mon Club', 'Recrute tes lutteurs et forme ton équipe.')}
+        ${porteMonnaie()}
+        <section class="bloc">
+          <h2>🔒 Club fermé</h2>
+          <p>Mon Club s'ouvre à <b>${K.medaillesOuverture} médailles</b>. Tu en as ${collection.medailles}.</p>
+          <div class="jauge-club" role="meter" aria-valuemin="0" aria-valuemax="${K.medaillesOuverture}" aria-valuenow="${collection.medailles}"><i style="width:${pct2}%"></i></div>
+          <p>Gagne des combats : +1 médaille contre l'ordinateur, +2 en ligne.</p>
+          <a class="principal lien-bouton" href="#combat">Aller combattre</a>
+        </section>
+      </main>`;
+    window.scrollTo(0, 0);
+    return;
+  }
+  const places = placesClub(collection);
+  const suivant = medaillesNiveauSuivant(collection);
+  const debutNiveau = K.medaillesOuverture + (niv - 1) * K.medaillesParNiveau;
+  const progression = suivant === null ? 100 : ((collection.medailles - debutNiveau) / (suivant - debutNiveau)) * 100;
+  const cases = Array.from({ length: K.niveauMax * K.placesParNiveau }, (_, i) => {
+    const id = collection.club[i];
+    if (id) {
+      const l = trouverLutteur(id);
+      return `<div class="club-place">${miniCarteLutteur(l, `${echap(l.origine)} · ${NOM_RARETE[niveauDe(id)]}`, '', niveauDe(id))}
+        <button class="lien petit" data-liberer="${id}">Libérer la place</button></div>`;
+    }
+    if (i < places) return '<button class="place-vide" data-recruter>+ Recruter</button>';
+    const nivPlace = Math.floor(i / K.placesParNiveau) + 1;
+    return `<div class="place-vide place-verrou">🔒 Niveau ${nivPlace}</div>`;
+  }).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Mon Club', `Club de ${echap(collection.coach ?? '')}`)}
+      ${porteMonnaie()}
+      ${message}
+      <section class="bloc">
+        <div class="club-niveau">
+          <span class="club-blason" aria-hidden="true">${niv}</span>
+          <b>Niveau ${niv}/${K.niveauMax} · ${collection.club.length}/${places} lutteur${places > 1 ? 's' : ''}</b>
+          <div>
+            <div class="jauge-club" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progression)}"><i style="width:${progression}%"></i></div>
+            <small>${suivant === null ? 'Niveau maximum : le tournoi par équipe est ouvert.' : `Niveau ${niv + 1} à ${suivant} médailles (encore ${suivant - collection.medailles}).`}</small>
+          </div>
+        </div>
+      </section>
+      <section class="bloc">
+        <h2>Mes lutteurs</h2>
+        <p>Une place par niveau. Le lutteur reste utilisable partout : c'est seulement sa place dans l'équipe. Il faut un club de niveau ${K.niveauTournoiEquipe} (5 lutteurs) pour le tournoi par équipe.</p>
+        <div class="club-places">${cases}</div>
+      </section>
+    </main>`;
+  activerReflets(app);
+  app.querySelectorAll<HTMLButtonElement>('[data-recruter]').forEach((b) => b.addEventListener('click', fenetreRecruter));
+  app.querySelectorAll<HTMLButtonElement>('[data-liberer]').forEach((b) =>
+    b.addEventListener('click', () => {
+      libererPlace(collection, b.dataset.liberer!);
+      sauver(collection);
+      ecranMonClub();
+    }),
+  );
+  window.scrollTo(0, 0);
+}
+
+function fenetreRecruter() {
+  const libres = LUTTEURS.filter((l) => possede(collection, l.id) && !collection.club.includes(l.id));
+  const f = ouvrirFenetre(`
+    <h2>Recruter un lutteur</h2>
+    ${libres.length
+      ? `<div class="liste-recrues">${libres.map((l) => `<button data-recrue="${l.id}" aria-label="Recruter ${echap(l.nom)}">${miniCarteLutteur(l, `${echap(l.origine)} · ${NOM_RARETE[niveauDe(l.id)]}`, '', niveauDe(l.id))}</button>`).join('')}</div>`
+      : '<p>Tous tes lutteurs sont déjà dans ton club. Ouvre des boosters pour en avoir d\'autres.</p>'}
+    <button class="lien" data-fermer>Annuler</button>`, true);
+  f.querySelectorAll<HTMLButtonElement>('[data-recrue]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const erreur = recruter(collection, b.dataset.recrue!);
+      fermerFenetre();
+      if (!erreur) sauver(collection);
+      ecranMonClub(erreur ? `<p class="alerte">${echap(erreur)}</p>` : '');
     }),
   );
 }
@@ -2017,7 +2110,8 @@ function route() {
   if (mode === 'ligne') return; // un combat en ligne est en cours : on n'y touche pas
   if (h === '#collection' || h === '#galerie') return ecranCollection();
   if (h === '#fusion') return ecranFusion();
-  if (h === '#social' || h === '#club') return ecranSocial();
+  if (h === '#social') return ecranSocial();
+  if (h === '#club') return ecranMonClub();
   quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
   if (h === '#regles') return ecranRegles();

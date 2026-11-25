@@ -577,7 +577,33 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .t-combat { --t: var(--rouge); grid-column: 1 / -1; min-height: 150px; }
 .t-collection { --t: var(--bleu); }
 .t-fusion { --t: var(--orange); }
-.t-social { --t: var(--defense); grid-column: 1 / -1; min-height: 120px; }
+.t-social { --t: var(--defense); }
+.t-club { --t: #ffd76a; }
+.tuile.verrouillee { filter: saturate(.35); }
+.tuile.verrouillee .tuile-ico { opacity: .5; }
+.tuile-cadenas { position: absolute; top: 12px; left: 12px; padding: 2px 8px; border-radius: 999px; background: var(--encre); color: #ffd76a; font: 700 13px var(--police); }
+
+/* ---------- Mon Club ---------- */
+.club-niveau { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; }
+.club-blason {
+  grid-row: span 2; display: grid; place-items: center; width: 64px; height: 72px;
+  clip-path: polygon(50% 0, 100% 14%, 100% 62%, 50% 100%, 0 62%, 0 14%);
+  background: linear-gradient(160deg, #ffe9a0, #c99a2e); color: var(--encre); font: 900 30px var(--police);
+}
+.club-niveau b { font: 800 20px var(--police); }
+.jauge-club { height: 10px; border-radius: 999px; background: var(--nuit); overflow: hidden; }
+.jauge-club i { display: block; height: 100%; background: linear-gradient(90deg, #c99a2e, #ffd76a); }
+.club-places { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.club-place { display: grid; gap: 4px; }
+.club-place .mini-carte { width: 100%; }
+.place-vide {
+  display: grid; place-items: center; aspect-ratio: 3 / 4; border-radius: 12px; border: 2px dashed var(--tapis-ligne);
+  color: var(--doux); font: 700 14px var(--police); background: transparent; text-align: center; padding: 6px;
+}
+button.place-vide { color: var(--orange); border-color: var(--orange); }
+.place-verrou { opacity: .45; }
+.liste-recrues { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; max-height: 60dvh; overflow: auto; }
+.liste-recrues button { padding: 0; border: 0; background: none; }
 
 /* ---------- Sous-menus ---------- */
 
