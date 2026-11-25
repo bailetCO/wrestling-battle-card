@@ -231,6 +231,14 @@ export const REGLES = {
     multiplicateurApresTutoriel: 2,
   },
 
+  // Économie : les médailles mesurent la progression (jamais dépensées), les $ se dépensent.
+  economie: {
+    medaillesParVictoire: { arene: 1, enLigne: 2 },
+    medaillesParPalier: 5, // toutes les 5 médailles gagnées…
+    dollarsParPalier: 10, // … +10 $
+    prixBooster: { classique: 10, rare: 25 },
+  },
+
   // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
   // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
   // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.

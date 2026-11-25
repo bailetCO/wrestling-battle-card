@@ -25,6 +25,8 @@ export interface Collection {
   marchand: { jour: string; faits: number[] }; // offres du marchand utilisées aujourd'hui
   bonusTutoriel: boolean; // tutoriel suivi en entier : boosters doublés au prochain combat d'arène
   styles: Record<string, number>; // style de carte choisi (0 = cadre Champion du Monde classique)
+  medailles: number; // médailles gagnées (progression, jamais dépensées)
+  dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
 }
 
@@ -39,10 +41,14 @@ export interface Ami {
 }
 
 export type TypeBooster = 'classique' | 'rare';
+// Un booster : des cartes, et parfois les médailles et les $ de la récompense.
+// Type « recompense » : sans cartes, seulement médailles et $.
 export interface Booster {
-  type: TypeBooster;
+  type: TypeBooster | 'recompense';
   cartes: string[];
   nouvelles: string[]; // cartes obtenues pour la première fois
+  medailles?: number;
+  dollars?: number;
 }
 
 const ORDRE: Rarete[] = ['commune', 'rare', 'epique', 'legendaire'];
@@ -66,7 +72,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete',
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0,
   };
 }
 
@@ -111,9 +117,9 @@ function tirerCarte(hasard: Hasard): string {
 }
 
 // Ouvre un booster (classique ou rare, au hasard) et ajoute ses cartes à la collection.
-export function ouvrirBooster(c: Collection, hasard: Hasard): Booster {
+export function ouvrirBooster(c: Collection, hasard: Hasard, impose?: TypeBooster): Booster {
   const B = REGLES.collection.boosters;
-  const type: TypeBooster = hasard() < B.chanceRare ? 'rare' : 'classique';
+  const type: TypeBooster = impose ?? (hasard() < B.chanceRare ? 'rare' : 'classique');
   const cartes = Array.from({ length: B[type].cartes }, () => tirerCarte(hasard));
   const nouvelles: string[] = [];
   for (const id of cartes) {
@@ -123,13 +129,45 @@ export function ouvrirBooster(c: Collection, hasard: Hasard): Booster {
   return { type, cartes, nouvelles };
 }
 
-// Victoire : 1 booster en arène, 2 en ligne (mode collection).
-// `multiplicateur` : 2 pour le combat d'arène qui suit le tutoriel.
-export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard, multiplicateur = 1): Booster[] {
+// ---------- Médailles et $ ----------
+
+// Ajoute des médailles ; chaque palier de 5 médailles franchi rapporte 10 $.
+export function gagnerMedailles(c: Collection, n: number): { medailles: number; dollars: number } {
+  const E = REGLES.economie;
+  const avant = Math.floor(c.medailles / E.medaillesParPalier);
+  c.medailles += n;
+  const dollars = (Math.floor(c.medailles / E.medaillesParPalier) - avant) * E.dollarsParPalier;
+  c.dollars += dollars;
+  return { medailles: n, dollars };
+}
+
+// Range les gains dans le premier booster de la récompense ; sans booster de cartes,
+// un booster « récompense » qui ne contient que les médailles et les $.
+export function joindreGains(boosters: Booster[], g: { medailles: number; dollars: number }): Booster[] {
+  if (!g.medailles && !g.dollars) return boosters;
+  if (!boosters.length) return [{ type: 'recompense', cartes: [], nouvelles: [], medailles: g.medailles, dollars: g.dollars }];
+  boosters[0].medailles = (boosters[0].medailles ?? 0) + g.medailles;
+  boosters[0].dollars = (boosters[0].dollars ?? 0) + g.dollars;
+  return boosters;
+}
+
+// Boutique (Social) : acheter un booster avec des $. Renvoie le booster, ou la raison.
+export function acheterBooster(c: Collection, type: TypeBooster, hasard: Hasard): Booster | string {
+  const prix = REGLES.economie.prixBooster[type];
+  if (c.dollars < prix) return `Il te faut ${prix} $ (tu as ${c.dollars} $).`;
+  c.dollars -= prix;
+  return ouvrirBooster(c, hasard, type);
+}
+
+// Victoire : 1 booster en arène, 2 en ligne (mode collection), plus les médailles (+1 en arène,
+// +2 en ligne) et les $ des paliers franchis. `multiplicateur` : 2 pour le combat d'arène qui suit
+// le tutoriel (boosters doublés). `boosters` : false en ligne avec les cartes de base (médailles seules).
+export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard, multiplicateur = 1, boosters = true): Booster[] {
   c.victoires++;
   if (ou === 'arene') c.defaitesDeSuite = 0;
-  const n = REGLES.collection.boostersParVictoire[ou] * multiplicateur;
-  return Array.from({ length: n }, () => ouvrirBooster(c, hasard));
+  const n = boosters ? REGLES.collection.boostersParVictoire[ou] * multiplicateur : 0;
+  const liste = Array.from({ length: n }, () => ouvrirBooster(c, hasard));
+  return joindreGains(liste, gagnerMedailles(c, REGLES.economie.medaillesParVictoire[ou]));
 }
 
 // Défaite en arène. Toutes les 2 défaites d'affilée : booster de consolation.
@@ -252,6 +290,9 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (b.niveau === 'fort') c.niveau = 'fort';
   c.toutDebloque = b.toutDebloque === true;
   c.bonusTutoriel = b.bonusTutoriel === true;
+  const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
+  c.medailles = entier(b.medailles);
+  c.dollars = entier(b.dollars);
   if (b.styles && typeof b.styles === 'object') c.styles = { ...(b.styles as Record<string, number>) };
   if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;
   if (typeof b.victoires === 'number') c.victoires = b.victoires;

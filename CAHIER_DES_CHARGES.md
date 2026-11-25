@@ -107,13 +107,23 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 - Tri de la collection : par rareté de base, par nation, par nombre de fusions (montées de rareté et étoiles) ou par rareté actuelle (fusion comprise). Le choix est gardé.
 - La collection et les decks sont gardés dans le navigateur du téléphone, en attendant les comptes joueurs. Un mode test débloque toutes les cartes.
 
-### Club
+### Social
 
-- Marchand : 3 offres par jour (les mêmes pour tous ce jour-là, renouvelées à minuit, heure du téléphone), chacune utilisable une fois. Il donne une carte contre un double d'une autre carte de même rareté (jamais le dernier exemplaire).
-- Échange entre amis : une salle d'échange avec un code de 4 lettres. Chacun voit les doubles de l'autre et propose un de ses doubles ; l'échange se fait quand les deux acceptent les mêmes cartes. Changer d'offre annule l'accord.
-- Liste d'amis : chaque coach affronté en ligne ou avec qui on a échangé y apparaît, avec les victoires, défaites et échanges.
-- Sans serveur, ces échanges reposent sur la confiance entre amis ; Firebase les sécurisera.
+- Boutique : boosters à acheter en $ (classique 10 $, rare 25 $).
+- Transfert de lutteur (anciennement « marchand ») : 3 offres par jour (les mêmes pour tous ce jour-là, renouvelées à minuit, heure du téléphone), chacune utilisable une fois. On reçoit une carte contre un double d'une autre carte de même rareté de départ (jamais le dernier exemplaire).
+- Transfert entre amis (anciennement « échange ») : une salle avec un code de 4 lettres. Chacun voit les doubles de l'autre et propose un de ses doubles ; le transfert se fait quand les deux acceptent les mêmes cartes. Changer d'offre annule l'accord.
+- Liste d'amis : chaque coach affronté en ligne ou avec qui on a fait un transfert y apparaît, avec les victoires, défaites et transferts.
+- Sans serveur, ces transferts reposent sur la confiance entre amis ; Firebase les sécurisera.
 - Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
+
+### Médailles et $
+
+- Deux monnaies : les médailles mesurent la progression (jamais dépensées) ; les $ se dépensent (boosters, inscriptions aux tournois).
+- Médailles : +1 par victoire contre l'ordinateur, +2 par victoire en ligne (dans les deux modes de salle ; boosters seulement avec nos collections).
+- Toutes les 5 médailles gagnées : +10 $.
+- Les médailles et les $ gagnés sont rangés dans le premier booster de la récompense, et révélés comme des cartes (médaille d'or, billet), puis dans le récapitulatif. Une récompense sans cartes s'ouvre quand même, dans un booster « Récompense ».
+- Les récompenses en boosters restent (arène, en ligne, consolation, bonus du tutoriel).
+- Médailles et $ s'affichent en haut du menu et de Social. Au départ : 0 médaille, 0 $.
 
 ### Fusion, niveaux de rareté et étoiles
 

@@ -106,7 +106,7 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
     {
       titre: 'Bienvenue, coach !',
       html: `<p>Ton rôle : réunir des lutteurs, régler leurs actions et les mener à la victoire.</p>
-        <p>En quelques écrans, découvre la collection, la fusion et les échanges, puis joue une période guidée pour apprendre à combattre.</p>`,
+        <p>En quelques écrans, découvre la collection, la fusion, les médailles et les transferts, puis joue une période guidée pour apprendre à combattre.</p>`,
     },
     {
       titre: 'Ta collection',
@@ -123,10 +123,10 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
         <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix. Chaque quart des étoiles débloque un <b>nouveau style de carte</b>.</p>`,
     },
     {
-      titre: 'Le Club',
+      titre: 'Médailles, $ et Social',
       html: `${illus.club}
-        <p><b>Échange</b> tes doubles avec un ami : ouvre une salle, donne-lui le code, chacun propose une carte et l'échange se fait quand vous acceptez tous les deux.</p>
-        <p>Le <b>marchand</b> propose 3 échanges par jour : une carte contre un de tes doubles de même rareté.</p>`,
+        <p>Chaque victoire rapporte des <b>médailles</b> : +1 contre l'ordinateur, +2 en ligne. Toutes les 5 médailles, tu gagnes <b>10 $</b>.</p>
+        <p>Dans <b>Social</b>, dépense tes $ en boosters, profite des 3 <b>transferts de lutteur</b> du jour (une carte contre un de tes doubles de même rareté) et fais des <b>transferts entre amis</b>.</p>`,
     },
     {
       titre: 'Le combat',
