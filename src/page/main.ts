@@ -236,7 +236,7 @@ function ecranHistoire() {
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
       ${paquetHistoire ? sectionPaquet(paquetHistoire) : ''}
       ${paquetHistoire?.ouvert && recompensesHistoire.length ? '<button class="principal marge" data-suite-histoire>Récompense suivante</button>' : ''}
-      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas (sauf l'ouverture de Mon Club). Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
+      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club ouvert (étape 3) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
@@ -2338,14 +2338,13 @@ function ecranFin() {
       }
     } else if (gagne && areneCtx?.type === 'boss') {
       const r = victoireBossRejoue(collection, areneCtx.nation, Math.random);
-      histoire({ type: 'nationArene', finie: areneTerminee(collection) });
       paquetSolo = { titre: r.carteBoss ? 'Victoire et carte du boss gagnée' : 'Victoire', boosters: r.boosters, ouvert: false };
     } else if (gagne) {
       // Arène : +1 médaille ; nation battue : 2 ou 3 boosters, 3 médailles, peut-être la carte du boss.
       // Bonus du tutoriel : des boosters en plus sur cette victoire.
       const bonus = x > 1 ? R_.collection.boostersParVictoire.arene * x : 0;
       const r = victoireArene(collection, Math.random, bonus);
-      if (r.nationBattue) histoire({ type: 'nationArene', finie: areneTerminee(collection) });
+      if (r.nationBattue) histoire({ type: 'nationArene' });
       const titre = r.nationBattue ? `${r.nationBattue.nom} battue${r.carteBoss ? ' et carte du boss gagnée' : ''}` : bonus ? 'Victoire · bonus du tutoriel' : 'Victoire';
       paquetSolo = { titre, boosters: r.boosters, ouvert: false };
     } else {

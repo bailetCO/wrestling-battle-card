@@ -1,7 +1,9 @@
 // Mode histoire, sans affichage : 12 étapes dans l'ordre. Une étape ne se valide qu'une fois
-// débloquée : ce qui a été fait avant ne compte pas (sauf l'ouverture de Mon Club, étape 3).
+// débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 7 (une
+// nation battue dans l'arène) et 11 (arène terminée), validées tout de suite si c'est déjà le cas.
 
 import { LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
+import { PAR_NATION, areneTerminee } from './arene';
 import { gradeDe, nbExemplaires, niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
 
 const H = REGLES.histoire;
@@ -47,7 +49,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Conquête', objectif: 'Battre une nation complète dans l\'arène',
-    guide: 'Dans l\'arène, bats les 5 lutteurs d\'une nation, le dernier étant son champion. Si tu as déjà fini l\'arène, bats à nouveau un champion.',
+    guide: 'Dans l\'arène, bats les 5 lutteurs d\'une nation, le dernier étant son champion. Si tu as déjà battu une nation, l\'étape est validée tout de suite.',
     lien: '#arene', bouton: 'Aller dans l\'arène',
   },
   {
@@ -67,7 +69,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Tour du monde', objectif: 'Terminer l\'arène en battant toutes les nations',
-    guide: 'Bats les 12 nations de l\'arène, l\'une après l\'autre. Si tu l\'as déjà terminée, bats à nouveau un champion.',
+    guide: 'Bats les 12 nations de l\'arène, l\'une après l\'autre. Si tu l\'as déjà terminée, l\'étape est validée tout de suite.',
     lien: '#arene', bouton: 'Aller dans l\'arène',
   },
   {
@@ -86,10 +88,10 @@ export type EvenementHistoire =
   | { type: 'tournoiIndividuel'; place: number; invaincu: boolean }
   | { type: 'tournoiEquipe'; gagne: boolean }
   | { type: 'recrutement' }
-  | { type: 'nationArene'; finie: boolean } // une nation (ou son champion rejoué) battue dans l'arène
+  | { type: 'nationArene' } // une nation battue dans l'arène
   | { type: 'fusion'; id: string }
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
-  | { type: 'etat' }; // simple vérification (ouverture de Mon Club)
+  | { type: 'etat' }; // simple vérification (Mon Club ouvert, arène)
 
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
 
@@ -117,11 +119,11 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
       for (const id of c.club) parNation.set(trouverLutteur(id).nation, (parNation.get(trouverLutteur(id).nation) ?? 0) + 1);
       return Math.max(0, ...parNation.values()) >= H.memeNationEtape6;
     }
-    case 6: return ev.type === 'nationArene';
+    case 6: return c.arene >= PAR_NATION; // au moins une nation battue, avant ou après le déblocage
     case 7: return ev.type === 'fusion' && NIVEAUX.indexOf(niveauCarte(trouverLutteur(ev.id), gradeDe(c, ev.id))) >= NIVEAUX.indexOf('epique');
     case 8: return ev.type === 'victoire' && ev.niveau === 'fort';
     case 9: return ev.type === 'enLigne';
-    case 10: return ev.type === 'nationArene' && ev.finie;
+    case 10: return areneTerminee(c);
     case 11: return ev.type === 'tournoiIndividuel' && ev.place === 1 && ev.invaincu;
     default: return false;
   }
@@ -141,7 +143,7 @@ function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
 }
 
 // Note un événement. Si l'étape en cours est validée, on passe à la suivante et on renvoie sa
-// récompense (une étape validée peut en valider une autre aussitôt : l'ouverture du club).
+// récompense (une étape validée peut en valider une autre aussitôt : club ouvert, arène).
 export interface EtapeValidee { etape: number; boosters: Booster[] }
 
 export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasard): EtapeValidee[] {

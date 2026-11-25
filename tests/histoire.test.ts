@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { LUTTEURS, REGLES } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import { depuisSauvegarde, nouvelleCollection, type Collection } from '../src/page/collection';
+import { PAR_NATION, nationsArene } from '../src/page/arene';
 import { ETAPES, histoireFinie, noterHistoire, progression, type EvenementHistoire } from '../src/page/histoire';
 
 const h = creerHasard(1);
@@ -85,7 +86,9 @@ test('étape 6 : un recrutement qui donne 3 lutteurs d\'une même nation', () =>
 test('étapes 7 à 11 : arène, fusion épique, ordinateur fort, en ligne, arène finie', () => {
   const c = nouvelleCollection();
   c.histoire.etape = 6;
-  assert.equal(noter(c, { type: 'nationArene', finie: false }).length, 1);
+  assert.deepEqual(noter(c, { type: 'etat' }), []); // aucune nation battue
+  c.arene = PAR_NATION; // une nation battue
+  assert.equal(noter(c, { type: 'nationArene' }).length, 1);
   // Étape 8 : seulement une fusion qui atteint épique ou plus.
   const commune = LUTTEURS.find((l) => l.rarete === 'commune')!;
   c.exemplaires[commune.id] = 1;
@@ -96,9 +99,27 @@ test('étapes 7 à 11 : arène, fusion épique, ordinateur fort, en ligne, arèn
   assert.deepEqual(noter(c, { type: 'victoire', nation: 'usa', niveau: 'normal' }), []);
   assert.equal(noter(c, { type: 'victoire', nation: 'usa', niveau: 'fort' })[0].boosters.length, 3);
   assert.equal(noter(c, { type: 'enLigne' }).length, 1);
-  assert.deepEqual(noter(c, { type: 'nationArene', finie: false }), []);
-  assert.equal(noter(c, { type: 'nationArene', finie: true }).length, 1);
+  assert.deepEqual(noter(c, { type: 'nationArene' }), []); // arène pas finie
+  c.arene = nationsArene().length * PAR_NATION;
+  assert.equal(noter(c, { type: 'nationArene' }).length, 1);
   assert.equal(c.histoire.etape, 11);
+});
+
+test('étapes 7 et 11 : validées dès le déblocage si l\'arène est déjà avancée', () => {
+  // Une nation déjà battue : l'étape 7 se valide dès que l'étape 6 est validée.
+  const c = nouvelleCollection();
+  c.histoire.etape = 5;
+  c.arene = PAR_NATION + 2;
+  const t = deNation('turquie');
+  c.club = [t[0].id, t[1].id, t[2].id];
+  assert.deepEqual(noter(c, { type: 'recrutement' }).map((x) => x.etape), [5, 6]);
+  assert.equal(c.histoire.etape, 7);
+  // Arène finie : l'étape 11 se valide dès que l'étape 10 est validée.
+  const d = nouvelleCollection();
+  d.histoire.etape = 9;
+  d.arene = nationsArene().length * PAR_NATION;
+  assert.deepEqual(noter(d, { type: 'enLigne' }).map((x) => x.etape), [9, 10]);
+  assert.equal(d.histoire.etape, 11);
 });
 
 test('étape 12 : tournoi sans défaite = une légendaire que le joueur n\'a pas', () => {
