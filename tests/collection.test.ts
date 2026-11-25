@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LUTTEURS, avecGrade, coutAction, trouverLutteur } from '../src/moteur/config';
+import { LUTTEURS, avecGrade, coutAction, exemplairesPourGrade, gradeMaxDe, niveauCarte, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import {
   cartesDeDepart, choisirDeck, consoler, defPossede, depuisSauvegarde, fusionner, gradeDe, nbEtoiles, nbExemplaires,
@@ -57,29 +57,55 @@ test('consolation : un booster toutes les 2 défaites d\'affilée, remis à zér
   assert.equal(consoler(c, creerHasard(5)), null);
 });
 
-test('fusion : grade g = g exemplaires identiques, les doubles sont consommés', () => {
+test('fusion : chaque fusion monte d\'une rareté ; il faut autant d\'exemplaires que le rang visé', () => {
   const c = nouvelleCollection();
-  c.exemplaires.usa = 1;
-  assert.ok(fusionner(c, 'usa')); // pas de double
-  c.exemplaires.usa = 2;
-  assert.deepEqual(prochaineFusion(c, 'usa'), { type: 'grade', grade: 2, doublesNecessaires: 1, doublesDispo: 1 });
-  assert.equal(fusionner(c, 'usa'), null);
-  assert.equal(gradeDe(c, 'usa'), 2);
-  assert.equal(nbExemplaires(c, 'usa'), 1);
-  c.exemplaires.usa = 3; // grade 3 : 2 doubles
-  assert.equal(fusionner(c, 'usa'), null);
-  assert.equal(gradeDe(c, 'usa'), 3);
-  c.exemplaires.usa = 1 + 3 + 4; // grade 4 (3 doubles) puis grade 5 (4 doubles)
-  assert.equal(fusionner(c, 'usa'), null);
-  assert.equal(fusionner(c, 'usa'), null);
-  assert.equal(gradeDe(c, 'usa'), 5);
-  assert.equal(nbExemplaires(c, 'usa'), 1);
+  c.exemplaires.europe = 1; // commune
+  assert.ok(fusionner(c, 'europe')); // pas de double
+  c.exemplaires.europe = 2; // Rare : 2 exemplaires (1 double)
+  assert.deepEqual(prochaineFusion(c, 'europe'), { type: 'grade', grade: 2, niveau: 'rare', doublesNecessaires: 1, doublesDispo: 1 });
+  assert.equal(fusionner(c, 'europe'), null);
+  assert.equal(niveauCarte(trouverLutteur('europe'), gradeDe(c, 'europe')), 'rare');
+  assert.equal(nbExemplaires(c, 'europe'), 1);
+  c.exemplaires.europe = 1 + 2 + 3 + 4; // Épique (2 doubles), Légendaire (3), Champion du Monde (4)
+  for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'europe'), null);
+  assert.equal(gradeDe(c, 'europe'), 5);
+  assert.equal(niveauCarte(trouverLutteur('europe'), 5), 'champion');
+  assert.equal(nbExemplaires(c, 'europe'), 1);
+  assert.equal(prochaineFusion(c, 'europe')?.type, 'etoile');
 });
 
-test('étoiles (après le grade 5) : 5 doubles, −1 au coût de l\'action choisie, 3 maximum par action', () => {
+test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, avec 5 exemplaires', () => {
+  const c = nouvelleCollection();
+  const usa = trouverLutteur('usa'); // légendaire
+  assert.equal(gradeMaxDe(usa), 2);
+  c.exemplaires.usa = 4;
+  assert.deepEqual(prochaineFusion(c, 'usa'), { type: 'grade', grade: 2, niveau: 'champion', doublesNecessaires: 4, doublesDispo: 3 });
+  assert.ok(fusionner(c, 'usa'));
+  c.exemplaires.usa = 5;
+  assert.equal(fusionner(c, 'usa'), null);
+  assert.equal(niveauCarte(usa, gradeDe(c, 'usa')), 'champion');
+  assert.equal(prochaineFusion(c, 'usa')?.type, 'etoile');
+  // Bonus d'un seul niveau gagné, et une seule action débloquée.
+  const d = defPossede(c, 'usa');
+  assert.equal(d.force, Math.round(usa.force * 1.05));
+  assert.equal(d.actionsPossibles.length, usa.actions.length + 1);
+  assert.equal(d.niveau, 'champion');
+  // Ancienne sauvegarde au-delà du maximum : ramenée au maximum.
+  c.grades.usa = 5;
+  assert.equal(gradeDe(c, 'usa'), 2);
+});
+
+test('fusion : nombre de montées selon la rareté de départ', () => {
+  const max = (r: string) => gradeMaxDe(LUTTEURS.find((l) => l.rarete === r)!);
+  assert.deepEqual(['commune', 'rare', 'epique', 'legendaire'].map(max), [5, 4, 3, 2]);
+  const rare = LUTTEURS.find((l) => l.rarete === 'rare')!;
+  assert.equal(exemplairesPourGrade(rare, 2), 3); // Rare → Épique : 3 exemplaires
+});
+
+test('étoiles (Champion du Monde) : 5 doubles, −1 au coût de l\'action choisie, 3 maximum par action', () => {
   const c = nouvelleCollection();
   c.exemplaires.usa = 1 + 5 * 4;
-  c.grades.usa = 5;
+  c.grades.usa = 2; // légendaire montée en Champion du Monde
   const f = prochaineFusion(c, 'usa');
   assert.equal(f?.type, 'etoile');
   assert.equal(f?.doublesNecessaires, 5);
@@ -92,8 +118,8 @@ test('étoiles (après le grade 5) : 5 doubles, −1 au coût de l\'action chois
   assert.equal(nbEtoiles(c, 'usa'), 3);
 });
 
-test('grades : +5 % par grade, +10 % pour le dernier (+25 % au grade 5)', () => {
-  const base = trouverLutteur('usa');
+test('grades : +5 % par niveau gagné, +10 % pour le 4e (+25 % en tout)', () => {
+  const base = trouverLutteur('europe'); // commune : 4 niveaux à gagner
   assert.equal(avecGrade(base, 1).force, base.force);
   assert.deepEqual(avecGrade(base, 1).actionsPossibles, base.actions);
   const g2 = avecGrade(base, 2);

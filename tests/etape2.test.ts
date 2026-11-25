@@ -90,17 +90,21 @@ test('coûts : les actions d\'une même famille ont le même coût de base', () 
   for (const a of Object.values(ACTIONS)) assert.equal(a.cout, COUT_FAMILLE[a.famille], a.id);
 });
 
-test('grades : chaque grade débloque une action qui coûte 1 de moins (coût minimum 1)', () => {
-  const usa = trouverLutteur('usa'); // déblocages : simple jambe, feinte, défense, ceinture arrière
-  const g3 = avecGrade(usa, 3);
-  assert.deepEqual(g3.actionsPossibles, [...usa.actions, 'simple_jambe', 'feinte']);
+test('grades : chaque niveau gagné débloque une action qui coûte 1 de moins (coût minimum 1)', () => {
+  const eu = trouverLutteur('europe'); // commune ; déblocages : simple jambe, parade, matraquage, relance
+  const g3 = avecGrade(eu, 3);
+  assert.deepEqual(g3.actionsPossibles, [...eu.actions, 'simple_jambe', 'parade']);
   assert.equal(coutAction(g3, 'simple_jambe'), 5);
-  assert.equal(coutAction(g3, 'feinte'), 2);
-  assert.equal(coutAction(g3, 'double_jambe'), 6); // action de base : coût normal
-  const g5 = avecGrade(usa, 5, { defense: 3, double_jambe: 2 });
-  assert.equal(coutAction(g5, 'defense'), 1); // 3 − 1 (déblocage) − 3 étoiles → minimum 1
-  assert.equal(coutAction(g5, 'double_jambe'), 4);
-  assert.equal(coutAction(avecGrade(usa, 4, { double_jambe: 2 }), 'double_jambe'), 6); // étoiles seulement au grade 5
+  assert.equal(coutAction(g3, 'parade'), 2);
+  assert.equal(coutAction(g3, 'attaque_base'), 6); // action de base : coût normal
+  const g5 = avecGrade(eu, 5, { parade: 3, attaque_base: 2 });
+  assert.equal(coutAction(g5, 'parade'), 1); // 3 − 1 (déblocage) − 3 étoiles → minimum 1
+  assert.equal(coutAction(g5, 'attaque_base'), 4);
+  assert.equal(coutAction(avecGrade(eu, 4, { attaque_base: 2 }), 'attaque_base'), 6); // étoiles seulement en Champion du Monde
+  // Une légendaire : une seule action débloquée, étoiles dès Champion du Monde (grade 2).
+  const usa = trouverLutteur('usa');
+  assert.deepEqual(avecGrade(usa, 5).actionsPossibles, [...usa.actions, 'simple_jambe']);
+  assert.equal(coutAction(avecGrade(usa, 2, { double_jambe: 1 }), 'double_jambe'), 5);
 });
 
 test('decks : refuse un deck sans action de la famille spéciale, ou avec une action pas encore débloquée', () => {
@@ -110,7 +114,7 @@ test('decks : refuse un deck sans action de la famille spéciale, ou avec une ac
   assert.ok(verifierDeck(usa, ['simple_jambe', 'sprawl', 'matraquage', 'relance'])); // grade 1 : pas encore
   const g2 = avecGrade(usa, 2);
   assert.equal(verifierDeck(g2, ['simple_jambe', 'sprawl', 'matraquage', 'relance']), null);
-  assert.ok(verifierDeck(g2, ['sprawl', 'matraquage', 'relance', 'feinte'])); // feinte : grade 3, et pas d'attaque
+  assert.ok(verifierDeck(g2, ['sprawl', 'matraquage', 'relance', 'feinte'])); // pas d'attaque
   assert.deepEqual(avecDeck(g2, ['simple_jambe', 'sprawl', 'matraquage', 'relance']).actions, ['simple_jambe', 'sprawl', 'matraquage', 'relance']);
 });
 

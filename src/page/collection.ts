@@ -2,8 +2,8 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, trouverLutteur, verifierDeck,
-  type DefLutteur, type Hasard, type IdAction, type Niveau, type Rarete,
+  LUTTEURS, REGLES, avecGrade, exemplairesPourGrade, gradeMaxDe, niveauCarte, trouverLutteur, verifierDeck,
+  type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte, type Rarete,
 } from '../moteur';
 
 export interface Collection {
@@ -12,7 +12,7 @@ export interface Collection {
   idCoach: string; // identifiant aléatoire, pour reconnaître un ami
   exemplaires: Record<string, number>; // nombre d'exemplaires de chaque carte
   grades: Record<string, number>; // grade de chaque carte possédée (1 = de base)
-  etoiles: Record<string, Partial<Record<IdAction, number>>>; // grade 5 : étoiles par action (−1 au coût chacune)
+  etoiles: Record<string, Partial<Record<IdAction, number>>>; // Champion du Monde : étoiles par action (−1 au coût chacune)
   decks: Record<string, IdAction[]>; // deck choisi pour chaque lutteur (sinon celui par défaut)
   niveau: Niveau;
   toutDebloque: boolean; // mode test : toutes les cartes disponibles
@@ -66,7 +66,9 @@ export function nouvelleCollection(): Collection {
 }
 
 export const nbExemplaires = (c: Collection, id: string) => c.exemplaires[id] ?? 0;
-export const gradeDe = (c: Collection, id: string) => (nbExemplaires(c, id) > 0 ? c.grades[id] ?? 1 : 1);
+// Grade de la carte (1 = rareté de départ). Borné : une ancienne sauvegarde pouvait dépasser le maximum.
+export const gradeDe = (c: Collection, id: string) =>
+  nbExemplaires(c, id) > 0 ? Math.min(gradeMaxDe(trouverLutteur(id)), c.grades[id] ?? 1) : 1;
 
 export const etoilesDe = (c: Collection, id: string): Partial<Record<IdAction, number>> => c.etoiles[id] ?? {};
 export const nbEtoiles = (c: Collection, id: string) => Object.values(etoilesDe(c, id)).reduce((n: number, x) => n + (x ?? 0), 0);
@@ -136,17 +138,21 @@ export function consoler(c: Collection, hasard: Hasard): Booster | null {
 // ---------- Fusion ----------
 
 export type ProchaineFusion =
-  | { type: 'grade'; grade: number; doublesNecessaires: number; doublesDispo: number }
+  | { type: 'grade'; grade: number; niveau: NiveauCarte; doublesNecessaires: number; doublesDispo: number }
   | { type: 'etoile'; actions: IdAction[]; doublesNecessaires: number; doublesDispo: number };
 
-// Ce que permet la prochaine fusion de cette carte : monter d'un grade, ou (au grade 5)
-// ajouter une étoile à une action. null si plus rien n'est possible.
+// Ce que permet la prochaine fusion de cette carte : monter d'un niveau de rareté, ou (une fois
+// Champion du Monde) ajouter une étoile à une action. null si plus rien n'est possible.
+// `niveau` : la rareté atteinte par la fusion.
 export function prochaineFusion(c: Collection, id: string): ProchaineFusion | null {
   if (nbExemplaires(c, id) === 0) return null;
   const F = REGLES.fusion;
+  const base = trouverLutteur(id);
   const g = gradeDe(c, id);
   const dispo = nbExemplaires(c, id) - 1;
-  if (g < F.gradeMax) return { type: 'grade', grade: g + 1, doublesNecessaires: exemplairesPourGrade(g + 1) - 1, doublesDispo: dispo };
+  if (g < gradeMaxDe(base)) {
+    return { type: 'grade', grade: g + 1, niveau: niveauCarte(base, g + 1), doublesNecessaires: exemplairesPourGrade(base, g + 1) - 1, doublesDispo: dispo };
+  }
   const et = etoilesDe(c, id);
   const actions = defPossede(c, id).actionsPossibles.filter((a) => (et[a] ?? 0) < F.etoilesMaxParAction);
   if (!actions.length) return null;
@@ -158,13 +164,13 @@ export const fusionPrete = (c: Collection, id: string) => {
   return !!f && f.doublesDispo >= f.doublesNecessaires;
 };
 
-// Fusionne : consomme les doubles et monte la carte d'un grade, ou (au grade 5) ajoute une étoile
+// Fusionne : consomme les doubles et monte la carte d'une rareté, ou (Champion du Monde) ajoute une étoile
 // à l'action choisie. Renvoie la raison si impossible.
 export function fusionner(c: Collection, id: string, action?: IdAction): string | null {
   const f = prochaineFusion(c, id);
   if (!f) return nbExemplaires(c, id) === 0 ? 'Tu ne possèdes pas cette carte.' : 'Cette carte est au maximum : toutes ses actions ont 3 étoiles.';
   if (f.doublesDispo < f.doublesNecessaires) {
-    const quoi = f.type === 'grade' ? `passer au grade ${f.grade}` : 'gagner une étoile';
+    const quoi = f.type === 'grade' ? `monter d'une rareté` : 'gagner une étoile';
     return `Il faut ${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''} pour ${quoi}.`;
   }
   if (f.type === 'etoile') {

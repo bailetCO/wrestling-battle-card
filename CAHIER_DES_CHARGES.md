@@ -67,7 +67,7 @@ Trois styles de jeu par nation. Noms et dessins fictifs et provisoires.
 
 Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération tous les 2 tours) : chaque lutteur est mesuré sur plus de 100 000 combats simulés, avec l'ordinateur au hasard puis avec l'ordinateur fort (des deux côtés). Sa rareté dépend de son taux de victoire moyen : légendaire 55 à 60 %, épique 50 à 55 %, rare 45 à 50 %, commune 40 à 45 % (à 1 point près). Les 2 premiers sont légendaires, les 3 suivants épiques, puis 5 rares et 5 communes. Vérification : `npm run simuler`.
 
-| Lutteur | Nation | Style | Endurance | Force | Récupération | 4 actions de base | Déblocages (grades 2 à 5) | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
+| Lutteur | Nation | Style | Endurance | Force | Récupération | 4 actions de base | Déblocages (dans l'ordre des fusions) | Spéciale | Victoires (hasard / fort / moyenne) | Rareté |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Rustam Kazbekov | Russie | Lutteur de pression, infatigable | 71 | 175 | 29 % | Double jambe, Matraquage, Sprawl, Relance | Ceinture arrière, Défense, Grande projection, Feinte | attaque | 65,9 / 55,4 / 60,6 % | Légendaire |
 | Tanner Briggs | USA | Lutteur de pression, très physique | 69 | 150 | 31 % | Double jambe, Sprawl, Matraquage, Relance | Simple jambe, Feinte, Défense, Ceinture arrière | attaque | 54,7 / 59,5 / 57,1 % | Légendaire |
@@ -87,8 +87,8 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 
 ### Decks
 
-- On compose son deck de 4 actions parmi les actions débloquées de la carte (4 de base au grade 1, jusqu'à 8 au grade 5), avec au moins une action de la famille de l'action spéciale.
-- L'équilibrage est mesuré avec les 4 actions de base, au grade 1.
+- On compose son deck de 4 actions parmi les actions débloquées de la carte (4 de base, plus une par niveau gagné en fusion : jusqu'à 8 pour une commune devenue Champion du Monde), avec au moins une action de la famille de l'action spéciale.
+- L'équilibrage est mesuré avec les 4 actions de base, sans fusion.
 
 ### Accueil et menu
 
@@ -100,7 +100,7 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 
 ### Collection
 
-- Au départ, le joueur possède 5 cartes : la moins rare de chaque nation. La collection compte les exemplaires de chaque carte et son grade.
+- Au départ, le joueur possède 5 cartes : la moins rare de chaque nation. La collection compte les exemplaires de chaque carte et son niveau de fusion.
 - Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %). Les cartes sont tirées parmi les 15, doublons possibles, avec des chances relatives de 50 (commune), 30 (rare), 15 (épique) et 5 (légendaire).
 - Ouverture d'un booster : le paquet fermé s'affiche, puis chaque appui sur l'écran révèle une carte (avec « Nouvelle ! » ou « Double » et un éclat aux couleurs de sa rareté) ; à la fin, un récapitulatif montre toutes les cartes obtenues. Un bouton « Tout voir » passe directement au récapitulatif.
 - Arène : 1 booster par victoire ; toutes les 2 défaites d'affilée, un booster de consolation. En ligne (mode collection) : 2 boosters par victoire (une victoire par abandon ne compte qu'après 5 tours).
@@ -114,12 +114,15 @@ Rééquilibrage du 25/11/2026 (coûts par famille, déblocages, récupération t
 - Sans serveur, ces échanges reposent sur la confiance entre amis ; Firebase les sécurisera.
 - Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
 
-### Fusion, grades et étoiles
+### Fusion, niveaux de rareté et étoiles
 
-- Passer au grade g demande g exemplaires identiques : l'original + (g − 1) doubles, qui sont consommés. Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4.
-- Bonus sur toutes les statistiques par rapport à la carte de base : +5 % aux grades 2, 3 et 4, puis +10 % au grade 5 (+25 % au total).
-- Actions : au grade 1, la carte a ses 4 actions de base. Chaque grade débloque une nouvelle action, dans un ordre fixe propre à chaque carte et affiché sur la carte (4 déblocages, grades 2 à 5). Une action débloquée coûte 1 d'endurance de moins que le coût de sa famille. En combat, on joue toujours avec 4 actions, choisies parmi celles débloquées (au moins une de la famille spéciale).
-- Étoiles (après le grade 5) : chaque fusion de 5 doubles donne une étoile, qui baisse de 1 le coût d'une action choisie (coût minimum 1). 3 étoiles maximum par action ; on peut continuer jusqu'à ce que toutes les actions débloquées aient 3 étoiles.
+- Une carte a une rareté de départ (celle du booster) et un niveau, qui monte par fusion : Commune → Rare → Épique → Légendaire → Champion du Monde. Champion du Monde ne s'obtient que par fusion. Une commune peut donc monter 4 fois, une rare 3, une épique 2, une légendaire 1.
+- Monter au niveau visé demande autant d'exemplaires identiques que son rang : Rare 2, Épique 3, Légendaire 4, Champion du Monde 5 (l'original compris ; les doubles sont consommés). C'est le même nombre pour toutes les cartes : une légendaire a besoin de 5 exemplaires pour devenir Champion du Monde.
+- Bonus et actions comptés par niveau gagné : +5 % sur toutes les statistiques pour chacun des 3 premiers niveaux gagnés, +10 % pour le 4e (+25 % au total pour une commune devenue Champion du Monde ; +5 % pour une légendaire). Chaque niveau gagné débloque une nouvelle action, dans un ordre fixe propre à la carte et affiché sur la carte. Une action débloquée coûte 1 d'endurance de moins que le coût de sa famille. En combat, on joue toujours avec 4 actions choisies parmi celles débloquées (au moins une de la famille spéciale).
+- La carte prend le cadre de son niveau ; Champion du Monde a un cadre rouge et or façon ceinture de champion.
+- Le marchand et les échanges comparent la rareté de départ.
+- Étoiles (une fois Champion du Monde) : chaque fusion de 5 doubles donne une étoile, qui baisse de 1 le coût d'une action choisie (coût minimum 1). 3 étoiles maximum par action ; on peut continuer jusqu'à ce que toutes les actions débloquées aient 3 étoiles.
+- Dans le code, le « grade » est le nombre de niveaux gagnés + 1 (grade 1 = rareté de départ). Une ancienne sauvegarde qui dépasse le maximum est ramenée au maximum.
 
 ### Style graphique
 
@@ -223,7 +226,7 @@ Version d'origine, remplacée par le rééquilibrage de l'étape 4 (voir Les 15 
 | Double jambe, ceinture arrière, bras roulé (bras à la volée) | Attaque | 6 | 4 |
 | Grande projection, german suplex | Attaque | 6 | 5 |
 
-Depuis le 25/11/2026, toutes les actions d'une même famille ont le même coût de base : attaque 6, défense 3, contre 6, feinte 3. Une action débloquée par un grade coûte 1 de moins ; chaque étoile (grade 5) retire encore 1, sans descendre sous 1.
+Depuis le 25/11/2026, toutes les actions d'une même famille ont le même coût de base : attaque 6, défense 3, contre 6, feinte 3. Une action débloquée par fusion coûte 1 de moins ; chaque étoile (Champion du Monde) retire encore 1, sans descendre sous 1.
 
 Récupération en combat : tous les 2 tours de chaque période (tours 2, 4, 6, 8, 10), chaque lutteur récupère 5 % de son endurance actuelle ; sa chance de réussite est sa précision du moment.
 
@@ -246,7 +249,7 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 - Le combat entre amis se joue sur la version ouverte à tous : https://bailetco.github.io/wrestling-battle-card/ (GitHub Pages, publiée automatiquement à chaque modification). Pas besoin de compte : il suffit du lien. La page sur claude.ai renvoie vers cette version.
 - Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre le même lien, touche « Combat entre amis » et tape le code.
 - Connexion : relais publics gratuits et sans compte (MQTT), deux à la fois pour plus de fiabilité. Solution provisoire, à remplacer par Firebase (au plus tard pour les comptes joueurs, étape 7). Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
-- En créant la salle, l'hôte choisit le mode : « Cartes de base » (les 15 cartes, sans grade, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs grades, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
+- En créant la salle, l'hôte choisit le mode : « Cartes de base » (les 15 cartes, sans fusion, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs niveaux, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
 - Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
 - Les deux téléphones calculent le combat avec le même moteur et le même numéro de combat : ils obtiennent le même résultat, vérifié à chaque tour.

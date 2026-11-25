@@ -118,9 +118,9 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
     {
       titre: 'La fusion',
       html: `${illus.fusion}
-        <p>Fusionne tes doubles pour faire monter une carte de grade : grade 2 avec 1 double, grade 3 avec 2, jusqu'au grade 5.</p>
-        <p>Chaque grade ajoute +5 % sur les statistiques (+10 % au grade 5) et <b>débloque une nouvelle action</b>, moins chère.</p>
-        <p>Au grade 5, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix.</p>`,
+        <p>Fusionne tes doubles pour faire monter une carte d'une rareté : Commune, Rare, Épique, Légendaire, jusqu'à <b>Champion du Monde</b>. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde.</p>
+        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e) et <b>débloque une nouvelle action</b>, moins chère.</p>
+        <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix.</p>`,
     },
     {
       titre: 'Le Club',

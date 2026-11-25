@@ -29,6 +29,8 @@ export interface DefAction {
 
 export type Nation = 'usa' | 'russie' | 'europe' | 'afrique' | 'japon';
 export type Rarete = 'commune' | 'rare' | 'epique' | 'legendaire';
+// Niveau d'une carte : sa rareté de départ, puis celle qu'elle atteint par fusion.
+export type NiveauCarte = Rarete | 'champion';
 
 export interface DefLutteur {
   id: string;
@@ -36,7 +38,8 @@ export interface DefLutteur {
   origine: string; // nom affiché de la nation
   nation: Nation; // sert aux noms locaux des actions
   style: string; // style de jeu, en clair
-  rarete: Rarete; // fixée d'après les simulations (taux de victoire)
+  rarete: Rarete; // rareté de départ, fixée d'après les simulations (taux de victoire)
+  niveau?: NiveauCarte; // rareté atteinte par fusion (posée par avecGrade)
   enduranceMax: number; // 0 à 100
   force: number; // 10 à 250
   recuperation: number; // part de l'endurance max récupérée entre deux périodes (0,35 = 35 %)

@@ -1,7 +1,7 @@
 // TOUS les chiffres du jeu sont ici. Pour rééquilibrer, on modifie ce fichier,
 // sans toucher aux règles.
 
-import type { DefAction, DefLutteur, Famille, IdAction } from './types';
+import type { DefAction, DefLutteur, Famille, IdAction, NiveauCarte } from './types';
 
 // Coût de base en endurance : le même pour toutes les actions d'une famille.
 export const COUT_FAMILLE: Record<Famille, number> = { attaque: 6, defense: 3, contre: 6, feinte: 3 };
@@ -232,15 +232,16 @@ export const REGLES = {
     multiplicateurApresTutoriel: 2,
   },
 
-  // Fusion : passer au grade g demande g exemplaires identiques (l'original + g − 1 doubles,
-  // qui sont consommés). Bonus sur toutes les stats par rapport à la carte de base.
+  // Fusion : chaque fusion fait monter la carte d'un niveau de rareté, jusqu'à Champion du Monde
+  // (voir NIVEAUX). Atteindre le niveau n demande n exemplaires identiques (Rare 2, Épique 3,
+  // Légendaire 4, Champion du Monde 5), l'original compris ; les doubles sont consommés.
+  // « grade » = nombre de niveaux gagnés + 1. Le bonus et les actions débloquées suivent le grade.
   fusion: {
-    gradeMax: 5,
     reductionDeblocage: 1, // une action débloquée coûte 1 de moins que le coût de sa famille
     doublesParEtoile: 5, // après le grade 5 : 5 doubles pour une étoile (−1 au coût d'une action)
     etoilesMaxParAction: 3,
     coutMinimum: 1,
-    bonus: [0, 0, 0.05, 0.1, 0.15, 0.25], // indice = grade (grade 1 = carte de base)
+    bonus: [0, 0, 0.05, 0.1, 0.15, 0.25], // indice = grade (grade 1 = carte de base, +1 par niveau gagné)
   },
 
   // Ordinateur.
@@ -310,21 +311,32 @@ export function coutAction(def: DefLutteur, a: IdAction): number {
 }
 
 // Actions débloquées à ce grade (grade 2 : la 1re action de la liste, etc.).
-export const actionsDebloquees = (def: DefLutteur, grade: number) => def.deblocages.slice(0, Math.max(0, Math.min(5, grade) - 1));
+// Les niveaux de carte, du plus bas au plus haut.
+export const NIVEAUX: NiveauCarte[] = ['commune', 'rare', 'epique', 'legendaire', 'champion'];
+const rangDe = (def: DefLutteur) => NIVEAUX.indexOf(def.rarete);
+
+// Grade maximal d'une carte : commune 5 (4 fusions), rare 4, épique 3, légendaire 2.
+export const gradeMaxDe = (def: DefLutteur) => NIVEAUX.length - rangDe(def);
+const borner = (def: DefLutteur, grade: number) => Math.max(1, Math.min(gradeMaxDe(def), Math.floor(grade)));
+
+// Niveau de rareté atteint par la carte à ce grade.
+export const niveauCarte = (def: DefLutteur, grade = 1): NiveauCarte => NIVEAUX[rangDe(def) + borner(def, grade) - 1];
+
+export const actionsDebloquees = (def: DefLutteur, grade: number) => def.deblocages.slice(0, borner(def, grade) - 1);
 
 // Copie du lutteur à son grade (1 = carte de base) : statistiques augmentées, actions débloquées
 // (au coût de leur famille − 1), et étoiles (−1 par étoile sur une action, coût minimum 1).
 // À appliquer sur la carte de base, avant de choisir le deck.
 export function avecGrade(def: DefLutteur, grade: number, etoiles: Partial<Record<IdAction, number>> = {}): DefLutteur {
   const F = REGLES.fusion;
-  const g = Math.max(1, Math.min(F.gradeMax, Math.floor(grade)));
+  const g = borner(def, grade);
   const b = F.bonus[g];
   const debloquees = actionsDebloquees(def, g);
   const possibles = [...def.actions, ...debloquees.filter((x) => !def.actions.includes(x))];
   const couts: Partial<Record<IdAction, number>> = {};
   for (const x of possibles) {
     let c = ACTIONS[x].cout - (debloquees.includes(x) ? F.reductionDeblocage : 0);
-    if (g === F.gradeMax) c -= Math.min(F.etoilesMaxParAction, etoiles[x] ?? 0);
+    if (g === gradeMaxDe(def)) c -= Math.min(F.etoilesMaxParAction, etoiles[x] ?? 0);
     c = Math.max(F.coutMinimum, c);
     if (c !== ACTIONS[x].cout) couts[x] = c;
   }
@@ -335,11 +347,13 @@ export function avecGrade(def: DefLutteur, grade: number, etoiles: Partial<Recor
     recuperation: Math.round(def.recuperation * (1 + b) * 100) / 100,
     actionsPossibles: possibles,
     couts,
+    niveau: niveauCarte(def, g),
   };
 }
 
-// Nombre d'exemplaires identiques pour atteindre ce grade (l'original compris).
-export const exemplairesPourGrade = (grade: number) => grade;
+// Nombre d'exemplaires identiques pour atteindre ce grade (l'original compris) :
+// le rang du niveau visé (Rare 2, Épique 3, Légendaire 4, Champion du Monde 5).
+export const exemplairesPourGrade = (def: DefLutteur, grade: number) => rangDe(def) + grade;
 
 export function trouverLutteur(id: string): DefLutteur {
   const lutteur = LUTTEURS.find((l) => l.id === id);

@@ -3,9 +3,9 @@
 import './style.css';
 import {
   ACTIONS, LUTTEURS, REGLES, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, specialeOuverte, trouverLutteur, NIVEAUX, gradeMaxDe, niveauCarte, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
-  type Joueur, type Nation,
+  type Joueur, type Nation, type NiveauCarte,
 } from '../moteur';
 import { Partie, type TourJoue } from './partie';
 import {
@@ -94,11 +94,13 @@ function defJoueur(def: DefLutteur): DefLutteur {
   return avecDeck(defPossede(collection, def.id), deckDe(collection, def.id));
 }
 
+// Rareté atteinte par la carte du joueur (sa rareté de départ, montée par fusion).
+const niveauDe = (id: string) => niveauCarte(trouverLutteur(id), gradeDe(collection, id));
+
 function etiquettesCarte(def: DefLutteur): string {
-  const g = gradeDe(collection, def.id);
   const n = nbExemplaires(collection, def.id);
   const et = nbEtoiles(collection, def.id);
-  return `${g > 1 ? `<span class="pastille grade" title="Grade ${g}">Grade ${g}${et ? ` · ★${et}` : ''}</span>` : ''}${n > 1 ? `<span class="pastille nombre" title="${n} exemplaires">×${n}</span>` : ''}`;
+  return `${et ? `<span class="pastille grade" title="${et} étoile${et > 1 ? 's' : ''}">★${et}</span>` : ''}${n > 1 ? `<span class="pastille nombre" title="${n} exemplaires">×${n}</span>` : ''}`;
 }
 
 function carteJoueur(def: DefLutteur, bouton = ''): string {
@@ -174,7 +176,7 @@ function ecranMenu() {
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
         ${tuile('collection', 'Collection', `${collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection)}/${LUTTEURS.length} cartes · régler les actions`, '#collection')}
-        ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter de grade', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
+        ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Club', 'Amis, échanges et marchand', '#club')}
       </nav>
     </main>`;
@@ -295,7 +297,8 @@ function fenetreDeck(base: DefLutteur) {
   const grade = gradeDe(collection, base.id);
   const et = etoilesDe(collection, base.id);
   let choix: IdAction[] = [...(deckDe(collection, def.id) ?? def.actions)];
-  const verrouillees = def.deblocages.filter((a) => !def.actionsPossibles.includes(a));
+  const verrouillees = def.deblocages.slice(0, gradeMaxDe(base) - 1).filter((a) => !def.actionsPossibles.includes(a));
+  const rang = NIVEAUX.indexOf(base.rarete);
   const ligne = (a: IdAction, ouverte: boolean, gradeDeblocage = 0) => {
     const fam = ACTIONS[a].famille;
     const cout = ouverte ? coutAction(def, a) : Math.max(R_.fusion.coutMinimum, ACTIONS[a].cout - R_.fusion.reductionDeblocage);
@@ -304,13 +307,13 @@ function fenetreDeck(base: DefLutteur) {
       <button class="deck-action ${ouverte ? '' : 'verrouillee'}" ${ouverte ? `data-a="${a}" aria-pressed="false"` : 'disabled'}>
         <span class="ico f-${fam}">${ICONE[fam]}</span>
         <span class="a-nom">${echap(nomLocal(def.nation, a))} ${etoiles}${fam === def.familleSpeciale ? ' <small class="marque-spe">spéciale</small>' : ''}</span>
-        <span class="a-fr">${ouverte ? '' : `Débloquée au grade ${gradeDeblocage} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
+        <span class="a-fr">${ouverte ? '' : `Débloquée au niveau ${NOM_RARETE[NIVEAUX[rang + gradeDeblocage - 1]]} · `}${echap(ACTIONS[a].nom)} · ${NOM_FAMILLE[fam].toLowerCase()} · ${ACTIONS[a].points ? `${ACTIONS[a].points} pts` : 'sans points'}</span>
         <span class="a-cout">${cout}</span>
       </button>`;
   };
   const f = ouvrirFenetre(`
     <h2>Actions de ${echap(def.nom)}</h2>
-    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque grade débloque une action de plus, qui coûte 1 d'endurance de moins.</p>
+    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque niveau gagné par fusion débloque une action de plus, qui coûte 1 d'endurance de moins.</p>
     <div class="deck-liste">
       ${def.actionsPossibles.map((a) => ligne(a, true)).join('')}
       ${verrouillees.map((a) => ligne(a, false, def.deblocages.indexOf(a) + 2)).join('')}
@@ -414,7 +417,8 @@ function miniCarteCollection(l: DefLutteur): string {
   const g = gradeDe(collection, l.id);
   const n = nbExemplaires(collection, l.id);
   const et = nbEtoiles(collection, l.id);
-  const etoiles = g > 1 ? `<span class="mc-grade">${'◆'.repeat(g)}${et ? ` ★${et}` : ''}</span>` : '';
+  const etoiles = et ? `<span class="mc-grade">★${et}</span>` : '';
+  const niv = niveauDe(l.id);
   if (!a) {
     return `
       <div class="mini-carte verrouillee" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">
@@ -424,7 +428,7 @@ function miniCarteCollection(l: DefLutteur): string {
       </div>`;
   }
   return `
-    <button class="mini-carte" data-rarete="${l.rarete}" data-carte="${l.id}" aria-label="${echap(l.nom)}, grade ${g}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+    <button class="mini-carte" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
       <span class="mc-portrait">${portrait(l)}</span>
       ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
       <span class="mc-nom">${echap(l.nom)}</span>
@@ -437,7 +441,7 @@ function fenetreCarteCollection(def: DefLutteur) {
   const n = nbExemplaires(collection, def.id);
   const f2 = ouvrirFenetre(`
     <div class="fenetre-carte">${carteJoueur(def)}</div>
-    <p class="note">${n > 0 ? `${n} exemplaire${n > 1 ? 's' : ''} · grade ${gradeDe(collection, def.id)}/${R_.fusion.gradeMax}` : 'Carte du mode test'}${f ? (f.doublesDispo >= f.doublesNecessaires ? ` · fusion possible (${f.type === 'grade' ? `grade ${f.grade}` : 'étoile'})` : ` · ${f.type === 'grade' ? `grade ${f.grade}` : 'étoile'} : ${f.doublesDispo}/${f.doublesNecessaires} doubles`) : ''}</p>
+    <p class="note">${n > 0 ? `${n} exemplaire${n > 1 ? 's' : ''} · ${NOM_RARETE[niveauDe(def.id)]}${niveauDe(def.id) !== def.rarete ? ` (au départ ${NOM_RARETE[def.rarete].toLowerCase()})` : ''}` : 'Carte du mode test'}${f ? (f.doublesDispo >= f.doublesNecessaires ? ` · fusion possible (${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'})` : ` · ${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'} : ${f.doublesDispo}/${f.doublesNecessaires} doubles`) : ''}</p>
     <div class="deck-boutons">
       <button class="principal" data-regler>Régler les actions</button>
       ${f ? `<a class="secondaire lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a>` : ''}
@@ -463,16 +467,19 @@ function ecranFusion(message = '') {
   const lignes = miens.map((l) => {
     const f = prochaineFusion(collection, l.id);
     const g = gradeDe(collection, l.id);
-    const etoiles = Array.from({ length: R_.fusion.gradeMax }, (_, i) => `<i class="${i < g ? 'plein' : ''}"></i>`).join('');
+    const niv = niveauDe(l.id);
+    // Les 5 niveaux de Commune à Champion du Monde ; remplis jusqu'au niveau atteint.
+    const rangAtteint = NIVEAUX.indexOf(niv);
+    const etoiles = NIVEAUX.map((_, i) => `<i class="${i <= rangAtteint ? 'plein' : ''}"></i>`).join('');
     const pret = f && f.doublesDispo >= f.doublesNecessaires;
     const prog = f ? Math.min(100, (f.doublesDispo / f.doublesNecessaires) * 100) : 100;
     return `
-      <li class="fusion-ligne ${pret ? 'pret' : ''}" data-rarete="${l.rarete}">
+      <li class="fusion-ligne ${pret ? 'pret' : ''}" data-rarete="${niv}">
         <span class="vignette">${portrait(l)}</span>
         <span class="fusion-info">
           <b>${echap(l.nom)}</b>
-          <span class="grades" aria-label="Grade ${g} sur ${R_.fusion.gradeMax}">${etoiles}</span>
-          <small>${f ? `${f.type === 'grade' ? `Grade ${f.grade}` : `Étoile (★${nbEtoiles(collection, l.id)})`} : ${Math.min(f.doublesDispo, f.doublesNecessaires)}/${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''}` : 'Maximum atteint : toutes les actions ont 3 étoiles'}</small>
+          <span class="grades" aria-label="${NOM_RARETE[niv]}, niveau ${rangAtteint + 1} sur ${NIVEAUX.length}">${etoiles}<em>${NOM_RARETE[niv]}</em></span>
+          <small>${f ? `${f.type === 'grade' ? `Vers ${NOM_RARETE[f.niveau]}` : `Étoile (★${nbEtoiles(collection, l.id)})`} : ${Math.min(f.doublesDispo, f.doublesNecessaires)}/${f.doublesNecessaires} double${f.doublesNecessaires > 1 ? 's' : ''}` : 'Maximum atteint : toutes les actions ont 3 étoiles'}</small>
           <span class="jauge"><i style="width:${prog}%"></i></span>
         </span>
         <button class="${pret ? 'principal' : 'secondaire'} petit-bouton" data-fusion="${l.id}" ${pret ? '' : 'disabled'}>${f?.type === 'etoile' ? 'Étoile' : 'Fusionner'}</button>
@@ -480,7 +487,7 @@ function ecranFusion(message = '') {
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Fusion', 'Grade 2 : 1 double, grade 3 : 2, grade 4 : 3, grade 5 : 4. Chaque grade : +5 % sur les stats (+10 % au grade 5) et une action débloquée. Au grade 5 : 5 doubles pour une étoile, −1 d\'endurance sur l\'action choisie (3 étoiles par action).')}
+      ${enTete('Fusion', 'Chaque fusion fait monter la carte d\'une rareté, jusqu\'à Champion du Monde. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée. Champion du Monde : 5 doubles pour une étoile, −1 d\'endurance sur l\'action choisie (3 étoiles par action).')}
       ${message}
       ${miens.length ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note marge">Tu n\'as encore aucune carte.</p>'}
     </main>`;
@@ -498,7 +505,7 @@ function ecranFusion(message = '') {
       const f = ouvrirFenetre(`
         <h2 class="onomato rouge">FUSION !</h2>
         <div class="fenetre-carte eclat-fusion">${carteJoueur(def)}</div>
-        <p><b>${echap(def.nom)}</b> passe au grade ${gradeDe(collection, id)}. Nouvelle action débloquée : <b>${echap(nomLocal(def.nation, actionsDebloquees(def, gradeDe(collection, id)).slice(-1)[0] ?? def.actions[0]))}</b> (coût ${coutAction(defPossede(collection, id), actionsDebloquees(def, gradeDe(collection, id)).slice(-1)[0] ?? def.actions[0])}).</p>
+        <p><b>${echap(def.nom)}</b> devient <b>${NOM_RARETE[niveauDe(id)]}</b> ! Nouvelle action débloquée : <b>${echap(nomLocal(def.nation, actionsDebloquees(def, gradeDe(collection, id)).slice(-1)[0] ?? def.actions[0]))}</b> (coût ${coutAction(defPossede(collection, id), actionsDebloquees(def, gradeDe(collection, id)).slice(-1)[0] ?? def.actions[0])}).</p>
         <p class="note">Avant : ${statsTexte(avant)}<br>Après : ${statsTexte(apres)}</p>
         <button class="principal" data-fermer>Continuer</button>`, true);
       activerReflets(f);
@@ -507,7 +514,7 @@ function ecranFusion(message = '') {
   window.scrollTo(0, 0);
 }
 
-// Étoile (grade 5) : choisir l'action dont le coût baisse de 1.
+// Étoile (Champion du Monde) : choisir l'action dont le coût baisse de 1.
 function fenetreEtoile(id: string) {
   const f = prochaineFusion(collection, id);
   if (!f || f.type !== 'etoile') return;
@@ -549,9 +556,9 @@ function fenetreEtoile(id: string) {
 // ---------- Club ----------
 
 // Petite carte simple (portrait, nom, rareté) avec une ligne en dessous.
-function miniCarteLutteur(l: DefLutteur, bas: string, attrs = ''): string {
+function miniCarteLutteur(l: DefLutteur, bas: string, attrs = '', niveau: NiveauCarte = l.rarete): string {
   return `
-    <span class="mini-carte" data-rarete="${l.rarete}" ${attrs}>
+    <span class="mini-carte" data-rarete="${niveau}" ${attrs}>
       <span class="mc-portrait">${portrait(l)}</span>
       <span class="mc-nom">${echap(l.nom)}</span>
       <span class="mc-bas">${bas}</span>
@@ -754,8 +761,8 @@ function illustrationsTuto() {
     .map((id) => miniCarteLutteur(ex(id), NOM_RARETE[ex(id).rarete])).join('')}</div>`;
   const e = ex('europe');
   const fusion = `<div class="tuto-illus fusion-illus">
-      ${miniCarteLutteur(e, 'Grade 1')}<span class="tuto-signe">+</span>${miniCarteLutteur(e, 'double')}
-      <span class="tuto-signe">=</span>${miniCarteLutteur(e, 'Grade 2 · +5 %')}</div>`;
+      ${miniCarteLutteur(e, 'Commune')}<span class="tuto-signe">+</span>${miniCarteLutteur(e, 'double')}
+      <span class="tuto-signe">=</span>${miniCarteLutteur(e, 'Rare · +5 %', '', 'rare')}</div>`;
   const club = `<div class="tuto-illus">
       ${miniCarteLutteur(ex('japon'), 'ton double')}<span class="tuto-signe">⇄</span>${miniCarteLutteur(ex('afrique-explosif'), 'son double')}</div>`;
   return { cartes, fusion, club };
@@ -1548,8 +1555,8 @@ function ecranAmis(message = '') {
       <section class="bloc">
         <h2>Créer une salle</h2>
         <p>Choisis comment vous jouez :</p>
-        <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes et leurs grades · 2 boosters par victoire</small></button>
-        <button class="secondaire" data-creer="base">Cartes de base<small>Les 15 cartes, sans grade · pas de booster</small></button>
+        <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes fusionnées · 2 boosters par victoire</small></button>
+        <button class="secondaire" data-creer="base">Cartes de base<small>Les 15 cartes, sans fusion · pas de booster</small></button>
       </section>
       <section class="bloc">
         <h2>Rejoindre ton ami</h2>
@@ -1716,11 +1723,11 @@ function ecranSalle(v: Vue) {
     return `
     <button class="choix-l ${v.monLutteur === l.id ? 'pris' : ''}" data-l="${l.id}" aria-pressed="${v.monLutteur === l.id}">
       <span class="vignette">${portrait(l)}</span>
-      <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[l.rarete]}${g > 1 ? ` · grade ${g}` : ''}</small></span>
+      <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[niveauCarte(l, g)]}</small></span>
     </button>`;
   }).join('');
   const modeTexte = v.modeSalle === null ? 'Connexion à la salle…'
-    : enCollection ? 'Mode : vos collections (grades compris) · 2 boosters par victoire.'
+    : enCollection ? 'Mode : vos collections (fusions comprises) · 2 boosters par victoire.'
     : 'Mode : cartes de base, toutes permises · pas de booster.';
   const ami = v.amiLutteur ? trouverLutteur(v.amiLutteur) : null;
   app.innerHTML = `

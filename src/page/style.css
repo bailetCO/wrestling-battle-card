@@ -147,6 +147,22 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .carte-l[data-rarete="legendaire"] .aura { transform-origin: 100px 95px; animation: aura 14s linear infinite; }
 .carte-l[data-rarete="legendaire"] .eclat { animation: eclat 2.4s ease-in-out infinite; }
 @keyframes or { to { background-position: -220% 0; } }
+
+/* Champion du Monde : cadre façon ceinture de champion, rouge et or, avec un liseré blanc. */
+.carte-l[data-rarete="champion"] {
+  --gemme: #fff1b8;
+  background: linear-gradient(120deg, #6d0a18, #c8102e 18%, #ffd76a 32%, #fff6d6 40%, #ffd76a 48%, #c8102e 62%, #6d0a18 80%, #c8102e);
+  background-size: 240% 100%;
+  animation: or 5s linear infinite;
+  box-shadow: 0 0 0 2px #fff6d6, 0 0 0 4px #c8102e, 0 0 34px rgba(255, 90, 70, .5), 0 10px 24px rgba(0, 0, 0, .35);
+}
+.carte-l[data-rarete="champion"] .cl-reflet {
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 240, 190, .5), transparent 50%);
+  mix-blend-mode: overlay;
+}
+.carte-l[data-rarete="champion"] .cl-niveau { background: #c8102e; color: #fff6d6; }
+.carte-l[data-rarete="champion"] .aura { transform-origin: 100px 95px; animation: aura 10s linear infinite; }
+.carte-l[data-rarete="champion"] .eclat { animation: eclat 2s ease-in-out infinite; }
 @keyframes aura { to { transform: rotate(360deg); } }
 @keyframes eclat { 0%, 70%, 100% { r: .9; } 80% { r: 2.4; } }
 
@@ -545,6 +561,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .mini-carte[data-rarete="rare"] { --cadre: linear-gradient(135deg, #8fa9cf, #eef5ff 45%, #6c8bbd 55%, #c9dbf5); }
 .mini-carte[data-rarete="epique"] { --cadre: conic-gradient(from 210deg, #ff7ac8, #ffd36e, #79f2c0, #6cc8ff, #b98bff, #ff7ac8); }
 .mini-carte[data-rarete="legendaire"] { --cadre: linear-gradient(120deg, #8a5a12, #ffe08a 30%, #b97d1e 50%, #fff1b8 70%, #8a5a12); }
+.mini-carte[data-rarete="champion"] { --cadre: linear-gradient(120deg, #6d0a18, #c8102e 25%, #ffd76a 45%, #fff6d6 52%, #c8102e 75%, #6d0a18); }
 .mc-portrait { display: block; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 2px solid var(--encre); background: var(--nuit); }
 .mc-portrait svg { width: 100%; height: 100%; display: block; }
 .mc-nom, .mc-bas { background: #101d3a; padding: 0 6px; }
@@ -567,7 +584,8 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .fusion-info { display: grid; gap: 3px; }
 .fusion-info b { font: 700 17px var(--police); }
 .fusion-info small { color: var(--doux); }
-.grades { display: flex; gap: 3px; }
+.grades { display: flex; gap: 3px; align-items: center; }
+.grades em { font-style: normal; font-size: 13px; color: var(--doux); margin-left: 6px; }
 .grades i { width: 14px; height: 14px; transform: rotate(45deg) scale(.8); border: 2px solid var(--orange); }
 .grades i.plein { background: var(--orange); }
 .jauge { height: 6px; border-radius: 3px; background: var(--nuit); overflow: hidden; }
