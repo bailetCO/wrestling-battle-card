@@ -10,38 +10,73 @@ export const NOM_RARETE: Record<NiveauCarte, string> = {
 // Styles de carte d'un Champion du Monde (0 = cadre classique, puis 4 styles à débloquer).
 export const STYLES_CARTE = ['Ceinture', 'Or massif', 'Nuit étoilée', 'Couleurs de la nation', 'Panthéon'];
 
-// Emblème de chaque style, affiché en filigrane au milieu d'une carte Champion du Monde.
-const EMBLEMES: string[] = [
-  // Ceinture de champion : bande, plaque centrale et plaques latérales.
-  `<rect x="2" y="40" width="96" height="20" rx="6" fill="currentColor" opacity=".55"/>
-   <rect x="10" y="36" width="16" height="28" rx="4" fill="currentColor"/>
-   <rect x="74" y="36" width="16" height="28" rx="4" fill="currentColor"/>
-   <ellipse cx="50" cy="50" rx="24" ry="22" fill="currentColor"/>
-   <ellipse cx="50" cy="50" rx="17" ry="15" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2.5"/>
-   <path d="M50 39l3.3 7 7.6.8-5.7 5.1 1.6 7.5L50 55.6l-6.8 3.8 1.6-7.5-5.7-5.1 7.6-.8z" fill="#000" fill-opacity=".35"/>`,
-  // Or massif : médaille d'or olympique, ruban et couronne de laurier.
-  `<path d="M30 4h14l10 30h-14z M70 4H56L46 34h14z" fill="currentColor" opacity=".6"/>
-   <circle cx="50" cy="62" r="30" fill="currentColor"/>
-   <circle cx="50" cy="62" r="22" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2.5"/>
-   <path d="M36 74c-6-6-7-15-3-22 M64 74c6-6 7-15 3-22" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2.5"/>
-   <path d="M33 58l-5-2 M34 66l-5 0 M37 72l-4 3 M67 58l5-2 M66 66l5 0 M63 72l4 3" stroke="#000" stroke-opacity=".3" stroke-width="2.5" stroke-linecap="round"/>
-   <text x="50" y="69" text-anchor="middle" font-size="20" font-weight="700" fill="#000" fill-opacity=".35" font-family="sans-serif">1</text>`,
-  // Nuit étoilée : croissant de lune et étoiles.
-  `<path d="M58 14a34 34 0 1 0 28 54A28 28 0 1 1 58 14z" fill="currentColor"/>
-   <path d="M78 16l2.4 5 5.4.6-4 3.7 1.1 5.4-4.9-2.7-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z M88 42l1.6 3.3 3.6.4-2.7 2.5.8 3.6-3.3-1.8-3.3 1.8.8-3.6-2.7-2.5 3.6-.4z M66 6l1.2 2.5 2.7.3-2 1.9.5 2.7-2.4-1.4-2.4 1.4.5-2.7-2-1.9 2.7-.3z" fill="currentColor"/>`,
-  // Couleurs de la nation : drapeau qui flotte, aux couleurs du lutteur.
-  `<rect x="14" y="10" width="5" height="82" rx="2" fill="currentColor"/>
-   <path d="M19 14c14-8 26 8 40 0s24-6 34 0v40c-10-6-20-8-34 0s-26-8-40 0z" fill="var(--n1)" stroke="currentColor" stroke-width="3"/>
-   <path d="M19 34c14-8 26 8 40 0s24-6 34 0v20c-10-6-20-8-34 0s-26-8-40 0z" fill="var(--n2)"/>`,
-  // Panthéon : temple grec avec fronton et colonnes.
-  `<path d="M50 8L6 32h88z" fill="currentColor"/>
-   <rect x="8" y="34" width="84" height="6" fill="currentColor"/>
-   <path d="M16 44h8v38h-8z M33 44h8v38h-8z M59 44h8v38h-8z M76 44h8v38h-8z" fill="currentColor"/>
-   <rect x="4" y="84" width="92" height="8" rx="2" fill="currentColor"/>`,
-];
-
-function filigrane(style: number): string {
-  return `<svg class="cl-filigrane" viewBox="0 0 100 100" aria-hidden="true">${EMBLEMES[style] ?? EMBLEMES[0]}</svg>`;
+// Emblème de chaque style, au premier plan d'une carte Champion du Monde : dessiné avec des
+// dégradés métalliques, semi-transparent pour laisser voir la carte dessous.
+// `u` rend les identifiants de dégradés uniques pour chaque carte affichée.
+function emblemeSVG(style: number, u: string): string {
+  const or = `url(#${u}or)`, rouge = `url(#${u}rouge)`, lune = `url(#${u}lune)`, marbre = `url(#${u}marbre)`;
+  const defs = `<defs>
+    <linearGradient id="${u}or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7cf"/><stop offset=".35" stop-color="#ffd76a"/>
+      <stop offset=".6" stop-color="#b8860b"/><stop offset="1" stop-color="#ffe9a0"/></linearGradient>
+    <linearGradient id="${u}rouge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff5a6e"/><stop offset="1" stop-color="#8e0a1e"/></linearGradient>
+    <radialGradient id="${u}lune" cx=".35" cy=".35" r=".8">
+      <stop offset="0" stop-color="#fffbe6"/><stop offset=".6" stop-color="#ffe38a"/><stop offset="1" stop-color="#c99a2e"/></radialGradient>
+    <linearGradient id="${u}marbre" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e8e6f2"/><stop offset="1" stop-color="#b9b6cc"/></linearGradient>
+  </defs>`;
+  const etoile = (x: number, y: number, r: number, fill: string) => {
+    const pts = Array.from({ length: 10 }, (_, i) => {
+      const ang = -Math.PI / 2 + (i * Math.PI) / 5;
+      const rr = i % 2 ? r * 0.45 : r;
+      return `${(x + rr * Math.cos(ang)).toFixed(1)},${(y + rr * Math.sin(ang)).toFixed(1)}`;
+    }).join(' ');
+    return `<polygon points="${pts}" fill="${fill}"/>`;
+  };
+  const trait = 'stroke="#2a1a00" stroke-opacity=".55" stroke-width="1.5"';
+  const dessins = [
+    // Ceinture de champion : sangle de cuir, plaques dorées, pierre rouge et étoile.
+    `<rect x="2" y="41" width="96" height="18" rx="5" fill="#1b1b22" ${trait}/>
+     <path d="M2 45h96M2 55h96" stroke="#ffd76a" stroke-opacity=".5" stroke-dasharray="2 3"/>
+     <rect x="8" y="35" width="18" height="30" rx="5" fill="${or}" ${trait}/>
+     <rect x="74" y="35" width="18" height="30" rx="5" fill="${or}" ${trait}/>
+     <ellipse cx="50" cy="50" rx="26" ry="23" fill="${or}" ${trait}/>
+     <ellipse cx="50" cy="50" rx="18" ry="16" fill="${rouge}" ${trait}/>
+     ${etoile(50, 50, 11, or)}
+     <ellipse cx="42" cy="38" rx="8" ry="3" fill="#fff" opacity=".55"/>`,
+    // Or : médaille d'or, ruban rouge, couronne de laurier et « 1 ».
+    `<path d="M28 2h16l10 34H38z" fill="${rouge}" ${trait}/><path d="M72 2H56L46 36h16z" fill="${rouge}" ${trait}/>
+     <path d="M34 2h4l9 32h-4z M62 2h4l-9 32h-4z" fill="#fff" opacity=".7"/>
+     <circle cx="50" cy="64" r="32" fill="${or}" ${trait}/>
+     <circle cx="50" cy="64" r="24" fill="none" stroke="#7a5a00" stroke-opacity=".6" stroke-width="2"/>
+     ${[0, 1, 2, 3, 4].map((k) => `<ellipse cx="${33 + k * 0.5}" cy="${78 - k * 7}" rx="5" ry="2.4" transform="rotate(${-60 + k * 12} ${33 + k * 0.5} ${78 - k * 7})" fill="#7a5a00" opacity=".55"/>
+       <ellipse cx="${67 - k * 0.5}" cy="${78 - k * 7}" rx="5" ry="2.4" transform="rotate(${60 - k * 12} ${67 - k * 0.5} ${78 - k * 7})" fill="#7a5a00" opacity=".55"/>`).join('')}
+     <text x="50" y="74" text-anchor="middle" font-size="26" font-weight="800" fill="#7a5a00" fill-opacity=".75" font-family="Georgia, serif">1</text>
+     <path d="M30 50a24 24 0 0 1 22-14" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>`,
+    // Nuit étoilée : lune dorée avec cratères, entourée d'étoiles.
+    `<path d="M60 12a38 38 0 1 0 30 60A32 32 0 1 1 60 12z" fill="${lune}" ${trait}/>
+     <circle cx="34" cy="48" r="4" fill="#c99a2e" opacity=".5"/><circle cx="44" cy="72" r="6" fill="#c99a2e" opacity=".45"/><circle cx="28" cy="66" r="2.5" fill="#c99a2e" opacity=".5"/>
+     ${etoile(80, 20, 8, or)}${etoile(92, 46, 5, '#fffbe6')}${etoile(70, 6, 4, '#fffbe6')}${etoile(86, 82, 4, or)}`,
+    // Couleurs de la nation : drapeau flottant sur un mât doré.
+    `<rect x="13" y="12" width="5" height="84" rx="2" fill="${or}" ${trait}/>
+     <circle cx="15.5" cy="9" r="5" fill="${or}" ${trait}/>
+     <path d="M18 16c14-8 26 8 40 0s24-6 36 0v44c-12-6-22-8-36 0s-26-8-40 0z" fill="var(--n1)" ${trait}/>
+     <path d="M18 31c14-8 26 8 40 0s24-6 36 0v14c-12-6-22-8-36 0s-26-8-40 0z" fill="var(--n2)"/>
+     <path d="M18 16c14-8 26 8 40 0s24-6 36 0v44c-12-6-22-8-36 0s-26-8-40 0z" fill="url(#${u}pli)" opacity=".5"/>
+     <defs><linearGradient id="${u}pli" x1="0" y1="0" x2="1" y2="0">
+       <stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset=".3" stop-color="#fff" stop-opacity=".5"/>
+       <stop offset=".5" stop-color="#000" stop-opacity=".3"/><stop offset=".75" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient></defs>`,
+    // Panthéon : temple de marbre, fronton doré, colonnes cannelées, marches.
+    `<path d="M50 6L4 30h92z" fill="${or}" ${trait}/>
+     <path d="M50 13L20 27h60z" fill="#fff" opacity=".35"/>
+     <rect x="8" y="31" width="84" height="7" fill="${marbre}" ${trait}/>
+     ${[14, 31, 59, 76].map((x) => `<rect x="${x}" y="40" width="10" height="40" fill="${marbre}" ${trait}/>
+       <path d="M${x + 3} 42v36M${x + 7} 42v36" stroke="#9a96b0" stroke-width="1"/>`).join('')}
+     <rect x="6" y="81" width="88" height="6" fill="${marbre}" ${trait}/>
+     <rect x="2" y="88" width="96" height="7" rx="1.5" fill="${or}" ${trait}/>`,
+  ];
+  return `<svg class="cl-filigrane" viewBox="0 0 100 100" aria-hidden="true">${defs}${dessins[style] ?? dessins[0]}</svg>`;
 }
 
 export const ORDRE_RARETE: Rarete[] = ['legendaire', 'epique', 'rare', 'commune'];
@@ -98,7 +133,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
           Dès le tour ${REGLES.speciale.premierTour}, recharge ${REGLES.speciale.toursRecharge} tours.</p>
         ${bouton}
       </div>
-      ${niveau === 'champion' ? filigrane(opts.style ?? 0) : ''}
+      ${niveau === 'champion' ? emblemeSVG(opts.style ?? 0, uid) : ''}
       ${niveau === 'champion' && opts.style === 2 ? '<div class="etoiles-filantes" aria-hidden="true"><i></i><i></i><i></i></div>' : ''}
       <div class="cl-reflet" aria-hidden="true"></div>
     </article>`;
