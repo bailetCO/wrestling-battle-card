@@ -194,29 +194,10 @@ export const LUTTEURS: DefLutteur[] = LIGNES.map(([id, nom, origine, nation, sty
   };
 });
 
-// Noms locaux des actions selon l'origine du lutteur (à valider par Corentin).
-// La mécanique reste identique : seul le nom affiché change.
-export const NOMS_LOCAUX: Record<IdAction, Record<string, string>> = {
-  attaque_base: { usa: 'Basic Shot', russie: 'Ataka', japon: 'Kōgeki', afrique: 'Song', europe: 'Attaque' },
-  simple_jambe: { usa: 'Single Leg', russie: 'Proxod v odnu nogu', japon: 'Kataashi takkuru', afrique: 'Benn tànk', europe: 'Simple jambe' },
-  double_jambe: { usa: 'Double Leg Takedown', russie: 'Proxod', japon: 'Ryōashi takkuru', afrique: 'Ñaari tànk', europe: 'Double jambe' },
-  ceinture_arriere: { usa: 'Rear Body Lock', russie: 'Obkhvat szadi', japon: 'Ushiro-dori', afrique: 'Geñ ginnaaw', europe: 'Ceinture arrière' },
-  bras_roule: { usa: 'Arm Throw', russie: 'Brosok cherez spinu', japon: 'Ude-maki-nage', afrique: 'Sànni loxo', europe: 'Bras roulé' },
-  grande_projection: { usa: 'Big Throw', russie: 'Brosok s amplitudoy', japon: 'Ō-nage', afrique: 'Sànni bu mag', europe: 'Grande projection' },
-  german_suplex: { usa: 'German Suplex', russie: 'Progib', japon: 'Jāman suprekkusu', afrique: 'Sànni ginnaaw', europe: 'Suplex allemand' },
-  defense: { usa: 'Defense', russie: 'Zashchita', japon: 'Bōgyo', afrique: 'Aar', europe: 'Défense' },
-  parade: { usa: 'Block', russie: 'Blok', japon: 'Uke', afrique: 'Tëj', europe: 'Parade' },
-  esquive: { usa: 'Dodge', russie: 'Ukhod', japon: 'Kawashi', afrique: 'Rëcc', europe: 'Esquive' },
-  sprawl: { usa: 'Sprawl', russie: 'Otbros nog', japon: 'Supurōru', afrique: 'Tëral', europe: 'Sprawl' },
-  contre: { usa: 'Counter', russie: 'Kontrpriyom', japon: 'Kaeshi-waza', afrique: 'Delloo', europe: 'Contre' },
-  relance: { usa: 'Re-Shot', russie: 'Povtornaya ataka', japon: 'Sai-kōgeki', afrique: 'Dellu song', europe: 'Relance' },
-  feinte: { usa: 'Fake', russie: 'Finta', japon: 'Feinto', afrique: 'Nax', europe: 'Feinte' },
-  matraquage: { usa: 'Snap Down', russie: 'Sbivanie', japon: 'Hatakikomi', afrique: 'Dóor-dóor', europe: 'Matraquage' },
-};
-
-// Nom d'une action selon la nation du lutteur ; à défaut, le nom français.
-export function nomLocal(nation: string, action: IdAction): string {
-  return NOMS_LOCAUX[action][nation] ?? ACTIONS[action].nom;
+// Nom affiché d'une action. Le jeu est entièrement en français : toutes les nations utilisent le
+// même nom (plus tard, un choix de langue traduira tout le jeu, noms des actions compris).
+export function nomLocal(_nation: string, action: IdAction): string {
+  return ACTIONS[action].nom;
 }
 
 // Qui bat qui (hors cas particulier « contre contre attaque » et « même famille »).

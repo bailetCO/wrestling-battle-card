@@ -350,6 +350,11 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Styles de carte : un Champion du Monde débloque un nouveau style de carte à chaque quart des étoiles possibles (8 actions × 3 = 24 étoiles, soit un style toutes les 6 étoiles), jusqu'à 4 quand toutes les étoiles sont obtenues : Or massif, Nuit étoilée, Couleurs de la nation, Panthéon. Le dernier style débloqué s'affiche ; le joueur peut revenir à n'importe quel style débloqué (ou au cadre classique) depuis la Collection.
 - Dans le code, le « grade » est le nombre de niveaux gagnés + 1 (grade 1 = rareté de départ). Une ancienne sauvegarde qui dépasse le maximum est ramenée au maximum.
 
+### Langue
+
+- Le jeu est entièrement en français, noms des actions compris (les mêmes pour toutes les nations ; les anciens noms locaux, comme « Double Leg Takedown », sont retirés).
+- Plus tard : un choix de langue sur l'écran d'accueil traduira tout le jeu (noms des actions et descriptions des lutteurs compris ; les noms des lutteurs restent tels quels). On commencera par le français et l'anglais, puis les langues des nations, une par une, avec relecture par quelqu'un qui parle la langue.
+
 ### Style graphique
 
 - Style manga semi-réaliste, entre réalisme et anime (esprit Baki, Hajime no Ippo).
@@ -540,8 +545,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 ## 8. Points ouverts
 
 - Vérifier que le nom Wrestling Battle Card est libre (marque, nom de domaine).
-- Valider les noms locaux des actions selon l'origine.
-- Police du jeu (Roboto Condensed) chargée depuis Google Fonts : à héberger avec le jeu avant le lancement public (vie privée, RGPD, fonctionnement hors ligne).
+- Choix de la langue (traduction du jeu) : mis de côté pour l'instant, le jeu reste en français.
 - Dépôt GitHub public : le code est visible de tous. Le passer en privé demanderait un abonnement GitHub payant pour garder GitHub Pages, ou un autre hébergement (Firebase Hosting à l'étape 7).
 
 ### Idée mise de côté

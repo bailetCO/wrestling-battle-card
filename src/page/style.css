@@ -1,3 +1,23 @@
+/* Police des titres intégrée au jeu (Roboto Condensed, licence libre OFL : voir polices/).
+   Seulement l'alphabet latin et ses accents (français, turc, etc.), en une police variable
+   (toutes les graisses). Le jeu ne télécharge plus rien chez Google. */
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(./polices/roboto-condensed-latin-ext-wght-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(./polices/roboto-condensed-latin-wght-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
 /* Wrestling Battle Card : un tapis de lutte olympique dessiné comme un manga.
    Fond bleu du tapis, coins rouge (toi) et bleu (l'ordinateur), orange de la zone
    de passivité pour l'action spéciale. Cartes à collectionner avec cadres de rareté,
@@ -1109,7 +1129,7 @@ b.moi { color: #ff8a95; }
 .jauge-histoire { display: inline-block; width: 100%; max-width: 220px; height: 8px; border-radius: 99px; background: var(--nuit); overflow: hidden; vertical-align: middle; }
 .jauge-histoire i { display: block; width: var(--p); height: 100%; background: var(--orange); }
 .bulle-histoire {
-  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60;
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 15;
   display: grid; gap: 2px; width: min(92vw, 420px); padding: 12px 16px; border-radius: 14px; text-decoration: none;
   background: var(--orange); color: var(--encre); box-shadow: 4px 4px 0 var(--encre); animation: bulle-entree .35s ease-out;
 }
@@ -1128,3 +1148,4 @@ b.moi { color: #ff8a95; }
 .etape-histoire.en-cours .etape-n { background: var(--orange); color: var(--encre); }
 .etape-histoire.verrouillee { filter: saturate(.3); opacity: .55; }
 @media (prefers-reduced-motion: reduce) { .bandeau-histoire.pret, .bulle-histoire { animation: none; } }
+.boutons-test { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

@@ -2,23 +2,17 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTIONS, COUT_FAMILLE, LUTTEURS, NOMS_LOCAUX, avecDeck, avecGrade, coutAction, nomLocal, trouverLutteur, verifierDeck } from '../src/moteur/config';
+import { ACTIONS, COUT_FAMILLE, LUTTEURS, avecDeck, avecGrade, coutAction, nomLocal, trouverLutteur, verifierDeck } from '../src/moteur/config';
 import { creerCombat, jouerTour } from '../src/moteur/combat';
 import { reagirInitiative } from '../src/moteur/ia';
 import type { IdAction } from '../src/moteur/types';
 import { c, toujours } from './outils';
 
-test('chaque action a un nom local pour les 5 premières nations (les autres : nom français en attendant)', () => {
+test('jeu entièrement en français : le nom d\'une action est le même pour toutes les nations', () => {
   for (const id of Object.keys(ACTIONS) as IdAction[]) {
-    for (const n of ['usa', 'russie', 'japon', 'afrique', 'europe']) assert.ok(NOMS_LOCAUX[id][n], `${id} / ${n}`);
-    for (const l of LUTTEURS) assert.ok(nomLocal(l.nation, id));
+    for (const l of LUTTEURS) assert.equal(nomLocal(l.nation, id), ACTIONS[id].nom);
   }
-});
-
-test('le nom local dépend de l\'origine du lutteur', () => {
-  assert.equal(nomLocal('usa', 'double_jambe'), 'Double Leg Takedown');
-  assert.equal(nomLocal('russie', 'double_jambe'), 'Proxod');
-  assert.equal(nomLocal('inconnu', 'double_jambe'), 'Double jambe');
+  assert.equal(nomLocal('usa', 'double_jambe'), 'Double jambe');
 });
 
 test('initiative de l\'ordinateur : il garde son action si le tirage dépasse 1 chance sur 2', () => {

@@ -572,6 +572,11 @@ function ecranCollection() {
       ${groupes}
       <section class="groupe reglages">
         <h2>Réglages de test</h2>
+        <p class="note">Tu as ${collection.medailles} médaille${collection.medailles > 1 ? 's' : ''} et ${collection.dollars} $.</p>
+        <div class="boutons-test">
+          <button class="secondaire" data-medailles-test>+10 médailles (test)</button>
+          <button class="secondaire" data-dollars-test>+50 $ (test)</button>
+        </div>
         <button class="secondaire" data-booster-test>Ouvrir un booster (test)</button>
         <button class="secondaire" data-doubles-test>Doubles pour tout monter au maximum (test)</button>
         <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>
@@ -588,6 +593,20 @@ function ecranCollection() {
       ecranCollection();
     }),
   );
+  // Test : des médailles comme si on les avait gagnées (10 $ par palier de 5, niveau de compte, Mon Club).
+  app.querySelector('[data-medailles-test]')!.addEventListener('click', () => {
+    const g = gagnerMedailles(collection, 10);
+    sauver(collection);
+    histoire({ type: 'etat' });
+    ecranCollection();
+    ouvrirFenetre(`<h2>+10 médailles</h2><p>Tu as maintenant ${collection.medailles} médailles${g.dollars ? `, et ${g.dollars} $ de paliers en plus` : ''} (niveau de compte ${niveauCompte(collection)}).</p><button class="principal" data-fermer>OK</button>`, true);
+  });
+  app.querySelector('[data-dollars-test]')!.addEventListener('click', () => {
+    collection.dollars += 50;
+    sauver(collection);
+    ecranCollection();
+    ouvrirFenetre(`<h2>+50 $</h2><p>Tu as maintenant ${collection.dollars} $.</p><button class="principal" data-fermer>OK</button>`, true);
+  });
   app.querySelector('[data-test]')!.addEventListener('click', () => {
     collection.toutDebloque = !collection.toutDebloque;
     sauver(collection);
