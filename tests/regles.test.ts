@@ -1,6 +1,6 @@
 // Points, endurance, précision, avantages, action spéciale, périodes.
 
-import { describe, it, test } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { c, combatTest, tour, toujours } from './outils';
 import {
@@ -354,21 +354,3 @@ describe('Hasard rejouable', () => {
   });
 });
 
-test('supériorité technique : l\'écart ne dépasse jamais 10 points', async () => {
-  const { LUTTEURS } = await import('../src/moteur/config');
-  const { creerCombat, jouerTour } = await import('../src/moteur/combat');
-  const { choixAleatoire } = await import('../src/moteur/ia');
-  const { creerHasard } = await import('../src/moteur/hasard');
-  for (let g = 1; g <= 600; g++) {
-    const h = creerHasard(g);
-    let e = creerCombat(LUTTEURS[g % 120], LUTTEURS[(g * 7 + 3) % 120], { rapide: g % 3 === 0 });
-    while (!e.termine) {
-      e = jouerTour(e, choixAleatoire(e, 0, h), choixAleatoire(e, 1, h), h);
-      assert.ok(Math.abs(e.joueurs[0].score - e.joueurs[1].score) <= 10);
-      for (const l of e.journal) {
-        const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)/);
-        if (m) assert.ok(Math.abs(+m[1] - +m[2]) <= 10, l);
-      }
-    }
-  }
-});

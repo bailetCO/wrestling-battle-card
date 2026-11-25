@@ -130,14 +130,9 @@ function nomChoix(l: EtatLutteur, c: Choix): string {
   return `${l.def.nom} (${ACTIONS[c.action].nom}${c.speciale ? ' spéciale' : ''})`;
 }
 
-// L'écart ne dépasse jamais 10 points (supériorité technique) : dès qu'il est atteint, plus aucun
-// point ne compte jusqu'à la fin du tour, et la période (ou le combat rapide) est gagnée.
 function marquer(e: EtatCombat, j: Joueur, points: number, raison: string) {
-  const l = e.joueurs[j];
-  const avance = l.score - e.joueurs[j === 0 ? 1 : 0].score;
-  if (Math.abs(avance) >= REGLES.ecartSuperiorite) return;
-  points = Math.min(points, REGLES.ecartSuperiorite - avance);
   if (points <= 0) return;
+  const l = e.joueurs[j];
   l.score += points;
   l.prises.push(points);
   e.dernierMarqueur = j;

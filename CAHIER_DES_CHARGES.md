@@ -333,7 +333,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Les compétitions se paient comme un tournoi individuel (5 $) et rapportent les gains habituels (+1 médaille par combat gagné, médailles et $ selon la place, booster rare au vainqueur), en plus de la récompense du palier. Une compétition ratée peut être retentée (nouvelle inscription). Les combats interclub rapportent comme un combat rapide (+1 médaille par victoire).
 - Les tableaux vont jusqu'à 64 places (1/32 de finale) ; les places vides sont des exemptions tirées au sort.
-- Récompenses des modes histoire : le booster s'ouvre carte par carte, sans récapitulatif à la fin.
+- Récompenses des modes histoire : le booster s'ouvre carte par carte avec son récapitulatif ; une fois revenu sur l'écran du mode histoire ou de la saison, les cartes de la dernière récompense ne sont plus affichées.
 
 ### Scènes de dialogue (modes histoire)
 
@@ -456,7 +456,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 
 - Marquent des points : une attaque, un contre ou un sprawl réussis (sprawl : 2 points techniques pour le défenseur).
 - Attaque réussie : 2, 4 ou 5 points selon l'action (voir Chiffrage) ; +2 points avec au moins le double d'endurance.
-- Supériorité technique : l'écart ne dépasse jamais 10 points. Dès qu'il atteint 10, les points marqués sont plafonnés (par exemple, à 8-0, une prise de 5 points ne compte que pour 2), plus rien ne compte jusqu'à la fin du tour, et la période (ou le combat rapide) est gagnée.
+- Supériorité technique : la période (ou le combat rapide) est gagnée dès que l'écart atteint 10 points, à la fin du tour. Le score n'est pas plafonné : une grosse prise peut finir la période à plus de 10 d'écart (par exemple 13-0).
 - Bonus de feinte : une feinte réussie donne +2 points à la prochaine attaque ou au prochain contre réussi, pendant 2 tours. Le bonus sert une seule fois ; une attaque ou un contre raté ne le consomme pas ; un contre réussi en profite même sans points de base (contre une défense) ; une nouvelle feinte réussie le relance pour 2 tours. Un contre renvoie la valeur de l'attaque adverse, bonus de l'attaquant compris (l'attaquant garde alors son bonus).
 - Contre réussi : il renvoie les points de l'attaque adverse.
 

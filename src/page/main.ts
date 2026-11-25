@@ -254,11 +254,11 @@ function preparerPaquet(lien: string) {
   const i = recompensesHistoire.findIndex((r) => r.lien === lien);
   if (i < 0) return;
   const r = recompensesHistoire.splice(i, 1)[0];
-  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false, sansRecap: true };
+  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false };
   paquetHistoireLien = lien;
 }
 
-// Récompense à ouvrir ; une fois ouverte, pas de récapitulatif : on passe à la suivante (ou plus rien).
+// Récompense à ouvrir ; une fois ouverte (récapitulatif compris), l'écran ne la montre plus : on passe à la suivante.
 function blocPaquet(lien: string): string {
   if (!paquetHistoire || paquetHistoireLien !== lien || paquetHistoire.ouvert) return '';
   return sectionPaquet(paquetHistoire);
