@@ -828,3 +828,14 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 /* Effet de l'action, en petit sous son nom. */
 .cl-effet { display: block; margin-top: 1px; font: 600 10.5px var(--police-texte); color: #ffd98a; letter-spacing: 0; }
 .a-effet { font-weight: 700; color: #ffd98a; }
+
+/* Emblème du style en filigrane, au milieu de la carte Champion du Monde. */
+.cl-filigrane {
+  position: absolute; left: 50%; top: 52%; width: 62%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  z-index: 2; pointer-events: none; color: #ffd76a; opacity: .2;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 106, .6));
+}
+.carte-l[data-style="2"] .cl-filigrane { color: #fff3c4; }
+.carte-l[data-style="3"] .cl-filigrane { opacity: .26; }
+.carte-l[data-style="4"] .cl-filigrane { color: #fff; opacity: .24; }
+.carte-l[data-style="1"] .cl-filigrane { color: #fff8dc; opacity: .26; }
