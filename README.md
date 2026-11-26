@@ -42,7 +42,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `tests/` : un test par règle.
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
 - `scripts/captures.mjs` : photographie chaque écran en taille téléphone et signale les défauts d'affichage.
-- `.claude/skills/` : les recettes de travail de Claude (`/fin-etape`, `/captures`…), à taper dans Claude Code.
+- `.claude/skills/` : les recettes de travail de Claude (`/fin-etape`, `/captures`, `/equilibrage`, `/nouveau-lutteur`…), à taper dans Claude Code.
 
 ## Commandes
 
@@ -51,6 +51,9 @@ npm install          # une seule fois
 npm test             # lance tous les tests
 npm run simuler      # simule les combats (ordinateur au hasard puis fort) et vérifie les raretés
 npm run simuler -- 400 150   # plus de combats, résultat plus précis (environ 1 minute)
+npm run simuler -- --sauver .equilibrage/reference.json   # garde les résultats pour comparer
+npm run simuler -- --avant .equilibrage/reference.json    # avant/après pour chaque lutteur
+npm run simuler -- --lutteurs usa-4,japon-5               # mesure rapide de quelques lutteurs
 npm run dev          # lance le jeu sur l'ordinateur (adresse affichée, à ouvrir dans le navigateur)
 npm run captures     # (après build) photos de chaque écran dans .captures/, non enregistrées
 npm run build        # construit le jeu en un seul fichier : dist/index.html
