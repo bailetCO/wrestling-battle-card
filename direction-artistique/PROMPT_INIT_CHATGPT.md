@@ -23,7 +23,12 @@ Nouvelle règle : toutes les cartes d'une même rareté partagent le même desig
 - Manga semi-réaliste, entre réalisme et anime, dans l'esprit de Baki et de Hajime no Ippo : anatomie crédible de lutteur, encrage noir marqué, couleurs franches, lumière dramatique.
 - Palette du guide : bleu nuit #08193a, arène #090d1f à #1c2550, tapis olympique bleu #1d5fc4 avec sa zone orange #f07c2a et sa ligne blanche, projecteurs blancs.
 - Maillot de lutte aux couleurs de la délégation (colonnes couleur_maillot et couleur_liseret du registre). L'adversaire porte le maillot de l'autre coin : bleu #1a49a8, ou rouge #c8283a si le lutteur est déjà en bleu.
-- La carrure suit la catégorie de poids : 57 kg sec et vif, 125 kg massif. Le style du registre guide l'attitude : un « explosif » est en mouvement, un « défenseur » est solide et ancré.
+- La carrure suit la catégorie de poids, et chaque catégorie se reconnaît au premier coup d'œil :
+  - 57 à 65 kg : léger, sec et nerveux, épaules étroites, muscles fins et très dessinés ;
+  - 70 à 79 kg : athlétique et compact, musclé mais fin ;
+  - 86 à 97 kg : puissant, larges épaules, gros cou, musculature dense (la référence est Marcus Stonewell, 92 kg) ;
+  - 125 kg : géant massif, le plus imposant du jeu, une tête de plus et nettement plus large qu'un 92 kg : cou de taureau, torse en tonneau, ventre de force, cuisses énormes, mains immenses ; la masse compte plus que la définition.
+  Dans les scènes à deux, l'adversaire est de la même catégorie de poids. Le style du registre guide l'attitude : un « explosif » est en mouvement, un « défenseur » est solide et ancré.
 
 ## Les 5 scènes (une par rareté, du même lutteur)
 
