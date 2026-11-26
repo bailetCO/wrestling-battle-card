@@ -21,8 +21,8 @@ export interface DefEtape {
 export const ETAPES: DefEtape[] = [
   {
     titre: 'Premiers combats', objectif: 'Gagner 3 combats contre 3 lutteurs de nations différentes',
-    guide: 'Choisis un lutteur et bats l\'ordinateur. Change d\'adversaire à chaque fois : il faut 3 nations différentes. Tous les combats comptent : arène, combat rapide, tournoi, en ligne.',
-    lien: '#arene', bouton: 'Aller dans l\'arène',
+    guide: 'Choisis un lutteur et bats l\'ordinateur. Change d\'adversaire à chaque fois : il faut 3 nations différentes. Tous les combats comptent : Carrière, entraînement, tournoi, en ligne.',
+    lien: '#arene', bouton: 'Aller en Carrière',
   },
   {
     titre: 'Premier tournoi', objectif: 'Gagner un tournoi individuel',
@@ -40,9 +40,9 @@ export const ETAPES: DefEtape[] = [
     lien: '#tournois', bouton: 'Voir les tournois',
   },
   {
-    titre: 'Victoire éclair', objectif: 'Gagner un combat rapide par tombé ou par 10 points d\'écart',
-    guide: 'Le combat rapide se joue en une seule période. Une victoire aux points ne suffit pas : fais tomber ton adversaire, ou mène de 10 points.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    titre: 'Victoire éclair', objectif: 'Gagner un combat d\'entraînement par tombé ou par 10 points d\'écart',
+    guide: 'L\'entraînement se joue en une seule période. Une victoire aux points ne suffit pas : fais tomber ton adversaire, ou mène de 10 points.',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'Fierté nationale', objectif: 'Recruter 3 lutteurs d\'une même nation dans Mon Club',
@@ -50,9 +50,9 @@ export const ETAPES: DefEtape[] = [
     lien: '#club', bouton: 'Voir Mon Club',
   },
   {
-    titre: 'Conquête', objectif: 'Battre une nation complète dans l\'arène',
-    guide: 'Dans l\'arène, bats les 5 lutteurs d\'une nation, le dernier étant son champion. Si tu as déjà battu une nation, l\'étape est validée tout de suite.',
-    lien: '#arene', bouton: 'Aller dans l\'arène',
+    titre: 'Conquête', objectif: 'Battre une nation complète en Carrière',
+    guide: 'En Carrière, bats les 5 lutteurs d\'une nation, le dernier étant son champion. Si tu as déjà battu une nation, l\'étape est validée tout de suite.',
+    lien: '#arene', bouton: 'Aller en Carrière',
   },
   {
     titre: 'Montée en puissance', objectif: 'Fusionner une carte jusqu\'au niveau épique ou légendaire',
@@ -61,8 +61,8 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Le grand défi', objectif: 'Battre l\'ordinateur fort',
-    guide: 'Règle l\'ordinateur sur « fort » et gagne un combat, en jouant toi-même (le combat auto ne compte pas pour cette étape). Il lit tes habitudes : varie tes actions ! Le champion de chaque nation dans l\'arène est aussi au niveau fort.',
-    lien: '#arene', bouton: 'Aller dans l\'arène',
+    guide: 'Règle l\'ordinateur sur « fort » et gagne un combat, en jouant toi-même (le combat auto ne compte pas pour cette étape). Il lit tes habitudes : varie tes actions ! Le champion de chaque nation en Carrière est aussi au niveau fort.',
+    lien: '#arene', bouton: 'Aller en Carrière',
   },
   {
     titre: 'Entre amis', objectif: 'Gagner un combat en ligne contre un ami',
@@ -70,9 +70,9 @@ export const ETAPES: DefEtape[] = [
     lien: '#social', bouton: 'Ouvrir Social',
   },
   {
-    titre: 'Tour du monde', objectif: 'Terminer l\'arène en battant toutes les nations',
-    guide: 'Bats les 12 nations de l\'arène, l\'une après l\'autre. Si tu l\'as déjà terminée, l\'étape est validée tout de suite.',
-    lien: '#arene', bouton: 'Aller dans l\'arène',
+    titre: 'Tour du monde', objectif: 'Terminer la Carrière en battant toutes les nations',
+    guide: 'Bats les 12 nations de la Carrière, l\'une après l\'autre. Si tu l\'as déjà terminée, l\'étape est validée tout de suite.',
+    lien: '#arene', bouton: 'Aller en Carrière',
   },
   {
     titre: 'La consécration', objectif: 'Gagner un tournoi individuel sans passer par le tableau des perdants',
@@ -82,32 +82,32 @@ export const ETAPES: DefEtape[] = [
   {
     titre: 'Le tacticien', objectif: 'Réussir 2 combos dans un même combat',
     guide: 'Un combo, ce sont deux actions qui s\'enchaînent : Matraquage puis Ceinture arrière, Sprawl puis une attaque, Simple jambe puis Double jambe, Esquive puis un contre. Le bouton de l\'action qui déclenche un combo s\'allume en vert. Le combat auto ne compte pas.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'L\'enchaîneur', objectif: 'Gagner un combat en format Enchaînement',
-    guide: 'Dans Combat rapide (ou entre amis), choisis le format « Enchaînement » : tu composes des séquences de 3 actions. Attention au contre en 1re action et au Matraquage en 2e : ils brisent la chaîne.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    guide: 'Dans Entraînement (ou entre amis), choisis le format « Enchaînement » : tu composes des séquences de 3 actions. Attention au contre en 1re action et au Matraquage en 2e : ils brisent la chaîne.',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'Jusqu\'au bout', objectif: 'Gagner un combat en durée infinie',
-    guide: 'Dans Combat rapide (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    guide: 'Dans Entraînement (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin.',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'Le rival', objectif: 'Battre Cocoach une première fois',
-    guide: 'En combat rapide, la durée « Infinie » se joue contre Cocoach, ton rival. Il commence en carte rare : fais-le tomber. À chaque défaite, il monte de niveau.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    guide: 'À l\'entraînement, la durée « Infinie » se joue contre Cocoach, ton rival. Il commence en carte rare : fais-le tomber. À chaque défaite, il monte de niveau.',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'Rival de taille', objectif: 'Battre Cocoach au niveau Légendaire',
     guide: 'Cocoach monte d\'un niveau à chaque fois que tu le bats : Épique, puis Légendaire. Au niveau Légendaire, l\'ordinateur qui le joue passe en fort. Bats-le à ce niveau.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    lien: '#rapide', bouton: 'Entraînement',
   },
   {
     titre: 'Le sommet', objectif: 'Battre Cocoach Champion du Monde',
     guide: 'Dernier défi : Cocoach au niveau Champion du Monde, avec toutes ses actions. Récompense : des boosters et une carte légendaire que tu n\'as pas encore.',
-    lien: '#rapide', bouton: 'Combat rapide',
+    lien: '#rapide', bouton: 'Entraînement',
   },
 ];
 
@@ -120,7 +120,7 @@ export type EvenementHistoire =
   | { type: 'tournoiIndividuel'; place: number; invaincu: boolean }
   | { type: 'tournoiEquipe'; gagne: boolean }
   | { type: 'recrutement' }
-  | { type: 'nationArene' } // une nation battue dans l'arène
+  | { type: 'nationArene' } // une nation battue en Carrière
   | { type: 'fusion'; id: string }
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
   | { type: 'combat'; gagne: boolean; combos: number; enchainement: boolean; infini: boolean; auto: boolean } // tout combat terminé

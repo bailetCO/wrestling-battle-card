@@ -37,6 +37,9 @@ export interface Collection {
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
   combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
+  tutosVus: string[]; // tutoriels courts déjà vus (ouverts tout seuls à la première visite d'un mode)
+  menusVus: string[]; // tuiles du menu déjà visitées (les autres portent « Nouveau »)
+  battusMain: string[]; // lutteurs adverses battus au moins une fois en jouant soi-même (le combat auto n'est permis que contre eux)
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
   quetes: { jour: string; liste: { id: string; param: string; progres: number; faite: boolean }[]; change: boolean; bonus: boolean; uniques: string[] }; // quêtes journalières
 }
@@ -88,7 +91,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, fragments: {}, departComplet: true, arene: 0,
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], menusVus: ['combat', 'collection'], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
@@ -219,6 +222,21 @@ export function medaillesNiveauSuivant(c: Collection): number | null {
   const n = niveauClub(c);
   if (n >= K.niveauMax) return null;
   return K.medaillesOuverture + n * K.medaillesParNiveau;
+}
+
+// ---------- Combat automatique ----------
+
+// Le combat auto n'est permis que contre un lutteur déjà battu en jouant soi-même.
+export const autoPermis = (c: Collection, idAdversaire: string) => c.battusMain.includes(idAdversaire);
+
+export function noterBattuMain(c: Collection, idAdversaire: string) {
+  if (!c.battusMain.includes(idAdversaire)) c.battusMain.push(idAdversaire);
+}
+
+// Un adversaire au hasard parmi ceux déjà battus à la main (sauf `sauf`), ou null s'il n'y en a pas.
+export function adversaireAuto(c: Collection, hasard: Hasard, sauf: (id: string) => boolean = () => false): string | null {
+  const ok = c.battusMain.filter((id) => !sauf(id));
+  return ok.length ? ok[Math.floor(hasard() * ok.length)] : null;
 }
 
 // Boosters rares des niveaux de Mon Club atteints (à partir du 6e) et pas encore donnés.
@@ -428,6 +446,11 @@ export function depuisSauvegarde(brut: unknown): Collection {
       bonus: typeof ri.bonus === 'number' && ri.bonus >= 0 && ri.bonus < 5 ? ri.bonus : 0,
     };
   }
+  // Ancienne sauvegarde (avant l'ouverture progressive du menu) : rien de « Nouveau ».
+  c.menusVus = Array.isArray(b.menusVus) ? b.menusVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combat', 'collection', 'tournois', 'club', 'saison', 'social', 'fusion'];
+  // Ancienne sauvegarde : le joueur connaît déjà les modes, les tutoriels courts ne s'ouvrent pas tout seuls.
+  c.tutosVus = Array.isArray(b.tutosVus) ? b.tutosVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combos', 'enchainement', 'infini', 'arene', 'individuel', 'equipe', 'amis'];
+  if (Array.isArray(b.battusMain)) c.battusMain = [...new Set(b.battusMain.filter((x): x is string => typeof x === 'string'))].slice(0, 500);
   if (Array.isArray(b.combosVus)) c.combosVus = [...new Set(b.combosVus.filter((x): x is string => typeof x === 'string'))].slice(0, 10);
   // 26/11/2026 : la scène d'ouverture de la saison s'appelait h12 ; h12 est maintenant l'étape 13.
   if (!c.scenesVues.includes('histoire15')) {

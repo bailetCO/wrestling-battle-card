@@ -40,7 +40,7 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
         <li><b>Enchaînement aux jambes</b> : ${nomA('simple_jambe')} puis ${nomA('double_jambe')}, +${R.combos.enchainementJambes.points} point et ${R.combos.enchainementJambes.reductionCout} d'endurance en moins.</li>
         <li><b>Esquive et contre</b> : ${nomA('esquive')} puis un contre qui prend l'attaque, +${R.combos.esquiveContre.points} points.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Le Matraquage use l'adversaire et prépare la Ceinture arrière. Le Contre-temps est précieux quand ton endurance baisse : ton attaque ne peut plus rater. Et 3 actions réussies d'affilée, dont 2 attaques, donnent une tentative de <b>tombé</b>.</p>
-        <p>Partie d'essai : combat rapide avec ${nomA('matraquage')}, ${nomA('ceinture_arriere')}, ${nomA('sprawl')} et ${nomA('simple_jambe')}. Pas de récompense.</p>` },
+        <p>Partie d'essai : entraînement avec ${nomA('matraquage')}, ${nomA('ceinture_arriere')}, ${nomA('sprawl')} et ${nomA('simple_jambe')}. Pas de récompense.</p>` },
     ],
     essai: { type: 'rapide', enchainement: false, infini: false, deck: ['matraquage', 'ceinture_arriere', 'sprawl', 'simple_jambe'] },
     conseils: [
@@ -60,7 +60,7 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
         <li>Un <b>Matraquage réussi en 2e action</b> annule la dernière action adverse (2 fois sur 3).</li>
         <li>Avec l'<b>initiative</b>, tu vois la dernière action adverse et tu peux changer la tienne.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Contre un adversaire qui attaque d'entrée, ouvre par un contre. Glisse un combo dans ta séquence (Matraquage puis Ceinture arrière). Garde de l'endurance : une séquence doit pouvoir être payée en entier.</p>
-        <p>Partie d'essai : combat rapide en format Enchaînement. Pas de récompense.</p>` },
+        <p>Partie d'essai : entraînement en format Enchaînement. Pas de récompense.</p>` },
     ],
     essai: { type: 'rapide', enchainement: true, infini: false, deck: ['matraquage', 'ceinture_arriere', 'contre', 'parade'] },
     conseils: [
@@ -73,11 +73,11 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
   infini: {
     id: 'infini', titre: 'La durée infinie',
     ecrans: [
-      { titre: 'Jusqu\'au tombé', html: `<p>Pas de périodes, pas d'arrêt à ${R.ecartSuperiorite} points : le combat ne s'arrête que sur un <b>tombé</b> ou un abandon. En combat rapide, ton adversaire est <b>Cocoach</b>, ton rival : il monte de niveau chaque fois que tu le bats.</p>` },
+      { titre: 'Jusqu\'au tombé', html: `<p>Pas de périodes, pas d'arrêt à ${R.ecartSuperiorite} points : le combat ne s'arrête que sur un <b>tombé</b> ou un abandon. À l'entraînement, ton adversaire est <b>Cocoach</b>, ton rival : il monte de niveau chaque fois que tu le bats.</p>` },
       { titre: 'La fatigue', html: `<ul class="liste-regles">
         <li>Dès le tour ${R.infini.debutFatigue}, tu récupères tous les 3 tours, puis tous les 4 tours au tour ${R.infini.debutFatigue + R.infini.palier}…</li>
         <li>Dès le tour ${R.infini.debutSurcout}, chaque action coûte +1, puis +1 de plus tous les ${R.infini.palier} tours.</li>
-        <li>Ne plus pouvoir payer aucune action pendant ${R.toursSansEnduranceAvantTombe} tours (à partir du tour d'épuisement choisi), c'est le tombé.</li></ul>` },
+        <li>Ne plus pouvoir payer aucune action pendant ${R.toursSansEnduranceAvantTombe} tours (à partir du tour ${R.infini.debutEpuisement}), c'est le tombé.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Ne dépense pas tout au début : les défenses réussies rendent de l'endurance. Garde ton <b>second souffle</b> (+${R.souffle.gain} d'endurance, une fois, sous ${R.souffle.seuil}) pour la fin. Les combos et l'action spéciale d'attaque peuvent faire tomber l'adversaire.</p>
         <p>Partie d'essai contre Cocoach : elle ne le fait pas progresser et ne rapporte rien.</p>` },
     ],
@@ -91,15 +91,15 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     verrou: () => null,
   },
   arene: {
-    id: 'arene', titre: 'L\'arène',
+    id: 'arene', titre: 'La Carrière',
     ecrans: [
-      { titre: 'Une nation après l\'autre', html: `<p>Dans l'arène, tu affrontes les nations une à une : ${R.arene.niveaux.length} lutteurs chacune, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur.</p>` },
+      { titre: 'Une nation après l\'autre', html: `<p>En Carrière, tu affrontes les nations une à une : ${R.arene.niveaux.length} lutteurs chacune, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur.</p>` },
       { titre: 'Les récompenses', html: `<p>Chaque victoire rapporte un booster et une médaille. Une nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion.</p>
         <p>Partie d'essai : un combat contre un premier adversaire, ordinateur facile. Pas de récompense ni de progression.</p>` },
     ],
     essai: { type: 'arene', deck: ['attaque_base', 'defense', 'feinte', 'contre'] },
     conseils: [
-      'L\'arène se joue en 3 périodes de 10 tours : gagne-en 2.',
+      'La Carrière se joue en 3 périodes de 10 tours : gagne-en 2.',
       'Attaque bat feinte, défense bat attaque, contre bat défense et attaque, feinte bat contre et défense.',
       'Sous 50 d\'endurance, tes actions peuvent rater : alterne attaques et défenses.',
     ],

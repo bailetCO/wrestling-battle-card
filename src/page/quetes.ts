@@ -26,7 +26,7 @@ export type EvenementQuete =
       niveauCarte: string; // niveau actuel de ma carte (commune…)
       feintes: number; // feintes réussies
       contres: number; // contres qui ont marqué
-      champion: boolean; // champion d'une nation battu dans l'arène
+      champion: boolean; // champion d'une nation battu en Carrière
       combos?: number; // combos réussis (combat joué à la main)
       ruptures?: number; // chaînes adverses brisées (mode Enchaînement)
       souffle?: boolean; // second souffle pris pendant le combat
@@ -36,7 +36,7 @@ export type EvenementQuete =
       tours?: number; // nombre de tours joués
       epuisement?: number; // durée infinie : tour où commence l'épuisement
     }
-  | { type: 'arene' } // un adversaire de l'arène battu (progression)
+  | { type: 'arene' } // un adversaire de la Carrière battu (progression)
   | { type: 'tournoi'; place: number } // tournoi individuel terminé
   | { type: 'booster'; n: number } // boosters ouverts
   | { type: 'deck' }
@@ -69,9 +69,9 @@ const memeNation = (c: Collection, n: number) => {
 
 export const QUETES: DefQuete[] = [
   // ----- Faciles -----
-  { id: 'arene-lancer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Lancer un combat dans l\'arène', avance: (ev) => (combat(ev)?.mode === 'arene' ? 1 : 0) },
+  { id: 'arene-lancer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Lancer un combat en Carrière', avance: (ev) => (combat(ev)?.mode === 'arene' ? 1 : 0) },
   { id: 'gagner-1', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Gagner 1 combat contre l\'ordinateur', avance: (ev) => (contreOrdi(ev)?.gagne ? 1 : 0) },
-  { id: 'rapide-jouer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Jouer 1 combat rapide', avance: (ev) => (combat(ev)?.mode === 'rapide' ? 1 : 0) },
+  { id: 'rapide-jouer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Jouer 1 combat d\'entraînement', avance: (ev) => (combat(ev)?.mode === 'rapide' ? 1 : 0) },
   { id: 'booster', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Ouvrir 1 booster', avance: (ev) => (ev.type === 'booster' ? ev.n : 0) },
   { id: 'feintes', difficulte: 'facile', niveauMin: 1, but: 3, texte: () => 'Réussir 3 feintes en combat', avance: (ev) => combat(ev)?.feintes ?? 0 },
   { id: 'contres', difficulte: 'facile', niveauMin: 1, but: 2, texte: () => 'Réussir 2 contres en combat', avance: (ev) => combat(ev)?.contres ?? 0 },
@@ -82,26 +82,26 @@ export const QUETES: DefQuete[] = [
   { id: 'nation', difficulte: 'moyenne', niveauMin: 1, but: 1, texte: (n) => `Gagner un combat avec un lutteur de la nation : ${nomNation(n)}`, avance: (ev, n) => (combat(ev)?.gagne && combat(ev)!.nation === n ? 1 : 0) },
   { id: 'points-20', difficulte: 'moyenne', niveauMin: 1, but: 20, texte: () => 'Marquer 20 points au total en combat', avance: (ev) => combat(ev)?.points ?? 0 },
   { id: 'tombe', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat par tombé', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.tombe ? 1 : 0) },
-  { id: 'rapide-10', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat rapide par 10 points d\'écart', avance: (ev) => { const c = combat(ev); return c?.mode === 'rapide' && c.gagne && c.ecart >= REGLES.ecartSuperiorite ? 1 : 0; } },
+  { id: 'rapide-10', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat d\'entraînement par 10 points d\'écart', avance: (ev) => { const c = combat(ev); return c?.mode === 'rapide' && c.gagne && c.ecart >= REGLES.ecartSuperiorite ? 1 : 0; } },
   { id: 'combos-3', difficulte: 'moyenne', niveauMin: 1, but: 3, texte: () => 'Réussir 3 combos en combat', avance: (ev) => combat(ev)?.combos ?? 0 },
   { id: 'chaine-2', difficulte: 'moyenne', niveauMin: 2, but: 2, texte: () => 'Briser 2 fois la chaîne adverse (format Enchaînement)', avance: (ev) => combat(ev)?.ruptures ?? 0 },
   { id: 'souffle-gagne', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat après avoir pris ton second souffle', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.souffle && !combat(ev)!.auto ? 1 : 0) },
-  { id: 'rival-1', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Battre Cocoach, ton rival (combat rapide, durée infinie)', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.rival && !combat(ev)!.auto ? 1 : 0) },
+  { id: 'rival-1', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Battre Cocoach, ton rival (entraînement, durée infinie)', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.rival && !combat(ev)!.auto ? 1 : 0) },
   { id: 'tenir-30', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Tenir 30 tours dans un combat en durée infinie', avance: (ev) => (combat(ev)?.infini && !combat(ev)!.auto && (combat(ev)!.tours ?? 0) >= 30 ? 1 : 0) },
   { id: 'auto-2', difficulte: 'moyenne', niveauMin: 3, but: 2, texte: () => 'Gagner 2 combats en mode auto', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.auto ? 1 : 0) },
   { id: 'fusion', difficulte: 'moyenne', niveauMin: 3, but: 1, texte: () => 'Faire une fusion', avance: (ev) => (ev.type === 'fusion' ? 1 : 0) },
-  { id: 'arene-2', difficulte: 'moyenne', niveauMin: 4, but: 2, texte: () => 'Avancer de 2 adversaires dans l\'arène', avance: (ev) => (ev.type === 'arene' ? 1 : 0) },
+  { id: 'arene-2', difficulte: 'moyenne', niveauMin: 4, but: 2, texte: () => 'Avancer de 2 adversaires en Carrière', avance: (ev) => (ev.type === 'arene' ? 1 : 0) },
   // ----- Difficiles -----
   { id: 'fort', difficulte: 'difficile', niveauMin: 2, but: 1, texte: () => 'Gagner un combat contre l\'ordinateur fort, en jouant toi-même', avance: (ev) => { const c = contreOrdi(ev); return c?.gagne && c.niveau === 'fort' && !c.auto ? 1 : 0; } },
   { id: 'commune', difficulte: 'difficile', niveauMin: 3, but: 1, texte: () => 'Gagner avec une carte commune contre l\'ordinateur normal ou fort', avance: (ev) => { const c = contreOrdi(ev); return c?.gagne && c.niveauCarte === 'commune' && c.niveau !== 'facile' ? 1 : 0; } },
   { id: 'podium', difficulte: 'difficile', niveauMin: 4, but: 1, texte: () => 'Finir sur le podium d\'un tournoi individuel', avance: (ev) => (ev.type === 'tournoi' && ev.place <= 3 ? 1 : 0) },
   { id: 'tournoi', difficulte: 'difficile', niveauMin: 5, but: 1, texte: () => 'Gagner un tournoi individuel', avance: (ev) => (ev.type === 'tournoi' && ev.place === 1 ? 1 : 0) },
   { id: 'equipe', difficulte: 'difficile', niveauMin: 5, but: 1, texte: () => 'Gagner un duel d\'un tournoi par équipe', avance: (ev) => (combat(ev)?.mode === 'equipe' && combat(ev)!.gagne ? 1 : 0) },
-  { id: 'champion', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Battre le champion d\'une nation dans l\'arène', avance: (ev) => (combat(ev)?.champion ? 1 : 0) },
+  { id: 'champion', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Battre le champion d\'une nation en Carrière', avance: (ev) => (combat(ev)?.champion ? 1 : 0) },
   { id: 'en-ligne', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Gagner un combat en ligne contre un ami', avance: (ev) => (combat(ev)?.mode === 'enLigne' && combat(ev)!.gagne ? 1 : 0) },
   { id: 'infini', difficulte: 'difficile', niveauMin: 3, but: 1, texte: () => 'Gagner un combat en durée infinie', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.infini && !combat(ev)!.auto ? 1 : 0) },
   { id: 'ench-3', difficulte: 'difficile', niveauMin: 3, but: 3, texte: () => 'Gagner 3 combats en format Enchaînement', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.enchainement ? 1 : 0) },
-  { id: 'infini-40', difficulte: 'difficile', niveauMin: 4, but: 1, texte: () => 'Gagner un combat en durée infinie avec l\'épuisement réglé au tour 40 ou plus', avance: (ev) => { const c = combat(ev); return c?.gagne && c.infini && !c.auto && (c.epuisement ?? 0) >= 40 ? 1 : 0; } },
+  { id: 'infini-40', difficulte: 'difficile', niveauMin: 4, but: 1, texte: () => 'Gagner un combat en durée infinie qui dure 40 tours ou plus', avance: (ev) => { const c = combat(ev); return c?.gagne && c.infini && !c.auto && (c.tours ?? 0) >= 40 ? 1 : 0; } },
   { id: 'serie-fort', difficulte: 'difficile', niveauMin: 8, but: 3, texte: () => 'Gagner 3 combats d\'affilée contre l\'ordinateur fort', avance: (ev) => { const c = contreOrdi(ev); if (!c || c.niveau !== 'fort') return 0; return c.gagne ? 1 : 'remise'; } },
   // ----- Uniques -----
   { id: 'u-tutoriel', difficulte: 'unique', niveauMin: 1, but: 1, texte: () => 'Finir le tutoriel', avance: (ev) => (ev.type === 'tutoriel' ? 1 : 0), etat: (c) => c.bonusTutoriel, recompense: { boosters: 1 } },

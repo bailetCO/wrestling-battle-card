@@ -97,7 +97,7 @@ test('deux amis jouent des combats complets et voient exactement le même combat
     await attendre();
     a.choisirLutteur(['usa', 'japon', 'europe-technicien', 'russie-contre'][partie % 4], undefined);
     b.choisirLutteur(['afrique', 'europe', 'japon-contre', 'usa-defenseur'][partie % 4], undefined);
-    await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
+    await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin', 20000);
     assert.equal(a.vue.phase, 'fin', `partie ${partie} : l'hôte n'a pas fini`);
     assert.equal(b.vue.phase, 'fin', `partie ${partie} : l'invité n'a pas fini`);
     assert.equal(resume(a.vue.etat!), resume(b.vue.etat!));

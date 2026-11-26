@@ -126,10 +126,10 @@ export function reglesHTML(): string {
     <section class="regle">
       <h2>Les modes de jeu</h2>
       <ul class="liste-regles">
-        <li><b>Combat rapide</b> : une seule période. Victoire par tombé, à ${R.ecartSuperiorite} points d'écart, ou aux points à la fin. Égalité : mort subite, le premier qui marque gagne.</li>
-        <li><b>Style de combat</b> (combat rapide et entre amis) : le <b>format</b> (Normal ou Enchaînement) et la <b>durée</b> (normale, ou <b>infinie</b> : pas de périodes ni d'écart, le combat ne s'arrête que sur un tombé ou un abandon). En durée infinie, la fatigue monte : dès le tour ${R.infini.debutFatigue}, on récupère tous les 3 tours, puis tous les 4 tours au tour ${R.infini.debutFatigue + R.infini.palier}, etc. ; dès le tour ${R.infini.debutSurcout}, chaque action coûte +1, puis +1 de plus tous les ${R.infini.palier} tours. Ne plus pouvoir payer aucune action pendant ${R.toursSansEnduranceAvantTombe} tours, c'est le tombé.</li>
+        <li><b>Entraînement</b> : une seule période. Victoire par tombé, à ${R.ecartSuperiorite} points d'écart, ou aux points à la fin. Égalité : mort subite, le premier qui marque gagne.</li>
+        <li><b>Style de combat</b> (entraînement et entre amis) : le <b>format</b> (Normal ou Enchaînement) et la <b>durée</b> (normale, ou <b>infinie</b> : pas de périodes ni d'écart, le combat ne s'arrête que sur un tombé ou un abandon). En durée infinie, la fatigue monte : dès le tour ${R.infini.debutFatigue}, on récupère tous les 3 tours, puis tous les 4 tours au tour ${R.infini.debutFatigue + R.infini.palier}, etc. ; dès le tour ${R.infini.debutSurcout}, chaque action coûte +1, puis +1 de plus tous les ${R.infini.palier} tours. Ne plus pouvoir payer aucune action pendant ${R.toursSansEnduranceAvantTombe} tours, c'est le tombé.</li>
         <li><b>Format Enchaînement</b> (à l'essai) : chacun compose en secret une séquence de ${R.enchainement.actions} actions, comparées une à une ; ${R.enchainement.toursParPeriode} tours, soit 4 séquences. Un contre réussi à la 1re action brise la chaîne : les deux séquences s'arrêtent, mais l'adversaire paie l'endurance de ses actions annulées. Un Matraquage réussi à la 2e action (2 fois sur 3) annule la dernière action adverse, qui est payée quand même ; celle du lutteur qui a matraqué se joue. L'action spéciale suit les règles normales : dès le 2e tour, puis 3 actions de recharge. L'initiative montre la dernière action de l'adversaire et permet de changer la sienne.</li>
-        <li><b>Arène</b> : ${R.arene.niveaux.length} lutteurs par nation, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur. Chaque nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion (on peut le réaffronter).</li>
+        <li><b>Carrière</b> : ${R.arene.niveaux.length} lutteurs par nation, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur. Chaque nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion (on peut le réaffronter).</li>
         <li><b>Tournoi individuel</b> (${R.tournoi.individuel.inscription} $) : de ${R.tournoi.individuel.minimum} à ${R.tournoi.individuel.maximum} lutteurs, en double tableau. Tu avances tant que tu gagnes ; une défaite avant les 1/2 finales t'envoie dans le tableau des perdants, une deuxième t'élimine. Chaque perdant de 1/2 finale affronte le vainqueur du tableau des perdants du côté opposé ; les deux gagnants jouent la petite finale (3e place). Gains : ${R.tournoi.individuel.medailles[1]}, ${R.tournoi.individuel.medailles[2]} et ${R.tournoi.individuel.medailles[3]} médailles, ${R.tournoi.individuel.dollars[1]}, ${R.tournoi.individuel.dollars[2]} et ${R.tournoi.individuel.dollars[3]} $, booster rare au vainqueur.</li>
         <li><b>Tournoi par équipe</b> (${R.tournoi.equipe.inscription} $) : tes ${R.tournoi.equipe.duels} lutteurs de Mon Club, un duel chacun ; la première équipe à ${R.tournoi.equipe.victoiresPourGagner} victoires gagne. <b>Bonus de nation</b> : 3 lutteurs d'une même nation donnent ${pct(R.tournoi.equipe.bonusNation[3])} à toute l'équipe, 4 : ${pct(R.tournoi.equipe.bonusNation[4])}, 5 : ${pct(R.tournoi.equipe.bonusNation[5])}.</li>
         <li><b>Mon Club</b> : ouvre à ${R.club.medaillesOuverture} médailles, puis un niveau et une place de plus toutes les ${R.club.medaillesParNiveau} médailles, jusqu'au niveau ${R.club.niveauMax} (${R.club.niveauMax} places). À partir du niveau ${R.club.niveauBooster}, chaque niveau donne aussi un booster rare.</li>
@@ -144,49 +144,20 @@ export function reglesHTML(): string {
 
 export interface EcranTuto { titre: string; html: string }
 
-// Les écrans avant le combat guidé. `illus` fournit les illustrations faites avec les vraies cartes.
-export function ecransTutoriel(illus: { cartes: string; fusion: string; club: string }): EcranTuto[] {
+// Les écrans avant le combat guidé : deux seulement (le grand tutoriel dure environ 2 minutes ;
+// collection, fusion, Mon Club et les modes se découvrent ensuite avec le mode histoire et les
+// tutoriels courts).
+export function ecransTutoriel(): EcranTuto[] {
   return [
     {
       titre: 'Bienvenue, coach !',
       html: `<p>Ton rôle : réunir des lutteurs, régler leurs actions et les mener à la victoire.</p>
-        <p>En quelques écrans, découvre la collection, la fusion, les médailles et les transferts, puis joue une période guidée pour apprendre à combattre.</p>`,
-    },
-    {
-      titre: 'Ta collection',
-      html: `${illus.cartes}
-        <p>Chaque lutteur est une carte : <b>commune</b>, <b>rare</b>, <b>épique</b> ou <b>légendaire</b>. Plus elle est rare, plus elle gagne souvent.</p>
-        <p>Chaque victoire ouvre un <b>booster</b> : 3 cartes (classique) ou 5 cartes (rare). Tu peux recevoir des cartes en double, et c'est utile.</p>
-        <p>Dans Collection, touche une carte pour choisir ses 4 actions.</p>`,
-    },
-    {
-      titre: 'La fusion',
-      html: `${illus.fusion}
-        <p>Fusionne tes doubles pour faire monter une carte d'une rareté : Commune, Rare, Épique, Légendaire, jusqu'à <b>Champion du Monde</b>. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde.</p>
-        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e). Plus la carte est rare, plus elle a d'<b>actions débloquées</b> (moins chères) : un Champion du Monde les a toutes, plus une <b>action de Champion</b> (Bras tiré, Sortie de zone, Tour de hanche, Cravate ou Changement de niveau selon la carte).</p>
-        <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix. Chaque quart des étoiles débloque un <b>nouveau style de carte</b>.</p>`,
-    },
-    {
-      titre: 'Médailles, $ et Social',
-      html: `${illus.club}
-        <p>Chaque victoire rapporte des <b>médailles</b> : +1 contre l'ordinateur, +2 en ligne. Toutes les 5 médailles, tu gagnes <b>10 $</b>.</p>
-        <p>Dans <b>Social</b>, dépense tes $ en boosters, profite des 3 <b>transferts de lutteur</b> du jour (une carte contre un de tes doubles de même rareté) et fais des <b>transferts entre amis</b>.</p>`,
-    },
-    {
-      titre: 'Les modes de jeu',
-      html: `<ul class="liste-regles">
-          <li><b>Arène</b> : bats les nations une par une, ${R.arene.niveaux.length} lutteurs chacune.</li>
-          <li><b>Combat rapide</b> : une seule période, pour une partie express.</li>
-          <li><b>Tournois</b> : individuel en double tableau, ou par équipe avec ton club (bonus si 3 lutteurs ou plus d'une même nation).</li>
-          <li><b>En ligne</b> : affronte un ami avec un code de salle.</li>
-        </ul>
-        <p>Le <b>mode histoire</b> te guide étape par étape à travers tout ça, avec des boosters à chaque étape et une carte légendaire à la fin. Ton objectif du moment est toujours affiché en haut du menu.</p>`,
+        <p>Commence par un combat express de ${R.tutoriel.toursCombat} tours avec Hugo Delmas : le coach te guide. Le reste (collection, fusion, ton club, les tournois) se découvre ensuite, pas à pas, avec le mode histoire.</p>`,
     },
     {
       titre: 'Le combat',
       html: `${schemaFamilles()}
-        <p>Chacun choisit en secret, puis on révèle. <b>L'attaque bat la feinte, la feinte bat la défense et le contre, la défense bat l'attaque, le contre bat la défense.</b></p>
-        <p>Place à la pratique : tu vas jouer une période avec Hugo Delmas. Le coach te guide pendant les premiers tours.</p>`,
+        <p>Chacun choisit en secret, puis on révèle. <b>L'attaque bat la feinte, la feinte bat la défense et le contre, la défense bat l'attaque, le contre bat la défense.</b></p>`,
     },
   ];
 }
@@ -223,6 +194,6 @@ export const ETAPES_GUIDEES: EtapeGuidee[] = [
   },
 ];
 
-export const TEXTE_LIBRE = `Renversement ! À toi de jouer jusqu'à la fin de la période. Surveille ta barre : sous 50 d'endurance, tes actions peuvent rater. Retiens : l'Attaque bat la Feinte, la Feinte bat la Défense et le Contre, la Défense bat l'Attaque, le Contre bat la Défense.`;
+export const TEXTE_LIBRE = `Renversement ! À toi de jouer seul pour les ${R.tutoriel.toursCombat - 4} derniers tours. Surveille ta barre : sous 50 d'endurance, tes actions peuvent rater.`;
 
-export const TEXTE_LIBRE_SUITE = `À toi de jouer ! La période se termine au 10e tour, ou dès qu'un lutteur mène de 10 points.`;
+export const TEXTE_LIBRE_SUITE = `Dernier tour : l'Attaque bat la Feinte, la Feinte bat la Défense et le Contre, la Défense bat l'Attaque, le Contre bat la Défense.`;

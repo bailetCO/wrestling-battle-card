@@ -380,6 +380,13 @@ export const REGLES = {
 
   // Mon Club : s'ouvre à 10 médailles, puis +1 niveau toutes les 5 médailles de plus (niveau 5 au
   // maximum). Le niveau donne le nombre de places pour les lutteurs recrutés (1 place par niveau).
+  // Menu principal ouvert pas à pas : étape du mode histoire (0 = étape 1) où chaque tuile apparaît.
+  // Tournois à l'étape 2, Mon Club et la saison sportive à la 3, Social à la 4, Fusion à la 8.
+  // Grand tutoriel : un combat express de 2 minutes (4 tours guidés, puis libre jusqu'au 6e tour).
+  tutoriel: { toursCombat: 6 },
+
+  menu: { etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7 } },
+
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
   // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.
   club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 10, placesParNiveau: 1, niveauTournoiEquipe: 5,
@@ -530,7 +537,7 @@ export const REGLES = {
   //   `palier` tours (+2 au tour 35, +3 au tour 45…). Lutte et Souffler restent gratuits.
   // - Dès le tour `debutEpuisement`, 3 tours sans pouvoir payer aucune action = épuisement (tombé).
   //   Sans cette règle, deux lutteurs à bout peuvent lutter l'un contre l'autre sans fin.
-  //   Le joueur règle ce tour (`choixEpuisement`, 20 par défaut).
+  //   Valeur fixe (le réglage par le joueur a été retiré le 26/11/2026).
   // Cocoach, le rival du mode infini : ses 4 actions à chaque niveau (grade 1 = rare … 4 = Champion
   // du Monde), le niveau de l'ordinateur qui le joue, la récompense quand il monte de niveau, et
   // le bonus de statistiques par saison (il repart de Rare à chaque nouvelle saison, +2 % à chaque fois).
@@ -546,7 +553,7 @@ export const REGLES = {
     bonusParSaison: 0.02,
   },
 
-  infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 20, choixEpuisement: [20, 30, 40, 50] },
+  infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 30 },
 
   // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
   // séquence de `actions` actions, comparées une à une. 12 tours par période (4 séquences).

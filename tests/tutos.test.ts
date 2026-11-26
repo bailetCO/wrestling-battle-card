@@ -41,3 +41,17 @@ test('le tutoriel par équipe s\'ouvre avec Mon Club au bon niveau et 5 lutteurs
   while (c.club.length < REGLES.tournoi.equipe.duels) c.club.push('europe');
   assert.equal(TUTOS.equipe.verrou(c), null);
 });
+
+test('grand tutoriel : 2 écrans et un combat express plus long que les tours guidés', async () => {
+  const { ecransTutoriel, ETAPES_GUIDEES } = await import('../src/page/aide');
+  assert.equal(ecransTutoriel().length, 2);
+  assert.ok(REGLES.tutoriel.toursCombat > ETAPES_GUIDEES.length);
+});
+
+test('tutoriels courts ouverts tout seuls : nouveau joueur oui, ancienne sauvegarde non', async () => {
+  const { depuisSauvegarde } = await import('../src/page/collection');
+  assert.deepEqual(nouvelleCollection().tutosVus, []);
+  const brut = JSON.parse(JSON.stringify(nouvelleCollection()));
+  delete brut.tutosVus;
+  assert.deepEqual([...depuisSauvegarde(brut).tutosVus].sort(), [...ids].sort());
+});

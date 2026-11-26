@@ -34,7 +34,7 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'cocoach', texte: 'Mon équipe t\'attend. Prépare tes cinq meilleurs… ou tes cinq moins mauvais.' },
   ],
   h4: [
-    { qui: 'philippe', texte: 'En combat rapide, il n\'y a qu\'une période. Pas le temps de calculer : il faut frapper fort.' },
+    { qui: 'philippe', texte: 'À l\'entraînement, il n\'y a qu\'une période. Pas le temps de calculer : il faut frapper fort.' },
     { qui: 'philippe', texte: 'Fais tomber ton adversaire, ou prends-lui 10 points d\'écart. Une petite victoire aux points ne suffira pas.' },
   ],
   h5: [
@@ -42,7 +42,7 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'cocoach', texte: 'Le bonus de nation ? Je l\'utilise depuis toujours. Bienvenue chez les grands.' },
   ],
   h6: [
-    { qui: 'philippe', texte: 'L\'arène, c\'est le tour du monde des styles de lutte. Chaque nation a ses spécialistes et son champion.' },
+    { qui: 'philippe', texte: 'La Carrière, c\'est le tour du monde des styles de lutte. Chaque nation a ses spécialistes et son champion.' },
     { qui: 'philippe', texte: 'Bats une nation entière, son champion compris.' },
   ],
   h7: [
@@ -58,7 +58,7 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'cocoach', texte: 'Et si ton ami a besoin de conseils, il sait où me trouver.' },
   ],
   h10: [
-    { qui: 'philippe', texte: 'Il te reste des nations à conquérir. Termine l\'arène : douze nations, douze champions.' },
+    { qui: 'philippe', texte: 'Il te reste des nations à conquérir. Termine la Carrière : douze nations, douze champions.' },
   ],
   h11: [
     { qui: 'philippe', texte: 'Dernière épreuve : gagner un tournoi individuel sans perdre un seul combat. Le tableau principal, de bout en bout.' },

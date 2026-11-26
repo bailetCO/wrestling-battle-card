@@ -149,8 +149,8 @@ test('quêtes du rival et de la durée infinie', () => {
   assert.equal(av('rival-1', combat({ rival: true, auto: true })), 0);
   assert.equal(av('tenir-30', combat({ infini: true, tours: 31, gagne: false })), 1);
   assert.equal(av('tenir-30', combat({ infini: true, tours: 25 })), 0);
-  assert.equal(av('infini-40', combat({ infini: true, epuisement: 40 })), 1);
-  assert.equal(av('infini-40', combat({ infini: true, epuisement: 30 })), 0);
+  assert.equal(av('infini-40', combat({ infini: true, tours: 40 })), 1);
+  assert.equal(av('infini-40', combat({ infini: true, tours: 39 })), 0);
   const c = nouvelleCollection();
   assert.equal(queteDe('u-rival-champion').etat!(c), false);
   c.rival.grade = 4;
