@@ -12,7 +12,8 @@
     "simuler": "tsx scripts/simuler.ts",
     "verifier-types": "tsc --noEmit",
     "niveaux": "tsx scripts/niveaux.ts",
-    "captures": "node scripts/captures.mjs"
+    "captures": "node scripts/captures.mjs",
+    "verifier-cahier": "tsx scripts/verifier-cahier.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
