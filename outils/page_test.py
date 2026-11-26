@@ -1,6 +1,7 @@
 # Construit la page de test « préproduction graphique » : le jeu (construit avec VITE_PAQUETS=1)
 # et ses images regroupées en paquets JSON (base64) par taille et par délégation, dans
 # dist-test/. Le jeu normal (dist/) garde ses images en fichiers séparés.
+# Les illustrations V2 (nouvelle formule) vont dans les paquets grande-v2 et mini-v2.
 #   VITE_PAQUETS=1 npx vite build --outDir dist-test && python3 -I outils/page_test.py
 import base64, json, os, shutil, sys
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,6 +26,13 @@ for d, _, fs in os.walk(SRC):
         if rel.startswith('frames/') or rel.startswith('assets/portraits/') or rel == 'mini/assets/rival/cocoach/presentation.webp':
             continue
         groupes.setdefault(paquet(rel), {})[rel] = base64.b64encode(open(os.path.join(d, f), 'rb').read()).decode()
+# nouvelle formule (V2) : clés « v2:<chemin> », paquets grande-v2 et mini-v2
+SRC2 = os.path.join(RACINE, 'public', 'illustrations', 'v2')
+for d, _, fs in os.walk(SRC2):
+    for f in fs:
+        rel = os.path.relpath(os.path.join(d, f), SRC2).replace(os.sep, '/')
+        nom = ('mini' if rel.startswith('mini/') else 'grande') + '-v2'
+        groupes.setdefault(nom, {})['v2:' + rel] = base64.b64encode(open(os.path.join(d, f), 'rb').read()).decode()
 shutil.rmtree(DEST, ignore_errors=True)
 os.makedirs(os.path.join(DEST, 'paquets'))
 for nom, contenu in sorted(groupes.items()):

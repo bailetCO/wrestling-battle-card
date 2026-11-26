@@ -110,11 +110,16 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
     return `<li class="${spe}"><span class="ico f-${f}">${ICONE[f]}</span><span>${echap(nomLocal(def.nation, a))}${etoiles}<small class="cl-effet">${effetAction(a)}</small></span><b>${coutAction(def, a)}</b></li>`;
   }).join('');
   const gemmes = '◆'.repeat(GEMMES[niveau]);
-  // Carte illustrée du pack graphique : l'image porte déjà le nom, le cadre et la rareté ;
-  // la fiche d'origine (en-tête, portrait, jauges) ne réapparaît que si l'image manque.
-  const illu = blocIllustre(def, niveau, 'grande');
+  // Carte illustrée : V1, l'image porte déjà le nom, le cadre et la rareté ; V2 (nouvelle formule),
+  // le jeu les dessine autour de l'illustration. La fiche d'origine (en-tête, portrait, jauges)
+  // ne réapparaît que si l'image manque.
+  let illu = blocIllustre(def, niveau, 'grande', opts.style ?? 0);
+  const v2 = illu?.includes('cl-v2') ? ' illu-v2' : '';
+  // Nouvelle formule : l'emblème du style Champion du Monde se pose dans l'étiquette du bas.
+  const embleme = niveau === 'champion' ? emblemeSVG(opts.style ?? 0, uid) : '';
+  if (v2 && embleme) illu = illu!.replace('<div class="v2-bas">', `${embleme}<div class="v2-bas">`);
   return `
-    <article class="carte-l ${illu ? 'avec-illu' : ''}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+    <article class="carte-l ${illu ? 'avec-illu' : ''}${v2}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
       ${illu ?? ''}
       <div class="cl-interieur">
         <header class="cl-tete">
@@ -138,7 +143,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
           Dès le tour ${REGLES.speciale.premierTour}, recharge ${REGLES.speciale.toursRecharge} tours.</p>
         ${bouton}
       </div>
-      ${niveau === 'champion' ? emblemeSVG(opts.style ?? 0, uid) : ''}
+      ${v2 ? '' : embleme}
       ${niveau === 'champion' && opts.style === 2 ? '<div class="etoiles-filantes" aria-hidden="true"><i></i><i></i><i></i></div>' : ''}
       <div class="cl-reflet" aria-hidden="true"></div>
     </article>`;

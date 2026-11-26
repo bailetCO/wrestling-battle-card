@@ -1,0 +1,12 @@
+{
+ "version": "v2",
+ "lutteurs": {
+  "usa": [
+   "commune",
+   "rare",
+   "epique",
+   "legendaire",
+   "champion"
+  ]
+ }
+}

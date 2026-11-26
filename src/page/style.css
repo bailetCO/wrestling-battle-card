@@ -132,7 +132,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 .carte-l[data-rarete="commune"] { --gemme: #c8cfda; }
 
 /* Rare : cadre argent bleuté et reflet brillant qui passe sur la carte. */
-.carte-l[data-rarete="rare"] { --gemme: #9fd0ff; background: linear-gradient(135deg, #8fa9cf, #eef5ff 45%, #6c8bbd 55%, #c9dbf5); }
+.carte-l[data-rarete="rare"], .cl-v2[data-rarete="rare"] { --gemme: #9fd0ff; background: linear-gradient(135deg, #8fa9cf, #eef5ff 45%, #6c8bbd 55%, #c9dbf5); }
 .carte-l[data-rarete="rare"] .cl-reflet {
   background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .28) 48%, transparent 60%) no-repeat;
   background-size: 250% 100%;
@@ -141,7 +141,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 @keyframes reflet { 0%, 55% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
 
 /* Épique : cadre holographique, l'arc-en-ciel suit le doigt. */
-.carte-l[data-rarete="epique"] {
+.carte-l[data-rarete="epique"], .cl-v2[data-rarete="epique"] {
   --gemme: #e2b8ff;
   background: conic-gradient(from 210deg at var(--mx) var(--my), #ff7ac8, #ffd36e, #79f2c0, #6cc8ff, #b98bff, #ff7ac8);
 }
@@ -153,7 +153,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 }
 
 /* Légendaire : cadre or vivant, portrait animé (aura qui tourne, regard qui brille). */
-.carte-l[data-rarete="legendaire"] {
+.carte-l[data-rarete="legendaire"], .cl-v2[data-rarete="legendaire"] {
   --gemme: #ffd76a;
   background: linear-gradient(120deg, #8a5a12, #ffe08a 30%, #b97d1e 50%, #fff1b8 70%, #8a5a12);
   background-size: 220% 100%;
@@ -169,7 +169,7 @@ h1, h2, h3 { font-family: var(--police); font-stretch: condensed; margin: 0; }
 @keyframes or { to { background-position: -220% 0; } }
 
 /* Champion du Monde : cadre façon ceinture de champion, rouge et or, avec un liseré blanc. */
-.carte-l[data-rarete="champion"] {
+.carte-l[data-rarete="champion"], .cl-v2[data-rarete="champion"] {
   --gemme: #fff1b8;
   background: linear-gradient(120deg, #6d0a18, #c8102e 18%, #ffd76a 32%, #fff6d6 40%, #ffd76a 48%, #c8102e 62%, #6d0a18 80%, #c8102e);
   background-size: 240% 100%;
@@ -861,7 +861,7 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 
 /* ---------- Styles de carte Champion du Monde (débloqués par les étoiles) ---------- */
 /* 1 · Or massif : cadre or plein, brossé. */
-.carte-l[data-rarete="champion"][data-style="1"] {
+.carte-l[data-rarete="champion"][data-style="1"], .cl-v2[data-rarete="champion"][data-style="1"] {
   background: repeating-linear-gradient(100deg, #b8860b 0 3px, #e9c24f 3px 6px, #fff0b0 6px 8px, #c9971f 8px 12px);
   animation: none;
   box-shadow: 0 0 0 2px #fff0b0, 0 0 30px rgba(255, 205, 80, .55), 0 10px 24px rgba(0, 0, 0, .35);
@@ -869,7 +869,7 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 .carte-l[data-rarete="champion"][data-style="1"] .cl-niveau { background: #b8860b; color: #fff8dc; }
 
 /* 2 · Nuit étoilée : cadre bleu nuit semé d'étoiles, liseré or. */
-.carte-l[data-rarete="champion"][data-style="2"] {
+.carte-l[data-rarete="champion"][data-style="2"], .cl-v2[data-rarete="champion"][data-style="2"] {
   background:
     radial-gradient(1.5px 1.5px at 12% 20%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 70% 8%, #fff 50%, transparent 51%),
@@ -883,7 +883,7 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 .carte-l[data-rarete="champion"][data-style="2"] .cl-niveau { background: #24135c; color: #ffd76a; }
 
 /* 3 · Couleurs de la nation : cadre aux couleurs du lutteur, bordé d'or. */
-.carte-l[data-rarete="champion"][data-style="3"] {
+.carte-l[data-rarete="champion"][data-style="3"], .cl-v2[data-rarete="champion"][data-style="3"] {
   background: linear-gradient(135deg, var(--n1), #ffd76a 30%, var(--n2) 50%, #ffd76a 70%, var(--n1));
   background-size: 220% 100%;
   box-shadow: 0 0 0 2px #ffd76a, 0 0 28px rgba(255, 215, 106, .45), 0 10px 24px rgba(0, 0, 0, .35);
@@ -891,7 +891,7 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 .carte-l[data-rarete="champion"][data-style="3"] .cl-niveau { background: var(--n2); color: #fff; }
 
 /* 4 · Panthéon : holographique arc-en-ciel et or, halo qui pulse. */
-.carte-l[data-rarete="champion"][data-style="4"] {
+.carte-l[data-rarete="champion"][data-style="4"], .cl-v2[data-rarete="champion"][data-style="4"] {
   background: conic-gradient(from 0deg at var(--mx) var(--my), #ffd76a, #ff7ac8, #79f2c0, #6cc8ff, #b98bff, #ffd76a);
   animation: halo 2.6s ease-in-out infinite;
   box-shadow: 0 0 0 2px #fff, 0 0 40px rgba(255, 215, 106, .7), 0 10px 24px rgba(0, 0, 0, .35);
@@ -1453,7 +1453,7 @@ b.moi { color: #ff8a95; }
 .cl-illu { position: relative; border-radius: 16px; overflow: hidden; background: #0b1530; aspect-ratio: 2 / 3; }
 .cl-illu .illu-carte { width: 100%; height: 100%; object-fit: cover; }
 .carte-l.avec-illu { padding: 0; background: none; box-shadow: none; display: grid; gap: 8px; }
-.carte-l.avec-illu .cl-illu { box-shadow: 0 10px 24px rgba(0, 0, 0, .35); }
+.carte-l.avec-illu .cl-illu:not(.cl-v2) { box-shadow: 0 10px 24px rgba(0, 0, 0, .35); }
 .carte-l.avec-illu .cl-tete, .carte-l.avec-illu .cl-portrait, .carte-l.avec-illu .cl-stats { display: none; }
 /* Style de carte Champion du Monde (débloqué par les étoiles) : petit emblème en haut de l'illustration. */
 .carte-l.avec-illu .cl-filigrane { position: absolute; top: 1.2%; left: 38%; width: 24%; height: auto; inset: auto; opacity: .95; z-index: 2; filter: drop-shadow(0 2px 3px #000); }
@@ -1482,3 +1482,65 @@ b.moi { color: #ff8a95; }
 .mc-etoiles { position: absolute; top: 4px; left: 4px; padding: 1px 6px; border-radius: 8px; background: rgba(7, 13, 34, .85); color: var(--orange); font-size: 12px; font-weight: 700; }
 .rival-presentation { max-width: 280px; margin: 0 auto; border-radius: 14px; }
 .rival-carte { max-width: 260px; margin: 10px auto 0; }
+
+/* ---------- Cartes « nouvelle formule » (V2) ---------- */
+/* L'image n'est qu'une illustration ; le jeu dessine le modèle commun de la rareté : cadre,
+   en-tête (emblème, nom, gemmes) sur les 12 % du haut, étiquette (rareté, statistiques) sur les
+   15 % du bas. Tailles en cqw (part de la largeur de la carte) : même dessin en grand et en mini. */
+:root { --mx: 50%; --my: 30%; }
+.cl-v2 {
+  --gemme: #c8cfda;
+  container-type: inline-size; padding: 2.4%; background: #7d8796;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+}
+.cl-v2[data-rarete="rare"] { --gemme: #9fd0ff; }
+.cl-v2[data-rarete="epique"] { --gemme: #e2b8ff; }
+.cl-v2[data-rarete="legendaire"] { --gemme: #ffd76a; }
+.cl-v2[data-rarete="champion"] { --gemme: #fff1b8; }
+.v2-fenetre {
+  position: relative; height: 100%; overflow: hidden; background: #0b1530;
+  border: .9cqw solid #120c08; border-radius: 4cqw;
+}
+.cl-v2 .illu-carte { width: 100%; height: 100%; object-fit: cover; }
+.v2-tete {
+  position: absolute; inset: 0 0 auto; height: 12%; display: flex; align-items: center; gap: 2.2cqw;
+  padding: 0 3.5cqw; background: linear-gradient(rgba(8, 25, 58, .95), rgba(8, 25, 58, .82) 72%, rgba(8, 25, 58, 0));
+}
+.v2-embleme { flex: none; width: 9cqw; display: grid; }
+.v2-embleme img, .v2-embleme svg { width: 100%; height: auto; border-radius: 1cqw; }
+.v2-nom {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 800 7.4cqw/1 var(--police); font-stretch: condensed; color: #fff; text-shadow: 0 .4cqw 0 #000;
+}
+.v2-gemmes { flex: none; color: var(--gemme); font-size: 4.2cqw; letter-spacing: .3cqw; text-shadow: 0 0 2cqw rgba(0, 0, 0, .8); }
+.v2-bas {
+  position: absolute; inset: auto 0 0; height: 15%; display: grid; align-content: center; justify-items: center; gap: 1cqw;
+  background: linear-gradient(rgba(8, 25, 58, 0), rgba(8, 25, 58, .9) 22%, #08193a);
+}
+.v2-rarete {
+  padding: .5cqw 3cqw; border-radius: 1.4cqw; background: #120c08; color: var(--gemme);
+  font: 800 4.3cqw/1.15 var(--police); letter-spacing: .04em; box-shadow: 0 0 0 .4cqw var(--gemme);
+}
+.v2-stats { display: grid; grid-template-columns: repeat(3, auto); gap: 6cqw; }
+.v2-stats span { display: flex; align-items: baseline; gap: 1.2cqw; }
+.v2-stats i { font: italic 800 3.8cqw/1 var(--police); }
+.v2-stats span:nth-child(1) i { color: #6ee59b; }
+.v2-stats span:nth-child(2) i { color: #ffad5a; }
+.v2-stats span:nth-child(3) i { color: #7cc8ff; }
+.v2-stats b { font: italic 800 6cqw/1 var(--police); color: #fff; text-shadow: 0 .3cqw 0 #000; }
+/* Emblème du style Champion du Monde : en bas à gauche, dans l'étiquette, pour ne cacher ni le nom
+   ni l'illustration. */
+.carte-l .v2-fenetre .cl-filigrane { inset: auto auto 2% 3%; width: 15%; transform: none; opacity: .95; }
+.carte-l.illu-v2 .cl-reflet { border-radius: 16px; }
+/* Miniatures : cadre plus fin, nom plus grand, statistiques retirées (trop petites). */
+.mini-carte .cl-v2 { padding: 3.5%; }
+.mini-carte .v2-fenetre { border-radius: 5cqw; border-width: 1.4cqw; }
+.mini-carte .v2-tete { height: 15%; padding: 0 3cqw; gap: 2cqw; }
+.mini-carte .v2-embleme { width: 13cqw; }
+.mini-carte .v2-nom { font-size: 11cqw; }
+.mini-carte .v2-gemmes { display: none; }
+.mini-carte .v2-stats { display: none; }
+.mini-carte .v2-bas { height: 13%; }
+.mini-carte .v2-rarete { font-size: 8cqw; padding: .6cqw 4cqw; }
+.mini-carte.avec-illu .cl-v2 ~ .mc-etoiles { top: 17%; }
+@media (prefers-reduced-motion: reduce) { .cl-v2 { animation: none !important; } }

@@ -9,10 +9,15 @@
 //   remplace (voir brancherRepli).
 // - Les statistiques imprimées sur les cartes ne comptent pas : le jeu les masque avec une bande
 //   qui montre ses propres valeurs (zone repérée à l'import, voir outils/importer_pack.py).
+// - Nouvelle formule (V2, public/illustrations/v2/, registre pack-v2.json, outil
+//   outils/importer_v2.py) : l'image n'est qu'une illustration, sans texte. Le jeu dessine
+//   lui-même le cadre de la rareté, l'en-tête (nom, emblème, gemmes) et l'étiquette du bas
+//   (rareté et statistiques). Une image V2 passe devant la carte V1 du même lutteur.
 
 import { ID_LUTTEUR_TEST, ID_RIVAL } from '../../moteur';
 import type { DefLutteur, NiveauCarte } from '../../moteur';
 import PACK from './pack-v1.json';
+import PACK2 from './pack-v2.json';
 import REMPLACEMENTS from './remplacements.json';
 
 export interface Zone { x: number; y: number; l: number; h: number }
@@ -28,8 +33,11 @@ const DONNEES = PACK as unknown as {
   cadres: Record<string, string>;
 };
 const AUTRES = REMPLACEMENTS as Record<string, string>;
+const V2 = (PACK2 as { lutteurs: Record<string, string[]> }).lutteurs;
 
 const BASE = `${import.meta.env?.BASE_URL ?? './'}illustrations/${DONNEES.version}/`;
+const BASE2 = `${import.meta.env?.BASE_URL ?? './'}illustrations/v2/`;
+const url2 = (id: string, niveau: NiveauCarte, taille: 'mini' | 'grande') => `${BASE2}${taille === 'mini' ? 'mini/' : ''}${id}/${niveau}.webp`;
 const url = (chemin: string, taille: 'mini' | 'grande') => (/^(https?:|\/|\.)/.test(chemin) ? chemin : BASE + (taille === 'mini' ? 'mini/' : '') + chemin);
 
 // Page de test seulement (construite avec VITE_PAQUETS=1) : les images y sont regroupées en
@@ -40,11 +48,13 @@ const PAQUETS = (import.meta.env as Record<string, string> | undefined)?.VITE_PA
 const VIDE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 // Attribut src (et data-paquet en page de test) pour une URL produite par url().
 function source(u: string): string {
+  if (PAQUETS && u.startsWith(BASE2)) return `src="${VIDE}" data-paquet="v2:${u.slice(BASE2.length)}"`;
   if (!PAQUETS || !u.startsWith(BASE)) return `src="${u}"`;
   return `src="${VIDE}" data-paquet="${u.slice(BASE.length)}"`;
 }
 // Nom du paquet d'une image : taille + délégation (cartes), portraits, cocoach ou emblèmes.
 export function nomPaquet(rel: string): string {
+  if (rel.startsWith('v2:')) return `${rel.startsWith('v2:mini/') ? 'mini' : 'grande'}-v2`;
   const mini = rel.startsWith('mini/');
   const r = mini ? rel.slice(5) : rel;
   const m = /^assets\/cards\/([A-Z]+)\//.exec(r);
@@ -83,9 +93,12 @@ export function brancherPaquets() {
 export const estCocoach = (id: string) => id === ID_RIVAL || id === ID_LUTTEUR_TEST;
 
 // Image d'une carte (niveau = rareté atteinte), ou null si le pack n'en a pas pour ce lutteur.
-export function imageCarte(id: string, niveau: NiveauCarte, taille: 'mini' | 'grande'): { url: string; zone: Zone | null } | null {
+// v2 : illustration seule (nouvelle formule), le jeu dessine cadre, nom, rareté et statistiques.
+export function imageCarte(id: string, niveau: NiveauCarte, taille: 'mini' | 'grande'): { url: string; zone: Zone | null; v2?: boolean } | null {
   const cle = `${estCocoach(id) ? 'cocoach' : id}/${niveau}`;
   if (AUTRES[cle]) return { url: url(AUTRES[cle], taille), zone: null };
+  const id2 = estCocoach(id) ? 'cocoach' : id;
+  if (V2[id2]?.includes(niveau)) return { url: url2(id2, niveau, taille), zone: null, v2: true };
   const im = estCocoach(id) ? DONNEES.cocoach.images[niveau] : DONNEES.lutteurs[id]?.images[niveau];
   return im ? { url: url(im.chemin, taille), zone: im.zone } : null;
 }
@@ -144,8 +157,33 @@ export function bandeStats(def: DefLutteur, zone: Zone | null): string {
     <span><i>END</i><b>${def.enduranceMax}</b></span><span><i>FOR</i><b>${def.force}</b></span><span><i>RÉC</i><b>${Math.round(def.recuperation * 100)}</b></span></div>`;
 }
 
-// Carte illustrée complète (image + bande des vraies statistiques), ou null sans illustration.
-export function blocIllustre(def: DefLutteur, niveau: NiveauCarte, taille: 'mini' | 'grande'): string | null {
+const NOMS_RARETE: Record<NiveauCarte, string> = { commune: 'Commune', rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire', champion: 'Champion du Monde' };
+const GEMMES: Record<NiveauCarte, number> = { commune: 1, rare: 2, epique: 3, legendaire: 4, champion: 5 };
+
+// Nouvelle formule : le modèle commun de la rareté (cadre, en-tête, étiquette) autour de l'illustration.
+// Les tailles sont relatives à la largeur de la carte : le même dessin sert en grand et en miniature.
+export function carteV2(def: DefLutteur, niveau: NiveauCarte, taille: 'mini' | 'grande', style = 0): string | null {
+  const im = imageCarte(def.id, niveau, taille);
+  if (!im?.v2) return null;
+  const emb = imgEmbleme(def.nation, def.origine) ?? '';
+  const rec = Math.round(def.recuperation * 100);
+  return `<div class="cl-illu cl-v2" data-rarete="${niveau}"${niveau === 'champion' && style ? ` data-style="${style}"` : ''}>
+    <div class="v2-fenetre">
+      <img class="illu illu-carte" ${source(im.url)} alt="Carte ${echap(def.nom)}" loading="lazy" decoding="async" width="600" height="900" data-repli="carte">
+      <div class="v2-tete"><span class="v2-embleme">${emb}</span><span class="v2-nom">${echap(def.nom)}</span><span class="v2-gemmes" aria-label="${NOMS_RARETE[niveau]}">${'◆'.repeat(GEMMES[niveau])}</span></div>
+      <div class="v2-bas">
+        <span class="v2-rarete">${NOMS_RARETE[niveau]}</span>
+        <span class="v2-stats" aria-label="Endurance ${def.enduranceMax}, force ${def.force}, récupération ${rec} %"><span><i>END</i><b>${def.enduranceMax}</b></span><span><i>FOR</i><b>${def.force}</b></span><span><i>RÉC</i><b>${rec}</b></span></span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Carte illustrée complète, ou null sans illustration : nouvelle formule si elle existe,
+// sinon carte V1 (image + bande des vraies statistiques).
+export function blocIllustre(def: DefLutteur, niveau: NiveauCarte, taille: 'mini' | 'grande', style = 0): string | null {
+  const v2 = carteV2(def, niveau, taille, style);
+  if (v2) return v2;
   const im = imageCarte(def.id, niveau, taille);
   const img = imgCarte(def, niveau, taille);
   if (!im || !img) return null;
@@ -164,7 +202,7 @@ export function brancherRepli(dessin: { portrait: (id: string) => string; emblem
     if (type === 'carte') {
       const carte = img.closest('.carte-l, .mini-carte');
       img.closest('.cl-illu')?.remove();
-      carte?.classList.remove('avec-illu');
+      carte?.classList.remove('avec-illu', 'illu-v2');
       if (!carte) img.replaceWith(document.createRange().createContextualFragment('<span class="illu-absente">Illustration indisponible</span>'));
     } else if (type === 'portrait') {
       img.replaceWith(document.createRange().createContextualFragment(dessin.portrait(img.dataset.id ?? '')));

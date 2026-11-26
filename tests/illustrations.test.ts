@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ID_LUTTEUR_TEST, ID_RIVAL, LUTTEURS, NATIONS } from '../src/moteur/config';
-import { imageCarte, imageEmbleme, imagePortrait, imagePresentationCocoach, infosPack } from '../src/page/illustrations';
+import { imageCarte, imageEmbleme, imagePortrait, imagePresentationCocoach, infosPack, nomPaquet } from '../src/page/illustrations';
+import PACK2 from '../src/page/illustrations/pack-v2.json';
 import PACK from '../src/page/illustrations/pack-v1.json';
 
 const NIVEAUX = ['commune', 'rare', 'epique', 'legendaire', 'champion'] as const;
@@ -20,6 +21,7 @@ test('les 120 lutteurs ont 5 cartes (grande et miniature), un portrait et une zo
       const m = imageCarte(l.id, n, 'mini');
       assert.ok(g && m, `${l.id} ${n}`);
       assert.ok(existe(g.url) && existe(m.url), `fichier manquant : ${g.url}`);
+      if (g.v2) continue; // nouvelle formule : pas de statistiques imprimées, donc pas de zone
       assert.ok(g.zone && g.zone.y > 40 && g.zone.y < 95, `zone douteuse : ${l.id} ${n}`); // cartes coupées en bas : bande limitée au bord (voir bandeStats)
     }
     const p = imagePortrait(l.id);
@@ -54,4 +56,25 @@ test('un emblème pour chaque nation du jeu', () => {
 test('lutteur sans illustration (Champion du Monde spécial) : pas d\'image, le dessin d\'origine reste', () => {
   assert.equal(imageCarte('champion-usa', 'champion', 'grande'), null);
   assert.equal(imagePortrait('champion-usa'), null);
+});
+
+test('nouvelle formule (V2) : chaque illustration déclarée existe et passe devant la carte V1', () => {
+  const ids = new Set([...LUTTEURS.map((l) => l.id), 'cocoach']);
+  for (const [id, niveaux] of Object.entries(PACK2.lutteurs as Record<string, string[]>)) {
+    assert.ok(ids.has(id), `identifiant inconnu : ${id}`);
+    for (const n of niveaux) {
+      for (const t of ['grande', 'mini'] as const) {
+        const im = imageCarte(id, n as (typeof NIVEAUX)[number], t);
+        assert.ok(im?.v2 && im.zone === null, `${id} ${n}`);
+        assert.ok(existe(im.url), `fichier manquant : ${im.url}`);
+      }
+    }
+  }
+  assert.ok(imageCarte('usa', 'legendaire', 'grande')?.v2, 'Marcus Stonewell est le lutteur d\'essai');
+});
+
+test('page de test : les illustrations V2 ont leurs propres paquets', () => {
+  assert.equal(nomPaquet('v2:usa/rare.webp'), 'grande-v2');
+  assert.equal(nomPaquet('v2:mini/usa/rare.webp'), 'mini-v2');
+  assert.equal(nomPaquet('mini/assets/cards/USA/x/rare.webp'), 'mini-USA');
 });
