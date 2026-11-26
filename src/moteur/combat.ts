@@ -37,7 +37,7 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
   };
 }
 
-export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean } = {}): EtatCombat {
+export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean; enchainement?: boolean } = {}): EtatCombat {
   const defA = typeof a === 'string' ? trouverLutteur(a) : a;
   const defB = typeof b === 'string' ? trouverLutteur(b) : b;
   return {
@@ -51,8 +51,14 @@ export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts
     finPar: null,
     journal: [],
     rapide: !!opts.rapide,
+    enchainement: !!opts.enchainement,
     mortSubite: false,
   };
+}
+
+// Nombre de tours d'une période : 10, ou 12 en mode Enchaînement (4 séquences de 3 actions).
+export function toursPeriode(e: EtatCombat): number {
+  return e.enchainement ? REGLES.enchainement.toursParPeriode : REGLES.toursParPeriode;
 }
 
 // ---------- Précision ----------
@@ -210,8 +216,20 @@ function perteDesequilibre(points: number): number {
   return 0;
 }
 
-function valider(e: EtatCombat, j: Joueur, c: Choix): Choix {
+function valider(e: EtatCombat, j: Joueur, c: Choix, sequence = false): Choix {
   const l = e.joueurs[j];
+  // Mode Enchaînement : la séquence a été choisie d'avance. Une action devenue impossible
+  // (plus assez d'endurance, spéciale plus disponible, souffle déjà pris) est remplacée.
+  if (sequence) {
+    const jouables = actionsJouables(e, j);
+    if (c.action === 'souffle' && !souffleDispo(e, j)) return { action: 'lutte' };
+    const a = c.action;
+    if (a === 'lutte') return { action: 'lutte' };
+    if (a !== 'souffle') {
+      if (c.speciale && !peutJouerSpeciale(e, j, a)) c = { action: a };
+      if (!c.speciale && !jouables.includes(a)) return { action: 'lutte' };
+    }
+  }
   if (c.action === 'souffle') {
     if (!souffleDispo(e, j)) throw new Error(`${l.def.nom} ne peut pas souffler maintenant.`);
     return { action: 'souffle' };
@@ -407,11 +425,11 @@ function finTourRapide(e: EtatCombat, ecart: number, hasard: Hasard): EtatCombat
   } else if (e.mortSubite && ecart !== 0) {
     log(e, `Mort subite : ${e.joueurs[meneur].def.nom} marque le premier.`);
     finirCombat(e, meneur, 'periodes');
-  } else if (e.mortSubite && e.tour >= REGLES.toursParPeriode + REGLES.rapide.mortSubiteMax) {
+  } else if (e.mortSubite && e.tour >= toursPeriode(e) + REGLES.rapide.mortSubiteMax) {
     const g = gagnantPeriode(e, hasard);
     log(e, `Toujours personne en mort subite : ${e.joueurs[g].def.nom} l'emporte au départage.`);
     finirCombat(e, g, 'periodes');
-  } else if (!e.mortSubite && e.tour >= REGLES.toursParPeriode) {
+  } else if (!e.mortSubite && e.tour >= toursPeriode(e)) {
     if (ecart !== 0) {
       log(e, `Fin de la période : ${e.joueurs[0].score} - ${e.joueurs[1].score}.`);
       finirCombat(e, meneur, 'periodes');
@@ -434,7 +452,14 @@ export function jouerTour(
   if (etat.termine) throw new Error('Le combat est terminé.');
   const e: EtatCombat = structuredClone(etat);
   const J = e.joueurs;
-  const choix: [Choix, Choix] = [valider(e, 0, choixA), valider(e, 1, choixB)];
+  const choix: [Choix, Choix] = [valider(e, 0, choixA, options.sequence), valider(e, 1, choixB, options.sequence)];
+  for (const j of LES_DEUX) {
+    const voulu = [choixA, choixB][j];
+    if (options.sequence && voulu.action !== choix[j].action && choix[j].action === 'lutte') {
+      log(e, `${J[j].def.nom} n'a plus de quoi jouer ce qu'il avait prévu : il lutte.`);
+    }
+  }
+  e.derniersChoix = [choix[0], choix[1]];
   const endDebut: [number, number] = [J[0].endurance, J[1].endurance];
   const fam = choix.map((c) => (c.action === 'lutte' || c.action === 'souffle' ? null : ACTIONS[c.action].famille)) as [
     Famille | null, Famille | null,
@@ -746,7 +771,7 @@ export function jouerTour(
   if (e.rapide) return finTourRapide(e, ecart, hasard);
   if (Math.abs(ecart) >= REGLES.ecartSuperiorite) {
     finirPeriode(e, ecart > 0 ? 0 : 1, 'supériorité technique');
-  } else if (e.tour >= REGLES.toursParPeriode) {
+  } else if (e.tour >= toursPeriode(e)) {
     finirPeriode(e, gagnantPeriode(e, hasard), 'fin de la période');
   } else {
     e.tour++;

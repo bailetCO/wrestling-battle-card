@@ -106,10 +106,15 @@ export interface EtatCombat {
   journal: string[];
   rapide: boolean; // combat rapide : une seule période, mort subite en cas d'égalité
   mortSubite: boolean; // combat rapide à égalité après la période : le premier qui marque gagne
+  enchainement?: boolean; // mode Enchaînement : séquences de 3 actions, 12 tours par période
+  derniersChoix?: [Choix, Choix]; // les actions réellement jouées au dernier tour (Lutte si remplacée)
 }
 
 export interface OptionsTour {
   // Quand un lutteur subit une tentative de tombé, il choisit pile ou face.
   // Sans réponse, le choix est fait au hasard.
   choisirFace?: (joueur: Joueur, etat: EtatCombat) => Face;
+  // Mode Enchaînement : les actions ont été choisies d'avance ; une action devenue impossible
+  // est remplacée par Lutte au lieu d'être refusée.
+  sequence?: boolean;
 }

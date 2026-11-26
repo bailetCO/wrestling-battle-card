@@ -517,6 +517,14 @@ export const REGLES = {
   // `mortSubiteMax` tours sans point, on départage comme une période normale).
   rapide: { mortSubiteMax: 10 },
 
+  // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
+  // séquence de `actions` actions, comparées une à une. 12 tours par période (4 séquences).
+  // Rupture : un contre réussi au 1er ou 2e duel, ou une feinte réussie au 2e duel
+  // (`chanceFeinteRupture`), arrête la séquence des deux lutteurs ; ce qui a été joué compte,
+  // les actions suivantes ne sont pas jouées ni payées. Initiative : on voit la dernière action
+  // de l'adversaire et on peut changer sa dernière action.
+  enchainement: { actions: 3, toursParPeriode: 12, rupturesContre: [1, 2], ruptureFeinte: 2, chanceFeinteRupture: 2 / 3 },
+
   // Niveau de compte : +1 toutes les 15 médailles, seulement pour montrer l'expérience du joueur.
   compte: { medaillesParNiveau: 15 },
 

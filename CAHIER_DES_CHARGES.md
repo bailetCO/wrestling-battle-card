@@ -610,6 +610,16 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Les boss des nations battues peuvent être réaffrontés (ordinateur fort) : +1 médaille et 1 chance sur 3 de gagner leur carte à chaque victoire.
 - Objectif : battre les 12 nations. Le bonus du tutoriel donne 2 boosters en plus à la prochaine victoire dans l'arène.
 
+### Mode Enchaînement (à l'essai, 25/11/2026)
+
+- Disponible pour l'essai en combat rapide et entre amis seulement.
+- Chacun compose en secret une séquence de 3 actions. Elles sont comparées dans l'ordre (1 contre 1, 2 contre 2, 3 contre 3) avec les règles habituelles d'un tour (familles, précision, combos, points). 12 tours par période, soit 4 séquences ; en combat rapide, mort subite séquence par séquence.
+- Rupture de chaîne : un contre réussi au 1er ou au 2e duel, ou une feinte réussie au 2e duel (2 chances sur 3), arrête la séquence des deux lutteurs. Ce qui a déjà été joué compte, points compris ; les actions suivantes ne sont ni jouées ni payées.
+- Endurance : on ne peut valider qu'une séquence dont on peut payer les 3 actions (coût de base) ; quand il ne reste plus de quoi payer aucune action, la place est prise par « Lutte ». Une action devenue impossible pendant la séquence (endurance perdue, spéciale plus disponible) est remplacée par Lutte. Une seule action spéciale par séquence ; « Souffler » compte comme une action.
+- Initiative : celui qui l'a voit la dernière action de l'adversaire avant la séquence et peut changer sa propre dernière action. Une initiative gagnée pendant une séquence sert pour la suivante.
+- Ordinateur : il compose ses séquences action par action, à son niveau ; avec l'initiative, il ne change que sa dernière action.
+- Étape 1 (moteur et tests) faite le 25/11/2026. Mesures sur 2 000 combats rapides : 43 % des séquences se cassent, 9 % des combats finissent par tombé, l'ordinateur fort bat le normal 56 % du temps. Étapes suivantes : écran contre l'ordinateur, puis entre amis.
+
 ### Combat rapide
 
 - Fin de combat (arène, combat rapide) : un bouton « Retour au menu » ramène directement à l'accueil, sans repasser par le choix du lutteur.
