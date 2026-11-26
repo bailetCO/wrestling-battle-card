@@ -18,6 +18,7 @@ export interface Collection {
   toutDebloque: boolean; // mode test : toutes les cartes disponibles
   victoires: number;
   defaitesDeSuite: number; // remis à zéro à chaque victoire ou booster de consolation
+  aOuvrir: RecompenseAOuvrir[]; // boîte à récompenses : gagnées ailleurs qu'en fin de combat, à ouvrir (cartes déjà dans la collection)
   recompensesEnLigne: string[]; // combats en ligne déjà récompensés (pas de double récompense)
   amis: Record<string, Ami>; // par identifiant de coach
   combatsComptes: string[]; // combats en ligne déjà comptés dans la liste d'amis
@@ -57,6 +58,10 @@ export interface Ami {
 export type TypeBooster = 'classique' | 'rare';
 // Un booster : des cartes, et parfois les médailles et les $ de la récompense.
 // Type « recompense » : sans cartes, seulement médailles et $.
+// Une récompense de la boîte : étape, palier de saison, quête, niveau de Mon Club.
+export type SourceRecompense = 'histoire' | 'saison' | 'quetes' | 'club';
+export interface RecompenseAOuvrir { titre: string; source: SourceRecompense; boosters: Booster[] }
+
 export interface Booster {
   type: TypeBooster | 'recompense';
   cartes: string[];
@@ -89,9 +94,9 @@ export function nouvelleCollection(): Collection {
   return {
     version: 2, coach: null, idCoach: nouvelId(),
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
-    decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
+    decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [], aOuvrir: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], menusVus: ['combat', 'collection'], fragments: {}, departComplet: true, arene: 0,
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], menusVus: ['combat', 'collection', 'recompenses'], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
@@ -153,6 +158,18 @@ export function ouvrirBooster(c: Collection, hasard: Hasard, impose?: TypeBooste
     c.exemplaires[id] = nbExemplaires(c, id) + 1;
   }
   return { type, cartes, nouvelles };
+}
+
+// Contrôle d'une récompense lue dans une sauvegarde.
+function recompenseValide(r: unknown): r is RecompenseAOuvrir {
+  const x = r as RecompenseAOuvrir;
+  const ids = (l: unknown) => Array.isArray(l) && l.every((id) => typeof id === 'string' && trouverLutteurOuNull(id));
+  return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club'].includes(x.source)
+    && Array.isArray(x.boosters) && x.boosters.length > 0 && x.boosters.length <= 10
+    && x.boosters.every((b) => b && ['classique', 'rare', 'recompense'].includes(b.type) && ids(b.cartes) && ids(b.nouvelles));
+}
+function trouverLutteurOuNull(id: string) {
+  try { return trouverLutteur(id); } catch { return null; }
 }
 
 // ---------- Médailles et $ ----------
@@ -447,7 +464,8 @@ export function depuisSauvegarde(brut: unknown): Collection {
     };
   }
   // Ancienne sauvegarde (avant l'ouverture progressive du menu) : rien de « Nouveau ».
-  c.menusVus = Array.isArray(b.menusVus) ? b.menusVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combat', 'collection', 'tournois', 'club', 'saison', 'social', 'fusion'];
+  c.menusVus = Array.isArray(b.menusVus) ? b.menusVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combat', 'collection', 'tournois', 'club', 'saison', 'social', 'fusion', 'recompenses'];
+  if (!c.menusVus.includes('recompenses')) c.menusVus.push('recompenses'); // boîte ajoutée après le menu pas à pas
   // Ancienne sauvegarde : le joueur connaît déjà les modes, les tutoriels courts ne s'ouvrent pas tout seuls.
   c.tutosVus = Array.isArray(b.tutosVus) ? b.tutosVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combos', 'enchainement', 'infini', 'arene', 'individuel', 'equipe', 'amis'];
   if (Array.isArray(b.battusMain)) c.battusMain = [...new Set(b.battusMain.filter((x): x is string => typeof x === 'string'))].slice(0, 500);
@@ -478,6 +496,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
+  if (Array.isArray(b.aOuvrir)) c.aOuvrir = b.aOuvrir.filter(recompenseValide).slice(0, 60);
   if (Array.isArray(b.recompensesEnLigne)) c.recompensesEnLigne = (b.recompensesEnLigne as string[]).slice(-50);
   if (b.amis && typeof b.amis === 'object') c.amis = { ...(b.amis as Record<string, Ami>) };
   if (Array.isArray(b.combatsComptes)) c.combatsComptes = (b.combatsComptes as string[]).slice(-100);

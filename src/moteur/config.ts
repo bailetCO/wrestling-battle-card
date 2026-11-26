@@ -385,7 +385,7 @@ export const REGLES = {
   // Grand tutoriel : un combat express de 2 minutes (4 tours guidés, puis libre jusqu'au 6e tour).
   tutoriel: { toursCombat: 6 },
 
-  menu: { etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7 } },
+  menu: { etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7, recompenses: 0 } },
 
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
   // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.

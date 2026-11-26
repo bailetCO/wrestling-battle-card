@@ -1421,3 +1421,11 @@ b.moi { color: #ff8a95; }
 .t-saison { --t: #7fd3ff; grid-column: 1 / -1; min-height: 120px; }
 /* Tournoi par équipe : séparation titulaires / remplaçants */
 .ordre-separation { list-style: none; margin: 6px 0; padding: 6px 10px; border-top: 2px dashed var(--doux); font-size: 13px; color: var(--doux); }
+
+/* Boîte à récompenses */
+.t-recompenses { --t: #ffb84d; grid-column: 1 / -1; min-height: 96px; }
+.lien-boite { display: block; margin: 0 16px 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255, 184, 77, .15); border: 1px solid #ffb84d; color: inherit; font-weight: 600; text-decoration: none; }
+.liste-boite { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.liste-boite li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .05); }
+.liste-boite small { grid-column: 1 / -1; opacity: .7; }
+.liste-boite span { opacity: .8; font-size: 13px; }

@@ -17,7 +17,7 @@ import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
   acheterBooster, acheterChampion, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, recompensesClub, autoPermis, noterBattuMain, adversaireAuto, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
-  nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
+  nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection, type RecompenseAOuvrir, type SourceRecompense,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
 import { drapeauSVG, portraitSVG } from './portrait';
@@ -156,6 +156,7 @@ const ICONES_MENU: Record<string, string> = {
   tournois: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v12a10 10 0 0 1-20 0z" fill="currentColor"/><path d="M14 10H7c0 7 3 11 8 11M34 10h7c0 7-3 11-8 11" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 28v8M16 42h16l-2-6H18z" fill="currentColor"/></svg>',
   club: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3l17 6v13c0 11-8 19-17 23C15 41 7 33 7 22V9z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 13l3 6.2 6.8.9-5 4.7 1.3 6.7L24 28.2l-6.1 3.3 1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>',
   social: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  recompenses: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="20" width="32" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="6" y="14" width="36" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 14v26M24 14c-4-8-12-6-10-1s10 1 10 1c4-8 12-6 10-1s-10 1-10 1" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>',
   saison: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="36" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="18" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="30" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 40h28" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
   fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
@@ -193,10 +194,48 @@ function ecranAccueil(message = '') {
 
 // ---------- Modes histoire (histoire et saison) ----------
 
-interface RecompenseHistoire { titre: string; lien: string; boosters: Booster[] }
-let recompensesHistoire: RecompenseHistoire[] = []; // étapes ou paliers validés dont les boosters restent à ouvrir
-let paquetHistoire: Paquet | null = null;
-let paquetHistoireLien = ''; // écran du paquet en cours (#histoire ou #saison)
+// ---------- Boîte à récompenses ----------
+// Tout ce qui est gagné ailleurs qu'en fin de combat (étapes, paliers, quêtes, Mon Club) arrive dans
+// une seule boîte, gardée dans la sauvegarde. Les cartes sont déjà dans la collection : la boîte
+// sert à les découvrir.
+
+let paquetBoite: Paquet | null = null; // récompense en cours d'ouverture (la première de la boîte)
+
+const NOM_SOURCE: Record<SourceRecompense, string> = { histoire: 'Mode histoire', saison: 'Saison sportive', quetes: 'Quêtes du jour', club: 'Mon Club' };
+
+function mettreEnBoite(titre: string, source: SourceRecompense, boosters: Booster[]) {
+  if (boosters.length) collection.aOuvrir.push({ titre, source, boosters });
+}
+
+// Petit lien vers la boîte, en haut des écrans qui donnent des récompenses.
+function lienBoite(): string {
+  const n = collection.aOuvrir.length;
+  return n ? `<a class="lien-boite" href="#recompenses">🎁 ${n} récompense${n > 1 ? 's' : ''} à ouvrir</a>` : '';
+}
+
+function ecranRecompenses() {
+  partie = null;
+  document.querySelector('.bulle-histoire')?.remove();
+  const liste = collection.aOuvrir;
+  if (!paquetBoite && liste.length) paquetBoite = { titre: liste[0].titre, boosters: liste[0].boosters, ouvert: false };
+  const nbCartes = (r: RecompenseAOuvrir) => r.boosters.reduce((n, b) => n + b.cartes.length, 0);
+  const reste = liste.slice(1).map((r) => `<li><small>${NOM_SOURCE[r.source]}</small><b>${echap(r.titre)}</b><span>${nbCartes(r)} carte${nbCartes(r) > 1 ? 's' : ''}</span></li>`).join('');
+  app.innerHTML = `
+    <main class="sous-menu">
+      ${enTete('Récompenses', liste.length ? `${liste.length} à ouvrir` : 'Rien à ouvrir pour l\'instant')}
+      ${paquetBoite ? `<p class="note marge">${NOM_SOURCE[liste[0]?.source ?? 'histoire']}</p>${sectionPaquet(paquetBoite)}` : `<section class="bloc"><p>Les étapes du mode histoire, les quêtes du jour, la saison sportive et Mon Club déposent leurs récompenses ici. Reviens après tes prochains combats !</p><a class="principal lien-bouton" href="#combat">Combattre</a></section>`}
+      ${reste ? `<section class="bloc"><h2>Ensuite</h2><ol class="liste-boite">${reste}</ol></section>` : ''}
+    </main>`;
+  activerReflets(app);
+  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => {
+    if (!paquetBoite) return;
+    // Retirée de la boîte dès l'ouverture : elle ne peut pas être découverte deux fois.
+    collection.aOuvrir.shift();
+    sauver(collection);
+    revelerPaquet(paquetBoite, () => { paquetBoite = null; ecranRecompenses(); });
+  });
+  window.scrollTo(0, 0);
+}
 
 // Note un événement du jeu ; une étape validée est annoncée par une bulle.
 function histoire(ev: EvenementHistoire) {
@@ -207,11 +246,11 @@ function etapesValidees(r: ReturnType<typeof noterHistoire>) {
   if (!r.length) return;
   for (const x of r) {
     const legendaire = x.etape === NB_ETAPES - 1;
-    recompensesHistoire.push({ titre: `Étape ${x.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, lien: '#histoire', boosters: x.boosters });
+    mettreEnBoite(`Étape ${x.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, 'histoire', x.boosters);
   }
   sauver(collection);
   const der = r[r.length - 1].etape;
-  annoncer(`Étape ${der + 1} validée : ${ETAPES[der].titre} !`, '#histoire');
+  annoncer(`Étape ${der + 1} validée : ${ETAPES[der].titre} !`);
 }
 
 // Note un événement de la saison sportive.
@@ -222,21 +261,23 @@ function saison(ev: EvenementSaison) {
 function palierValide(r: ReturnType<typeof noterSaison>) {
   sauver(collection);
   if (!r) return;
-  recompensesHistoire.push({ titre: `${PALIERS[r.palier].nom} : réussi${r.finSaison ? ', fin de saison' : ''}`, lien: '#saison', boosters: r.boosters });
-  annoncer(r.finSaison ? `Saison ${collection.saison.numero} terminée !` : `${PALIERS[r.palier].nom} : objectif atteint !`, '#saison');
+  mettreEnBoite(`${PALIERS[r.palier].nom} : réussi${r.finSaison ? ', fin de saison' : ''}`, 'saison', r.boosters);
+  sauver(collection);
+  annoncer(r.finSaison ? `Saison ${collection.saison.numero} terminée !` : `${PALIERS[r.palier].nom} : objectif atteint !`);
 }
 
 // Boosters rares des nouveaux niveaux de Mon Club (6 à 10), à ouvrir dans Mon Club.
 function recompenseClub() {
   const r = recompensesClub(collection, Math.random);
   if (!r.length) return;
-  for (const x of r) recompensesHistoire.push({ titre: `Mon Club niveau ${x.niveau}${x.niveau === R_.club.niveauSaison ? ' : la saison sportive est ouverte' : ''}`, lien: '#club', boosters: [x.booster] });
+  for (const x of r) mettreEnBoite(`Mon Club niveau ${x.niveau}${x.niveau === R_.club.niveauSaison ? ' : la saison sportive est ouverte' : ''}`, 'club', [x.booster]);
   sauver(collection);
   const der = r[r.length - 1].niveau;
-  annoncer(der >= R_.club.niveauSaison ? `Mon Club niveau ${der} : saison sportive ouverte !` : `Mon Club passe au niveau ${der} !`, '#club');
+  annoncer(der >= R_.club.niveauSaison ? `Mon Club niveau ${der} : saison sportive ouverte !` : `Mon Club passe au niveau ${der} !`);
 }
 
-function annoncer(titre: string, lien: string) {
+// Bulle d'annonce ; elle mène à la boîte à récompenses.
+function annoncer(titre: string, lien = '#recompenses') {
   document.querySelector('.bulle-histoire')?.remove();
   const b = document.createElement('a');
   b.className = 'bulle-histoire';
@@ -251,9 +292,9 @@ function annoncer(titre: string, lien: string) {
 const jauge = (p: [number, number]) => `<span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span>`;
 
 function bandeauHistoire(): string {
-  if (recompensesHistoire.length) {
-    const r = recompensesHistoire[0];
-    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : r.lien === '#quetes' ? 'Quêtes du jour' : r.lien === '#club' ? 'Mon Club' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
+  const n = collection.aOuvrir.length;
+  if (n) {
+    return `<a class="bandeau-histoire pret" href="#recompenses"><small>Boîte à récompenses</small><b>🎁 ${n} récompense${n > 1 ? 's' : ''} à ouvrir</b><span>${echap(collection.aOuvrir[0].titre)}</span></a>`;
   }
   // Saison ouverte et mode histoire pas fini : un petit rappel du mode histoire en dessous.
   const reste = saisonOuverte(collection) && !histoireFinie(collection)
@@ -277,32 +318,6 @@ function bandeauHistoire(): string {
     <b>${echap(ETAPES[i].objectif)}</b>${p ? `${jauge(p)}<span>${p[0]}/${p[1]}</span>` : ''}</a>`;
 }
 
-// Prend la prochaine récompense à ouvrir pour cet écran (histoire ou saison).
-function preparerPaquet(lien: string) {
-  if (paquetHistoire && paquetHistoireLien === lien) return;
-  if (paquetHistoire && !paquetHistoire.ouvert) {
-    // Paquet de l'autre écran pas encore ouvert : il retourne dans la file.
-    recompensesHistoire.unshift({ titre: paquetHistoire.titre, lien: paquetHistoireLien, boosters: paquetHistoire.boosters });
-  }
-  paquetHistoire = null;
-  const i = recompensesHistoire.findIndex((r) => r.lien === lien);
-  if (i < 0) return;
-  const r = recompensesHistoire.splice(i, 1)[0];
-  paquetHistoire = { titre: r.titre, boosters: r.boosters, ouvert: false };
-  paquetHistoireLien = lien;
-}
-
-// Récompense à ouvrir ; une fois ouverte (récapitulatif compris), l'écran ne la montre plus : on passe à la suivante.
-function blocPaquet(lien: string): string {
-  if (!paquetHistoire || paquetHistoireLien !== lien || paquetHistoire.ouvert) return '';
-  return sectionPaquet(paquetHistoire);
-}
-
-function brancherPaquet(_lien: string, ecran: () => void) {
-  app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () =>
-    paquetHistoire && revelerPaquet(paquetHistoire, () => { paquetHistoire = null; ecran(); }));
-}
-
 // ---------- Quêtes journalières ----------
 
 // Note un événement pour les quêtes du jour ; une quête réussie est annoncée par une bulle.
@@ -310,8 +325,9 @@ function quete(ev: EvenementQuete) {
   const r = noterQuete(collection, ev, jourDe(), Math.random);
   sauver(collection);
   if (!r.length) return;
-  for (const x of r) if (x.boosters.length) recompensesHistoire.push({ titre: `Quête réussie : ${x.titre}`, lien: '#quetes', boosters: x.boosters });
-  annoncer(r.length > 1 ? `${r.length} quêtes réussies !` : `Quête réussie : ${r[0].titre}`, '#quetes');
+  for (const x of r) mettreEnBoite(`Quête réussie : ${x.titre}`, 'quetes', x.boosters);
+  sauver(collection);
+  annoncer(r.length > 1 ? `${r.length} quêtes réussies !` : `Quête réussie : ${r[0].titre}`, r.some((x) => x.boosters.length) ? '#recompenses' : '#quetes');
 }
 
 // Événement « combat terminé » pour les quêtes, calculé à partir des tours joués.
@@ -365,7 +381,6 @@ function ecranQuetes(message = '') {
   partie = null;
   document.querySelector('.bulle-histoire')?.remove();
   quete({ type: 'etat' });
-  preparerPaquet('#quetes');
   const jour = jourDe();
   const liste = quetesDuJour(collection, jour);
   const P = R_.quetes.prixChangement;
@@ -384,14 +399,13 @@ function ecranQuetes(message = '') {
     <main class="sous-menu">
       ${enTete('Quêtes du jour', 'Trois nouvelles quêtes chaque jour à minuit. Celles qui ne sont pas finies disparaissent.')}
       ${message}
-      ${blocPaquet('#quetes')}
+      ${lienBoite()}
       <ol class="etapes-histoire">${lignes}</ol>
       <section class="bloc"><p class="note">🎁 Les 3 quêtes réussies : ${collection.quetes.bonus ? 'bonus reçu ✓' : '1 booster rare en bonus'}.
         ${collection.quetes.change ? 'Tu as déjà changé une quête aujourd\'hui.' : `Tu peux changer une quête par jour (${P} $), sauf une quête unique.`}
         Les quêtes uniques (★) ne reviennent jamais une fois réussies.</p></section>
     </main>`;
   activerReflets(app);
-  brancherPaquet('#quetes', () => ecranQuetes());
   app.querySelectorAll<HTMLButtonElement>('[data-changer]').forEach((b) =>
     b.addEventListener('click', () => {
       const erreur = changerQuete(collection, jour, Number(b.dataset.changer));
@@ -454,7 +468,6 @@ function ecranHistoire() {
   partie = null;
   document.querySelector('.bulle-histoire')?.remove();
   histoire({ type: 'etat' });
-  preparerPaquet('#histoire');
   const cours = collection.histoire.etape;
   const p = progression(collection);
   const lignes = ETAPES.map((e, i) => {
@@ -472,12 +485,11 @@ function ecranHistoire() {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
-      ${blocPaquet('#histoire')}
+      ${lienBoite()}
       <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et la Carrière (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape. La saison sportive est un mode à part, ouvert au niveau ${R_.club.niveauSaison} de Mon Club.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
-  brancherPaquet('#histoire', ecranHistoire);
   app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
   app.querySelector('[data-passer-etape]')?.addEventListener('click', () => {
     etapesValidees(passerEtape(collection, Math.random));
@@ -500,7 +512,6 @@ function ecranSaison() {
       <a class="principal lien-bouton" href="#club">Voir Mon Club</a></section></main>`;
     return;
   }
-  preparerPaquet('#saison');
   const cours = collection.saison.palier;
   const enCours = !!tournoi && !tournoi.recompense;
   const C = R_.tournoi.individuel;
@@ -531,7 +542,7 @@ function ecranSaison() {
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete(`Saison ${num}`, saisonFinie(collection) ? 'Saison terminée !' : `Palier ${cours + 1} sur ${nbPaliers(collection)} · ${PALIERS[cours].nom}`)}
-      ${blocPaquet('#saison')}
+      ${lienBoite()}
       ${saisonFinie(collection) ? `<section class="bloc saison-ouverte"><h2>Saison ${num} terminée 🏆</h2>
         <p>${collection.saison.terminees} saison${collection.saison.terminees > 1 ? 's' : ''} terminée${collection.saison.terminees > 1 ? 's' : ''} au total. La saison ${num + 1} ${saisonOlympique(num + 1) ? 'se termine aux Jeux Olympiques' : 'se termine aux championnats du monde (les Jeux reviennent tous les 4 ans)'}.</p>
         <button class="principal" data-nouvelle-saison>Commencer la saison ${num + 1}</button>
@@ -540,7 +551,6 @@ function ecranSaison() {
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
-  brancherPaquet('#saison', ecranSaison);
   app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
   app.querySelector('[data-interclub]')?.addEventListener('click', () => ecranChoixSaison('interclub'));
   app.querySelector('[data-competition]')?.addEventListener('click', () => ecranChoixSaison('competition'));
@@ -604,7 +614,7 @@ function ecranMenu() {
   const session = sessionLigne();
   const fusions = CARTES.filter((l) => fusionPrete(collection, l.id)).length;
   // Tuiles ouvertes pas à pas selon le mode histoire ; « Nouveau » jusqu'à la première visite.
-  const tuile = (id: IdTuile, titre: string, sous: string, href: string, alerte = '', cadenas = '') => !tuileVisible(collection, id) ? '' : (alerte = tuileNouvelle(collection, id) ? 'Nouveau' : alerte, `
+  const tuile = (id: IdTuile, titre: string, sous: string, href: string, alerte = '', cadenas = '') => !tuileVisible(collection, id) ? '' : (alerte = alerte || (tuileNouvelle(collection, id) ? 'Nouveau' : ''), `
     <a class="tuile t-${id} ${cadenas ? 'verrouillee' : ''}" href="${href}">
       <span class="tuile-ico">${ICONES_MENU[id]}</span>
       <span class="tuile-titre">${titre}</span>
@@ -635,6 +645,7 @@ function ecranMenu() {
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${collection.club.length}/${placesClub(collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
+        ${tuile('recompenses', 'Récompenses', collection.aOuvrir.length ? `${collection.aOuvrir.length} à ouvrir` : 'Rien à ouvrir pour l\'instant', '#recompenses', collection.aOuvrir.length ? `🎁 ${collection.aOuvrir.length}` : '')}
       </nav>
     </main>`;
   app.querySelector('[data-reprendre]')?.addEventListener('click', () => {
@@ -1749,7 +1760,6 @@ function ecranMonClub(message = '') {
   partie = null;
   recompenseClub();
   document.querySelector('.bulle-histoire')?.remove();
-  preparerPaquet('#club');
   const K = R_.club;
   const niv = niveauClub(collection);
   if (!niv) {
@@ -1789,7 +1799,7 @@ function ecranMonClub(message = '') {
       ${enTete('Mon Club', `Club de ${echap(collection.coach ?? '')}`)}
       ${porteMonnaie()}
       ${message}
-      ${blocPaquet('#club')}
+      ${lienBoite()}
       <section class="bloc">
         <div class="club-niveau">
           <span class="club-blason" aria-hidden="true">${niv}</span>
@@ -1807,7 +1817,6 @@ function ecranMonClub(message = '') {
       </section>
     </main>`;
   activerReflets(app);
-  brancherPaquet('#club', () => ecranMonClub());
   app.querySelectorAll<HTMLButtonElement>('[data-recruter]').forEach((b) => b.addEventListener('click', fenetreRecruter));
   app.querySelectorAll<HTMLButtonElement>('[data-liberer]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -3799,6 +3808,7 @@ function route() {
   if (h === '#histoire') return ecranHistoire();
   if (h === '#saison') return ecranSaison();
   if (h === '#quetes') return ecranQuetes();
+  if (h === '#recompenses') return ecranRecompenses();
   if (h === '#tournois') return ecranTournois();
   if (h === '#rapide') return ecranArene(true);
   quitterEchange();
