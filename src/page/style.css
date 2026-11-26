@@ -1407,3 +1407,12 @@ b.moi { color: #ff8a95; }
 .encart-rival b { font: 800 14px var(--police); }
 .encart-rival small { font-size: 11.5px; color: var(--doux); line-height: 1.3; }
 .rival-fin { margin: 8px auto 0; max-width: 34ch; padding: 6px 12px; border-radius: 10px; background: rgba(0, 0, 0, .35); font-size: 14px; }
+
+/* Tutoriels courts */
+.bouton-tuto{width:100%;margin-top:8px}
+.tutos-ligne{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+.tutos-courts .bouton-tuto{margin-top:6px}
+.tuto-etape{font-size:.8rem;opacity:.7;margin:0 0 4px}
+.tuto-court p,.tuto-court li{line-height:1.45}
+.bulle-coach.conseil{margin-top:6px}
+.bouton-tuto:disabled{opacity:.45;cursor:not-allowed}

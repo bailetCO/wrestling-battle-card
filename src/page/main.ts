@@ -35,6 +35,7 @@ import { ETAPES, ETAPE_SAISON, NB_ETAPES, histoireFinie, noterHistoire, passerEt
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { defRival, etoilesRival, niveauOrdiRival, rivalBattu, type MonteeRival } from './rival';
+import { TUTOS, type IdTuto } from './tutos';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
@@ -640,6 +641,79 @@ function choixNiveau(niv: Niveau): string {
   </div>`;
 }
 
+// ---------- Tutoriels courts (un par style de jeu) ----------
+
+let essaiSolo: IdTuto | null = null; // partie d'essai d'un tutoriel court en cours
+
+// Bouton d'un tutoriel court ; grisé, avec la raison, si le style de jeu n'est pas encore accessible.
+function boutonTuto(id: IdTuto, note = true): string {
+  const t = TUTOS[id];
+  const verrou = t.verrou(collection);
+  return `<button class="secondaire bouton-tuto" data-tuto="${id}" ${verrou ? 'disabled' : ''}>📘 Tutoriel : ${echap(t.titre)}</button>${verrou && note ? `<p class="note">🔒 ${echap(verrou)}</p>` : ''}`;
+}
+
+function brancherTutos(racine: ParentNode = app) {
+  racine.querySelectorAll<HTMLButtonElement>('[data-tuto]').forEach((b) => b.addEventListener('click', () => ouvrirTuto(b.dataset.tuto as IdTuto)));
+}
+
+function ouvrirTuto(id: IdTuto, k = 0) {
+  const t = TUTOS[id];
+  if (t.verrou(collection)) return;
+  const ecran = t.ecrans[k];
+  const dernier = k === t.ecrans.length - 1;
+  const f = ouvrirFenetre(`
+    <p class="tuto-etape">Tutoriel · ${echap(t.titre)} · ${k + 1}/${t.ecrans.length}</p>
+    <h2>${echap(ecran.titre)}</h2>
+    <div class="tuto-court">${ecran.html}</div>
+    <div class="fin-boutons">
+      ${dernier
+        ? t.essai ? '<button class="principal" data-essai>Lancer la partie d\'essai</button>' : '<button class="principal" data-fermer>Compris</button>'
+        : '<button class="principal" data-suite-tuto>Suite</button>'}
+      ${k > 0 ? '<button class="secondaire" data-avant-tuto>Retour</button>' : ''}
+      <button class="lien" data-fermer>Fermer</button>
+    </div>`, true);
+  f.querySelector('[data-suite-tuto]')?.addEventListener('click', () => ouvrirTuto(id, k + 1));
+  f.querySelector('[data-avant-tuto]')?.addEventListener('click', () => ouvrirTuto(id, k - 1));
+  f.querySelector('[data-essai]')?.addEventListener('click', () => { fermerFenetre(); lancerEssai(id); });
+}
+
+// Le lutteur des parties d'essai : un lutteur équilibré, avec le deck qui montre le style de jeu.
+function defEssai(deck: IdAction[]): DefLutteur {
+  const base = trouverLutteur('europe');
+  return { ...base, nom: 'Lutteur d\'essai', actions: [...deck], actionsPossibles: Object.keys(ACTIONS) as IdAction[] };
+}
+
+function lancerEssai(id: IdTuto) {
+  const t = TUTOS[id];
+  const e = t.essai;
+  if (!e || t.verrou(collection)) return;
+  const auHasard = () => LUTTEURS.filter((l) => l.rarete === 'commune')[Math.floor(Math.random() * LUTTEURS.filter((l) => l.rarete === 'commune').length)].id;
+  if (e.type === 'rapide') {
+    return lancer('europe', auHasard(), nouvelleGraine(), true, 'normal', false, null, false, { id, enchainement: e.enchainement, infini: e.infini, def: defEssai(e.deck) });
+  }
+  if (e.type === 'arene') {
+    return lancer('europe', auHasard(), nouvelleGraine(), false, 'facile', false, null, false, { id, enchainement: false, infini: false, def: defEssai(e.deck) });
+  }
+  if (tournoi && !tournoi.recompense) return ecranTournois('<p class="alerte">Termine d\'abord le tournoi en cours.</p>');
+  const moi = CARTES.find((l) => possede(collection, l.id))?.id ?? 'europe';
+  tournoi = e.type === 'individuel'
+    ? { ...creerIndividuel(moi, R_.tournoi.individuel.minimum, nouvelleGraine()), essai: true }
+    : { ...creerTournoiEquipe([...collection.club], nouvelleGraine()), essai: true };
+  paquetTournoi = null;
+  sauverTournoi();
+  location.hash = '#tournois';
+  ecranTournoiEnCours();
+}
+
+// Conseil du coach pendant une partie d'essai (ou un tournoi d'essai), sur les premiers tours.
+function bulleConseil(e: EtatCombat): string {
+  const id: IdTuto | null = essaiSolo ?? (enTournoi !== null && tournoi && 'essai' in tournoi && tournoi.essai ? (tournoi.type === 'equipe' ? 'equipe' : 'individuel') : null);
+  if (!id || tuto) return '';
+  const i = e.enchainement ? (tours[tours.length - 1]?.sequence ?? 0) : tours.length;
+  const c = TUTOS[id].conseils[i];
+  return c ? `<div class="bulle-coach conseil"><b>Coach</b><p>${echap(c)}</p></div>` : '';
+}
+
 function ecranCombatMenu() {
   partie = null;
   app.innerHTML = `
@@ -665,7 +739,13 @@ function ecranCombatMenu() {
         <p>Affronte un ami sur son téléphone. Chaque victoire rapporte 2 médailles, et 2 boosters avec ta collection.</p>
         <a class="principal lien-bouton" href="#amis">Combat entre amis</a>
       </section>
+      <section class="bloc tutos-courts">
+        <h2>Tutoriels courts</h2>
+        <p class="note">Quelques écrans, puis une partie d'essai sans récompense, pour découvrir un style de jeu.</p>
+        ${(Object.keys(TUTOS) as IdTuto[]).map(boutonTuto).join('')}
+      </section>
     </main>`;
+  brancherTutos();
   app.querySelectorAll<HTMLButtonElement>('[data-niveau]').forEach((b) =>
     b.addEventListener('click', () => {
       const n = b.dataset.niveau;
@@ -737,8 +817,9 @@ function ecranArene(rapide = false) {
         ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
            <div class="marge">${choixNiveau(collection.niveau)}
              ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé contre Cocoach']], epuisementChoisi)}
-             ${encartRival()}</div>`
-        : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
+             ${encartRival()}
+             <div class="tutos-ligne">${boutonTuto('combos')}${boutonTuto('enchainement')}${boutonTuto('infini')}</div></div>`
+        : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}<div class="tutos-ligne">${boutonTuto('arene')}</div></div>`}
       ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
       <div class="defile" tabindex="0" aria-label="Tes lutteurs">${cartes}</div>
@@ -791,6 +872,7 @@ function ecranArene(rapide = false) {
     else if (cle === 'duree') infiniChoisi = v === 'infinie';
     else epuisementChoisi = Number(v);
   });
+  brancherTutos();
   app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { bossChoisi = null; ecranArene(); });
   if (areneTerminee(collection) && !bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
@@ -1287,6 +1369,7 @@ function ecranTournois(message = '') {
         </ul>
         <button class="principal" data-individuel ${enCours ? 'disabled' : ''}>Contre l'ordinateur</button>
         <button class="secondaire" disabled>En ligne · bientôt</button>
+        ${boutonTuto('individuel')}
       </section>
       <section class="bloc">
         <h2>Tournoi par équipe <small>${Q.inscription} $</small></h2>
@@ -1294,6 +1377,7 @@ function ecranTournois(message = '') {
         ${equipeOk ? '' : `<p class="alerte-douce">🔒 Il faut Mon Club au niveau ${R_.club.niveauTournoiEquipe} avec ${Q.duels} lutteurs (niveau actuel : ${niv || 'fermé'}, ${collection.club.length} lutteur${collection.club.length > 1 ? 's' : ''}).</p>`}
         <button class="principal" data-equipe ${equipeOk && !enCours ? '' : 'disabled'}>Contre l'ordinateur</button>
         <button class="secondaire" disabled>En ligne · bientôt</button>
+        ${boutonTuto('equipe', false)}
       </section>
       <section class="bloc admin">
         <h2>Espace administrateur</h2>
@@ -1301,6 +1385,7 @@ function ecranTournois(message = '') {
         <button class="secondaire" data-admin>Créer un tournoi</button>
       </section>
     </main>`;
+  brancherTutos();
   app.querySelector('[data-reprendre-tournoi]')?.addEventListener('click', ecranTournoiEnCours);
   app.querySelector('[data-individuel]')?.addEventListener('click', () => ecranInscriptionIndividuel(R_.tournoi.individuel.parDefaut));
   app.querySelector('[data-admin]')?.addEventListener('click', () => ecranCreationAdmin());
@@ -1414,6 +1499,10 @@ function ecranTournoiEnCours() {
 
 // Gains de fin : donnés une seule fois, puis montrés dans un booster.
 function sectionFinTournoi(t: Tournoi, titre: string): string {
+  if ('essai' in t && t.essai) {
+    if (!t.recompense) { t.recompense = []; sauverTournoi(); }
+    return '<section class="booster"><p>Tournoi d\'essai terminé : pas de gain. Inscris-toi pour de vrai dans Tournois !</p></section>';
+  }
   if (!paquetTournoi) {
     const premiereFois = !t.recompense;
     const boosters = recompenserTournoi(collection, t, Math.random);
@@ -1605,7 +1694,8 @@ function finCombatTournoi(abandon: boolean) {
   if (!partie || !tournoi || cle === null) return ecranTournois();
   const e = partie.etat;
   const gagne = !abandon && e.vainqueur === HUMAIN;
-  if (!abandon) queteCombat(e, tournoi.type === 'equipe' ? 'equipe' : 'tournoi', partie.niveau);
+  const essaiT = 'essai' in tournoi && !!tournoi.essai;
+  if (!abandon && !essaiT) queteCombat(e, tournoi.type === 'equipe' ? 'equipe' : 'tournoi', partie.niveau);
   const detail = abandon ? 'par abandon' : e.finPar === 'tombe' ? 'par tombé'
     : `${Math.max(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)} périodes à ${Math.min(e.joueurs[0].periodesGagnees, e.joueurs[1].periodesGagnees)}`;
   if (tournoi.type === 'individuel' && typeof cle === 'number') {
@@ -1618,7 +1708,7 @@ function finCombatTournoi(abandon: boolean) {
   } else if (tournoi.type === 'equipe' && typeof cle === 'number') {
     enregistrerDuel(tournoi, cle, gagne, detail);
   }
-  if (gagne) {
+  if (gagne && !essaiT) {
     gagnerCombatTournoi(collection, tournoi);
     histoire({ type: 'victoire', nation: trouverLutteur(partie.idOrdi).nation, niveau: partie.niveau, auto: combatEnAuto });
   }
@@ -1959,20 +2049,25 @@ function lancerArene(idHumain: string, auto = false) {
   lancer(idHumain, e.adversaire, nouvelleGraine(), false, e.niveau, auto, { type: 'progression' });
 }
 
-function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau, auto = false, ctx: typeof areneCtx = null, interclub = false) {
+// `essai` : partie d'essai d'un tutoriel court (format, durée et lutteur imposés ; pas de récompense).
+function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = collection.niveau, auto = false, ctx: typeof areneCtx = null, interclub = false,
+  essai: { id: IdTuto; enchainement: boolean; infini: boolean; def: DefLutteur } | null = null) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
   // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
   const libre = rapide && !interclub && !ctx; // les styles de combat : combat rapide seulement
+  const ench = essai ? essai.enchainement : libre && enchainementChoisi;
+  const inf = essai ? essai.infini : libre && infiniChoisi;
+  essaiSolo = essai?.id ?? null;
   // Durée infinie en combat rapide : l'adversaire est toujours Cocoach, le rival, à son niveau.
-  const rival = libre && infiniChoisi;
+  const rival = inf;
   if (rival) {
     idOrdi = ID_RIVAL;
     niveau = niveauOrdiRival(collection);
   }
-  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, rival ? defRival(collection) : undefined, libre && enchainementChoisi, libre && infiniChoisi, epuisementChoisi);
+  partie = new Partie(idHumain, idOrdi, graine, niveau, essai?.def ?? avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, rival ? defRival(collection) : undefined, ench, inf, epuisementChoisi);
   sequenceHumain = [];
   areneCtx = ctx;
   interclubEnCours = interclub;
@@ -1986,7 +2081,11 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   tuto = false;
   enTournoi = null;
   bonusEnCours = null;
-  bonusCeCombat = rapide ? false : collection.bonusTutoriel;
+  bonusCeCombat = rapide || essai ? false : collection.bonusTutoriel;
+  if (essai) {
+    recompenseDonnee = true; // partie d'essai : ni récompense, ni progression, ni quête
+    messageSolo = 'Partie d\'essai : pas de récompense ni de progression. À toi de jouer pour de vrai !';
+  }
   demarrer(auto);
 }
 
@@ -2752,7 +2851,7 @@ function ecranCombat() {
           ? `Tu as l'initiative : après ta séquence, tu verras la dernière action ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'} et pourras changer la tienne.`
           : `Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.`}</p>` : ''}
         ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
-        ${bulleCoach()}
+        ${bulleCoach()}${bulleConseil(e)}
 
         <div class="actions-zone">${e.enchainement ? paveSequence(e) : boutonsActions(e, 'tour')}</div>
         <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : tuto ? 'Combat guidé' : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>${tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
@@ -3230,6 +3329,7 @@ function ecranFin() {
   activerReflets(app);
   const ctx = areneCtx;
   const revanche = (auto: boolean) => {
+    if (essaiSolo) return lancerEssai(essaiSolo);
     if (interclubEnCours) return lancerInterclub(idHumain, auto);
     if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide, partie?.niveau ?? collection.niveau, auto);
     if (ctx?.type === 'boss') bossChoisi = ctx.nation;
@@ -3337,8 +3437,10 @@ function ecranAmis(message = '') {
           <button class="principal" type="submit">Rejoindre</button>
         </form>
       </section>
+      ${boutonTuto('amis')}
       <a class="lien" href="#">Retour</a>
     </main>`;
+  brancherTutos();
   brancherStyle('ligne', () => undefined);
   app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
     b.addEventListener('click', () => {

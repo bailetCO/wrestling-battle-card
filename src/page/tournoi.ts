@@ -159,6 +159,7 @@ export interface MatchI {
 }
 
 export interface Individuel {
+  essai?: boolean; // tournoi d'essai (tutoriel) : gratuit, sans gain
   type: 'individuel';
   lutteurs: string[]; // l'indice 0 est le lutteur du joueur
   matchs: MatchI[]; // dans l'ordre où ils se jouent
@@ -362,6 +363,7 @@ export function placesI(t: Individuel): Map<number, number> {
 // ---------- Tournoi par équipe ----------
 
 export interface TournoiEquipe {
+  essai?: boolean; // tournoi d'essai (tutoriel) : gratuit, sans gain
   type: 'equipe';
   mes: string[]; // mes 5 lutteurs, dans l'ordre des duels
   leurs: string[]; // les 5 lutteurs du club adverse
