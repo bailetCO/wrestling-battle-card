@@ -742,7 +742,7 @@ function ecranCombatMenu() {
       <section class="bloc tutos-courts">
         <h2>Tutoriels courts</h2>
         <p class="note">Quelques écrans, puis une partie d'essai sans récompense, pour découvrir un style de jeu.</p>
-        ${(Object.keys(TUTOS) as IdTuto[]).map(boutonTuto).join('')}
+        ${(Object.keys(TUTOS) as IdTuto[]).map((id) => boutonTuto(id)).join('')}
       </section>
     </main>`;
   brancherTutos();
