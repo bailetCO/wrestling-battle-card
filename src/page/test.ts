@@ -1,5 +1,7 @@
 // Bonus de test : à retirer avant la sortie du jeu.
 // Chaque bonus est une ligne de la liste ci-dessous, pour pouvoir en ajouter ou en enlever facilement.
+// Pas de médailles offertes : ce sont elles qui débloquent Mon Club, le niveau de compte,
+// les quêtes et l'Histoire, qui doivent se débloquer en jouant.
 
 import type { Collection } from './collection';
 import type { EtatCombat, Joueur } from '../moteur/types';
@@ -8,7 +10,7 @@ import { DEV } from './dev';
 type BonusPseudo = { pseudo: string; medailles: number; dollars: number };
 
 const BONUS_PSEUDO: BonusPseudo[] = [
-  { pseudo: 'Coco', medailles: 200, dollars: 1000 },
+  { pseudo: 'Coco', medailles: 0, dollars: 1000 },
 ];
 
 // Appelé quand le joueur enregistre son pseudo. Majuscules et minuscules ne comptent pas.
@@ -18,7 +20,10 @@ export function bonusDeTest(c: Collection, pseudo: string): string | null {
   if (!b) return null;
   c.medailles += b.medailles;
   c.dollars += b.dollars;
-  return `Bonus de test : +${b.medailles} médailles et +${b.dollars} $`;
+  const t: string[] = [];
+  if (b.medailles) t.push(`+${b.medailles} médailles`);
+  if (b.dollars) t.push(`+${b.dollars} $`);
+  return `Bonus de test : ${t.join(' et ')}`;
 }
 
 // Petit bandeau en haut de l'écran qui disparaît tout seul après quelques secondes.

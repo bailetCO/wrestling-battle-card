@@ -6,6 +6,7 @@ import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets } from '../carte
 import { enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, choisirDeck, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbEtoiles, nbExemplaires, nouvelleCollection, possede, prochaineFusion, sauver, nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection } from '../collection';
 import { ouvrirBooster } from '../collection';
 import { DEV } from '../dev';
+import { afficherBandeauTest, bonusDeTest } from '../test';
 import { carteJoueur, compteur, defJoueur, niveauDe } from './accueil';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap, enTete, portrait } from './commun';
@@ -221,8 +222,10 @@ export function ecranCollection() {
     const coach = S.collection.coach;
     S.collection = nouvelleCollection();
     S.collection.coach = coach;
+    const bonus = coach ? bonusDeTest(S.collection, coach) : null; // le bonus de test revient après une remise à zéro
     sauver(S.collection);
     ecranCollection();
+    if (bonus) afficherBandeauTest(bonus);
   });
   activerReflets(app);
   window.scrollTo(0, 0);
