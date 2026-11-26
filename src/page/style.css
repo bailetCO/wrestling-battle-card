@@ -1232,3 +1232,24 @@ b.moi { color: #ff8a95; }
 .choix-spe-boite button small { font-weight: 400; font-size: 13px; opacity: .85; }
 .choix-spe-boite .lien { text-align: center; }
 @media (prefers-reduced-motion: reduce) { .action.peut-speciale { animation: none; } }
+
+/* Gameplay 2 : combo possible, chance de réussite, coût réduit, second souffle, barre selon la fatigue. */
+.action { position: relative; }
+.action.combo { border-color: #7fd18b; box-shadow: 0 0 0 2px #7fd18b, 0 0 12px rgba(127, 209, 139, .45); }
+.badge-combo {
+  position: absolute; top: -9px; left: 8px; padding: 1px 7px; border-radius: 999px;
+  background: #7fd18b; color: var(--encre); font: 800 10.5px var(--police); box-shadow: 2px 2px 0 var(--encre);
+  white-space: nowrap; max-width: calc(100% - 40px); overflow: hidden; text-overflow: ellipsis;
+}
+.a-chance {
+  position: absolute; bottom: 4px; right: 8px; font: 700 10.5px var(--police);
+  padding: 0 5px; border-radius: 999px; background: rgba(242, 163, 58, .2); color: #ffc274;
+}
+.a-chance.faible { background: rgba(229, 57, 74, .22); color: #ff8a95; }
+.action:has(.a-chance) .a-cout { align-self: start; }
+.a-cout.moins-cher { color: #9be3a6; }
+.action.souffle { grid-column: 1 / -1; min-height: 52px; border-style: dashed; border-color: #8fb8ff; }
+.action.souffle .ico { color: #8fb8ff; }
+.endu-barre.moyenne { border-color: #b86a12; }
+.endu-barre.faible { border-color: #b3202f; }
+.a-combo { grid-column: 2 / 3; font: 700 11px/1.2 var(--police); color: #9be3a6; }

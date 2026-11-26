@@ -19,27 +19,28 @@ describe('Précision', () => {
     assert.equal(precisionDe(0), 0.5);
   });
 
-  it('chances : 100 % dès 0,75, 2/3 sous 0,75, 1/2 sous 0,6, 1/3 à 0,5', () => {
-    assert.equal(chanceReussite(0.75), 1);
-    assert.equal(chanceReussite(0.74), 2 / 3);
-    assert.equal(chanceReussite(0.6), 2 / 3);
-    assert.equal(chanceReussite(0.59), 1 / 2);
-    assert.equal(chanceReussite(0.5), 1 / 3);
+  it('chances : 100 % dès 50 d\'endurance, puis une baisse régulière jusqu\'à 40 % à 0', () => {
+    const presque = (x: number, y: number) => assert.ok(Math.abs(x - y) < 1e-9, `${x} ≠ ${y}`);
+    assert.equal(chanceReussite(precisionDe(50)), 1);
+    assert.equal(chanceReussite(precisionDe(80)), 1);
+    presque(chanceReussite(precisionDe(49)), 0.4 + 0.6 * 49 / 50);
+    presque(chanceReussite(precisionDe(25)), 0.7);
+    presque(chanceReussite(precisionDe(0)), 0.4);
   });
 
   it("une action ratée part dans le vent : l'action adverse réussit seule", () => {
     const depart = combatTest();
-    depart.joueurs[1].endurance = 30; // précision 0,65 → 2 chances sur 3
-    const e = tour(depart, c('attaque_base'), c('defense'), toujours(0.7));
+    depart.joueurs[1].endurance = 30; // 76 % de chances
+    const e = tour(depart, c('attaque_base'), c('defense'), toujours(0.8));
     assert.ok(e.journal.some((l) => l.includes('B rate son action')));
     assert.equal(e.joueurs[0].score, 4); // 2 + 2 (100 contre 30 : plus du double d'endurance)
   });
 });
 
 describe('Points', () => {
-  it('sprawl réussi : 2 points pour le défenseur', () => {
-    const e = tour(combatTest(), c('sprawl'), c('double_jambe'));
-    assert.equal(e.joueurs[0].score, 2);
+  it('sprawl réussi : 2 points pour le défenseur, 4 sur une double jambe', () => {
+    assert.equal(tour(combatTest(), c('sprawl'), c('attaque_base')).joueurs[0].score, 2);
+    assert.equal(tour(combatTest(), c('sprawl'), c('double_jambe')).joueurs[0].score, 4);
   });
 
   it('attaque à 4 points, +2 si elle suit une feinte réussie', () => {
@@ -120,11 +121,11 @@ describe('Avantages', () => {
 
   it('le malus de précision du matraquage fait rater une attaque limite', () => {
     const depart = combatTest();
-    depart.joueurs[1].endurance = 52; // précision 0,76, et 0,71 avec le malus
-    const sans = tour(depart, c('defense'), c('attaque_base'), toujours(0.7));
+    depart.joueurs[1].endurance = 52; // 100 % ; avec le malus (−0,05 de précision, soit 10 d'endurance) : 90 %
+    const sans = tour(depart, c('defense'), c('attaque_base'), toujours(0.95));
     assert.equal(sans.joueurs[1].historique.at(-1)?.reussie, false); // battue par la défense, mais tirée
     depart.joueurs[1].malusPrecisionTours = 2;
-    const avec = tour(depart, c('feinte'), c('attaque_base'), toujours(0.7));
+    const avec = tour(depart, c('feinte'), c('attaque_base'), toujours(0.95));
     assert.equal(avec.joueurs[1].score, 0); // l'attaque part dans le vent
     assert.ok(avec.journal.some((l) => l.includes('B rate son action')));
     assert.equal(avec.joueurs[1].malusPrecisionTours, 1);

@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTIONS, COUT_FAMILLE, LUTTEURS, avecDeck, avecGrade, coutAction, nomLocal, trouverLutteur, verifierDeck } from '../src/moteur/config';
+import { ACTIONS, CHAMPIONS, LUTTEURS, avecDeck, avecGrade, coutAction, nomLocal, trouverLutteur, verifierDeck } from '../src/moteur/config';
 import { creerCombat, jouerTour } from '../src/moteur/combat';
 import { reagirInitiative } from '../src/moteur/ia';
 import type { IdAction } from '../src/moteur/types';
@@ -67,22 +67,39 @@ test('decks : 4 actions de base + 4 déblocages différents par lutteur', () => 
   }
 });
 
-test('coûts : les actions d\'une même famille ont le même coût de base', () => {
-  assert.deepEqual(COUT_FAMILLE, { attaque: 6, defense: 3, contre: 6, feinte: 3 });
-  for (const a of Object.values(ACTIONS)) assert.equal(a.cout, COUT_FAMILLE[a.famille], a.id);
+test('coûts : le coût suit la puissance (attaque 1 pt : 3, 2 pts : 4, 4 pts : 6, 5 pts : 8)', () => {
+  const parPoints: Record<number, number> = { 1: 3, 2: 4, 4: 6, 5: 8 };
+  for (const a of Object.values(ACTIONS)) {
+    if (a.famille === 'attaque') assert.equal(a.cout, parPoints[a.points], a.id);
+  }
+  assert.equal(ACTIONS.defense.cout, 3);
+  assert.equal(ACTIONS.sprawl.cout, 4);
+  assert.equal(ACTIONS.contre.cout, 6);
+  assert.equal(ACTIONS.feinte.cout, 3);
+  assert.equal(ACTIONS.matraquage.cout, 4);
+});
+
+test('chaque Champion du Monde a une nouvelle action en plus de ses 8 actions', () => {
+  for (const ch of CHAMPIONS) {
+    const g = avecGrade(ch, 1);
+    assert.equal(g.actionsPossibles.length, 9, ch.id);
+    const nouvelle = g.actionsPossibles.at(-1)!;
+    const autres = [...ch.actions].sort((x, y) => Number(ACTIONS[y].famille === ch.familleSpeciale) - Number(ACTIONS[x].famille === ch.familleSpeciale));
+    assert.equal(verifierDeck(g, [nouvelle, ...autres.slice(0, 3)]), null, ch.id);
+  }
 });
 
 test('grades : chaque niveau de rareté donne une action qui coûte 1 de moins (coût minimum 1)', () => {
   const eu = trouverLutteur('europe-7'); // commune ; déblocages : simple jambe, parade, matraquage, relance
   const g3 = avecGrade(eu, 3);
   assert.deepEqual(g3.actionsPossibles, [...eu.actions, 'simple_jambe', 'parade']);
-  assert.equal(coutAction(g3, 'simple_jambe'), 5);
+  assert.equal(coutAction(g3, 'simple_jambe'), 3);
   assert.equal(coutAction(g3, 'parade'), 2);
-  assert.equal(coutAction(g3, 'attaque_base'), 6); // action de base : coût normal
+  assert.equal(coutAction(g3, 'attaque_base'), 4); // action de base : coût normal
   const g5 = avecGrade(eu, 5, { parade: 3, attaque_base: 2 });
   assert.equal(coutAction(g5, 'parade'), 1); // 3 − 1 (déblocage) − 3 étoiles → minimum 1
-  assert.equal(coutAction(g5, 'attaque_base'), 4);
-  assert.equal(coutAction(avecGrade(eu, 4, { attaque_base: 2 }), 'attaque_base'), 6); // étoiles seulement en Champion du Monde
+  assert.equal(coutAction(g5, 'attaque_base'), 2);
+  assert.equal(coutAction(avecGrade(eu, 4, { attaque_base: 2 }), 'attaque_base'), 4); // étoiles seulement en Champion du Monde
   // Le niveau fixe le nombre d'actions : une légendaire en a 3 dès le départ, toutes en Champion du Monde.
   const usa = trouverLutteur('usa'); // déblocages : simple jambe, feinte, défense, ceinture arrière
   assert.deepEqual(avecGrade(usa, 1).actionsPossibles, [...usa.actions, 'simple_jambe', 'feinte', 'defense']);
@@ -102,13 +119,14 @@ test('decks : refuse un deck sans action de la famille spéciale, ou avec une ac
   assert.deepEqual(avecDeck(g2, ['simple_jambe', 'sprawl', 'matraquage', 'relance']).actions, ['simple_jambe', 'sprawl', 'matraquage', 'relance']);
 });
 
-test('récupération régulière : tous les 2 tours, 5 % de l\'endurance actuelle si la précision le permet', () => {
+test('récupération régulière : tous les 2 tours, 0,1 × récupération × barre d\'endurance si la précision le permet', () => {
   let e = creerCombat('europe', 'usa');
   e = jouerTour(e, c('defense'), c('sprawl'), toujours(0)); // tour 1 : rien
   const avant = e.joueurs[0].endurance;
   e = jouerTour(e, c('defense'), c('sprawl'), toujours(0)); // tour 2 : récupération
   const apres = avant - ACTIONS.defense.cout;
   assert.ok(e.journal.some((l) => l.includes('(tous les 2 tours)')));
-  assert.equal(Math.round(e.joueurs[0].endurance * 100), Math.round(Math.min(e.joueurs[0].def.enduranceMax, apres * 1.05) * 100));
+  const d = e.joueurs[0].def;
+  assert.equal(Math.round(e.joueurs[0].endurance * 100), Math.round(Math.min(d.enduranceMax, apres + 0.1 * d.recuperation * d.enduranceMax) * 100));
 });
 

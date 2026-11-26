@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { actionsJouables } from '../src/moteur/combat';
 import { creerHasard } from '../src/moteur/hasard';
+import { trouverLutteur } from '../src/moteur/config';
 import { Duel, coder, decoder, resume, type Presence, type Salle } from '../src/page/enligne';
 
 function salleMemoire() {
@@ -256,3 +257,31 @@ test('en ligne : l\'hôte quitte puis revient avec le code (comme invité) : les
   assert.equal(revenu.vue.graine, invite.vue.graine);
   revenu.fermer(); invite.fermer();
 });
+
+for (const cas of ['une autre action de sa carte', 'une action que sa carte n\'a pas'] as const) {
+  test(`triche : un ami qui dévoile ${cas} au lieu de celle envoyée est détecté`, async () => {
+    const salle = salleMemoire();
+    const a = new Duel(salle('a'), 'hote');
+    const vraie = salle('b');
+    const deck = trouverLutteur('japon').actions.map((x) => coder({ action: x }));
+    const absente = coder({ action: 'german_suplex' });
+    // Salle truquée : le choix dévoilé n'est pas celui qui a été envoyé en secret.
+    const truquee: Salle = {
+      ...vraie,
+      publier(p) {
+        const q = JSON.parse(JSON.stringify(p));
+        if (q.rev && q.t === 0) q.rev.c = cas === 'une autre action de sa carte' ? deck.find((x) => x !== q.rev.c) : absente;
+        vraie.publier(q);
+      },
+    };
+    const b = new Duel(truquee, 'invite');
+    joueurAuto(a, 1);
+    joueurAuto(b, 2);
+    await attendre();
+    a.choisirLutteur('usa', undefined);
+    b.choisirLutteur('japon', undefined);
+    await attendreQue(() => a.vue.desaccord, 20000);
+    assert.equal(a.vue.desaccord, true);
+    a.fermer(); b.fermer();
+  });
+}

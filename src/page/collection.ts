@@ -352,7 +352,7 @@ export function deckDe(c: Collection, id: string): IdAction[] | undefined {
 }
 
 export function choisirDeck(c: Collection, id: string, actions: IdAction[]): string | null {
-  if (!carteConnue(id)) return 'Lutteur inconnu.';
+  if (!carteConnue(id) && id !== ID_LUTTEUR_TEST) return 'Lutteur inconnu.';
   const erreur = verifierDeck(defPossede(c, id), actions);
   if (!erreur) c.decks[id] = [...actions];
   return erreur;
@@ -435,7 +435,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
     if (!carteConnue(id) || !(c.exemplaires[id] > 0)) delete c.exemplaires[id];
   }
   for (const [id, deck] of Object.entries(c.decks)) {
-    if (!carteConnue(id) || verifierDeck(defPossede(c, id), deck)) delete c.decks[id];
+    if ((!carteConnue(id) && id !== ID_LUTTEUR_TEST) || verifierDeck(defPossede(c, id), deck)) delete c.decks[id];
   }
   return c;
 }

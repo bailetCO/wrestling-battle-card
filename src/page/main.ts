@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, trouverLutteur, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
@@ -84,12 +84,16 @@ const pct = (x: number) => `${Math.round(x * 100)} %`;
 const echap = (t: string) =>
   t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function famille(a: IdAction | 'lutte'): Famille | 'lutte' {
-  return a === 'lutte' ? 'lutte' : ACTIONS[a].famille;
+type ActionJouee = Choix['action'];
+function famille(a: ActionJouee): Famille | 'lutte' | 'souffle' {
+  return a === 'lutte' || a === 'souffle' ? a : ACTIONS[a].famille;
 }
+// Nom de la famille, en minuscules, pour les petites légendes (rien pour Lutte et Souffler).
+const legendeFamille = (f: Famille | 'lutte' | 'souffle') => (f === 'lutte' || f === 'souffle' ? '' : ` · ${NOM_FAMILLE[f].toLowerCase()}`);
 
-function libelleAction(nation: string, a: IdAction | 'lutte'): { local: string; fr: string } {
+function libelleAction(nation: string, a: ActionJouee): { local: string; fr: string } {
   if (a === 'lutte') return { local: 'Lutte', fr: 'Lutte' };
+  if (a === 'souffle') return { local: 'Souffler', fr: 'Second souffle' };
   return { local: nomLocal(nation, a), fr: ACTIONS[a].nom };
 }
 
@@ -290,7 +294,8 @@ function queteCombat(e: EtatCombat, mode: 'arene' | 'rapide' | 'tournoi' | 'equi
   let feintes = 0, contres = 0, points = 0;
   tours.forEach((t, i) => {
     const apres = tours[i + 1]?.avant ?? e;
-    const fam = t.choixHumain.action === 'lutte' ? null : ACTIONS[t.choixHumain.action].famille;
+    const ch = t.choixHumain.action;
+    const fam = ch === 'lutte' || ch === 'souffle' ? null : ACTIONS[ch].famille;
     const marque = t.lignes.filter((l) => l.startsWith(`${nom} marque `));
     for (const l of marque) points += Number(l.match(/marque (\d+)/)?.[1] ?? 0);
     if (fam === 'feinte' && apres.joueurs[HUMAIN].bonusFeinte === REGLES.toursBonusFeinte) feintes++;
@@ -2126,6 +2131,8 @@ function badges(e: EtatCombat, j: Joueur): string {
   if (l.bonusFeinte > 0) b.push(`+${REGLES.bonusFeinte} sur la prochaine attaque ou le prochain contre réussi (${l.bonusFeinte} tour${l.bonusFeinte > 1 ? 's' : ''})`);
   if (l.bonusEnchainement) b.push('Enchaînement : +4 si attaque ou contre réussi');
   if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % de précision (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
+  if (l.attaqueIncontrable) b.push('Niveau changé : attaque impossible à contrer');
+  if (l.derniereReussie === 'bras_tire') b.push(`Bras tiré : attaque −${REGLES.brasTire.reductionCout} d'endurance`);
   let serie = 0;
   for (let i = l.historique.length - 1; i >= 0 && l.historique[i].reussie; i--) serie++;
   const attaques = l.historique.slice(l.historique.length - serie).filter((h) => h.attaque).length;
@@ -2150,7 +2157,7 @@ function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquette: str
         <span class="endu-qui">${etiquette}</span>
         <span class="endu-val"><b>${fmt(l.endurance)}</b><small>/${max}</small></span>
       </div>
-      <div class="endu-barre" role="meter" aria-label="Endurance ${etiquette}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${fmt(l.endurance)}">
+      <div class="endu-barre ${etatPrecision}" role="meter" aria-label="Endurance ${etiquette}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${fmt(l.endurance)}">
         <div class="endu-trace" style="width:${Math.max(depart, cible)}%" data-cible="${cible}"></div>
         <div class="endu-rempli ${l.endurance < 50 ? 'bas' : ''}" style="width:${depart}%" data-cible="${cible}"></div>
         ${repere < 100 ? `<div class="endu-repere" style="${coin === 'bleu' ? 'right' : 'left'}:${repere}%" title="Sous 50, la précision baisse"></div>` : ''}
@@ -2159,17 +2166,35 @@ function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquette: str
     </div>`;
 }
 
+// Chance de réussite d'une action pour le joueur, ce tour-ci (précision, matraquage, combos).
+function chanceAction(e: EtatCombat, a: IdAction): number {
+  const l = e.joueurs[HUMAIN];
+  const attaque = ACTIONS[a].famille === 'attaque';
+  if (attaque && l.derniereReussie === R_.combos.contreTemps.avant) return 1;
+  if (a === 'tour_hanche' && l.def.force > e.joueurs[ORDI].def.force) return 1;
+  const malus = attaque && l.malusPrecisionTours > 0 && a !== 'simple_jambe' ? R_.matraquage.malusPrecision : 0;
+  return chanceReussite(precisionDe(l.endurance) - malus);
+}
+
 function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
   const l = e.joueurs[HUMAIN];
   const jouables = actionsJouables(e, HUMAIN);
+  // Second souffle : une fois par combat, sous 25 d'endurance.
+  const souffle = mode === 'tour' && souffleDispo(e, HUMAIN) ? `
+      <button class="action souffle" data-action="souffle" data-mode="${mode}">
+        <span class="ico">${ICONE.souffle}</span>
+        <span class="a-nom">Souffler</span>
+        <span class="a-fr"><b class="a-effet">+${REGLES.souffle.gain} d'endurance · 1 fois par combat</b> · si l'adversaire attaque, +${REGLES.souffle.penalite} pour lui</span>
+        <span class="a-cout">0</span>
+      </button>` : '';
   if (jouables.length === 0) {
-    return `
+    return `<div class="grille">
       <button class="action lutte" data-action="lutte" data-mode="${mode}">
         <span class="ico">${ICONE.lutte}</span>
         <span class="a-nom">Lutte</span>
         <span class="a-fr">Plus d'endurance : 1 chance sur 10 de marquer 1 ou 2 points</span>
         <span class="a-cout">0</span>
-      </button>`;
+      </button>${souffle}</div>`;
   }
   // Action spéciale : pas de bouton à part ; l'action qui peut être jouée en spéciale brille, et le
   // jeu demande au moment du choix si on active la spéciale (voir demanderSpeciale).
@@ -2177,16 +2202,22 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
     const ok = jouables.includes(a);
     const f = ACTIONS[a].famille;
     const spe = f === l.def.familleSpeciale && peutJouerSpeciale(e, HUMAIN, a);
+    const combo = ok ? comboPossible(e, HUMAIN, a) : null;
+    const chance = chanceAction(e, a);
+    const cout = coutDuTour(e, HUMAIN, a);
+    const moinsCher = cout < coutAction(l.def, a);
     return `
-      <button class="action ${spe ? 'peut-speciale' : ''}" data-action="${a}" data-mode="${mode}" ${spe ? 'data-spe="1"' : ''} ${ok || spe ? '' : 'disabled'}>
+      <button class="action ${spe ? 'peut-speciale' : ''} ${combo ? 'combo' : ''}" data-action="${a}" data-mode="${mode}" ${spe ? 'data-spe="1"' : ''} ${ok || spe ? '' : 'disabled'}>
         ${spe ? '<span class="badge-spe" aria-label="Action spéciale possible">★</span>' : ''}
+        ${combo ? `<span class="badge-combo" title="${echap(combo)}">Combo !</span>` : ''}
+        ${chance < 1 ? `<span class="a-chance ${chance >= 0.7 ? 'moyenne' : 'faible'}" title="Chance de réussite">${pct(chance)}</span>` : ''}
         <span class="ico f-${f}">${ICONE[f]}</span>
         <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
-        <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement })}</b></span>
-        <span class="a-cout">−${fmt(coutAction(l.def, a))}</span>
+        <span class="a-fr">${nomLocal(l.def.nation, a) !== ACTIONS[a].nom ? `${echap(ACTIONS[a].nom)} · ` : ''}<b class="a-effet">${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement, combo: pointsCombo(l, a) })}</b></span>${combo ? `<span class="a-combo">${echap(combo)}</span>` : ''}
+        <span class="a-cout ${moinsCher ? 'moins-cher' : ''}">−${fmt(cout)}</span>
       </button>`;
   }).join('');
-  return `<div class="grille">${normales}</div>`;
+  return `<div class="grille">${normales}${souffle}</div>`;
 }
 
 function classeLigne(ligne: string, e: EtatCombat): string {
@@ -2210,6 +2241,9 @@ function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: Cote; fo
   const trouve = (re: RegExp) => L.find((l) => re.test(l));
   let l: string | undefined;
   if ((l = trouve(/: TOMBÉ\./))) return { texte: 'TOMBÉ !', cote: de(l), fort: true };
+  if ((l = trouve(/^Combo « /))) return { texte: 'COMBO !', cote: l.includes(nh) ? 'rouge' : 'bleu', fort: true };
+  if ((l = trouve(/reprend son souffle/))) return { texte: 'SECOND SOUFFLE', cote: de(l), fort: false };
+  if ((l = trouve(/hors de la zone/))) return { texte: 'SORTIE !', cote: de(l), fort: false };
   if ((l = trouve(/se fait tomber/))) return { texte: 'TOMBÉ !', cote: inverse(de(l)), fort: true };
   if ((l = trouve(/il s'en sort/))) return { texte: 'SAUVÉ !', cote: inverse(de(l)), fort: true };
   if ((l = trouve(/renvoyés/))) return { texte: 'CONTRE !', cote: de(l), fort: true };
@@ -2252,7 +2286,7 @@ function miniCarte(c: Choix, def: DefLutteur, coin: 'rouge' | 'bleu', delai: num
     <div class="mini ${coin} ${c.speciale ? 'speciale' : ''}" style="--delai:${delai}ms">
       <span class="mini-ico f-${f}">${ICONE[f]}</span>
       <b>${c.speciale ? '★ ' : ''}${echap(lib.local)}</b>
-      <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small>
+      <small>${echap(lib.fr)}${legendeFamille(f)}</small>
     </div>`;
 }
 
@@ -2419,15 +2453,15 @@ function confirmerAbandon(): boolean {
 }
 
 function lireChoix(b: HTMLButtonElement): Choix {
-  const a = b.dataset.action as IdAction | 'lutte';
-  return a === 'lutte' ? { action: 'lutte' } : { action: a, speciale: b.dataset.speciale === '1' };
+  const a = b.dataset.action as ActionJouee;
+  return a === 'lutte' || a === 'souffle' ? { action: a } : { action: a, speciale: b.dataset.speciale === '1' };
 }
 
 // Choix d'une action : si elle peut être jouée en spéciale (elle brille), le jeu demande d'abord
 // si on active l'action spéciale, dans une petite bulle par-dessus l'écran.
 function demanderSpeciale(b: HTMLButtonElement, suite: (c: Choix) => void) {
   const c = lireChoix(b);
-  if (b.dataset.spe !== '1' || c.action === 'lutte') return suite(c);
+  if (b.dataset.spe !== '1' || c.action === 'lutte' || c.action === 'souffle') return suite(c);
   const e = partie?.etat ?? vueLigne?.etat;
   if (!e) return suite(c);
   const l = e.joueurs[HUMAIN];
@@ -2443,7 +2477,7 @@ function demanderSpeciale(b: HTMLButtonElement, suite: (c: Choix) => void) {
     <button class="principal" data-oui ${g && !g.conseil.speciale ? 'disabled' : ''}>
       <b>★ ${nom} spéciale</b><small>${EFFET_SPECIALE[ACTIONS[a].famille]} · −${fmt(coutSpeciale(e, HUMAIN, a))} d'endurance</small></button>
     <button class="secondaire" data-non ${normaleOk && !(g && g.conseil.speciale) ? '' : 'disabled'}>
-      <b>${nom} normale</b><small>${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement })} · −${fmt(coutAction(l.def, a))} d'endurance</small></button>
+      <b>${nom} normale</b><small>${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement, combo: pointsCombo(l, a) })} · −${fmt(coutDuTour(e, HUMAIN, a))} d'endurance</small></button>
     <button class="lien" data-annuler>Annuler</button></div>`;
   document.body.append(el);
   const fermer = () => el.remove();
@@ -2517,14 +2551,14 @@ function fenetreCarte(def: DefLutteur, style = 0) {
   activerReflets(f);
 }
 
-function fenetreInitiative(choixHumain: Choix, choixOrdi: Choix, apercu: (IdAction | 'lutte')[]) {
+function fenetreInitiative(choixHumain: Choix, choixOrdi: Choix, apercu: ActionJouee[]) {
   const e = partie!.etat;
   const nationO = e.joueurs[ORDI].def.nation;
   const mien = libelleAction(e.joueurs[HUMAIN].def.nation, choixHumain.action);
   const options = apercu.map((a) => {
     const lib = libelleAction(nationO, a);
     const f = famille(a);
-    return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small></li>`;
+    return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${legendeFamille(f)}</small></li>`;
   }).join('');
   const f = ouvrirFenetre(`
     <h2>Initiative</h2>
@@ -3146,7 +3180,7 @@ function fenetreInitiativeLigne(v: Vue) {
   const options = v.initiative!.map((a) => {
     const lib = libelleAction(nationA, a);
     const f = famille(a);
-    return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${f !== 'lutte' ? ` · ${NOM_FAMILLE[f].toLowerCase()}` : ''}</small></li>`;
+    return `<li class="bleu"><span class="ico f-${f}">${ICONE[f]}</span><b>${echap(lib.local)}</b> <small>${echap(lib.fr)}${legendeFamille(f)}</small></li>`;
   }).join('');
   const mien = choix ? libelleAction(e.joueurs[HUMAIN].def.nation, choix.action) : null;
   const f = ouvrirFenetre(`

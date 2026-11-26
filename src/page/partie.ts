@@ -68,7 +68,7 @@ export class Partie {
   }
 
   // Si le joueur a l'initiative : 2 actions possibles de l'ordinateur, dont la vraie.
-  apercuPourHumain(actionOrdi: IdAction | 'lutte'): (IdAction | 'lutte')[] | null {
+  apercuPourHumain(actionOrdi: IdAction | 'lutte' | 'souffle'): (IdAction | 'lutte' | 'souffle')[] | null {
     return apercuInitiative(this.etat, HUMAIN, actionOrdi, this.hasard.fn);
   }
 

@@ -1,7 +1,7 @@
 // Aide au joueur : la page de règles et les écrans du tutoriel.
 // Les chiffres viennent de la configuration : si on rééquilibre, les textes suivent.
 
-import { COUT_FAMILLE, REGLES, type Choix, type IdAction } from '../moteur';
+import { ACTIONS, REGLES, type Choix, type IdAction } from '../moteur';
 import { ICONE } from './textes';
 
 const R = REGLES;
@@ -54,22 +54,50 @@ export function reglesHTML(): string {
       <h2>Qui bat qui</h2>
       ${schemaFamilles()}
       <ul class="liste-regles">
-        <li><b>Attaque</b> (coût ${COUT_FAMILLE.attaque}) : marque des points (2 à 5 selon la prise).</li>
-        <li><b>Défense</b> (coût ${COUT_FAMILLE.defense}) : bloque l'attaque et fait récupérer de l'endurance. Le Sprawl marque aussi 2 points.</li>
-        <li><b>Feinte</b> (coût ${COUT_FAMILLE.feinte}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque ou ton prochain contre réussi vaut +${R.bonusFeinte}, pendant ${R.toursBonusFeinte} tours.</li>
-        <li><b>Contre</b> (coût ${COUT_FAMILLE.contre}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>ou</i> plus de force que l'attaquant (sinon l'attaque passe).</li>
+        <li><b>Attaque</b> : marque des points (1 à 5 selon la prise). Plus elle rapporte, plus elle coûte : ${ACTIONS.sortie_zone.cout} pour 1 point, ${ACTIONS.simple_jambe.cout} pour 2, ${ACTIONS.double_jambe.cout} pour 4, ${ACTIONS.grande_projection.cout} pour 5.</li>
+        <li><b>Défense</b> (coût ${ACTIONS.defense.cout}) : bloque l'attaque et fait récupérer de l'endurance.</li>
+        <li><b>Feinte</b> (coût ${ACTIONS.feinte.cout}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque ou ton prochain contre réussi vaut +${R.bonusFeinte}, pendant ${R.toursBonusFeinte} tours.</li>
+        <li><b>Contre</b> (coût ${ACTIONS.contre.cout}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>ou</i> plus de force que l'attaquant (sinon l'attaque passe).</li>
         <li>Deux actions de la même famille s'annulent, sauf si l'un a au moins le double d'endurance de l'autre.</li>
+      </ul>
+    </section>
+    <section class="regle">
+      <h2>Chaque action a son caractère</h2>
+      <ul class="liste-regles">
+        <li><b>Simple jambe</b> (2 pts) : pas chère, et le Matraquage ne baisse pas sa précision.</li>
+        <li><b>Grosses attaques</b> (5 pts) : bloquées par une défense, elles coûtent ${R.grosseAttaqueBloquee.perte} d'endurance de plus.</li>
+        <li><b>Parade</b> : bloque l'attaque et fait perdre ${R.parade.perteAttaquant} d'endurance à l'attaquant.</li>
+        <li><b>Esquive</b> : ne fait pas récupérer, mais une attaque esquivée donne l'initiative 1 fois sur ${Math.round(1 / R.esquive.chanceInitiative)}.</li>
+        <li><b>Sprawl</b> (coût ${ACTIONS.sprawl.cout}) : bloque et marque ${ACTIONS.sprawl.points} points, ${ACTIONS.sprawl.points + R.sprawlSurDoubleJambe} sur une Double jambe.</li>
+        <li><b>Relance</b> : face à une défense, marque ${R.relance.pointsSurDefense} points ; face à une attaque, ne renvoie que la moitié des points.</li>
+        <li><b>Matraquage</b> (coût ${ACTIONS.matraquage.cout}) : l'adversaire perd ${pct(R.matraquage.perteEndurance)} d'endurance et ${pct(R.matraquage.malusPrecision)} de précision sur ses attaques pendant ${R.matraquage.tours} tours.</li>
+        <li><b>Bras tiré</b> (2 pts) : l'attaque du tour suivant coûte ${R.brasTire.reductionCout} de moins.</li>
+        <li><b>Sortie de zone</b> (1 pt) : un contre ne la prend qu'une fois sur ${Math.round(1 / R.sortieZone.chanceContre)}.</li>
+        <li><b>Tour de hanche</b> (4 pts) : ne rate jamais si tu es plus fort que l'adversaire.</li>
+        <li><b>Cravate</b> (contre) : sur une attaque aux jambes, l'attaquant perd ${R.cravate.perteEndurance} d'endurance de plus.</li>
+        <li><b>Changement de niveau</b> (feinte) : pas de bonus de points, mais ton attaque du tour suivant ne peut pas être contrée.</li>
+      </ul>
+    </section>
+    <section class="regle">
+      <h2>Combos</h2>
+      <p>Deux actions réussies à la suite. Le bouton de l'action qui déclenche un combo s'allume en combat.</p>
+      <ul class="liste-regles">
+        <li><b>Passage dans le dos</b> : Matraquage puis Ceinture arrière, +${R.combos.passageDansLeDos.points} points.</li>
+        <li><b>Contre-temps</b> : Sprawl puis n'importe quelle attaque, qui ne peut pas rater.</li>
+        <li><b>Enchaînement aux jambes</b> : Simple jambe puis Double jambe, +${R.combos.enchainementJambes.points} point et ${R.combos.enchainementJambes.reductionCout} d'endurance en moins.</li>
+        <li><b>Esquive et contre</b> : Esquive puis contre, qui renvoie l'attaque même sans avoir plus d'endurance ou de force.</li>
       </ul>
     </section>
     <section class="regle">
       <h2>Endurance et précision</h2>
       <p>Plus ton endurance baisse, plus tes actions risquent de rater :</p>
       <ul class="liste-regles">
-        <li>50 d'endurance ou plus : <b>toujours réussie</b>.</li>
-        <li>De 20 à 50 : 2 chances sur 3. De 0 à 20 : 1 chance sur 2.</li>
+        <li>${R.precision.seuilPlein} d'endurance ou plus : <b>toujours réussie</b>.</li>
+        <li>En dessous, la chance baisse un peu à chaque point perdu, jusqu'à ${pct(R.precision.chanceMinimale)} à 0. Elle s'affiche sur chaque action.</li>
+        <li><b>Second souffle</b> : une fois par combat, sous ${R.souffle.seuil} d'endurance, « Souffler » rend ${R.souffle.gain} d'endurance. Si l'adversaire attaque pendant ce temps, il marque son attaque et ${R.souffle.penalite} point de plus.</li>
         <li>Sans assez d'endurance pour une action, il ne reste que <b>Lutte</b> (1 chance sur 10 de marquer). ${R.toursSansEnduranceAvantTombe} tours à 0, c'est le tombé.</li>
       </ul>
-      <p>Tous les ${R.recuperationReguliere.tousLesTours} tours, chaque lutteur récupère ${pct(R.recuperationReguliere.part)} de son endurance actuelle (si sa précision le permet), et il récupère davantage entre deux périodes.</p>
+      <p>Tous les ${R.recuperationReguliere.tousLesTours} tours, chaque lutteur récupère un peu d'endurance selon sa statistique de récupération (si sa précision le permet), et il récupère davantage entre deux périodes.</p>
     </section>
     <section class="regle">
       <h2>Action spéciale</h2>

@@ -25,7 +25,7 @@ C'est un concept inédit : il existe très peu de jeux de lutte en ligne.
 
 - Endurance : de 0 à 100, avec une vitesse de récupération entre les périodes.
 - Force : de 10 à 250.
-- Précision : calculée à partir de l'endurance, précision = (100 + endurance) / 200, soit de 0,5 à 1. Chance de réussir une action, quelle qu'elle soit : 100 % à 0,75 ou plus (endurance de 50 ou plus), 2 chances sur 3 sous 0,75, 1 chance sur 2 sous 0,6 (endurance sous 20), 1 chance sur 3 à 0,5 (endurance à 0).
+- Précision : calculée à partir de l'endurance, précision = (100 + endurance) / 200, soit de 0,5 à 1. Chance de réussir une action, quelle qu'elle soit : 100 % à 50 d'endurance ou plus, puis une baisse régulière, point par point, jusqu'à 40 % à 0 d'endurance (depuis le 25/11/2026 ; avant : paliers de 2/3, 1/2 et 1/3).
 - 4 actions.
 - 1 action spéciale, active (attaque, contre, défense) ou passive (feinte).
 
@@ -463,7 +463,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 | Contre contre défense | Le contre l'emporte |
 | Feinte contre contre | La feinte l'emporte |
 | Feinte contre défense | La feinte l'emporte : le défenseur perd 10 % de son endurance totale et le feinteur a 2 chances sur 3 de gagner l'initiative |
-| Contre contre attaque | Plus d'endurance OU plus de force que l'attaquant (depuis le 25/11/2026) : le contre renvoie les points de l'attaque et l'attaquant subit un déséquilibre. Aucun des deux : l'attaque passe. (Le point de sortie a été supprimé.) Exceptions pour les actions spéciales : voir Action spéciale |
+| Contre contre attaque | Plus d'endurance OU plus de force que l'attaquant (depuis le 25/11/2026) : le contre renvoie les points de l'attaque et l'attaquant subit un déséquilibre. Aucun des deux : l'attaque passe. (Le point de sortie a été supprimé.) Exceptions : actions spéciales (voir Action spéciale), combo Esquive et contre, Changement de niveau, Sortie de zone, Relance (voir Gameplay 2) |
 | Même famille | Le lutteur qui a au moins le double d'endurance gagne, sinon personne ne marque |
 
 ### Format du match
@@ -488,12 +488,52 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 - Bonus de feinte : une feinte réussie donne +2 points à la prochaine attaque ou au prochain contre réussi, pendant 2 tours. Le bonus sert une seule fois ; une attaque ou un contre raté ne le consomme pas ; un contre réussi en profite même sans points de base (contre une défense) ; une nouvelle feinte réussie le relance pour 2 tours. Un contre renvoie la valeur de l'attaque adverse, bonus de l'attaquant compris (l'attaquant garde alors son bonus).
 - Contre réussi : il renvoie les points de l'attaque adverse.
 
+### Gameplay 2 : identité des actions, combos, second souffle (25/11/2026)
+
+Coûts : ils suivent la puissance (voir Chiffrage).
+
+Chaque action a son caractère :
+
+- Simple jambe : le Matraquage ne baisse pas sa précision.
+- Grosse attaque (5 points) bloquée par une défense : l'attaquant perd 3 d'endurance de plus.
+- Parade : bloque l'attaque et fait perdre 3 d'endurance à l'attaquant.
+- Esquive : ne fait pas récupérer d'endurance ; une attaque esquivée donne l'initiative 1 fois sur 2.
+- Sprawl : 2 points, 4 sur une Double jambe.
+- Relance : face à une défense, 2 points ; face à une attaque, ne renvoie que la moitié des points (arrondie au-dessus). La Relance spéciale renvoie tout.
+- Défense : inchangée (bloque et fait récupérer).
+
+Nouvelles actions (données pour l'instant aux 12 Champions du Monde, une chacun, en 9e action, et au lutteur de test Cocoach, qui a toutes les actions) :
+
+| Action | Famille | Coût | Points | Effet |
+| --- | --- | --- | --- | --- |
+| Bras tiré | Attaque | 4 | 2 | L'attaque du tour suivant coûte 2 de moins |
+| Sortie de zone | Attaque | 3 | 1 | Un contre (non spécial) ne la prend qu'une fois sur 2 |
+| Tour de hanche | Attaque | 6 | 4 | Ne rate jamais avec plus de force que l'adversaire |
+| Cravate | Contre | 6 | Renvoi | Sur une attaque aux jambes (simple ou double), 5 d'endurance en plus pour l'attaquant |
+| Changement de niveau | Feinte | 3 | 0 | Pas de bonus de +2, mais l'attaque du tour suivant ne peut pas être contrée (sauf contre spécial) |
+
+Champions du Monde : USA et Kirghizistan Changement de niveau ; Russie, Kazakhstan et Afrique Sortie de zone ; Japon et Azerbaïdjan Bras tiré ; Iran, Ouzbékistan et Europe Cravate ; Géorgie et Turquie Tour de hanche.
+
+Combos (deux actions réussies à la suite ; le bouton de l'action qui déclenche un combo s'allume en vert avec « Combo ! ») :
+
+- Passage dans le dos : Matraquage puis Ceinture arrière, +2 points.
+- Contre-temps : Sprawl puis n'importe quelle attaque, qui ne peut pas rater.
+- Enchaînement aux jambes : Simple jambe puis Double jambe, +1 point et 2 d'endurance en moins.
+- Esquive et contre : Esquive puis une action de contre, qui renvoie l'attaque même sans avoir plus d'endurance ou de force.
+- Le combo de tombé (3 actions réussies dont 2 attaques) reste en place.
+
+Second souffle : une fois par combat, sous 25 d'endurance (même à 0), l'action « Souffler » (gratuite, elle ne fait rien d'autre) rend 15 d'endurance. Si l'adversaire attaque pendant ce tour, son attaque passe et il marque 1 point de plus. L'ordinateur souffle sous 12 d'endurance.
+
+Affichage : chaque bouton montre sa chance de réussite quand elle est sous 100 %, son coût réel du tour (en vert s'il est réduit), et le combo possible. Le contour de la barre d'endurance devient orange puis rouge avec la fatigue.
+
+Équilibrage : les 120 cartes et les 12 Champions du Monde ont été rééquilibrés par simulation (2 500 combats par carte) en ajustant l'endurance : 113 cartes dans la fourchette de leur rareté, 4 à un point près, 3 en dehors ; Champions du Monde entre 62,8 et 67,1 %.
+
 ### Avantages
 
 - **Initiative** : réservée au lutteur qui a feinté. Après une feinte réussie sur une défense, 2 chances sur 3 d'obtenir l'initiative au tour suivant : le joueur voit 2 actions de l'adversaire, dont celle qu'il a choisie, et peut changer son action ou non.
 - **Déséquilibre** : face à un contre réussi, l'attaquant perd 5, 10 ou 15 % de son endurance selon que son attaque valait 2 points, 4 points, ou 5 points et plus.
 - **Combo** : trois actions réussies dont deux attaques permettent de tenter un tombé. Réussite : 3 chances sur 5 avec plus d'endurance, 2 sur 5 à égalité, 1 sur 5 avec moins. Si la tentative réussit, le lutteur menacé annonce pile ou face : s'il devine juste, il s'en sort.
-- **Récupération** : une défense réussie rend 5 % d'endurance sous la moitié de la barre, 10 % au-dessus.
+- **Récupération** : une défense réussie (sauf l'Esquive) rend 5 % d'endurance sous la moitié de la barre, 10 % au-dessus.
 - **Pression** : trois tours d'affilée sans attaque ni contre donnent 1 point de pénalité à l'adversaire.
 
 ### Action spéciale
@@ -524,18 +564,19 @@ Version d'origine, remplacée par le rééquilibrage de l'étape 4 (voir Les 15 
 
 | Actions | Famille | Coût en endurance | Points |
 | --- | --- | --- | --- |
-| Feinte | Feinte | 3 | 0 (+2 sur la prochaine attaque ou le prochain contre réussi, pendant 2 tours) |
-| Matraquage | Feinte | 3 | 0 |
+| Feinte, changement de niveau | Feinte | 3 | 0 (feinte : +2 sur la prochaine attaque ou le prochain contre réussi, pendant 2 tours) |
+| Matraquage | Feinte | 4 | 0 |
 | Défense, parade, esquive | Défense | 3 | 0 |
-| Sprawl | Défense | 3 | 2 |
-| Contre, relance | Contre | 6 | Points de l'attaque renvoyés |
-| Attaque de base, simple jambe | Attaque | 6 | 2 |
-| Double jambe, ceinture arrière, bras roulé (bras à la volée) | Attaque | 6 | 4 |
-| Grande projection, german suplex | Attaque | 6 | 5 |
+| Sprawl | Défense | 4 | 2 (4 sur une double jambe) |
+| Contre, relance, cravate | Contre | 6 | Points de l'attaque renvoyés (relance : la moitié) |
+| Sortie de zone | Attaque | 3 | 1 |
+| Attaque de base, simple jambe, bras tiré | Attaque | 4 | 2 |
+| Double jambe, ceinture arrière, bras roulé (bras à la volée), tour de hanche | Attaque | 6 | 4 |
+| Grande projection, german suplex | Attaque | 8 | 5 |
 
-Depuis le 25/11/2026, toutes les actions d'une même famille ont le même coût de base : attaque 6, défense 3, contre 6, feinte 3. Une action débloquée par fusion coûte 1 de moins ; chaque étoile (Champion du Monde) retire encore 1, sans descendre sous 1.
+Depuis le 25/11/2026 (2e version), le coût suit la puissance : attaque à 1 point 3, à 2 points 4, à 4 points 6, à 5 points 8 ; défense 3 (Sprawl 4), contre 6, feinte 3 (Matraquage 4). Une action débloquée par fusion coûte 1 de moins ; chaque étoile (Champion du Monde) retire encore 1, sans descendre sous 1.
 
-Récupération en combat : tous les 2 tours de chaque période (tours 2, 4, 6, 8, 10), chaque lutteur récupère 5 % de son endurance actuelle ; sa chance de réussite est sa précision du moment.
+Récupération en combat : tous les 2 tours de chaque période (tours 2, 4, 6, 8, 10), chaque lutteur récupère 0,1 × sa récupération × sa barre d'endurance (par exemple 2,3 pour une barre de 57 et une récupération de 0,4) ; sa chance de réussite est sa précision du moment. Avant le 25/11/2026 : 5 % de l'endurance actuelle.
 
 Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'endurance par période, ce qui permet de tenir jusqu'à la 3e période ; enchaîner les attaques fait passer sous 50 d'endurance dès la 3e période, avec une précision dégradée.
 
@@ -543,7 +584,7 @@ Le coût est payé même si l'action échoue. Un jeu varié coûte environ 50 d'
 
 - Chaque lutteur a deux statistiques d'endurance : la taille de sa barre et sa vitesse de récupération entre les périodes.
 - Chaque action coûte plus ou moins d'endurance selon sa puissance, ce qui évite de répéter les grosses attaques.
-- À 0 d'endurance, la seule action possible est « Lutte » : 1 chance sur 10 de marquer 1 ou 2 points (tirés au hasard).
+- À 0 d'endurance, la seule action possible est « Lutte » : 1 chance sur 10 de marquer 1 ou 2 points (tirés au hasard), ou « Souffler » si le second souffle n'a pas encore servi.
 - Après 3 tours sans endurance, le lutteur a 100 % de chance de se faire tomber.
 
 ### Ordinateur (3 niveaux)
@@ -553,7 +594,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Facile : au hasard, sans action spéciale, et 45 % du temps l'action la moins bonne (comme un débutant qui se trompe) ; avec l'initiative, change d'action 1 fois sur 4.
 - Normal : au hasard ; avec l'initiative, change d'action 1 fois sur 2.
 - Fort : il retient les 6 dernières familles d'actions du joueur et estime ce que rapporte chacune de ses actions (points, tombé, endurance, passivité) face à ce que le joueur joue d'habitude ; il joue la meilleure 9 fois sur 10. Avec l'initiative, il joue l'action qui contre celle du joueur 3 fois sur 4. Varier ses actions ou feinter permet de le piéger.
-- Mesures (`npm run niveaux`, 1 000 combats par case, cartes au hasard) : joueur au hasard (débutant) 69 % contre le facile, 51 % contre le normal, 16 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 51 % contre le fort. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
+- Mesures (`npm run niveaux`, 2 000 combats par case, cartes au hasard, 25/11/2026 après le gameplay 2) : joueur au hasard (débutant) 67 % contre le facile, 51 % contre le normal, 22 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 52 % contre le fort. Le joueur simulé prend son second souffle comme l'ordinateur. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
 - Le choix du facile au lieu du hasard pur est voulu : un ordinateur qui joue entièrement au hasard laisse 50 % de victoires à un joueur au hasard, pas 70 %.
 
 ### Arène par nation
@@ -586,6 +627,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
 - Les deux téléphones calculent le combat avec le même moteur et le même numéro de combat : ils obtiennent le même résultat, vérifié à chaque tour.
 - Reprise : chaque téléphone garde son historique ; après un rechargement, le combat reprend où il en était. Si l'ami part plus de 2 minutes, on peut arrêter le combat (victoire par forfait). Abandon et revanche possibles.
+- Correction du 25/11/2026 : un combat pouvait rester bloqué (environ 1 fois sur 30) quand un joueur contrôlait l'empreinte de son ami pendant que celui-ci annonçait pile ou face. Le contrôle reprend maintenant le calcul depuis le début avec les informations à jour. Un choix dévoilé impossible (action absente de la carte) est signalé comme un désaccord au lieu de faire planter la page.
 
 ## 5. Plateforme et technique
 

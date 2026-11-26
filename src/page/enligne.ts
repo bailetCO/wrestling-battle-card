@@ -48,19 +48,23 @@ export interface Salle {
 
 const IDS = Object.keys(ACTIONS) as IdAction[];
 const LUTTE = 100;
+const SOUFFLE = 101;
+type ActionChoix = Choix['action'];
 
 export function coder(c: Choix): number {
   if (c.action === 'lutte') return LUTTE;
+  if (c.action === 'souffle') return SOUFFLE;
   return IDS.indexOf(c.action) * 2 + (c.speciale ? 1 : 0);
 }
 
 export function decoder(n: number): Choix {
   if (n === LUTTE) return { action: 'lutte' };
+  if (n === SOUFFLE) return { action: 'souffle' };
   return { action: IDS[Math.floor(n / 2)], speciale: n % 2 === 1 };
 }
 
-const codeAction = (a: IdAction | 'lutte') => (a === 'lutte' ? LUTTE : IDS.indexOf(a) * 2);
-const actionDuCode = (n: number): IdAction | 'lutte' => (n === LUTTE ? 'lutte' : IDS[Math.floor(n / 2)]);
+const codeAction = (a: ActionChoix) => (a === 'lutte' ? LUTTE : a === 'souffle' ? SOUFFLE : IDS.indexOf(a) * 2);
+const actionDuCode = (n: number): ActionChoix => (n === LUTTE ? 'lutte' : n === SOUFFLE ? 'souffle' : IDS[Math.floor(n / 2)]);
 
 // ---------- Ce que chaque joueur publie ----------
 
@@ -167,7 +171,7 @@ export interface Vue {
   // Pendant le combat : ce que l'écran doit faire.
   aChoisir: boolean; // je peux choisir mon action
   monChoix: Choix | null; // mon choix secret du tour en cours
-  initiative: (IdAction | 'lutte')[] | null; // j'ai l'initiative : voici les 2 actions possibles de mon ami
+  initiative: ActionChoix[] | null; // j'ai l'initiative : voici les 2 actions possibles de mon ami
   pileOuFace: boolean; // je dois annoncer pile ou face
   attente: string | null; // ce qu'on attend de l'ami
   abandon: 'moi' | 'ami' | null;
@@ -182,6 +186,8 @@ export class Duel {
   private moiP: Presence;
   private secret: { t: number; m: number; choix: Choix; sel: string } | null = null;
   private enCours = false; // un calcul asynchrone (empreinte) est en cours
+  private empreinteVerifiee = ''; // dernier choix de l'ami dont l'empreinte a été contrôlée
+  private empreinteOk = true; // résultat de ce contrôle
   private ecouteurs = new Set<(v: Vue) => void>();
   private arret: () => void;
   vue: Vue;
@@ -398,7 +404,7 @@ export class Duel {
     const enCollection = (hote.mo ?? 'base') === 'collection';
     const def = (p: Presence) => {
       const base = enCollection ? avecGrade(trouverLutteur(p.lu!), p.gr ?? 1, (p.et ?? {}) as Partial<Record<IdAction, number>>) : trouverLutteur(p.lu!);
-      return avecDeck(base, p.dk!.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte'));
+      return avecDeck(base, p.dk!.map(actionDuCode).filter((a): a is IdAction => a !== 'lutte' && a !== 'souffle'));
     };
     const defHote = def(hote);
     let defInvite = def(invite);
@@ -538,15 +544,23 @@ export class Duel {
     }
 
     // Vérification de l'empreinte de l'ami (sauf s'il avait l'initiative : il pouvait changer).
+    // Le calcul est asynchrone : pendant ce temps, l'ami peut publier du nouveau (pile ou face,
+    // tour enregistré) que ce joueur ne voit pas. On garde donc seulement le résultat du contrôle,
+    // puis on reprend tout depuis le début avec les présences à jour (sinon : blocage possible).
     if (!amiFini && !initAmi && ami.eng) {
       const ref = ami.eng;
-      this.enCours = true;
-      empreinte(t, amiRev.c, amiRev.s).then((e) => {
-        this.enCours = false;
-        if (e !== ref) this.vue = { ...this.vue, desaccord: true };
-        this.resoudre(etat, hasard, t, moi, amiRev.c, v, jouerT);
-      });
-      return;
+      const cle = `${t}:${amiRev.c}:${amiRev.s}:${ref}`;
+      if (this.empreinteVerifiee !== cle) {
+        this.enCours = true;
+        empreinte(t, amiRev.c, amiRev.s).then((e) => {
+          this.enCours = false;
+          this.empreinteVerifiee = cle;
+          this.empreinteOk = e === ref;
+          this.avancer();
+        });
+        return;
+      }
+      if (!this.empreinteOk) v.desaccord = true;
     }
     this.resoudre(etat, hasard, t, moi, amiRev.c, v, jouerT);
   }
@@ -570,7 +584,9 @@ export class Duel {
         }
         return this.emettre(v);
       }
-      throw err;
+      // Choix impossible (action que la carte n'a pas, par exemple) : on s'arrête là, sans planter.
+      v.desaccord = true;
+      return this.emettre(v);
     }
     // Tour joué : je l'enregistre dans mon historique.
     this.secret = null;

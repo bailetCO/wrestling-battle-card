@@ -53,7 +53,7 @@ describe('Contre contre attaque', () => {
     const e = tour(depart, c('contre'), c('attaque_base'));
     assert.equal(e.joueurs[0].score, 2);
     assert.equal(e.joueurs[1].score, 0);
-    assert.equal(e.joueurs[1].endurance, 60 - 6 - 5); // coût + déséquilibre 5 %
+    assert.equal(e.joueurs[1].endurance, 60 - ACTIONS.attaque_base.cout - 5); // coût + déséquilibre 5 %
   });
 
   it('les points renvoyés incluent les bonus de l\'attaquant (ex. double jambe après feinte)', () => {

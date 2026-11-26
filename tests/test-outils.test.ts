@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ID_LUTTEUR_TEST, LUTTEURS, LUTTEUR_TEST, niveauCarte, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
-import { defPossede, gradeDe, nouvelleCollection, possede } from '../src/page/collection';
+import { choisirDeck, defPossede, depuisSauvegarde, gradeDe, nouvelleCollection, possede } from '../src/page/collection';
 import { passerEtape } from '../src/page/histoire';
 import { NB_PALIERS, passerPalier } from '../src/page/saison';
 
@@ -40,4 +40,10 @@ test('passer l\'étape (test) : tout le mode histoire puis toute la saison, avec
   for (let i = 0; i < NB_PALIERS; i++) assert.equal(passerPalier(c, h)!.palier, i);
   assert.equal(c.saison.palier, NB_PALIERS);
   assert.equal(passerPalier(c, h), null);
+});
+
+test('le lutteur de test peut composer son deck avec toutes les actions du jeu', () => {
+  const c = nouvelleCollection();
+  assert.equal(choisirDeck(c, ID_LUTTEUR_TEST, ['matraquage', 'ceinture_arriere', 'sprawl', 'bras_tire']), null);
+  assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify(c))).decks[ID_LUTTEUR_TEST], ['matraquage', 'ceinture_arriere', 'sprawl', 'bras_tire']);
 });

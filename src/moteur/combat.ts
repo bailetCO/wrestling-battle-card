@@ -31,6 +31,9 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
     reductionSpeciale: false,
     initiative: false,
     habitudes: [],
+    derniereReussie: null,
+    attaqueIncontrable: false,
+    souffleUtilise: false,
   };
 }
 
@@ -58,20 +61,55 @@ export function precisionDe(endurance: number): number {
   return (100 + endurance) / 200;
 }
 
+// 100 % à partir de 50 d'endurance, puis une baisse régulière jusqu'à 40 % à 0 d'endurance.
 export function chanceReussite(precision: number): number {
   const P = REGLES.precision;
-  if (precision >= P.seuilPlein) return P.chancePlein;
-  if (precision >= P.seuilMoyen) return P.chanceMoyenne;
-  if (precision > 0.5) return P.chanceFaible;
-  return P.chanceMinimale;
+  const endurance = precision * 200 - 100;
+  if (endurance >= P.seuilPlein) return 1;
+  return P.chanceMinimale + (1 - P.chanceMinimale) * Math.max(0, endurance) / P.seuilPlein;
 }
 
 // ---------- Ce qu'un joueur peut faire ----------
 
+// Baisse de coût d'une action ce tour-ci, grâce à l'action réussie au tour précédent
+// (Bras tiré puis attaque, ou combo Simple jambe puis Double jambe ; non cumulable).
+export function reductionCout(etat: EtatCombat, j: Joueur, id: IdAction): number {
+  const avant = etat.joueurs[j].derniereReussie;
+  const C = REGLES.combos.enchainementJambes;
+  if (avant === C.avant && id === C.apres) return C.reductionCout;
+  if (avant === 'bras_tire' && ACTIONS[id].famille === 'attaque') return REGLES.brasTire.reductionCout;
+  return 0;
+}
+
+// Coût réel d'une action (non spéciale) pour ce tour.
+export function coutDuTour(etat: EtatCombat, j: Joueur, id: IdAction): number {
+  const base = coutAction(etat.joueurs[j].def, id);
+  const r = reductionCout(etat, j, id);
+  return r ? Math.max(REGLES.fusion.coutMinimum, base - r) : base;
+}
+
 export function actionsJouables(etat: EtatCombat, j: Joueur): IdAction[] {
   const l = etat.joueurs[j];
   if (l.endurance <= 0) return [];
-  return l.def.actions.filter((id) => coutAction(l.def, id) <= l.endurance);
+  return l.def.actions.filter((id) => coutDuTour(etat, j, id) <= l.endurance);
+}
+
+// Nom du combo que déclencherait cette action ce tour-ci (si elle réussit), sinon null.
+export function comboPossible(etat: EtatCombat, j: Joueur, id: IdAction): string | null {
+  const avant = etat.joueurs[j].derniereReussie;
+  const C = REGLES.combos;
+  const f = ACTIONS[id].famille;
+  if (avant === C.passageDansLeDos.avant && id === C.passageDansLeDos.apres) return 'Passage dans le dos';
+  if (avant === C.enchainementJambes.avant && id === C.enchainementJambes.apres) return 'Enchaînement aux jambes';
+  if (avant === C.contreTemps.avant && f === 'attaque') return 'Contre-temps';
+  if (avant === C.esquiveContre.avant && f === 'contre') return 'Esquive et contre';
+  return null;
+}
+
+// Second souffle : une fois par combat, sous le seuil d'endurance.
+export function souffleDispo(etat: EtatCombat, j: Joueur): boolean {
+  const l = etat.joueurs[j];
+  return !l.souffleUtilise && l.endurance < REGLES.souffle.seuil;
 }
 
 export function multiplicateurSpeciale(etat: EtatCombat, j: Joueur): number {
@@ -110,8 +148,8 @@ export function peutJouerSpeciale(etat: EtatCombat, j: Joueur, id: IdAction): bo
 
 // Initiative : le joueur voit 2 actions de l'adversaire, dont la vraie, dans un ordre au hasard.
 export function apercuInitiative(
-  etat: EtatCombat, j: Joueur, actionAdverse: IdAction | 'lutte', hasard: Hasard,
-): (IdAction | 'lutte')[] | null {
+  etat: EtatCombat, j: Joueur, actionAdverse: IdAction | 'lutte' | 'souffle', hasard: Hasard,
+): (IdAction | 'lutte' | 'souffle')[] | null {
   if (!etat.joueurs[j].initiative) return null;
   const leurres = etat.joueurs[autre(j)].def.actions.filter((a) => a !== actionAdverse);
   if (leurres.length === 0) return [actionAdverse];
@@ -127,6 +165,7 @@ function log(e: EtatCombat, texte: string) {
 
 function nomChoix(l: EtatLutteur, c: Choix): string {
   if (c.action === 'lutte') return `${l.def.nom} (Lutte)`;
+  if (c.action === 'souffle') return `${l.def.nom} (Souffler)`;
   return `${l.def.nom} (${ACTIONS[c.action].nom}${c.speciale ? ' spéciale' : ''})`;
 }
 
@@ -151,11 +190,19 @@ function ajouterEndurance(l: EtatLutteur, quantite: number) {
 // sans que l'attaquant perde son bonus de feinte : son attaque n'a pas réussi).
 function valeurAttaque(e: EtatCombat, j: Joueur, id: IdAction, endDebut: [number, number]): number {
   const l = e.joueurs[j];
-  let pts = ACTIONS[id].points;
+  let pts = ACTIONS[id].points + pointsCombo(l, id);
   if (l.bonusFeinte > 0) pts += REGLES.bonusFeinte;
   if (l.bonusEnchainement) pts += REGLES.speciale.bonusEnchainementFeinte;
   if (endDebut[j] >= 2 * endDebut[autre(j)]) pts += REGLES.bonusDoubleEndurance;
   return pts;
+}
+
+// Points de combo d'une attaque, selon l'action réussie au tour précédent.
+export function pointsCombo(l: EtatLutteur, id: IdAction): number {
+  const C = REGLES.combos;
+  if (l.derniereReussie === C.passageDansLeDos.avant && id === C.passageDansLeDos.apres) return C.passageDansLeDos.points;
+  if (l.derniereReussie === C.enchainementJambes.avant && id === C.enchainementJambes.apres) return C.enchainementJambes.points;
+  return 0;
 }
 
 function perteDesequilibre(points: number): number {
@@ -165,6 +212,10 @@ function perteDesequilibre(points: number): number {
 
 function valider(e: EtatCombat, j: Joueur, c: Choix): Choix {
   const l = e.joueurs[j];
+  if (c.action === 'souffle') {
+    if (!souffleDispo(e, j)) throw new Error(`${l.def.nom} ne peut pas souffler maintenant.`);
+    return { action: 'souffle' };
+  }
   const jouables = actionsJouables(e, j);
   if (jouables.length === 0) return { action: 'lutte' };
   if (c.action === 'lutte') throw new Error(`${l.def.nom} a encore des actions jouables : Lutte n'est pas autorisée.`);
@@ -176,8 +227,15 @@ function valider(e: EtatCombat, j: Joueur, c: Choix): Choix {
 }
 
 // Compare deux actions qui ont toutes les deux passé leur tirage de précision.
+// Situations du tour qui changent le duel « contre contre attaque ».
+export interface OptionsDuel {
+  contreGaranti?: [boolean, boolean]; // combo Esquive puis contre : le contre gagne sans avantage
+  incontrable?: [boolean, boolean]; // Changement de niveau au tour précédent : l'attaque ne peut pas être contrée
+}
+
 function duel(
   e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
+  opts: OptionsDuel = {},
 ): { res: [Resultat, Resultat] } {
   const [f0, f1] = f;
   // Contre spécial : bat toujours une attaque ou une feinte.
@@ -200,8 +258,13 @@ function duel(
       const plusEndurance = endDebut[c] > endDebut[a];
       const plusForce = e.joueurs[c].def.force > e.joueurs[a].def.force;
       const res: [Resultat, Resultat] = ['perd', 'perd'];
-      // Le contre gagne avec plus d'endurance OU plus de force que l'attaquant.
-      if (plusEndurance || plusForce) {
+      // Attaque préparée par un Changement de niveau : impossible à contrer.
+      if (opts.incontrable?.[a]) {
+        res[a] = 'gagne';
+        return { res };
+      }
+      // Le contre gagne avec plus d'endurance OU plus de force que l'attaquant (ou grâce au combo Esquive).
+      if (plusEndurance || plusForce || opts.contreGaranti?.[c]) {
         res[c] = 'gagne';
         return { res };
       }
@@ -220,7 +283,7 @@ const maj = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 // Phrase qui explique pourquoi un duel a été gagné (pour le journal).
 function expliquerDuel(
-  e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], spe: [boolean, boolean],
+  e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], spe: [boolean, boolean], opts: OptionsDuel = {},
 ): string {
   const g: Joueur = res[0] === 'gagne' ? 0 : 1;
   const p = autre(g);
@@ -231,7 +294,11 @@ function expliquerDuel(
   }
   if (f[g] === f[p]) return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
   if (f[g] === 'contre' && f[p] === 'attaque') {
+    if (opts.contreGaranti?.[g]) return `Après son esquive, ${nomG} prend l'attaque à contretemps : le contre renvoie l'attaque.`;
     return `${nomG} a plus d'endurance ou plus de force : le contre renvoie l'attaque.`;
+  }
+  if (f[g] === 'attaque' && f[p] === 'contre' && opts.incontrable?.[g]) {
+    return `${nomG} a changé de niveau : son attaque ne peut pas être contrée.`;
   }
   if (f[g] === 'attaque' && f[p] === 'contre') {
     return `${nomP} n'a ni plus d'endurance ni plus de force : son contre ne tient pas, l'attaque passe.`;
@@ -267,7 +334,11 @@ function tenterPercee(
 export function comparerFamilles(
   e: EtatCombat, f: [Famille, Famille], endurances: [number, number], speciale: [boolean, boolean],
 ): 'gagne' | 'perd' | 'neutre' {
-  const r = duel(e, f, endurances, speciale).res[0];
+  const J = e.joueurs;
+  const r = duel(e, f, endurances, speciale, {
+    contreGaranti: [0, 1].map((j) => f[j] === 'contre' && J[j].derniereReussie === REGLES.combos.esquiveContre.avant) as [boolean, boolean],
+    incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable],
+  }).res[0];
   return r === 'gagne' ? 'gagne' : r === 'perd' ? 'perd' : 'neutre';
 }
 
@@ -340,6 +411,8 @@ function finirPeriode(e: EtatCombat, g: Joueur, raison: string) {
     x.historique = [];
     x.initiative = false;
     x.toursSansEndurance = 0;
+    x.derniereReussie = null;
+    x.attaqueIncontrable = false;
     ajouterEndurance(x, x.def.recuperation * x.def.enduranceMax);
   }
 }
@@ -382,7 +455,7 @@ export function jouerTour(
   const J = e.joueurs;
   const choix: [Choix, Choix] = [valider(e, 0, choixA), valider(e, 1, choixB)];
   const endDebut: [number, number] = [J[0].endurance, J[1].endurance];
-  const fam = choix.map((c) => (c.action === 'lutte' ? null : ACTIONS[c.action].famille)) as [
+  const fam = choix.map((c) => (c.action === 'lutte' || c.action === 'souffle' ? null : ACTIONS[c.action].famille)) as [
     Famille | null, Famille | null,
   ];
 
@@ -398,8 +471,8 @@ export function jouerTour(
   // 1. Paiement de l'endurance.
   for (const j of LES_DEUX) {
     const c = choix[j];
-    if (c.action === 'lutte') continue;
-    const cout = c.speciale ? coutSpeciale(e, j, c.action) : coutAction(J[j].def, c.action);
+    if (c.action === 'lutte' || c.action === 'souffle') continue;
+    const cout = c.speciale ? coutSpeciale(e, j, c.action) : coutDuTour(e, j, c.action);
     if (c.speciale) {
       J[j].dernierSpecialTour = e.tourGlobal;
       J[j].reductionSpeciale = false;
@@ -410,8 +483,22 @@ export function jouerTour(
   // 2. Tirage de précision, avant de comparer les familles.
   const passe: [boolean, boolean] = [false, false];
   for (const j of LES_DEUX) {
-    if (choix[j].action === 'lutte') continue;
-    const malus = fam[j] === 'attaque' && J[j].malusPrecisionTours > 0 ? REGLES.matraquage.malusPrecision : 0;
+    const id = choix[j].action;
+    if (id === 'lutte' || id === 'souffle') continue;
+    // Actions qui ne peuvent pas rater : attaque juste après un sprawl réussi (combo Contre-temps),
+    // Tour de hanche avec plus de force que l'adversaire.
+    if (fam[j] === 'attaque' && J[j].derniereReussie === REGLES.combos.contreTemps.avant) {
+      passe[j] = true;
+      log(e, `Combo « Contre-temps » : après son sprawl, ${J[j].def.nom} attaque sans pouvoir rater.`);
+      continue;
+    }
+    if (id === 'tour_hanche' && J[j].def.force > J[autre(j)].def.force) {
+      passe[j] = true;
+      log(e, `${J[j].def.nom} est plus fort : son tour de hanche ne peut pas rater.`);
+      continue;
+    }
+    const sansMalus = id === 'simple_jambe' && REGLES.simpleJambeSansMalus;
+    const malus = fam[j] === 'attaque' && J[j].malusPrecisionTours > 0 && !sansMalus ? REGLES.matraquage.malusPrecision : 0;
     const p = precisionDe(endDebut[j]) - malus;
     passe[j] = reussit(hasard, chanceReussite(p));
     if (!passe[j]) log(e, `${J[j].def.nom} rate son action (précision ${p.toFixed(2).replace('.', ',')}) : action dans le vent.`);
@@ -426,10 +513,24 @@ export function jouerTour(
     res[percee] = 'gagne';
     res[autre(percee)] = 'perd';
   } else if (passe[0] && passe[1]) {
-    const d = duel(e, [fam[0]!, fam[1]!], endDebut, spe);
+    const opts: OptionsDuel = {
+      contreGaranti: [0, 1].map((j) => fam[j] === 'contre' && J[j].derniereReussie === REGLES.combos.esquiveContre.avant) as [boolean, boolean],
+      incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable],
+    };
+    const d = duel(e, [fam[0]!, fam[1]!], endDebut, spe, opts);
     res = d.res;
     if (res[0] === 'neutre') log(e, 'Même famille et pas le double d\'endurance : personne ne marque.');
-    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, spe));
+    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, spe, opts));
+    // Sortie de zone : un contre normal ne la prend qu'une fois sur 2.
+    for (const c of LES_DEUX) {
+      const a = autre(c);
+      if (res[c] === 'gagne' && fam[c] === 'contre' && !spe[c] && choix[a].action === 'sortie_zone'
+        && !reussit(hasard, REGLES.sortieZone.chanceContre)) {
+        res[c] = 'perd';
+        res[a] = 'gagne';
+        log(e, `${J[a].def.nom} pousse ${J[c].def.nom} hors de la zone avant que le contre ne prenne.`);
+      }
+    }
   } else {
     for (const j of LES_DEUX) if (passe[j]) res[j] = 'gagne';
   }
@@ -446,6 +547,7 @@ export function jouerTour(
   const bonusUtilise: [boolean, boolean] = [false, false]; // bonus de feinte servi ce tour
   const enchainementSuivant: [boolean, boolean] = [false, false];
   const initiativeSuivante: [boolean, boolean] = [false, false];
+  const incontrableSuivant: [boolean, boolean] = [false, false];
   const tombe = new Set<Joueur>();
 
   for (const j of LES_DEUX) {
@@ -463,30 +565,64 @@ export function jouerTour(
       }
       continue;
     }
+    if (c.action === 'souffle') {
+      const S = REGLES.souffle;
+      ajouterEndurance(l, S.gain);
+      l.souffleUtilise = true;
+      log(e, `${l.def.nom} reprend son souffle : +${S.gain} d'endurance.`);
+      if (fam[o] === 'attaque') marquer(e, o, S.penalite, `${l.def.nom} souffle pendant l'attaque`);
+      continue;
+    }
     if (res[j] !== 'gagne') continue;
 
     const a = ACTIONS[c.action];
     const actionAdv = choix[o].action;
-    const opposee = passe[o] && actionAdv !== 'lutte' ? ACTIONS[actionAdv] : null;
+    const opposee = passe[o] && actionAdv !== 'lutte' && actionAdv !== 'souffle' ? ACTIONS[actionAdv] : null;
     let speDeclenchee = !!c.speciale;
 
     switch (a.famille) {
-      case 'attaque':
+      case 'attaque': {
         if (l.bonusFeinte > 0) bonusUtilise[j] = true;
+        const C = REGLES.combos;
+        if (l.derniereReussie === C.passageDansLeDos.avant && a.id === C.passageDansLeDos.apres) {
+          log(e, `Combo « Passage dans le dos » : ${l.def.nom} enchaîne matraquage et ceinture arrière (+${C.passageDansLeDos.points}).`);
+        } else if (l.derniereReussie === C.enchainementJambes.avant && a.id === C.enchainementJambes.apres) {
+          log(e, `Combo « Enchaînement aux jambes » : ${l.def.nom} passe de la simple à la double jambe (+${C.enchainementJambes.points}).`);
+        }
         marquer(e, j, valeurAttaque(e, j, a.id, endDebut), `${a.nom}${l.bonusFeinte > 0 ? ' + bonus de feinte' : ''}`);
         if (c.speciale) tombe.add(j);
         break;
+      }
 
-      case 'defense':
+      case 'defense': {
+        const bloque = opposee?.famille === 'attaque';
         if (c.speciale) marquer(e, j, REGLES.speciale.pointsDefense, `${a.nom} spéciale : renversement`);
-        else if (a.points > 0 && opposee?.famille === 'attaque') marquer(e, j, a.points, a.nom);
-        {
+        else if (a.points > 0 && bloque) {
+          const enPlus = a.id === 'sprawl' && opposee!.id === 'double_jambe' ? REGLES.sprawlSurDoubleJambe : 0;
+          marquer(e, j, a.points + enPlus, `${a.nom}${enPlus ? ' sur la double jambe' : ''}`);
+        }
+        if (bloque && a.id === 'parade') {
+          retirerEndurance(adv, REGLES.parade.perteAttaquant);
+          log(e, `La parade de ${l.def.nom} fatigue ${adv.def.nom} : −${REGLES.parade.perteAttaquant} d'endurance.`);
+        }
+        if (bloque && opposee!.points >= REGLES.grosseAttaqueBloquee.pointsMin) {
+          retirerEndurance(adv, REGLES.grosseAttaqueBloquee.perte);
+          log(e, `${adv.def.nom} s'épuise sur sa grosse attaque bloquée : −${REGLES.grosseAttaqueBloquee.perte} d'endurance.`);
+        }
+        if (a.id === 'esquive') {
+          // L'esquive ne fait pas récupérer, mais peut donner l'initiative quand elle évite une attaque.
+          if (bloque && reussit(hasard, REGLES.esquive.chanceInitiative)) {
+            initiativeSuivante[j] = true;
+            log(e, `${l.def.nom} esquive et prend l'initiative pour le prochain tour.`);
+          }
+        } else {
           const R = REGLES.recuperationDefense;
           const taux = l.endurance < l.def.enduranceMax / 2 ? R.sousMoitie : R.auDessus;
           ajouterEndurance(l, taux * l.def.enduranceMax);
           log(e, `${l.def.nom} récupère ${Math.round(taux * 100)} % d'endurance.`);
         }
         break;
+      }
 
       case 'contre': {
         const ench = l.bonusEnchainement ? REGLES.speciale.bonusEnchainementFeinte : 0;
@@ -494,16 +630,28 @@ export function jouerTour(
         if (bf) bonusUtilise[j] = true;
         const extras = `${ench ? ' + enchaînement' : ''}${bf ? ' + bonus de feinte' : ''}`;
         if (opposee?.famille === 'attaque') {
+          if (l.derniereReussie === REGLES.combos.esquiveContre.avant) {
+            log(e, `Combo « Esquive et contre » : ${l.def.nom} prend l'attaque à contretemps.`);
+          }
           const v = valeurAttaque(e, o, opposee.id, endDebut);
-          marquer(e, j, v + ench + bf, `${a.nom} : points de l'attaque renvoyés${extras}`);
+          // La Relance (non spéciale) ne renvoie que la moitié des points (arrondie au-dessus).
+          const moitie = a.id === 'relance' && !c.speciale;
+          const renvoi = moitie ? Math.ceil(v * REGLES.relance.partRenvoyee) : v;
+          marquer(e, j, renvoi + ench + bf, `${a.nom} : ${moitie ? 'la moitié des points' : 'points'} de l'attaque renvoyés${extras}`);
           const perte = perteDesequilibre(v);
           retirerEndurance(adv, perte * adv.def.enduranceMax);
           log(e, `${adv.def.nom} est déséquilibré et perd ${Math.round(perte * 100)} % d'endurance.`);
+          if (a.id === 'cravate' && REGLES.attaquesAuxJambes.includes(opposee.id)) {
+            retirerEndurance(adv, REGLES.cravate.perteEndurance);
+            log(e, `${l.def.nom} prend la tête en cravate : ${adv.def.nom} perd ${REGLES.cravate.perteEndurance} d'endurance de plus.`);
+          }
+        } else if (a.id === 'relance' && opposee?.famille === 'defense') {
+          marquer(e, j, REGLES.relance.pointsSurDefense + ench + bf, `${a.nom} : la défense est surprise${extras}`);
         } else if (ench || bf) {
           marquer(e, j, ench + bf, `${a.nom} réussi :${extras.slice(2)}`);
         }
         if (c.speciale) {
-          const famAdv = actionAdv === 'lutte' ? null : ACTIONS[actionAdv].famille;
+          const famAdv = actionAdv === 'lutte' || actionAdv === 'souffle' ? null : ACTIONS[actionAdv].famille;
           if (famAdv === 'attaque' || famAdv === 'feinte') tombe.add(j);
           else {
             speDeclenchee = false;
@@ -518,6 +666,9 @@ export function jouerTour(
           marquer(e, j, REGLES.speciale.pointsFeinte, `${a.nom} spéciale : l'adversaire glisse`);
           enchainementSuivant[j] = true;
           log(e, `${l.def.nom} pourra enchaîner : +${REGLES.speciale.bonusEnchainementFeinte} si son attaque ou son contre réussit au prochain tour.`);
+        } else if (a.id === 'changement_niveau') {
+          incontrableSuivant[j] = true;
+          log(e, `${l.def.nom} change de niveau : son attaque du prochain tour ne pourra pas être contrée.`);
         } else bonusSuivant[j] = true;
         if (a.id === 'matraquage') {
           retirerEndurance(adv, REGLES.matraquage.perteEndurance * adv.def.enduranceMax);
@@ -585,7 +736,7 @@ export function jouerTour(
     }
   }
 
-  // 8 bis. Récupération régulière : tous les 2 tours, 5 % de l'endurance actuelle,
+  // 8 bis. Récupération régulière : tous les 2 tours, part × récupération × barre d'endurance,
   // avec la précision du lutteur comme chance de réussite.
   const RR = REGLES.recuperationReguliere;
   if (e.tour % RR.tousLesTours === 0) {
@@ -593,7 +744,7 @@ export function jouerTour(
       const l = J[j];
       if (l.endurance <= 0) continue;
       if (reussit(hasard, chanceReussite(precisionDe(l.endurance)))) {
-        const gain = l.endurance * RR.part;
+        const gain = RR.part * l.def.recuperation * l.def.enduranceMax;
         ajouterEndurance(l, gain);
         log(e, `${l.def.nom} récupère ${Math.round(gain * 10) / 10} d'endurance (tous les ${RR.tousLesTours} tours).`);
       }
@@ -606,6 +757,9 @@ export function jouerTour(
     J[j].bonusFeinte = bonusSuivant[j] ? REGLES.toursBonusFeinte : bonusUtilise[j] ? 0 : Math.max(0, J[j].bonusFeinte - 1);
     J[j].bonusEnchainement = enchainementSuivant[j];
     J[j].initiative = initiativeSuivante[j];
+    J[j].attaqueIncontrable = incontrableSuivant[j];
+    const id = choix[j].action;
+    J[j].derniereReussie = res[j] === 'gagne' && id !== 'lutte' && id !== 'souffle' ? id : null;
   }
   e.tourGlobal++;
 

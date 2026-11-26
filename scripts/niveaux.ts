@@ -4,7 +4,7 @@
 // Usage : npm run niveaux -- [combats par case]
 
 import { LUTTEURS, REGLES, ACTIONS } from '../src/moteur/config';
-import { actionsJouables, apercuInitiative, creerCombat, jouerTour } from '../src/moteur/combat';
+import { actionsJouables, apercuInitiative, creerCombat, jouerTour, souffleDispo } from '../src/moteur/combat';
 import { choixAleatoire, choixFort, choixOrdinateur, reactionOrdinateur, reagirInitiative, type Niveau } from '../src/moteur/ia';
 import { creerHasard, choisirParmi, type Hasard } from '../src/moteur/hasard';
 import type { Choix, EtatCombat, Famille, Joueur } from '../src/moteur/types';
@@ -14,7 +14,9 @@ const n = Number(process.argv.slice(2).find((x) => /^\d+$/.test(x)) ?? 2000);
 type Profil = 'hasard' | 'habitudes' | 'experimente';
 
 // Joueur à habitudes : chaque combat, il a une famille préférée qu'il joue 1 fois sur 2.
+// Comme l'ordinateur, le joueur simulé prend son second souffle quand il est presque à bout.
 function choixJoueur(e: EtatCombat, j: Joueur, h: Hasard, profil: Profil, prefere: Famille): Choix {
+  if (souffleDispo(e, j) && e.joueurs[j].endurance < REGLES.ia.seuilSouffle) return { action: 'souffle' };
   if (profil === 'hasard') return choixAleatoire(e, j, h);
   if (profil === 'experimente') return choixFort(e, j, h);
   const jouables = actionsJouables(e, j);

@@ -56,7 +56,7 @@ test('ordinateur fort : contre un joueur qui se défend toujours, il feinte ou c
   let bat = 0;
   for (let i = 0; i < 200; i++) {
     const f = choixFort(e, 1, h);
-    if (f.action === 'feinte' || f.action === 'contre' || f.action === 'matraquage' || f.action === 'relance') bat++;
+    if (['feinte', 'contre', 'matraquage', 'relance', 'changement_niveau', 'cravate'].includes(f.action)) bat++;
   }
   assert.ok(bat > 140, `${bat}/200`);
 });

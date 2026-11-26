@@ -17,7 +17,12 @@ export type IdAction =
   | 'contre'
   | 'relance'
   | 'feinte'
-  | 'matraquage';
+  | 'matraquage'
+  | 'bras_tire'
+  | 'sortie_zone'
+  | 'cravate'
+  | 'tour_hanche'
+  | 'changement_niveau';
 
 export interface DefAction {
   id: IdAction;
@@ -58,8 +63,9 @@ export interface DefLutteur {
   familleSpeciale: Famille; // famille de l'action spéciale
 }
 
+// « lutte » : seule action possible à 0 d'endurance ; « souffle » : second souffle (une fois par combat).
 export interface Choix {
-  action: IdAction | 'lutte';
+  action: IdAction | 'lutte' | 'souffle';
   speciale?: boolean;
 }
 
@@ -82,6 +88,9 @@ export interface EtatLutteur {
   reductionSpeciale: boolean; // prochaine action spéciale moins chère (non cumulable)
   initiative: boolean; // peut voir 2 actions adverses et changer la sienne ce tour
   habitudes: Famille[]; // familles des dernières actions jouées (l'ordinateur fort s'en sert)
+  derniereReussie: IdAction | null; // action réussie au tour précédent (combos, Bras tiré)
+  attaqueIncontrable: boolean; // Changement de niveau réussi : l'attaque de ce tour ne peut pas être contrée
+  souffleUtilise: boolean; // le second souffle a déjà servi dans ce combat
 }
 
 export interface EtatCombat {

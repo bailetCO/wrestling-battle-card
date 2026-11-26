@@ -5,9 +5,9 @@
 // - Normal : au hasard ; avec l'initiative, change d'action 1 fois sur 2.
 // - Fort : joue contre tes habitudes ; avec l'initiative, contre ton action 3 fois sur 4.
 
-import { ACTIONS, REGLES, coutAction } from './config';
+import { ACTIONS, REGLES } from './config';
 import {
-  actionsJouables, chanceReussite, comparerFamilles, coutSpeciale, peutJouerSpeciale, precisionDe,
+  actionsJouables, chanceReussite, comparerFamilles, coutDuTour, coutSpeciale, peutJouerSpeciale, pointsCombo, precisionDe, souffleDispo,
 } from './combat';
 import { choisirParmi, reussit, type Hasard } from './hasard';
 import type { Choix, EtatCombat, IdAction, Joueur } from './types';
@@ -28,7 +28,7 @@ export function choixAleatoire(etat: EtatCombat, j: Joueur, hasard: Hasard, chan
 export function reagirInitiative(
   etat: EtatCombat, j: Joueur, choixActuel: Choix, hasard: Hasard, niveau: 'facile' | 'normal' = 'normal',
 ): Choix {
-  if (choixActuel.action === 'lutte') return choixActuel;
+  if (choixActuel.action === 'lutte' || choixActuel.action === 'souffle') return choixActuel;
   if (!reussit(hasard, REGLES.ia.chanceChangerInitiative[niveau])) return choixActuel;
   const autres = actionsJouables(etat, j).filter((a) => a !== choixActuel.action);
   if (autres.length === 0) return choixActuel;
@@ -60,19 +60,27 @@ function gain(etat: EtatCombat, qui: Joueur, c: Candidat, autre: Candidat | null
   const tombe = F.valeurTombe * chanceTombe(etat, qui);
   switch (a.famille) {
     case 'attaque': {
-      let pts = a.points + (l.bonusFeinte ? REGLES.bonusFeinte : 0) + (l.bonusEnchainement ? S.bonusEnchainementFeinte : 0);
+      let pts = a.points + pointsCombo(l, a.id) + (l.bonusFeinte ? REGLES.bonusFeinte : 0) + (l.bonusEnchainement ? S.bonusEnchainementFeinte : 0);
       if (c.speciale) pts += tombe;
       return pts;
     }
     case 'defense': {
-      let pts = F.valeurRecuperation;
+      let pts = a.id === 'esquive' ? 0 : F.valeurRecuperation;
       if (c.speciale) pts += S.pointsDefense;
-      else if (a.points > 0 && famAutre === 'attaque') pts += a.points;
+      else if (a.points > 0 && famAutre === 'attaque') pts += a.points + (a.id === 'sprawl' && autre?.action === 'double_jambe' ? REGLES.sprawlSurDoubleJambe : 0);
+      if (famAutre === 'attaque' && a.id === 'parade') pts += 0.5;
+      if (famAutre === 'attaque' && a.id === 'esquive') pts += 0.5;
+      if (famAutre === 'attaque' && autre && ACTIONS[autre.action].points >= REGLES.grosseAttaqueBloquee.pointsMin) pts += 0.5;
       return pts;
     }
     case 'contre': {
       let pts = (l.bonusEnchainement ? S.bonusEnchainementFeinte : 0) + (l.bonusFeinte ? REGLES.bonusFeinte : 0);
-      if (autre && famAutre === 'attaque') pts += ACTIONS[autre.action].points;
+      if (autre && famAutre === 'attaque') {
+        const v = ACTIONS[autre.action].points;
+        pts += a.id === 'relance' && !c.speciale ? Math.ceil(v * REGLES.relance.partRenvoyee) : v;
+        if (a.id === 'cravate' && REGLES.attaquesAuxJambes.includes(autre.action)) pts += 0.5;
+      }
+      if (a.id === 'relance' && famAutre === 'defense') pts += REGLES.relance.pointsSurDefense;
       if (c.speciale && (famAutre === 'attaque' || famAutre === 'feinte')) pts += tombe;
       return pts;
     }
@@ -80,6 +88,7 @@ function gain(etat: EtatCombat, qui: Joueur, c: Candidat, autre: Candidat | null
       let pts = c.speciale ? S.pointsFeinte + 2 : F.valeurFeinte;
       if (famAutre === 'defense') pts += 1;
       if (a.id === 'matraquage') pts += 0.5;
+      if (a.id === 'changement_niveau') pts += 0.5;
       return pts;
     }
   }
@@ -87,12 +96,15 @@ function gain(etat: EtatCombat, qui: Joueur, c: Candidat, autre: Candidat | null
 
 function precision(etat: EtatCombat, j: Joueur, c: Candidat): number {
   const l = etat.joueurs[j];
-  const malus = ACTIONS[c.action].famille === 'attaque' && l.malusPrecisionTours > 0 ? REGLES.matraquage.malusPrecision : 0;
+  const attaque = ACTIONS[c.action].famille === 'attaque';
+  if (attaque && l.derniereReussie === REGLES.combos.contreTemps.avant) return 1;
+  if (c.action === 'tour_hanche' && l.def.force > etat.joueurs[j === 0 ? 1 : 0].def.force) return 1;
+  const malus = attaque && l.malusPrecisionTours > 0 && c.action !== 'simple_jambe' ? REGLES.matraquage.malusPrecision : 0;
   return chanceReussite(precisionDe(l.endurance) - malus);
 }
 
 function coutDe(etat: EtatCombat, j: Joueur, c: Candidat): number {
-  return c.speciale ? coutSpeciale(etat, j, c.action) : coutAction(etat.joueurs[j].def, c.action);
+  return c.speciale ? coutSpeciale(etat, j, c.action) : coutDuTour(etat, j, c.action);
 }
 
 // Valeur moyenne d'une action face à une liste d'actions adverses possibles.
@@ -156,6 +168,11 @@ function meilleur(etat: EtatCombat, j: Joueur, adverses: Candidat[], hasard: Has
   return { action: pris.c.action, speciale: pris.c.speciale };
 }
 
+// Second souffle : l'ordinateur souffle à 0 d'endurance, ou sous `REGLES.ia.seuilSouffle`.
+function veutSouffler(etat: EtatCombat, j: Joueur): boolean {
+  return souffleDispo(etat, j) && etat.joueurs[j].endurance < REGLES.ia.seuilSouffle;
+}
+
 // Choix secret de l'ordinateur fort : la meilleure action face à ce que l'adversaire joue
 // d'habitude. Chaque action jouable de l'adversaire compte d'autant plus que sa famille revient
 // souvent dans ses dernières actions ; sans habitudes connues, toutes comptent pareil.
@@ -175,7 +192,8 @@ export function choixFort(etat: EtatCombat, j: Joueur, hasard: Hasard): Choix {
 export function reagirInitiativeForte(
   etat: EtatCombat, j: Joueur, choixActuel: Choix, choixAdverse: Choix, hasard: Hasard,
 ): Choix {
-  if (choixAdverse.action === 'lutte' || choixActuel.action === 'lutte') return choixActuel;
+  const passer = (a: Choix['action']) => a === 'lutte' || a === 'souffle';
+  if (passer(choixAdverse.action) || passer(choixActuel.action)) return choixActuel;
   if (!reussit(hasard, REGLES.ia.fort.chanceContrerInitiative)) return choixActuel;
   return meilleur(etat, j, [{ action: choixAdverse.action, speciale: !!choixAdverse.speciale }], hasard, true);
 }
@@ -196,6 +214,7 @@ export function choixFacile(etat: EtatCombat, j: Joueur, hasard: Hasard): Choix 
 }
 
 export function choixOrdinateur(etat: EtatCombat, j: Joueur, hasard: Hasard, niveau: Niveau): Choix {
+  if (veutSouffler(etat, j) || (souffleDispo(etat, j) && etat.joueurs[j].endurance <= 0)) return { action: 'souffle' };
   if (niveau === 'fort') return choixFort(etat, j, hasard);
   return niveau === 'facile' ? choixFacile(etat, j, hasard) : choixAleatoire(etat, j, hasard);
 }
