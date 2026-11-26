@@ -1370,3 +1370,5 @@ b.moi { color: #ff8a95; }
 .case-seq .case-points { animation: apparait .35s ease-out both; }
 .chat-seq { align-self: stretch; margin: 12px 0 0; padding-top: 8px; border-top: 1px solid var(--tapis-ligne); text-align: center; font: 800 13px var(--police); color: var(--orange); }
 @media (prefers-reduced-motion: reduce) { .seq-duel, .case-seq .case-points { animation: none; } }
+/* Case déjà vue : pas de nouvelle animation quand l'écran se redessine. */
+.case.fige, .case.fige * { animation: none !important; }

@@ -1,9 +1,11 @@
 // Mode Enchaînement (à l'essai : combat rapide et entre amis). Aucun affichage ici.
 // Chacun compose en secret une séquence de 3 actions. Les actions sont comparées une à une
 // (1 contre 1, 2 contre 2, 3 contre 3) avec les règles habituelles d'un tour.
-// - Rupture de chaîne : un contre réussi au 1er ou au 2e duel, ou une feinte réussie au 2e duel
-//   (2 chances sur 3), arrête la séquence des deux lutteurs. Ce qui a été joué compte (points
-//   compris) ; les actions suivantes ne sont ni jouées ni payées.
+// - Rupture de chaîne par un contre réussi au 1er duel : les deux séquences s'arrêtent. Ce qui a
+//   été joué compte (points compris). L'adversaire paie quand même l'endurance de ses actions
+//   annulées ; celui qui a contré ne paie pas les siennes.
+// - Feinte réussie au 2e duel (2 chances sur 3) : la dernière action de l'adversaire est annulée
+//   (payée, sans effet) ; celle du feinteur se joue normalement.
 // - Endurance : une séquence doit pouvoir être payée en entier (coût de base de chaque action) ;
 //   s'il ne reste plus de quoi payer aucune action, la place est prise par « Lutte ». Si, pendant
 //   la séquence, une action devient impossible (endurance perdue, spéciale plus disponible),
@@ -102,31 +104,42 @@ export function jouerSequence(
   const duels: DuelJoue[] = [];
   const initiative: [boolean, boolean] = [false, false];
   let rupture: ResultatSequence['rupture'] = null;
+  let annulee: Joueur | undefined;
   for (let k = 0; k < TAILLE_SEQUENCE && !e.termine; k++) {
     const avant = e;
-    e = jouerTour(e, seqA[k], seqB[k], hasard, { ...options, sequence: true });
+    e = jouerTour(e, seqA[k], seqB[k], hasard, { ...options, sequence: true, annulee });
+    annulee = undefined;
     duels.push({ avant, choix: e.derniersChoix!, lignes: e.journal.slice(avant.journal.length) });
     if (e.termine || e.periode !== avant.periode) {
-      return { etat: e, duels, rupture: null }; // période ou combat terminés : la séquence s'arrête
+      return { etat: e, duels, rupture }; // période ou combat terminés : la séquence s'arrête
     }
     for (const j of [0, 1] as Joueur[]) initiative[j] ||= e.joueurs[j].initiative;
     if (k === TAILLE_SEQUENCE - 1) break;
-    // Rupture de chaîne.
+    const seqs = [seqA, seqB];
     for (const j of [0, 1] as Joueur[]) {
       const r = e.joueurs[j].derniereReussie;
-      if (!r || rupture) continue;
+      if (!r) continue;
       const f = ACTIONS[r].famille;
-      if (f === 'contre' && (E.rupturesContre as readonly number[]).includes(k + 1)) rupture = { par: j, duel: k + 1, cause: 'contre' };
-      else if (f === 'feinte' && k + 1 === E.ruptureFeinte && reussit(hasard, E.chanceFeinteRupture)) rupture = { par: j, duel: k + 1, cause: 'feinte' };
+      const o = autre(j);
+      // Contre réussi au 1er duel : les deux séquences s'arrêtent, l'adversaire paie ses actions annulées.
+      if (f === 'contre' && (E.rupturesContre as readonly number[]).includes(k + 1) && !rupture) {
+        rupture = { par: j, duel: k + 1, cause: 'contre' };
+        e = structuredClone(e);
+        const l = e.joueurs[o];
+        const perte = seqs[o].slice(k + 1).reduce((t, c) => t + coutPrevu(e, o, c), 0);
+        l.endurance = Math.max(0, l.endurance - perte);
+        e.journal.push(`Chaîne brisée : le contre de ${e.joueurs[j].def.nom} casse l'enchaînement de ${l.def.nom}, qui s'épuise sur ses actions annulées (−${Math.round(perte * 10) / 10} d'endurance). La séquence s'arrête là.`);
+        duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
+      // Feinte réussie au 2e duel : la dernière action de l'adversaire est annulée (et payée).
+      } else if (f === 'feinte' && k + 1 === E.ruptureFeinte && !rupture && reussit(hasard, E.chanceFeinteRupture)) {
+        rupture = { par: j, duel: k + 1, cause: 'feinte' };
+        annulee = o;
+        e = structuredClone(e);
+        e.journal.push(`Chaîne brisée : la feinte de ${e.joueurs[j].def.nom} casse l'enchaînement de ${e.joueurs[o].def.nom}, dont la dernière action sera annulée.`);
+        duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
+      }
     }
-    if (rupture) {
-      e = structuredClone(e);
-      const nom = e.joueurs[rupture.par].def.nom;
-      const adv = e.joueurs[autre(rupture.par)].def.nom;
-      e.journal.push(`Chaîne brisée : ${rupture.cause === 'contre' ? 'le contre' : 'la feinte'} de ${nom} casse l'enchaînement de ${adv}. La séquence s'arrête là.`);
-      duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
-      break;
-    }
+    if (rupture?.cause === 'contre') break;
   }
   if (!e.termine) {
     e = e === depart ? structuredClone(e) : e;

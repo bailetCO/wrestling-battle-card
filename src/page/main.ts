@@ -51,6 +51,9 @@ let vueLigne: Vue | null = null;
 let codeSalle = '';
 let fenetreLigne: '' | 'init' | 'face' = '';
 let toursAffiches = -1;
+// Nombre de tours déjà montrés avec leur animation : quand l'écran se redessine sans nouveau tour
+// (choix des actions d'une séquence, ouverture du Récap), la case reste figée au lieu de rejouer.
+let toursAnimes = -1;
 let absentDepuis: number | null = null;
 const adv = () => (mode === 'ligne' ? vueLigne?.amiCoach || 'Ami' : 'Ordi');
 const moiNom = () => collection.coach || 'Toi';
@@ -2577,7 +2580,7 @@ function caseDernierTour(e: EtatCombat): string {
         <span class="vs">VS</span>
         <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
         <p class="case-aide">${e.enchainement
-          ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi (1re ou 2e action) ou une feinte réussie (2e action) peut briser la chaîne.`
+          ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi à la 1re action brise la chaîne ; une feinte réussie à la 2e action peut annuler la dernière action adverse.`
           : `Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}</p>
       </section>`;
   }
@@ -2627,6 +2630,8 @@ function tableau(e: EtatCombat): string {
 function ecranCombat() {
   const e = etatEnCours();
   if (!e) return;
+  const animer = tours.length !== toursAnimes;
+  toursAnimes = tours.length;
   if (tuto && (e.termine || e.periode > 1)) return ecranFinTutoriel();
   if (enTournoi !== null && e.termine) return finCombatTournoi(false);
   if (e.termine) return mode === 'ligne' ? ecranFinLigne() : ecranFin();
@@ -2669,6 +2674,7 @@ function ecranCombat() {
     }),
   );
   endurancesAvant = [e.joueurs[0].endurance, e.joueurs[1].endurance];
+  if (!animer) app.querySelector('.case')?.classList.add('fige');
   guiderBoutons(app);
 
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>

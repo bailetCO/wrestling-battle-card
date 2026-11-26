@@ -37,31 +37,38 @@ describe('Séquences', () => {
 });
 
 describe('Rupture de chaîne', () => {
-  it('contre réussi au 1er duel : les deux séquences s\'arrêtent, les actions suivantes ne sont pas payées', () => {
+  it('contre réussi au 1er duel : les deux séquences s\'arrêtent, l\'adversaire paie ses actions annulées', () => {
     const r = jouerSequence(combat(), seq('contre', 'attaque_base', 'attaque_base'), seq('attaque_base', 'grande_projection', 'grande_projection'), toujours(0));
     assert.equal(r.duels.length, 1);
     assert.deepEqual(r.rupture, { par: 0, duel: 1, cause: 'contre' });
     assert.equal(r.etat.joueurs[0].score, 2);
-    assert.equal(r.etat.joueurs[1].endurance, 100 - ACTIONS.attaque_base.cout - 5); // 1 seule action payée (+ déséquilibre)
+    // B paie son attaque, le déséquilibre (5 %), puis ses 2 grandes projections annulées.
+    assert.equal(r.etat.joueurs[1].endurance, 100 - ACTIONS.attaque_base.cout - 5 - 2 * ACTIONS.grande_projection.cout);
+    // A ne paie que son contre.
+    assert.equal(r.etat.joueurs[0].endurance, 100 - ACTIONS.contre.cout);
     assert.ok(r.etat.journal.some((l) => l.startsWith('Chaîne brisée')));
   });
 
-  it('contre réussi au 2e duel : les points du 1er duel restent acquis', () => {
-    const r = jouerSequence(combat(), seq('feinte', 'contre', 'attaque_base'), seq('attaque_base', 'defense', 'attaque_base'), toujours(0));
-    assert.equal(r.duels.length, 2);
-    assert.equal(r.rupture?.duel, 2);
+  it('contre réussi au 2e duel : plus de rupture, la séquence continue', () => {
+    const r = jouerSequence(combat(), seq('feinte', 'contre', 'attaque_base'), seq('attaque_base', 'defense', 'feinte'), toujours(0));
+    assert.equal(r.duels.length, 3);
+    assert.equal(r.rupture, null);
     assert.equal(r.etat.joueurs[1].score, 2); // l'attaque du 1er duel a marqué
   });
 
-  it('contre réussi au 3e duel : rien à briser, la séquence est complète', () => {
-    const r = jouerSequence(combat(), seq('defense', 'defense', 'contre'), seq('defense', 'defense', 'attaque_base'), toujours(0));
+  it('feinte réussie au 2e duel : la dernière action adverse est annulée mais payée, celle du feinteur se joue', () => {
+    const r = jouerSequence(combat(), seq('defense', 'matraquage', 'attaque_base'), seq('defense', 'defense', 'grande_projection'), toujours(0));
+    assert.deepEqual(r.rupture, { par: 0, duel: 2, cause: 'feinte' });
     assert.equal(r.duels.length, 3);
-    assert.equal(r.rupture, null);
+    assert.ok(r.etat.journal.some((l) => l.includes('est annulée')));
+    // La grande projection de B ne marque rien, mais elle est payée ; l'attaque de A passe (+2 du bonus de feinte).
+    assert.equal(r.etat.joueurs[1].score, 0);
+    assert.equal(r.etat.joueurs[0].score, ACTIONS.attaque_base.points + REGLES.bonusFeinte);
+    const avant3 = r.duels[2].avant.joueurs[1].endurance;
+    assert.equal(r.etat.joueurs[1].endurance, avant3 - ACTIONS.grande_projection.cout); // payée quand même
   });
 
-  it('feinte réussie au 2e duel : brise la chaîne 2 fois sur 3', () => {
-    const casse = jouerSequence(combat(), seq('defense', 'feinte', 'attaque_base'), seq('defense', 'defense', 'attaque_base'), toujours(0));
-    assert.deepEqual(casse.rupture, { par: 0, duel: 2, cause: 'feinte' });
+  it('la feinte au 2e duel ne casse la chaîne que 2 fois sur 3', () => {
     const tient = jouerSequence(combat(), seq('defense', 'feinte', 'attaque_base'), seq('defense', 'defense', 'attaque_base'), toujours(0.99));
     assert.equal(tient.rupture, null);
     assert.equal(tient.duels.length, 3);
@@ -69,6 +76,7 @@ describe('Rupture de chaîne', () => {
 
   it('feinte réussie au 1er duel : pas de rupture', () => {
     const r = jouerSequence(combat(), seq('feinte', 'defense', 'defense'), seq('defense', 'defense', 'defense'), toujours(0));
+    assert.equal(r.rupture, null);
     assert.equal(r.duels.length, 3);
   });
 });

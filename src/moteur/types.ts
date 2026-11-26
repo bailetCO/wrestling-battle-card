@@ -117,4 +117,7 @@ export interface OptionsTour {
   // Mode Enchaînement : les actions ont été choisies d'avance ; une action devenue impossible
   // est remplacée par Lutte au lieu d'être refusée.
   sequence?: boolean;
+  // Mode Enchaînement : l'action de ce joueur est annulée (chaîne brisée par une feinte) ;
+  // elle est payée mais n'a aucun effet.
+  annulee?: Joueur;
 }

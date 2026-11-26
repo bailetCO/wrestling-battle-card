@@ -490,6 +490,10 @@ export function jouerTour(
   const passe: [boolean, boolean] = [false, false];
   for (const j of LES_DEUX) {
     const id = choix[j].action;
+    if (options.annulee === j) {
+      log(e, `L'action de ${J[j].def.nom} est annulée : sa chaîne est brisée.`);
+      continue;
+    }
     if (id === 'lutte' || id === 'souffle') continue;
     // Actions qui ne peuvent pas rater : attaque juste après un sprawl réussi (combo Contre-temps),
     // Tour de hanche avec plus de force que l'adversaire.
@@ -558,6 +562,7 @@ export function jouerTour(
     const l = J[j];
     const adv = J[o];
     const c = choix[j];
+    if (options.annulee === j) continue; // action annulée (chaîne brisée) : aucun effet
 
     if (c.action === 'lutte') {
       if (reussit(hasard, REGLES.lutte.chance)) {
