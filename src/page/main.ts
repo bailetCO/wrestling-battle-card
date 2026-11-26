@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, recuperationArretee, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
@@ -2160,10 +2160,7 @@ function badges(e: EtatCombat, j: Joueur): string {
   if (l.bonusEnchainement) b.push(`Enchaînement : +${REGLES.speciale.bonusEnchainementFeinte}`);
   if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
   if (l.attaqueIncontrable) b.push('Attaque incontrable');
-  if (j === HUMAIN && recuperationArretee(e)) {
-    const f = surcoutFatigue(e);
-    b.push(f ? `Fatigue : +${f} par action` : 'Fatigue : plus de récupération');
-  }
+
   if (l.derniereReussie === 'bras_tire') b.push(`Attaque −${REGLES.brasTire.reductionCout} d'endurance`);
   let serie = 0;
   for (let i = l.historique.length - 1; i >= 0 && l.historique[i].reussie; i--) serie++;
@@ -2171,7 +2168,10 @@ function badges(e: EtatCombat, j: Joueur): string {
   if (serie >= 2 && attaques >= 1) b.push(`Combo en vue (${serie}/3)`);
   if (l.toursSansAttaque === REGLES.pression.tours - 1) b.push('Passif : attaque ou contre !');
   if (l.toursSansEndurance > 0) b.push(`Épuisé : ${l.toursSansEndurance}/${REGLES.toursSansEnduranceAvantTombe}`);
-  return b.map((t) => `<span class="badge">${echap(t)}</span>`).join('');
+  // Durée infinie : l'étiquette Fatigue change de couleur à chaque nouvel effet (tours 20, 25, 30…).
+  const nf = j === HUMAIN ? niveauFatigue(e) : 0;
+  const fatigue = nf ? `<span class="badge fatigue f${Math.min(5, nf)}">Fatigue : récupération tous les ${intervalleRecuperation(e)} tours${surcoutFatigue(e) ? ` · +${surcoutFatigue(e)} par action` : ''}</span>` : '';
+  return fatigue + b.map((t) => `<span class="badge">${echap(t)}</span>`).join('');
 }
 
 // Jauge d'endurance façon jeu de combat : la barre se vide vers l'extérieur, une trace claire

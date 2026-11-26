@@ -64,16 +64,30 @@ export function toursPeriode(e: EtatCombat): number {
   return e.enchainement ? REGLES.enchainement.toursParPeriode : REGLES.toursParPeriode;
 }
 
-// Durée infinie : surcoût de fatigue de chaque action (0 avant le tour 30, puis +1 par palier de 10).
+// Durée infinie : surcoût de fatigue de chaque action (+1 dès le tour 25, puis +1 tous les 10 tours).
 export function surcoutFatigue(e: EtatCombat): number {
-  if (!e.infini) return 0;
   const I = REGLES.infini;
-  return Math.max(0, Math.floor((e.tourGlobal - I.finRecuperation) / I.palier));
+  if (!e.infini || e.tourGlobal < I.debutSurcout) return 0;
+  return 1 + Math.floor((e.tourGlobal - I.debutSurcout) / I.palier);
 }
 
-// Durée infinie : la récupération tous les 2 tours s'arrête à partir du tour 20.
-export function recuperationArretee(e: EtatCombat): boolean {
-  return !!e.infini && e.tourGlobal >= REGLES.infini.finRecuperation;
+// Durée infinie : la fatigue a commencé (tour 20 et après).
+export function enFatigue(e: EtatCombat): boolean {
+  return !!e.infini && e.tourGlobal >= REGLES.infini.debutFatigue;
+}
+
+// Tous les combien de tours on récupère : 2, puis en durée infinie 3 dès le tour 20, 4 dès le 30…
+export function intervalleRecuperation(e: EtatCombat): number {
+  const base = REGLES.recuperationReguliere.tousLesTours;
+  if (!enFatigue(e)) return base;
+  const I = REGLES.infini;
+  return base + 1 + Math.floor((e.tourGlobal - I.debutFatigue) / I.palier);
+}
+
+// Niveau de fatigue (0 = aucune) : il monte à chaque nouvel effet (tours 20, 25, 30, 35…).
+export function niveauFatigue(e: EtatCombat): number {
+  if (!enFatigue(e)) return 0;
+  return 1 + Math.floor((e.tourGlobal - REGLES.infini.debutFatigue) / (REGLES.infini.palier / 2));
 }
 
 // ---------- Précision ----------
@@ -480,7 +494,7 @@ export function jouerTour(
     Famille | null, Famille | null,
   ];
 
-  log(e, `${e.mortSubite ? 'Mort subite' : `Période ${e.periode}`}, tour ${e.tour} : ${nomChoix(J[0], choix[0])} contre ${nomChoix(J[1], choix[1])}.`);
+  log(e, `${e.infini ? 'Tour' : `${e.mortSubite ? 'Mort subite' : `Période ${e.periode}`}, tour`} ${e.tour} : ${nomChoix(J[0], choix[0])} contre ${nomChoix(J[1], choix[1])}.`);
   // Habitudes : les familles d'actions jouées récemment.
   for (const j of LES_DEUX) {
     const f = fam[j];
@@ -752,7 +766,8 @@ export function jouerTour(
   // 3 tours sans pouvoir payer aucune action comptent aussi, sinon le combat ne finirait jamais.
   for (const j of LES_DEUX) {
     const l = J[j];
-    const aBout = l.endurance <= 0 || (recuperationArretee(e) && actionsJouables(e, j).length === 0);
+    const aBout = l.endurance <= 0
+      || (!!e.infini && e.tourGlobal >= REGLES.infini.debutEpuisement && actionsJouables(e, j).length === 0);
     l.toursSansEndurance = aBout ? l.toursSansEndurance + 1 : 0;
     if (l.toursSansEndurance >= REGLES.toursSansEnduranceAvantTombe) {
       log(e, `${l.def.nom} est épuisé depuis 3 tours et se fait tomber.`);
@@ -764,14 +779,15 @@ export function jouerTour(
   // 8 bis. Récupération régulière : tous les 2 tours, part × récupération × barre d'endurance,
   // avec la précision du lutteur comme chance de réussite.
   const RR = REGLES.recuperationReguliere;
-  if (e.tour % RR.tousLesTours === 0 && !recuperationArretee(e)) {
+  const intervalle = intervalleRecuperation(e);
+  if (e.tour % intervalle === 0) {
     for (const j of LES_DEUX) {
       const l = J[j];
       if (l.endurance <= 0) continue;
       if (reussit(hasard, chanceReussite(precisionDe(l.endurance)))) {
         const gain = RR.part * l.def.recuperation * l.def.enduranceMax;
         ajouterEndurance(l, gain);
-        log(e, `${l.def.nom} récupère ${Math.round(gain * 10) / 10} d'endurance (tous les ${RR.tousLesTours} tours).`);
+        log(e, `${l.def.nom} récupère ${Math.round(gain * 10) / 10} d'endurance (tous les ${intervalle} tours).`);
       }
     }
   }

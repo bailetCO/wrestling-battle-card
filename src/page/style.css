@@ -1388,3 +1388,10 @@ b.moi { color: #ff8a95; }
 .choix-style input:checked + span { border-color: var(--orange); background: color-mix(in srgb, var(--orange) 18%, var(--tapis-clair)); }
 .choix-style input:focus-visible + span { outline: 2px solid var(--texte); outline-offset: 2px; }
 .bandeau-histoire.petit { padding-top: 6px; padding-bottom: 6px; } .bandeau-histoire.petit b { font-size: 13.5px; }
+/* Étiquette Fatigue (durée infinie) : de plus en plus chaude à chaque nouvel effet. */
+.badge.fatigue { font-weight: 700; border-color: transparent; color: #1a1205; }
+.badge.fatigue.f1 { background: #f3d36b; }
+.badge.fatigue.f2 { background: #f2a33a; }
+.badge.fatigue.f3 { background: #ec7a2c; }
+.badge.fatigue.f4 { background: #e5393a; color: #fff; }
+.badge.fatigue.f5 { background: #9e1023; color: #fff; }

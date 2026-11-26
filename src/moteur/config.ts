@@ -521,10 +521,14 @@ export const REGLES = {
   // `mortSubiteMax` tours sans point, on départage comme une période normale).
   rapide: { mortSubiteMax: 10 },
 
-  // Durée infinie : fatigue croissante pour que le combat finisse. À partir du tour
-  // `finRecuperation`, plus de récupération tous les 2 tours ; puis, à chaque palier de `palier`
-  // tours, chaque action coûte 1 d'endurance de plus (+1 dès le tour 30, +2 dès le tour 40…).
-  infini: { finRecuperation: 20, palier: 10 },
+  // Durée infinie : fatigue croissante pour que le combat finisse (26/11/2026, 2e version).
+  // - Récupération : tous les 2 tours, puis tous les 3 tours dès le tour `debutFatigue` (20),
+  //   tous les 4 tours dès le tour 30… (un tour de plus tous les `palier` tours).
+  // - Coût : +1 d'endurance par action dès le tour `debutSurcout` (25), puis +1 de plus tous les
+  //   `palier` tours (+2 au tour 35, +3 au tour 45…). Lutte et Souffler restent gratuits.
+  // - Dès le tour `debutEpuisement`, 3 tours sans pouvoir payer aucune action = épuisement (tombé).
+  //   Sans cette règle, deux lutteurs à bout peuvent lutter l'un contre l'autre sans fin.
+  infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 20 },
 
   // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
   // séquence de `actions` actions, comparées une à une. 12 tours par période (4 séquences).

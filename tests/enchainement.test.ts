@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { c, testeur, toujours } from './outils';
 import { ACTIONS, REGLES } from '../src/moteur/config';
-import { coutDuTour, creerCombat, jouerTour, recuperationArretee, toursPeriode } from '../src/moteur/combat';
+import { coutDuTour, creerCombat, enFatigue, intervalleRecuperation, jouerTour, niveauFatigue, toursPeriode } from '../src/moteur/combat';
 import { choixOrdinateur } from '../src/moteur/ia';
 import {
   apercuSequence, actionsAjoutables, jouerSequence, reactionSequence, sequenceOrdinateur, validerSequence,
@@ -222,28 +222,33 @@ describe('Durée infinie', () => {
 });
 
 describe('Durée infinie : fatigue croissante', () => {
-  it('plus de récupération à partir du tour 20, puis +1 par action à chaque palier de 10 tours', () => {
+  it('récupération tous les 3 tours dès le tour 20, 4 dès le 30 ; coût +1 dès le 25, +2 dès le 35', () => {
     const e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
-    const cout = (tour: number) => { e.tour = tour; e.tourGlobal = tour; return coutDuTour(e, 0, 'attaque_base'); };
-    assert.equal(cout(19), ACTIONS.attaque_base.cout);
-    assert.equal(recuperationArretee(e), false);
-    assert.equal(cout(20), ACTIONS.attaque_base.cout);
-    assert.equal(recuperationArretee(e), true);
-    assert.equal(cout(29), ACTIONS.attaque_base.cout);
-    assert.equal(cout(30), ACTIONS.attaque_base.cout + 1);
-    assert.equal(cout(45), ACTIONS.attaque_base.cout + 2);
+    const a = (tour: number) => { e.tour = tour; e.tourGlobal = tour; return [intervalleRecuperation(e), coutDuTour(e, 0, 'attaque_base') - ACTIONS.attaque_base.cout, niveauFatigue(e)]; };
+    assert.deepEqual(a(19), [2, 0, 0]);
+    assert.equal(enFatigue(e), false);
+    assert.deepEqual(a(20), [3, 0, 1]);
+    assert.equal(enFatigue(e), true);
+    assert.deepEqual(a(25), [3, 1, 2]);
+    assert.deepEqual(a(30), [4, 1, 3]);
+    assert.deepEqual(a(35), [4, 2, 4]);
+    assert.deepEqual(a(40), [5, 2, 5]);
+    assert.deepEqual(a(45), [5, 3, 6]);
     // Combat normal : jamais de fatigue.
     const n = creerCombat(testeur(), testeur(), { rapide: true });
     n.tourGlobal = 50;
     assert.equal(coutDuTour(n, 0, 'attaque_base'), ACTIONS.attaque_base.cout);
+    assert.equal(intervalleRecuperation(n), 2);
   });
 
-  it('au tour 20 et après, pas de récupération tous les 2 tours', () => {
-    let e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
-    e.tour = 22; e.tourGlobal = 22;
-    e.joueurs[0].endurance = 50; e.joueurs[1].endurance = 50;
-    e = jouerTour(e, c('defense'), c('defense'), toujours(0));
-    assert.equal(e.joueurs[0].endurance, 50 - ACTIONS.defense.cout);
-    assert.ok(!e.journal.some((l) => l.includes('tous les 2 tours')));
+  it('au tour 21 : pas de récupération (pas un multiple de 3) ; au tour 24 : récupération', () => {
+    const debut = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
+    debut.joueurs[0].endurance = 50; debut.joueurs[1].endurance = 50;
+    for (const [tour, recupere] of [[22, false], [24, true]] as const) {
+      const e = structuredClone(debut);
+      e.tour = tour; e.tourGlobal = tour;
+      const apres = jouerTour(e, c('defense'), c('defense'), toujours(0));
+      assert.equal(apres.journal.some((l) => l.includes('(tous les 3 tours)')), recupere, `tour ${tour}`);
+    }
   });
 });
