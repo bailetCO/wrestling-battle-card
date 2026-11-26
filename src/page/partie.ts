@@ -2,8 +2,9 @@
 // La page appelle ces fonctions ; toutes les règles restent dans src/moteur.
 
 import {
-  apercuInitiative, choixOrdinateur, creerCombat, creerHasard, jouerTour, reactionOrdinateur, trouverLutteur,
-  type Choix, type DefLutteur, type EtatCombat, type Face, type Hasard, type IdAction, type Niveau,
+  apercuInitiative, choixOrdinateur, creerCombat, creerHasard, jouerSequence, jouerTour, reactionOrdinateur, reactionSequence,
+  sequenceOrdinateur, trouverLutteur,
+  type Choix, type DefLutteur, type EtatCombat, type Face, type Hasard, type IdAction, type Niveau, type ResultatSequence, type Sequence,
 } from '../moteur';
 
 export const HUMAIN = 0;
@@ -39,7 +40,12 @@ export interface TourJoue {
   choixOrdi: Choix;
   ordiAChange: boolean;
   lignes: string[];
+  sequence?: number; // mode Enchaînement : numéro de la séquence (les 3 duels d'une séquence ont le même)
+  rupture?: boolean; // mode Enchaînement : la chaîne a été brisée à ce duel
 }
+
+// Une séquence jouée (mode Enchaînement) : ses duels, et l'éventuelle rupture de chaîne.
+export interface SequenceJouee { tours: TourJoue[]; rupture: ResultatSequence['rupture']; ordiAChange: boolean }
 
 export class Partie {
   etat: EtatCombat;
@@ -50,9 +56,9 @@ export class Partie {
   constructor(
     readonly idHumain: string, readonly idOrdi: string, graine: number,
     readonly niveau: Niveau = 'normal', defHumain?: DefLutteur, readonly script: Choix[] = [], rapide = false,
-    defOrdi?: DefLutteur,
+    defOrdi?: DefLutteur, enchainement = false,
   ) {
-    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), defOrdi ?? idOrdi, { rapide });
+    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), defOrdi ?? idOrdi, { rapide, enchainement });
     this.hasard = new HasardRejouable(graine);
   }
 
@@ -77,6 +83,49 @@ export class Partie {
     if (this.scripte || !this.etat.joueurs[ORDI].initiative) return choixOrdi;
     apercuInitiative(this.etat, ORDI, choixHumain.action, this.hasard.fn);
     return reactionOrdinateur(this.etat, ORDI, choixOrdi, choixHumain, this.hasard.fn, this.niveau);
+  }
+
+  // ---------- Mode Enchaînement ----------
+  sequencesJouees = 0;
+
+  // L'ordinateur compose sa séquence en secret.
+  sequenceOrdi(): Sequence {
+    return sequenceOrdinateur(this.etat, ORDI, this.hasard.fn, this.niveau);
+  }
+
+  // Avec l'initiative, l'ordinateur voit la dernière action du joueur et peut changer la sienne.
+  reactionSequenceOrdi(seqHumain: Sequence, seqOrdi: Sequence): Sequence {
+    return reactionSequence(this.etat, ORDI, seqOrdi, seqHumain, this.hasard.fn, this.niveau);
+  }
+
+  // Joue la séquence. Chaque tentative de tombé de l'ordinateur demande une annonce au joueur :
+  // tant qu'il en manque, on renvoie 'pileOuFace' et la séquence sera rejouée à l'identique.
+  resoudreSequence(seqHumain: Sequence, seqOrdi: Sequence, ordiAChange: boolean, faces: Face[] = []): SequenceJouee | 'pileOuFace' {
+    const marque = this.hasard.marque();
+    let n = 0;
+    try {
+      const r = jouerSequence(this.etat, seqHumain, seqOrdi, this.hasard.fn, {
+        choisirFace: (j) => {
+          if (j !== HUMAIN) return undefined as unknown as Face;
+          if (n >= faces.length) throw new BesoinFace();
+          return faces[n++];
+        },
+      });
+      this.etat = r.etat;
+      this.toursJoues += r.duels.length;
+      const num = ++this.sequencesJouees;
+      const tours = r.duels.map((d, k): TourJoue => ({
+        avant: d.avant, choixHumain: d.choix[HUMAIN], choixOrdi: d.choix[ORDI], ordiAChange: ordiAChange && k === r.duels.length - 1,
+        lignes: d.lignes, sequence: num, rupture: !!r.rupture && k === r.duels.length - 1,
+      }));
+      return { tours, rupture: r.rupture, ordiAChange };
+    } catch (err) {
+      if (err instanceof BesoinFace) {
+        this.hasard.revenirA(marque);
+        return 'pileOuFace';
+      }
+      throw err;
+    }
   }
 
   // Joue le tour. Si l'ordinateur réussit sa tentative de tombé, le joueur doit

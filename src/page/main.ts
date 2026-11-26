@@ -3,12 +3,12 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutPrevu, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
 } from '../moteur';
-import { Partie, type TourJoue } from './partie';
+import { Partie, type TourJoue , type SequenceJouee } from './partie';
 import {
   ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais,
   type ModeSalle, type Presence, type Role, type Salle, type Vue,
@@ -714,7 +714,8 @@ function ecranArene(rapide = false) {
     <main class="choix">
       ${rapide
         ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
-           <div class="marge">${choixNiveau(collection.niveau)}</div>`
+           <div class="marge">${choixNiveau(collection.niveau)}
+             <label class="case-rapide"><input type="checkbox" id="enchainement" ${enchainementChoisi ? 'checked' : ''}> Mode Enchaînement <small>(à l'essai : séquences de ${TAILLE_SEQUENCE} actions, ${R_.enchainement.toursParPeriode} tours)</small></label></div>`
         : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
       ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
@@ -763,6 +764,9 @@ function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((b) =>
     b.addEventListener('click', () => { bossChoisi = b.dataset.boss!; ecranArene(); }),
   );
+  app.querySelector<HTMLInputElement>('#enchainement')?.addEventListener('change', (ev) => {
+    enchainementChoisi = (ev.target as HTMLInputElement).checked;
+  });
   app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { bossChoisi = null; ecranArene(); });
   if (areneTerminee(collection) && !bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
@@ -1936,7 +1940,11 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   mode = 'solo';
   HUMAIN = 0;
   ORDI = 1;
-  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide);
+  // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
+  const ench = rapide && !interclub && !ctx && enchainementChoisi;
+  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, ench);
+  sequenceHumain = [];
+  derniereSequence = null;
   areneCtx = ctx;
   interclubEnCours = interclub;
   tours = [];
@@ -2340,14 +2348,15 @@ function filChat(e: EtatCombat): string {
     if (ih < 0 && io < 0) return 'neutre';
     return io < 0 || (ih >= 0 && ih <= io && !(nh.length < no.length && no.includes(nh) && ih === io)) ? 'moi' : 'lui';
   };
-  return tours.map((t) => {
+  return tours.map((t, i) => {
+    const entete = t.sequence && t.sequence !== tours[i - 1]?.sequence ? `<p class="chat-seq">Séquence ${t.sequence}</p>` : '';
     const h = libelleAction(e.joueurs[HUMAIN].def.nation, t.choixHumain.action);
     const o = libelleAction(e.joueurs[ORDI].def.nation, t.choixOrdi.action);
     const lignes = [
       ...(t.ordiAChange ? [`${no} avait l'initiative : il a vu deux de tes actions possibles et a changé la sienne.`] : []),
       ...t.lignes.slice(1),
     ];
-    return `
+    return `${entete}
       <div class="chat-tour"><b>${echap(titreTour(t))}</b>
         <span><i class="rouge">${t.choixHumain.speciale ? '★ ' : ''}${echap(h.local)}</i> contre <i class="bleu">${t.choixOrdi.speciale ? '★ ' : ''}${echap(o.local)}</i></span></div>
       ${lignes.map((l) => `<p class="bulle-chat ${cote(l)} ${classeLigne(l, e)}">${echap(l)}</p>`).join('')}`;
@@ -2378,8 +2387,186 @@ function brancherChat() {
   }
 }
 
+// ---------- Mode Enchaînement (à l'essai, combat rapide) ----------
+// Le joueur compose sa séquence de 3 actions en touchant les boutons dans l'ordre ; une case
+// remplie se retire d'un toucher (avec celles qui suivent). Puis les 3 duels se révèlent.
+let enchainementChoisi = false; // case cochée sur l'écran du combat rapide
+let sequenceHumain: Choix[] = [];
+let derniereSequence: SequenceJouee | null = null;
+
+function caseSequenceHTML(e: EtatCombat, c: Choix | undefined, k: number): string {
+  if (!c) return `<span class="seq-case vide">${k + 1}</span>`;
+  const lib = libelleAction(e.joueurs[HUMAIN].def.nation, c.action);
+  const f = famille(c.action);
+  const cout = c.action === 'lutte' || c.action === 'souffle' ? 0 : coutPrevu(e, HUMAIN, c);
+  return `<button class="seq-case pleine ${c.speciale ? 'speciale' : ''}" data-retirer="${k}" aria-label="Retirer ${echap(lib.local)}">
+    <small>${k + 1}</small><span class="ico f-${f}">${ICONE[f]}</span><b>${c.speciale ? '★ ' : ''}${echap(lib.local)}</b><i>−${fmt(cout)}</i></button>`;
+}
+
+function paveSequence(e: EtatCombat): string {
+  const l = e.joueurs[HUMAIN];
+  const seq = sequenceHumain;
+  const plein = seq.length >= TAILLE_SEQUENCE;
+  const cases = Array.from({ length: TAILLE_SEQUENCE }, (_, k) => caseSequenceHTML(e, seq[k], k)).join('');
+  const reste = enduranceApres(e, HUMAIN, seq);
+  let boutons = '';
+  if (!plein) {
+    const ok = actionsAjoutables(e, HUMAIN, seq);
+    const souffle = souffleAjoutable(e, HUMAIN, seq);
+    if (!ok.length && !souffle) {
+      boutons = `<div class="grille"><button class="action lutte" data-action="lutte" data-mode="sequence">
+        <span class="ico">${ICONE.lutte}</span><span class="a-nom">Lutte</span>
+        <span class="a-fr">Plus de quoi payer une action : 1 chance sur 10 de marquer</span><span class="a-cout">0</span></button></div>`;
+    } else {
+      boutons = `<div class="grille">${l.def.actions.map((a) => {
+        const f = ACTIONS[a].famille;
+        const spe = f === l.def.familleSpeciale && speciaux(e, HUMAIN, seq, a);
+        return `<button class="action ${spe ? 'peut-speciale' : ''}" data-action="${a}" data-mode="sequence" ${spe ? 'data-spe="1"' : ''} ${ok.includes(a) || spe ? '' : 'disabled'}>
+          ${spe ? '<span class="badge-spe" aria-label="Action spéciale possible">★</span>' : ''}
+          <span class="ico f-${f}">${ICONE[f]}</span>
+          <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
+          <span class="a-fr"><b class="a-effet">${effetAction(a)}</b></span>
+          <span class="a-cout">−${fmt(coutAction(l.def, a))}</span></button>`;
+      }).join('')}${souffle ? `<button class="action souffle" data-action="souffle" data-mode="sequence">
+          <span class="ico">${ICONE.souffle}</span><span class="a-nom">Souffler</span>
+          <span class="a-fr"><b class="a-effet">+${R_.souffle.gain} d'endurance · 1 fois par combat</b></span><span class="a-cout">0</span></button>` : ''}</div>`;
+    }
+  }
+  return `
+    <div class="seq-cases" aria-label="Ta séquence">${cases}</div>
+    <p class="seq-info">${plein ? 'Séquence prête.' : `Choisis l'action ${seq.length + 1} sur ${TAILLE_SEQUENCE}.`} Endurance après la séquence : <b>${fmt(Math.max(0, reste))}</b>${seq.length ? ' · touche une case pour la retirer' : ''}</p>
+    ${boutons}
+    ${plein ? '<button class="principal" data-valider-seq>Valider la séquence</button>' : ''}`;
+}
+
+function brancherSequence() {
+  app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="sequence"]').forEach((b) =>
+    b.addEventListener('click', () => demanderSpeciale(b, (c) => {
+      if (sequenceHumain.length >= TAILLE_SEQUENCE) return;
+      sequenceHumain = [...sequenceHumain, c];
+      ecranCombat();
+    })),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-retirer]').forEach((b) =>
+    b.addEventListener('click', () => {
+      sequenceHumain = sequenceHumain.slice(0, Number(b.dataset.retirer));
+      ecranCombat();
+    }),
+  );
+  app.querySelector('[data-valider-seq]')?.addEventListener('click', validerSequenceHumain);
+}
+
+function validerSequenceHumain() {
+  if (!partie || enAttente) return;
+  const erreur = validerSequence(partie.etat, HUMAIN, sequenceHumain);
+  if (erreur) {
+    sequenceHumain = [];
+    ecranCombat();
+    return;
+  }
+  enAttente = true;
+  const seqO = partie.sequenceOrdi();
+  const vue = apercuSequence(partie.etat, HUMAIN, seqO);
+  if (vue) return fenetreInitiativeSequence(seqO, vue);
+  suiteSequence(sequenceHumain, seqO);
+}
+
+// Initiative : le joueur voit la dernière action de l'ordinateur et peut changer la sienne.
+function fenetreInitiativeSequence(seqO: Choix[], vue: Choix) {
+  const e = partie!.etat;
+  const n = TAILLE_SEQUENCE - 1;
+  const debut = sequenceHumain.slice(0, n);
+  const mien = sequenceHumain[n];
+  const libO = libelleAction(e.joueurs[ORDI].def.nation, vue.action);
+  const fO = famille(vue.action);
+  const libM = libelleAction(e.joueurs[HUMAIN].def.nation, mien.action);
+  const ok = actionsAjoutables(e, HUMAIN, debut).filter((a) => a !== mien.action);
+  const autres = ok.map((a) => {
+    const f = ACTIONS[a].famille;
+    return `<button class="action" data-autre="${a}"><span class="ico f-${f}">${ICONE[f]}</span>
+      <span class="a-nom">${echap(nomLocal(e.joueurs[HUMAIN].def.nation, a))}</span>
+      <span class="a-fr"><b class="a-effet">${effetAction(a)}</b></span><span class="a-cout">−${fmt(coutAction(e.joueurs[HUMAIN].def, a))}</span></button>`;
+  }).join('');
+  const f = ouvrirFenetre(`
+    <h2>Initiative</h2>
+    <p>La dernière action de l'ordinateur sera :</p>
+    <ul class="apercu"><li class="bleu"><span class="ico f-${fO}">${ICONE[fO]}</span><b>${vue.speciale ? '★ ' : ''}${echap(libO.local)}</b> <small>${echap(libO.fr)}${legendeFamille(fO)}</small></li></ul>
+    <button class="principal" data-garder>Garder ma dernière action : ${mien.speciale ? '★ ' : ''}${echap(libM.local)}</button>
+    ${autres ? `<p class="ou">ou la changer pour :</p><div class="pave-fenetre"><div class="grille">${autres}</div></div>` : ''}`);
+  f.querySelector('[data-garder]')!.addEventListener('click', () => suiteSequence(sequenceHumain, seqO));
+  f.querySelectorAll<HTMLButtonElement>('[data-autre]').forEach((b) =>
+    b.addEventListener('click', () => suiteSequence([...debut, { action: b.dataset.autre as IdAction }], seqO)),
+  );
+}
+
+function suiteSequence(seqH: Choix[], seqO: Choix[]) {
+  if (!partie) return;
+  const finale = partie.reactionSequenceOrdi(seqH, seqO);
+  const change = finale[finale.length - 1].action !== seqO[seqO.length - 1].action;
+  resoudreSequenceHumain(seqH, finale, change, []);
+}
+
+function resoudreSequenceHumain(seqH: Choix[], seqO: Choix[], change: boolean, faces: Face[]) {
+  if (!partie) return;
+  const r = partie.resoudreSequence(seqH, seqO, change, faces);
+  if (r === 'pileOuFace') {
+    const f = ouvrirFenetre(`
+      <h2>Tentative de tombé !</h2>
+      <p>L'ordinateur est sur le point de te faire tomber pendant la séquence. Annonce pile ou face : si la pièce tombe sur ton annonce, tu t'en sors.</p>
+      <div class="pile-face">
+        <button class="principal" data-face="pile">Pile</button>
+        <button class="principal" data-face="face">Face</button>
+      </div>`);
+    f.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) =>
+      b.addEventListener('click', () => resoudreSequenceHumain(seqH, seqO, change, [...faces, b.dataset.face as Face])),
+    );
+    return;
+  }
+  for (const t of r.tours) {
+    tours.push(t);
+    for (const l of t.lignes) {
+      const m = l.match(/^Période \d gagnée par .* : (\d+) - (\d+)\.$/);
+      if (m) scoresPeriodes.push([Number(m[1]), Number(m[2])]);
+    }
+  }
+  derniereSequence = r;
+  sequenceHumain = [];
+  fermerFenetre();
+  enAttente = false;
+  ecranCombat();
+}
+
+// La case de la dernière séquence : les duels se révèlent l'un après l'autre.
+function caseSequence(e: EtatCombat, s: SequenceJouee): string {
+  const dh = e.joueurs[HUMAIN].def;
+  const dO = e.joueurs[ORDI].def;
+  const pas = 650;
+  const lignes = s.tours.map((t, k) => {
+    const ono = onomatopee(t, e);
+    return `
+      <div class="seq-duel" style="--delai:${k * pas}ms">
+        <span class="seq-num">${k + 1}</span>
+        ${miniCarte(t.choixHumain, dh, 'rouge', k * pas)}
+        <span class="seq-mot ${ono?.cote ?? 'neutre'}">${ono?.texte ?? '—'}</span>
+        ${miniCarte(t.choixOrdi, dO, 'bleu', k * pas + 120)}
+      </div>`;
+  }).join('');
+  const pts = s.tours.flatMap((t) => t.lignes).filter((l) => / marque \d/.test(l))
+    .map((l) => `<li class="${classeLigne(l, e)}">${echap(l.replace(/ \(.*\)\.$/, ''))}</li>`).join('');
+  const fin = s.tours.length * pas;
+  const num = s.tours[0]?.sequence ?? 0;
+  return `
+    <section class="case case-seq" aria-live="polite">
+      <div class="case-tete"><h3>Séquence ${num}${s.ordiAChange ? ' · l\'ordinateur a changé sa dernière action' : ''}</h3>${boutonChat()}</div>
+      <div class="seq-duels">${lignes}</div>
+      ${s.rupture ? `<p class="onomato ${s.rupture.par === HUMAIN ? 'rouge' : 'bleu'} seq-brisee" style="animation-delay:${fin}ms">CHAÎNE BRISÉE !</p>` : ''}
+      ${pts ? `<ul class="case-points" style="animation-delay:${fin}ms">${pts}</ul>` : ''}
+    </section>`;
+}
+
 // La case du dernier tour : les deux actions se révèlent, puis le mot du résultat.
 function caseDernierTour(e: EtatCombat): string {
+  if (e.enchainement && derniereSequence) return caseSequence(e, derniereSequence);
   const t = tours[tours.length - 1];
   const h = e.joueurs[HUMAIN];
   const o = e.joueurs[ORDI];
@@ -2389,7 +2576,9 @@ function caseDernierTour(e: EtatCombat): string {
         <div class="vs-portrait rouge">${portrait(h.def)}<span>Toi</span></div>
         <span class="vs">VS</span>
         <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
-        <p class="case-aide">Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.</p>
+        <p class="case-aide">${e.enchainement
+          ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi (1re ou 2e action) ou une feinte réussie (2e action) peut briser la chaîne.`
+          : `Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}</p>
       </section>`;
   }
   const ono = onomatopee(t, e);
@@ -2425,9 +2614,9 @@ function tableau(e: EtatCombat): string {
       <div class="centre">
         ${e.rapide
           ? `<span class="per">${e.mortSubite ? '<b class="mort-subite">Mort subite</b>' : 'Combat <b>rapide</b>'}</span>
-             <span class="trn">Tour <b>${e.tour}</b>${e.mortSubite ? '' : `/${REGLES.toursParPeriode}`}</span>`
+             <span class="trn">Tour <b>${e.tour}</b>${e.mortSubite ? '' : `/${toursPeriode(e)}`}</span>`
           : `<span class="per">Période <b>${e.periode}</b>/3</span>
-             <span class="trn">Tour <b>${e.tour}</b>/${REGLES.toursParPeriode}</span>`}
+             <span class="trn">Tour <b>${e.tour}</b>/${toursPeriode(e)}</span>`}
         ${historique}
         <span class="niv">${mode === 'ligne' ? 'Entre amis' : `Ordi ${niveauOrdi(partie?.niveau)}`}</span>
       </div>
@@ -2460,11 +2649,13 @@ function ecranCombat() {
       </section>
       ${caseDernierTour(e)}
       <footer class="pave">
-        ${h.initiative ? `<p class="spe-info init">Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.</p>` : ''}
+        ${h.initiative ? `<p class="spe-info init">${e.enchainement
+          ? `Tu as l'initiative : après ta séquence, tu verras la dernière action ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'} et pourras changer la tienne.`
+          : `Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.`}</p>` : ''}
         ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
         ${bulleCoach()}
 
-        <div class="actions-zone">${boutonsActions(e, 'tour')}</div>
+        <div class="actions-zone">${e.enchainement ? paveSequence(e) : boutonsActions(e, 'tour')}</div>
         <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : tuto ? 'Combat guidé' : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>${tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
       </footer>
       ${panneauChat(e)}
@@ -2483,6 +2674,7 @@ function ecranCombat() {
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
     b.addEventListener('click', () => demanderSpeciale(b, choisir)),
   );
+  if (e.enchainement) brancherSequence();
   app.querySelectorAll<HTMLButtonElement>('[data-voir]').forEach((b) =>
     b.addEventListener('click', () => {
       const e = etatEnCours();
