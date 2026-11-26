@@ -12,6 +12,7 @@ import { ecranFinLigne, majStatutLigne } from './amis';
 import { ecranArene } from './carriere';
 import { ActionJouee, S, adv, app, echap, etatEnCours, famille, fmt, legendeFamille, libelleAction, moiNom, niveauOrdi, nouvelleGraine, pastilleNiveau, pct, portrait } from './commun';
 import { ecranFin } from './fin';
+import { gagnerTout, outilsTestVisibles } from '../test';
 import { finCombatTournoi } from './tournois';
 import { bulleCoach, ecranFinTutoriel, etapeGuidee, guiderBoutons } from './tutoriel';
 import { bulleConseil } from './tutos-courts';
@@ -696,6 +697,7 @@ export function ecranCombat() {
 
         <div class="actions-zone">${e.enchainement ? paveSequence(e) : boutonsActions(e, 'tour')}</div>
         <p class="graine">${S.mode === 'ligne' ? `Salle ${S.codeSalle.toUpperCase()} · combat n° ${S.vueLigne?.graine ?? ''}` : S.tuto ? 'Combat guidé' : `Combat n° ${S.partie!.hasard.graine}`} · <button class="lien" data-quitter>${S.tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
+        ${S.mode !== 'ligne' && !S.tuto && outilsTestVisibles(S.collection.coach) ? '<button class="secondaire bouton-test" data-passer-combat>⏩ Passer le combat et gagner (test)</button>' : ''}
       </footer>
       ${panneauChat(e)}
     </main>`;
@@ -728,6 +730,11 @@ export function ecranCombat() {
       fenetreCarte(e.joueurs[idx].def, style);
     }),
   );
+  app.querySelector('[data-passer-combat]')?.addEventListener('click', () => {
+    if (!S.partie) return;
+    gagnerTout(S.partie.etat, S.HUMAIN);
+    ecranCombat();
+  });
   app.querySelector('[data-quitter]')?.addEventListener('click', () => {
     if (S.tuto) {
       S.tuto = false;

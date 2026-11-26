@@ -2,6 +2,8 @@
 // Chaque bonus est une ligne de la liste ci-dessous, pour pouvoir en ajouter ou en enlever facilement.
 
 import type { Collection } from './collection';
+import type { EtatCombat, Joueur } from '../moteur/types';
+import { DEV } from './dev';
 
 type BonusPseudo = { pseudo: string; medailles: number; dollars: number };
 
@@ -29,4 +31,17 @@ export function afficherBandeauTest(texte: string) {
     + 'padding:10px 16px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.4);max-width:90vw;text-align:center';
   document.body.appendChild(d);
   setTimeout(() => d.remove(), 4000);
+}
+
+// Outils de test visibles seulement pour le pseudo Coco (ou en mode développeur, ?dev).
+export const outilsTestVisibles = (pseudo: string | null) =>
+  DEV || (pseudo ?? '').trim().toLowerCase() === 'coco';
+
+// « Passer le combat et gagner » : le combat se termine tout de suite par une victoire par tombé.
+// L'écran de fin donne ensuite les récompenses habituelles d'une victoire.
+export function gagnerTout(e: EtatCombat, moi: Joueur) {
+  e.termine = true;
+  e.vainqueur = moi;
+  e.finPar = 'tombe';
+  e.journal.push(`Combat passé (test) : victoire de ${e.joueurs[moi].def.nom} par tombé.`);
 }
