@@ -43,7 +43,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
 - `scripts/verifier-cahier.ts` : compare les tableaux des lutteurs du cahier des charges avec le jeu.
 - `scripts/captures.mjs` : photographie chaque écran en taille téléphone et signale les défauts d'affichage.
-- `.claude/skills/` : les recettes de travail de Claude (`/fin-etape`, `/captures`, `/equilibrage`, `/nouveau-lutteur`, `/publier`, `/verifier-cahier`…), à taper dans Claude Code.
+- `.claude/skills/` : les recettes de travail de Claude (`/fin-etape`, `/captures`, `/equilibrage`, `/nouveau-lutteur`, `/publier`, `/verifier-cahier`, `/retours-testeurs`, `/avant-lancement`), à taper dans Claude Code.
 
 ## Commandes
 
