@@ -2,7 +2,7 @@
 
 import './style.css';
 import {
-  ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
+  ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
   peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
@@ -34,6 +34,7 @@ import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type 
 import { ETAPES, ETAPE_SAISON, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
+import { defRival, etoilesRival, niveauOrdiRival, rivalBattu, type MonteeRival } from './rival';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
 const app = document.getElementById('app')!;
@@ -734,7 +735,8 @@ function ecranArene(rapide = false) {
       ${rapide
         ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
            <div class="marge">${choixNiveau(collection.niveau)}
-             ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé']], epuisementChoisi)}</div>`
+             ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé contre Cocoach']], epuisementChoisi)}
+             ${encartRival()}</div>`
         : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
       ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
@@ -1963,7 +1965,13 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   ORDI = 1;
   // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
   const libre = rapide && !interclub && !ctx; // les styles de combat : combat rapide seulement
-  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, libre && enchainementChoisi, libre && infiniChoisi, epuisementChoisi);
+  // Durée infinie en combat rapide : l'adversaire est toujours Cocoach, le rival, à son niveau.
+  const rival = libre && infiniChoisi;
+  if (rival) {
+    idOrdi = ID_RIVAL;
+    niveau = niveauOrdiRival(collection);
+  }
+  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, rival ? defRival(collection) : undefined, libre && enchainementChoisi, libre && infiniChoisi, epuisementChoisi);
   sequenceHumain = [];
   areneCtx = ctx;
   interclubEnCours = interclub;
@@ -2417,6 +2425,18 @@ function brancherChat() {
 let enchainementChoisi = false; // format choisi sur l'écran du combat rapide
 let infiniChoisi = false; // durée choisie sur l'écran du combat rapide
 let epuisementChoisi: number = R_.infini.debutEpuisement; // durée infinie : tour où commence l'épuisement
+let rivalFin: (MonteeRival & { gradeAvant: number }) | null = null; // dernière progression de Cocoach (écran de fin)
+
+// Encart du rival sur l'écran du combat rapide (durée infinie).
+function encartRival(): string {
+  const r = collection.rival;
+  const niv = NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade)];
+  const et = etoilesRival(collection);
+  return `<div class="encart-rival si-infini" ${infiniChoisi ? '' : 'hidden'}>
+    <span class="vignette">${portrait(defRival(collection))}</span>
+    <span><b>Adversaire : Cocoach, ton rival</b><small>${niv}${et ? ` · ${et} étoile${et > 1 ? 's' : ''}` : ''} · ordinateur ${niveauOrdiRival(collection)} · battu ${r.victoires} fois${r.bonus ? ` · +${Math.round(r.bonus * 100)} % (saisons)` : ''}</small>
+    <small>À chaque victoire, il monte de niveau${r.grade < 4 ? ` (prochain : ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade + 1)]}, 1 booster rare)` : ' (étoiles)'}.</small></span></div>`;
+}
 
 // Réglages « Style de combat » : le format (normal ou Enchaînement) et la durée.
 function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: string, durees: [string, string, string][], epuisement: number = R_.infini.debutEpuisement): string {
@@ -2441,7 +2461,7 @@ function brancherStyle(nom: string, changer: (cle: 'format' | 'duree' | 'epuise'
   app.querySelectorAll<HTMLInputElement>(`input[name^="${nom}-"]`).forEach((i) => i.addEventListener('change', () => {
     const cle = i.name.slice(nom.length + 1) as 'format' | 'duree' | 'epuise';
     changer(cle, i.value);
-    if (cle === 'duree') app.querySelector<HTMLElement>('.si-infini')!.hidden = i.value !== 'infinie';
+    if (cle === 'duree') app.querySelectorAll<HTMLElement>('.si-infini').forEach((x) => { x.hidden = i.value !== 'infinie'; });
   }));
 }
 let sequenceHumain: Choix[] = [];
@@ -3148,7 +3168,16 @@ function ecranFin() {
         histoire({ type: 'rapide', tombe: e.finPar === 'tombe', ecart: h.score - o.score });
         if (interclubEnCours) saison({ type: 'interclub' });
         collection.victoires++;
-        paquetSolo = { titre: 'Victoire', boosters: joindreGains([], gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
+        // Cocoach battu : il progresse ; quand il monte de niveau, 1 booster rare.
+        const boostersRival: Booster[] = [];
+        rivalFin = null;
+        if (idOrdi === ID_RIVAL) {
+          const gradeAvant = collection.rival.grade;
+          const m = rivalBattu(collection);
+          rivalFin = { ...m, gradeAvant };
+          if (m.monte) for (let k = 0; k < R_.rival.boostersRaresParMontee; k++) boostersRival.push(ouvrirBooster(collection, Math.random, 'rare'));
+        }
+        paquetSolo = { titre: rivalFin?.monte ? 'Victoire contre Cocoach' : 'Victoire', boosters: joindreGains(boostersRival, gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
       }
     } else if (gagne && areneCtx?.type === 'boss') {
       const r = victoireBossRejoue(collection, areneCtx.nation, Math.random);
@@ -3182,6 +3211,9 @@ function ecranFin() {
         ${scoresPeriodes.length ? `<p class="hist">${scoresPeriodes.map(([a, b], i) => `Période ${i + 1} : ${a} - ${b}`).join('<br>')}</p>` : ''}
         <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · Ordi : ${echap(o.def.nom)} · ${e.tourGlobal} tours</p>
         ${combatEnAuto ? `<p class="hist">${texteAuto()}</p>` : ''}
+        ${idOrdi === ID_RIVAL && rivalFin ? `<p class="rival-fin">${rivalFin.monte
+          ? `Cocoach passe au niveau <b>${NOM_RARETE[niveauCarte(COCOACH_RIVAL, rivalFin.grade)]}</b> ! Il sera plus fort au prochain combat. Tu gagnes ${R_.rival.boostersRaresParMontee} booster rare.`
+          : rivalFin.etoile ? `Cocoach gagne une étoile sur ${echap(ACTIONS[rivalFin.etoile].nom)}.` : 'Cocoach est à son maximum.'}</p>` : ''}
       </section>
       ${booster}
       <div class="fin-boutons">

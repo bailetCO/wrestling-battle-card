@@ -529,6 +529,21 @@ export const REGLES = {
   // - Dès le tour `debutEpuisement`, 3 tours sans pouvoir payer aucune action = épuisement (tombé).
   //   Sans cette règle, deux lutteurs à bout peuvent lutter l'un contre l'autre sans fin.
   //   Le joueur règle ce tour (`choixEpuisement`, 20 par défaut).
+  // Cocoach, le rival du mode infini : ses 4 actions à chaque niveau (grade 1 = rare … 4 = Champion
+  // du Monde), le niveau de l'ordinateur qui le joue, la récompense quand il monte de niveau, et
+  // le bonus de statistiques par saison (il repart de Rare à chaque nouvelle saison, +2 % à chaque fois).
+  rival: {
+    decks: [
+      ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
+      ['simple_jambe', 'ceinture_arriere', 'contre', 'feinte'],
+      ['matraquage', 'ceinture_arriere', 'contre', 'feinte'],
+      ['matraquage', 'ceinture_arriere', 'contre', 'changement_niveau'],
+    ] as IdAction[][],
+    ordinateur: ['normal', 'normal', 'fort', 'fort'] as ('facile' | 'normal' | 'fort')[],
+    boostersRaresParMontee: 1,
+    bonusParSaison: 0.02,
+  },
+
   infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 20, choixEpuisement: [20, 30, 40, 50] },
 
   // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
@@ -681,7 +696,19 @@ export function avecBonus(def: DefLutteur, bonus: number): DefLutteur {
 // le rang du niveau visé (Rare 2, Épique 3, Légendaire 4, Champion du Monde 5).
 export const exemplairesPourGrade = (def: DefLutteur, grade: number) => rangDe(def) + grade;
 
+// Cocoach, le rival du mode infini (combat rapide, durée infinie). Il commence en carte rare et
+// monte d'un niveau à chaque défaite (Épique, Légendaire, Champion du Monde), puis gagne des
+// étoiles. Ce n'est pas le lutteur de test (Cocoach, id « cocoach-test »).
+export const ID_RIVAL = 'cocoach-rival';
+export const COCOACH_RIVAL: DefLutteur = {
+  id: ID_RIVAL, nom: 'Cocoach', origine: 'France', nation: 'europe', style: 'Rival, technicien des feintes et des ceintures',
+  rarete: 'rare', enduranceMax: 58, force: 168, recuperation: 0.44, familleSpeciale: 'feinte',
+  actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
+  deblocages: ['contre', 'matraquage', 'esquive', 'bras_roule'], actionChampion: 'changement_niveau',
+};
+
 export function trouverLutteur(id: string): DefLutteur {
+  if (id === ID_RIVAL) return COCOACH_RIVAL;
   const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id) ?? CHAMPIONS.find((l) => l.id === id);
   if (!lutteur) throw new Error(`Lutteur inconnu : ${id}`);
   return lutteur;

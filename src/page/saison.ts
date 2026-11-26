@@ -6,6 +6,7 @@
 import { CHAMPIONS, REGLES, type Hasard } from '../moteur';
 import { ouvrirBooster, type Booster, type Collection } from './collection';
 import { ETAPE_SAISON, legendaireOfferte } from './histoire';
+import { rivalNouvelleSaison } from './rival';
 import { creerIndividuel, type Individuel } from './tournoi';
 
 const S = REGLES.saison;
@@ -63,6 +64,7 @@ export function cartesFinSaison(c: Collection, hasard: Hasard): Booster {
 export function nouvelleSaison(c: Collection): boolean {
   if (!saisonOuverte(c) || !saisonFinie(c)) return false;
   c.saison = { palier: 0, victoires: 0, numero: c.saison.numero + 1, terminees: c.saison.terminees };
+  rivalNouvelleSaison(c); // Cocoach repart de Rare, un peu plus fort
   c.scenesVues = c.scenesVues.filter((k) => !k.startsWith('s')); // les scènes de la saison reviennent
   return true;
 }

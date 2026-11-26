@@ -36,6 +36,7 @@ export interface Collection {
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
   combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
+  rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
   quetes: { jour: string; liste: { id: string; param: string; progres: number; faite: boolean }[]; change: boolean; bonus: boolean; uniques: string[] }; // quêtes journalières
 }
 
@@ -91,6 +92,7 @@ export function nouvelleCollection(): Collection {
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
     combosVus: [],
+    rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
 }
@@ -404,6 +406,15 @@ export function depuisSauvegarde(brut: unknown): Collection {
     };
   }
   if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
+  const ri = b.rival as { grade?: unknown; etoiles?: unknown; victoires?: unknown; bonus?: unknown } | undefined;
+  if (ri && typeof ri === 'object') {
+    c.rival = {
+      grade: Math.max(1, Math.min(4, entier(ri.grade) || 1)),
+      etoiles: ri.etoiles && typeof ri.etoiles === 'object' ? Object.fromEntries(Object.entries(ri.etoiles as Record<string, unknown>).map(([k, v]) => [k, Math.min(3, entier(v))])) : {},
+      victoires: entier(ri.victoires),
+      bonus: typeof ri.bonus === 'number' && ri.bonus >= 0 && ri.bonus < 5 ? ri.bonus : 0,
+    };
+  }
   if (Array.isArray(b.combosVus)) c.combosVus = [...new Set(b.combosVus.filter((x): x is string => typeof x === 'string'))].slice(0, 10);
   // 26/11/2026 : la scène d'ouverture de la saison s'appelait h12 ; h12 est maintenant l'étape 13.
   if (!c.scenesVues.includes('histoire15')) {
