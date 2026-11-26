@@ -2,6 +2,7 @@
 
 import { LUTTEURS, trouverLutteur, niveauCarte, avecDeck, REGLES as R_, type DefLutteur } from '../../moteur';
 import { carteHTML } from '../carte';
+import { afficherBandeauTest, bonusDeTest } from '../test';
 import { cartesPossedees, niveauCompte, niveauClub, placesClub, deckDe, defPossede, etoilesDe, fusionPrete, gradeDe, nbDoubles, nbEtoiles, nbExemplaires, sauver, verifierPseudo, styleDe } from '../collection';
 import { PALIERS, saisonFinie, saisonOuverte } from '../saison';
 import { DEV } from '../dev';
@@ -83,9 +84,11 @@ export function ecranAccueil(message = '') {
     const erreur = verifierPseudo(v);
     if (erreur) return ecranAccueil(erreur);
     S.collection.coach = v;
+    const bonus = bonusDeTest(S.collection, v);
     sauver(S.collection);
     if (location.hash) history.replaceState(null, '', location.pathname);
     ecranMenu();
+    if (bonus) afficherBandeauTest(bonus);
   });
   app.querySelector<HTMLInputElement>('#pseudo')!.focus();
   window.scrollTo(0, 0);

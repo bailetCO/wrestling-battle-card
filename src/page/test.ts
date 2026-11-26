@@ -1,0 +1,32 @@
+// Bonus de test : à retirer avant la sortie du jeu.
+// Chaque bonus est une ligne de la liste ci-dessous, pour pouvoir en ajouter ou en enlever facilement.
+
+import type { Collection } from './collection';
+
+type BonusPseudo = { pseudo: string; medailles: number; dollars: number };
+
+const BONUS_PSEUDO: BonusPseudo[] = [
+  { pseudo: 'Coco', medailles: 200, dollars: 1000 },
+];
+
+// Appelé quand le joueur enregistre son pseudo. Majuscules et minuscules ne comptent pas.
+// Rend le texte à afficher si un bonus a été donné, sinon null.
+export function bonusDeTest(c: Collection, pseudo: string): string | null {
+  const b = BONUS_PSEUDO.find((x) => x.pseudo.toLowerCase() === pseudo.trim().toLowerCase());
+  if (!b) return null;
+  c.medailles += b.medailles;
+  c.dollars += b.dollars;
+  return `Bonus de test : +${b.medailles} médailles et +${b.dollars} $`;
+}
+
+// Petit bandeau en haut de l'écran qui disparaît tout seul après quelques secondes.
+export function afficherBandeauTest(texte: string) {
+  const d = document.createElement('div');
+  d.textContent = texte;
+  d.setAttribute('role', 'status');
+  d.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;'
+    + 'background:#1b1b1b;color:#ffd54a;border:2px solid #ffd54a;border-radius:10px;'
+    + 'padding:10px 16px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.4);max-width:90vw;text-align:center';
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 4000);
+}
