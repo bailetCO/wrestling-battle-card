@@ -362,7 +362,17 @@ test('mode Enchaînement entre amis : une séquence modifiée après l\'envoi es
     ...vraie,
     publier(p) {
       const q = JSON.parse(JSON.stringify(p));
-      if (q.rev && q.t === 0) q.rev.c = coderSequence(decoderSequence(q.rev.c).reverse()) === q.rev.c ? q.rev.c + deck[1] - (q.rev.c % 128) : coderSequence(decoderSequence(q.rev.c).reverse());
+      if (q.rev && q.t === 0) {
+        // Séquence truquée, toujours différente de la vraie : à l'envers, ou sinon (séquence
+        // symétrique) avec une autre dernière action. Avant, un cas rare restait identique.
+        const vraieSeq = decoderSequence(q.rev.c);
+        let autre = [...vraieSeq].reverse();
+        if (coderSequence(autre) === q.rev.c) {
+          const der = coder(autre[autre.length - 1]);
+          autre = [...autre.slice(0, -1), decoder(deck.find((x) => x !== der)!)];
+        }
+        q.rev.c = coderSequence(autre);
+      }
       vraie.publier(q);
     },
   };
