@@ -2375,7 +2375,58 @@ function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
         <span class="a-cout ${moinsCher ? 'moins-cher' : ''}">−${fmt(cout)}</span>
       </button>`;
   }).join('');
-  return `<div class="grille">${normales}${souffle}</div>`;
+  // Fenêtre d'initiative : détails toujours visibles (pas d'appui long dans une fenêtre).
+  if (mode === 'initiative') return `<div class="grille details">${normales}${souffle}</div>`;
+  return `${barreDetails()}<div class="grille ${detailsActions() ? 'details' : ''}">${normales}${souffle}</div>`;
+}
+
+// ---------- Boutons d'action allégés : nom et coût ; le détail en appui long ----------
+
+const CLE_DETAILS = 'wbc-details'; // détails toujours affichés (préférence du téléphone)
+const CLE_APPUI = 'wbc-appui-vu'; // l'astuce de l'appui long a servi
+const lireCle = (k: string) => { try { return localStorage.getItem(k) === '1'; } catch { return false; } };
+const ecrireCle = (k: string, v: boolean) => { try { if (v) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch { /* navigation privée */ } };
+const detailsActions = () => lireCle(CLE_DETAILS);
+
+function barreDetails(): string {
+  const astuce = !lireCle(CLE_APPUI) && !detailsActions();
+  return `<div class="barre-details">${astuce ? '<span class="astuce-appui">Appui long sur une action : son effet.</span>' : '<span></span>'}
+    <button class="lien" data-details>${detailsActions() ? 'Masquer les détails' : 'Détails'}</button></div>`;
+}
+
+// Fenêtre de détail d'une action, faite à partir de ce que contient son bouton.
+function fenetreDetailAction(b: HTMLButtonElement) {
+  const t = (sel: string) => b.querySelector(sel)?.textContent?.trim() ?? '';
+  const chance = t('.a-chance');
+  ouvrirFenetre(`<h2>${echap(t('.a-nom'))}</h2>
+    <p>${echap(t('.a-fr'))}</p>
+    ${t('.a-combo') ? `<p class="a-combo">${echap(t('.a-combo'))}</p>` : ''}
+    ${b.dataset.spe ? '<p>★ Action spéciale possible ce tour-ci.</p>' : ''}
+    <p class="note">Coût : ${echap(t('.a-cout').replace('−', ''))} d'endurance${chance ? ` · chance de réussite : ${echap(chance)}` : ''}</p>
+    <div class="fin-boutons"><button class="principal" data-fermer>Compris</button></div>`, true);
+}
+
+function brancherAppuiLong(racine: ParentNode) {
+  racine.querySelector('[data-details]')?.addEventListener('click', () => { ecrireCle(CLE_DETAILS, !detailsActions()); ecranCombat(); });
+  racine.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((b) => {
+    let minuterie = 0;
+    const annuler = () => { clearTimeout(minuterie); minuterie = 0; };
+    b.addEventListener('pointerdown', () => {
+      annuler();
+      minuterie = window.setTimeout(() => {
+        b.dataset.appuiLong = '1';
+        ecrireCle(CLE_APPUI, true);
+        racine.querySelector('.astuce-appui')?.remove();
+        fenetreDetailAction(b);
+      }, 450);
+    });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, annuler);
+    b.addEventListener('contextmenu', (ev) => ev.preventDefault());
+    // Le clic qui suit un appui long ne joue pas l'action.
+    b.addEventListener('click', (ev) => {
+      if (b.dataset.appuiLong) { delete b.dataset.appuiLong; ev.stopImmediatePropagation(); ev.preventDefault(); }
+    }, true);
+  });
 }
 
 function classeLigne(ligne: string, e: EtatCombat): string {
@@ -2603,11 +2654,11 @@ function paveSequence(e: EtatCombat): string {
     const ok = actionsAjoutables(e, HUMAIN, seq);
     const souffle = souffleAjoutable(e, HUMAIN, seq);
     if (!ok.length && !souffle) {
-      boutons = `<div class="grille"><button class="action lutte" data-action="lutte" data-mode="sequence">
+      boutons = `${barreDetails()}<div class="grille ${detailsActions() ? 'details' : ''}"><button class="action lutte" data-action="lutte" data-mode="sequence">
         <span class="ico">${ICONE.lutte}</span><span class="a-nom">Lutte</span>
         <span class="a-fr">Plus de quoi payer une action : 1 chance sur 10 de marquer</span><span class="a-cout">0</span></button></div>`;
     } else {
-      boutons = `<div class="grille">${l.def.actions.map((a) => {
+      boutons = `${barreDetails()}<div class="grille ${detailsActions() ? 'details' : ''}">${l.def.actions.map((a) => {
         const f = ACTIONS[a].famille;
         const spe = f === l.def.familleSpeciale && speciaux(e, HUMAIN, seq, a);
         return `<button class="action ${spe ? 'peut-speciale' : ''}" data-action="${a}" data-mode="sequence" ${spe ? 'data-spe="1"' : ''} ${ok.includes(a) || spe ? '' : 'disabled'}>
@@ -2878,6 +2929,7 @@ function ecranCombat() {
   endurancesAvant = [e.joueurs[0].endurance, e.joueurs[1].endurance];
   if (!animer) app.querySelector('.case')?.classList.add('fige');
   guiderBoutons(app);
+  brancherAppuiLong(app);
 
   app.querySelectorAll<HTMLButtonElement>('[data-action][data-mode="tour"]').forEach((b) =>
     b.addEventListener('click', () => demanderSpeciale(b, choisir)),

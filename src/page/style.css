@@ -1429,3 +1429,12 @@ b.moi { color: #ff8a95; }
 .liste-boite li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .05); }
 .liste-boite small { grid-column: 1 / -1; opacity: .7; }
 .liste-boite span { opacity: .8; font-size: 13px; }
+
+/* Boutons d'action allégés : nom et coût ; effet et combo en appui long ou avec « Afficher les détails » */
+.grille:not(.details) .action .a-fr,
+.grille:not(.details) .action .a-combo { display: none; }
+.grille:not(.details) .action { min-height: 44px; align-items: center; }
+.action { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.barre-details { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 12px; }
+.barre-details .lien { font-size: 12px; padding: 2px 0; white-space: nowrap; }
+.astuce-appui { color: var(--doux); }

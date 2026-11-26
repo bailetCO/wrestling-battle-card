@@ -7,7 +7,7 @@ import { depuisSauvegarde, nouvelleCollection, ouvrirBooster } from '../src/page
 
 test('les récompenses à ouvrir sont gardées dans la sauvegarde', () => {
   const c = nouvelleCollection();
-  assert.deepEqual(c.aOuvrir, []);
+  assert.equal(c.aOuvrir.length, 0);
   const b = ouvrirBooster(c, creerHasard(4), 'rare');
   c.aOuvrir.push({ titre: 'Étape 1 validée', source: 'histoire', boosters: [b] });
   const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
