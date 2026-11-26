@@ -36,6 +36,7 @@ import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { defRival, etoilesRival, niveauOrdiRival, rivalBattu, type MonteeRival } from './rival';
 import { TUTOS, type IdTuto } from './tutos';
+import { DEV } from './dev';
 import { noterVisite, tuileNouvelle, tuileVisible, type IdTuile } from './menu';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
 
@@ -71,6 +72,7 @@ let enAttente = false; // un tour est en cours de résolution (fenêtre ouverte)
 let endurancesAvant: [number, number] | null = null; // pour animer les barres
 let idPortrait = 0;
 let collection: Collection = charger();
+if (!DEV && collection.toutDebloque) collection.toutDebloque = false; // hors mode développeur : la vraie collection
 let recompenseDonnee = false; // une seule récompense par combat
 let tuto = false; // combat guidé du tutoriel en cours
 // Combat d'arène en cours : progression par nation, ou revanche contre le boss d'une nation battue.
@@ -464,7 +466,7 @@ function ecranHistoire() {
       <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
         ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres">${jauge(p)} ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="h${i}">💬 Revoir la scène</button>` : ''}
-        ${i === cours ? '<button class="secondaire bouton-test" data-passer-etape>⏭ Passer à l\'étape suivante (test)</button>' : ''}
+        ${i === cours && DEV ? '<button class="secondaire bouton-test" data-passer-etape>⏭ Passer à l\'étape suivante (test)</button>' : ''}
         <small class="gain">🎁 ${recompense}</small></div></li>`;
   }).join('');
   app.innerHTML = `
@@ -523,7 +525,7 @@ function ecranSaison() {
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
       <div><b>${echap(p.nom)}</b><p>${echap(objectifPalier(i))}</p>${action}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="${i === 4 && !olympique ? 's4b' : `s${i}`}">💬 Revoir la scène</button>` : ''}
-        ${i === cours ? '<button class="secondaire bouton-test" data-passer-palier>⏭ Passer au palier suivant (test)</button>' : ''}
+        ${i === cours && DEV ? '<button class="secondaire bouton-test" data-passer-palier>⏭ Passer au palier suivant (test)</button>' : ''}
         <small class="gain">🎁 ${recompensePalier(i)}</small></div></li>`;
   }).join('');
   app.innerHTML = `
@@ -560,7 +562,7 @@ function ecranSaison() {
 function ecranChoixSaison(quoi: 'interclub' | 'competition', message = '') {
   const p = PALIERS[collection.saison.palier];
   if (!p) return ecranSaison();
-  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete(p.nom, quoi === 'interclub' ? 'Combat rapide (1 période) contre un autre club' : `Inscription ${R_.tournoi.individuel.inscription} $ (tu as ${collection.dollars} $)`, '#saison')}
@@ -621,6 +623,7 @@ function ecranMenu() {
       </header>
       ${porteMonnaie()}
       <p class="compteur menu-stats">${compteur()}</p>
+      ${DEV ? '<p class="note mode-dev">🛠 Mode développeur (retirer : ajouter ?nodev à l\'adresse)</p>' : ''}
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
       ${bandeauHistoire()}
       ${blocQuetes()}
@@ -831,7 +834,7 @@ function blocArene(): string {
 
 function ecranArene(rapide = false) {
   partie = null;
-  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   // Adversaire du combat auto : connu en Carrière et contre Cocoach ; au hasard (parmi les battus à la main) sinon.
   const advListe: string | null = rapide ? (infiniChoisi ? ID_RIVAL : null) : bossChoisi ? adversairesDe(bossChoisi)[PAR_NATION - 1] : etapeArene(collection).adversaire ?? '';
   const cartes = miens.map((l) => {
@@ -1049,15 +1052,15 @@ function ecranCollection() {
       <nav class="puces tri" aria-label="Trier la collection"><span>Trier par</span>${tris}</nav>
       ${groupes}
       <section class="groupe reglages">
-        <h2>Réglages de test</h2>
-        <p class="note">Tu as ${collection.medailles} médaille${collection.medailles > 1 ? 's' : ''} et ${collection.dollars} $.</p>
+        <h2>Réglages</h2>
+        ${DEV ? `<p class="note">Mode développeur · tu as ${collection.medailles} médaille${collection.medailles > 1 ? 's' : ''} et ${collection.dollars} $.</p>
         <div class="boutons-test">
           <button class="secondaire" data-medailles-test>+10 médailles (test)</button>
           <button class="secondaire" data-dollars-test>+50 $ (test)</button>
         </div>
         <button class="secondaire" data-booster-test>Ouvrir un booster (test)</button>
         <button class="secondaire" data-doubles-test>Doubles pour tout monter au maximum (test)</button>
-        <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>
+        <button class="secondaire" data-test>${collection.toutDebloque ? 'Revenir à ma vraie collection' : 'Débloquer toutes les cartes (mode test)'}</button>` : ''}
         <button class="lien" data-raz>Remettre la collection à zéro</button>
       </section>
     </main>`;
@@ -1079,32 +1082,32 @@ function ecranCollection() {
     }),
   );
   // Test : des médailles comme si on les avait gagnées (10 $ par palier de 5, niveau de compte, Mon Club).
-  app.querySelector('[data-medailles-test]')!.addEventListener('click', () => {
+  app.querySelector('[data-medailles-test]')?.addEventListener('click', () => {
     const g = gagnerMedailles(collection, 10);
     sauver(collection);
     histoire({ type: 'etat' });
     ecranCollection();
     ouvrirFenetre(`<h2>+10 médailles</h2><p>Tu as maintenant ${collection.medailles} médailles${g.dollars ? `, et ${g.dollars} $ de paliers en plus` : ''} (niveau de compte ${niveauCompte(collection)}).</p><button class="principal" data-fermer>OK</button>`, true);
   });
-  app.querySelector('[data-dollars-test]')!.addEventListener('click', () => {
+  app.querySelector('[data-dollars-test]')?.addEventListener('click', () => {
     collection.dollars += 50;
     sauver(collection);
     ecranCollection();
     ouvrirFenetre(`<h2>+50 $</h2><p>Tu as maintenant ${collection.dollars} $.</p><button class="principal" data-fermer>OK</button>`, true);
   });
-  app.querySelector('[data-test]')!.addEventListener('click', () => {
+  app.querySelector('[data-test]')?.addEventListener('click', () => {
     collection.toutDebloque = !collection.toutDebloque;
     sauver(collection);
     ecranCollection();
   });
-  app.querySelector('[data-doubles-test]')!.addEventListener('click', () => {
+  app.querySelector('[data-doubles-test]')?.addEventListener('click', () => {
     const n = doublesPourMaximum(collection);
     sauver(collection);
     ecranCollection();
     ouvrirFenetre(`<h2>Doubles ajoutés</h2><p>${n ? `${n} doubles ajoutés : tu peux monter chacune de tes cartes jusqu'à Champion du Monde et lui donner toutes ses étoiles dans Fusion.` : 'Tes cartes ont déjà assez de doubles.'}</p>
       <a class="principal lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a><button class="lien" data-fermer>Fermer</button>`, true);
   });
-  app.querySelector('[data-booster-test]')!.addEventListener('click', () => {
+  app.querySelector('[data-booster-test]')?.addEventListener('click', () => {
     const b = ouvrirBooster(collection, Math.random);
     sauver(collection);
     revelerPaquet({ titre: 'Booster de test', boosters: [b], ouvert: false }, () => ecranCollection());
@@ -1426,7 +1429,7 @@ const NOM_TOURNOI: Record<Tournoi['type'], string> = { individuel: 'Tournoi indi
 function ecranInscriptionIndividuel(nombre: number) {
   const C = R_.tournoi.individuel;
   const n = nombreParticipants(nombre);
-  const miens = [LUTTEUR_TEST, ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi individuel', `Inscription ${C.inscription} $ (tu as ${collection.dollars} $)`, '#tournois')}
