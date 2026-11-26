@@ -262,6 +262,10 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 ### Accueil et menu
 
 - À la première ouverture, le joueur choisit son pseudo de coach (3 à 16 caractères), modifiable ensuite. Il s'affiche dans les combats et ses amis le voient en ligne.
+- Phase « Consolider » (26/11/2026) :
+  - **Boîte à récompenses** : étapes du mode histoire, paliers de saison, quêtes et niveaux de Mon Club déposent leurs boosters dans une seule boîte, gardée dans la sauvegarde. Tuile « Récompenses » (toute la largeur, compteur), bandeau du menu et bulles d'annonce y mènent ; les écrans concernés montrent un lien « 🎁 N récompenses à ouvrir ». Une récompense quitte la boîte dès qu'on l'ouvre. Les boosters de fin de combat, de tournoi et de la boutique s'ouvrent toujours sur place.
+  - **Écran de combat allégé** : chaque bouton d'action montre le nom et le coût (plus les badges ★ spéciale, Combo et la chance si elle baisse). L'effet et le combo s'affichent en appui long (le clic qui suit ne joue pas l'action) ; un bouton « Détails » les affiche en permanence (préférence gardée sur le téléphone) ; une astuce le rappelle tant que l'appui long n'a pas servi. Fenêtre d'initiative : détails toujours visibles.
+  - **Fin du tutoriel** : un gros bouton « Ton premier vrai combat » lance tout de suite le meilleur lutteur du joueur contre le premier adversaire de la Carrière.
 - Simplifications du 26/11/2026 (analyse du projet) :
   - Menu ouvert pas à pas selon le mode histoire : au départ, seulement Combat et Collection ; Tournois à l'étape 2, Mon Club et Saison sportive à l'étape 3, Social à l'étape 4, Fusion à l'étape 8 (réglable dans la configuration). Une tuile qui apparaît porte « Nouveau » jusqu'à la première visite. Les anciennes sauvegardes ne voient rien de « Nouveau ».
   - Noms : l'arène devient la **Carrière** et le combat rapide devient l'**Entraînement** (les adresses et les sauvegardes ne changent pas ; « combat rapide » reste le nom du format en une période, en interclub et entre amis).
@@ -689,6 +693,9 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Si les retours sont bons : application mobile.
 - Développement réalisé avec Claude Code, code stocké sur le GitHub de Corentin.
 - Avancement étape par étape avec validation d'une esquisse à chaque étape.
+- Organisation du code (26/11/2026) : les règles dans `src/moteur` ; l'affichage dans `src/page`, avec un écran par fichier dans `src/page/ecrans` (accueil, carrière, combat, fin, tournois, club, collection, progression, tutoriel, tutoriels courts, amis, navigation, commun). L'état de la page est réuni dans un seul objet. `src/page/main.ts` ne fait que démarrer le jeu.
+- Mode développeur (26/11/2026) : les outils de test (médailles, $, boosters et doubles de test, toutes les cartes, Cocoach de test, passer une étape ou un palier) ne sont visibles qu'en ajoutant `?dev` à l'adresse du jeu, une fois (le téléphone s'en souvient) ; `?nodev` les retire. Sans mode développeur, une collection « tout débloqué » est désactivée.
+- Essai réel du combat entre amis : fiche `ESSAI_ENTRE_AMIS.md` (deux téléphones, environ 20 minutes).
 
 ## 6. Feuille de route
 
