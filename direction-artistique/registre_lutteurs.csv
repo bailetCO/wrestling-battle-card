@@ -1,0 +1,121 @@
+﻿id;nom;delegation;poids_kg;rarete_de_depart;style;couleur_maillot;couleur_liseret;couleur_fond
+usa;Marcus Stonewell;USA;92;Légendaire;Lutteur de pression, très physique;#c8283a;#ffffff;#1f3a7a
+usa-7;Darius Westrell;USA;125;Épique;Lutteur de pression, très physique;#c8283a;#ffffff;#1f3a7a
+usa-6;Mason Blackridge;USA;86;Épique;Défenseur, un mur qui use l'adversaire;#c8283a;#ffffff;#1f3a7a
+usa-9;Jaylen Brooks;USA;86;Rare;Défenseur, un mur qui use l'adversaire;#c8283a;#ffffff;#1f3a7a
+usa-5;Caleb Ashford;USA;70;Rare;Explosif, enchaîne les attaques aux jambes;#c8283a;#ffffff;#1f3a7a
+usa-4;Cameron Ashfield;USA;97;Rare;Lutteur de pression, très physique;#c8283a;#ffffff;#1f3a7a
+usa-defenseur;Tyler Monroe;USA;79;Commune;Défenseur, un mur qui use l'adversaire;#c8283a;#ffffff;#1f3a7a
+usa-explosif;Logan Steelvern;USA;79;Commune;Explosif, enchaîne les attaques aux jambes;#c8283a;#ffffff;#1f3a7a
+usa-8;Jayden Crosswell;USA;57;Commune;Explosif, enchaîne les attaques aux jambes;#c8283a;#ffffff;#1f3a7a
+usa-10;Darius Westford;USA;125;Commune;Lutteur de pression, très physique;#c8283a;#ffffff;#1f3a7a
+russie-pression;Ivan Kotov;Russie;125;Légendaire;Lutteur de pression, infatigable;#d42f2f;#ffffff;#2a5fb0
+russie-5;Sergei Volkov;Russie;97;Épique;Lutteur de pression, infatigable;#d42f2f;#ffffff;#2a5fb0
+russie-8;Boris Velkarov;Russie;125;Épique;Lutteur de pression, infatigable;#d42f2f;#ffffff;#2a5fb0
+russie-contre;Pavel Zoravin;Russie;57;Rare;Contre-attaquant patient;#d42f2f;#ffffff;#2a5fb0
+russie-6;Anton Zarev;Russie;57;Rare;Contre-attaquant patient;#d42f2f;#ffffff;#2a5fb0
+russie-4;Dmitri Karsenov;Russie;74;Rare;Technicien précis;#d42f2f;#ffffff;#2a5fb0
+russie;Alexei Volzaren;Russie;86;Commune;Technicien précis;#d42f2f;#ffffff;#2a5fb0
+russie-9;Nikita Belzarin;Russie;61;Commune;Contre-attaquant patient;#d42f2f;#ffffff;#2a5fb0
+russie-7;Timur Velkanov;Russie;97;Commune;Technicien précis;#d42f2f;#ffffff;#2a5fb0
+russie-10;Alexei Voranek;Russie;70;Commune;Technicien précis;#d42f2f;#ffffff;#2a5fb0
+japon-5;Takeshi Kurogane;Japon;92;Légendaire;Technicien, ceinture et relances;#f4f4f4;#c51f35;#b3203a
+japon-8;Kenzo Takemori;Japon;125;Épique;Technicien, ceinture et relances;#f4f4f4;#c51f35;#b3203a
+japon-contre;Haru Kazemori;Japon;74;Épique;Contre-attaquant insaisissable;#f4f4f4;#c51f35;#b3203a
+japon-4;Ren Kazemori;Japon;57;Rare;Rapide et explosif;#f4f4f4;#c51f35;#b3203a
+japon-6;Renji Kurozane;Japon;79;Rare;Contre-attaquant insaisissable;#f4f4f4;#c51f35;#b3203a
+japon-technicien;Kaito Arashino;Japon;86;Rare;Technicien, ceinture et relances;#f4f4f4;#c51f35;#b3203a
+japon-10;Sora Takemori;Japon;61;Commune;Rapide et explosif;#f4f4f4;#c51f35;#b3203a
+japon-7;Riku Moriyama;Japon;70;Commune;Rapide et explosif;#f4f4f4;#c51f35;#b3203a
+japon-9;Daichi Kazehara;Japon;74;Commune;Contre-attaquant insaisissable;#f4f4f4;#c51f35;#b3203a
+japon;Haruto Mizunari;Japon;65;Commune;Rapide et explosif;#f4f4f4;#c51f35;#b3203a
+iran-2;Kian Rostavari;Iran;79;Légendaire;Lutteur de pression, très physique;#da0000;#ffffff;#239f40
+iran-10;Kian Mehravan;Iran;97;Épique;Poids lourd, suplex dévastateur;#da0000;#ffffff;#239f40
+iran-1;Farhad Zandavar;Iran;125;Épique;Poids lourd, suplex dévastateur;#da0000;#ffffff;#239f40
+iran-5;Reza Navzaren;Iran;74;Rare;Lutteur de pression, très physique;#da0000;#ffffff;#239f40
+iran-8;Reza Mousavi;Iran;86;Rare;Lutteur de pression, très physique;#da0000;#ffffff;#239f40
+iran-7;Arman Navid;Iran;92;Rare;Poids lourd, suplex dévastateur;#da0000;#ffffff;#239f40
+iran-9;Reza Mehradin;Iran;57;Commune;Technicien précis;#da0000;#ffffff;#239f40
+iran-3;Arash Zandivar;Iran;61;Commune;Technicien précis;#da0000;#ffffff;#239f40
+iran-4;Arash Mehravan;Iran;97;Commune;Poids lourd, suplex dévastateur;#da0000;#ffffff;#239f40
+iran-6;Reza Kaviranel;Iran;65;Commune;Technicien précis;#da0000;#ffffff;#239f40
+georgie-2;Levan Kvaratskhelia;Géorgie;125;Légendaire;Poids lourd, suplex dévastateur;#ffffff;#e8112d;#9b1020
+georgie-5;Davit Kordaneli;Géorgie;125;Épique;Poids lourd, suplex dévastateur;#ffffff;#e8112d;#9b1020
+georgie-1;Luka Meskari;Géorgie;79;Épique;Puissant et athlétique;#ffffff;#e8112d;#9b1020
+georgie-8;Davit Karsheli;Géorgie;125;Rare;Poids lourd, suplex dévastateur;#ffffff;#e8112d;#9b1020
+georgie-9;Levan Tseradeli;Géorgie;57;Rare;Technicien, ceinture et relances;#ffffff;#e8112d;#9b1020
+georgie-6;Giorgi Vardaneli;Géorgie;61;Rare;Technicien, ceinture et relances;#ffffff;#e8112d;#9b1020
+georgie-3;Giorgi Kvaratskheli;Géorgie;65;Commune;Technicien, ceinture et relances;#ffffff;#e8112d;#9b1020
+georgie-10;Luka Makhareli;Géorgie;86;Commune;Puissant et athlétique;#ffffff;#e8112d;#9b1020
+georgie-7;Nika Darsveli;Géorgie;92;Commune;Puissant et athlétique;#ffffff;#e8112d;#9b1020
+georgie-4;Lasha Bakurveli;Géorgie;86;Commune;Puissant et athlétique;#ffffff;#e8112d;#9b1020
+azerbaidjan-1;Elvin Narzade;Azerbaïdjan;65;Légendaire;Explosif, enchaîne les attaques aux jambes;#e4002b;#00af66;#0092bc
+azerbaidjan-10;Emin Zardanel;Azerbaïdjan;57;Épique;Explosif, enchaîne les attaques aux jambes;#e4002b;#00af66;#0092bc
+azerbaidjan-4;Tural Arazli;Azerbaïdjan;65;Épique;Explosif, enchaîne les attaques aux jambes;#e4002b;#00af66;#0092bc
+azerbaidjan-9;Murad Zervanel;Azerbaïdjan;97;Rare;Équilibré, solide partout;#e4002b;#00af66;#0092bc
+azerbaidjan-6;Azad Mammadov;Azerbaïdjan;97;Rare;Équilibré, solide partout;#e4002b;#00af66;#0092bc
+azerbaidjan-3;Tural Kazveri;Azerbaïdjan;125;Rare;Équilibré, solide partout;#e4002b;#00af66;#0092bc
+azerbaidjan-2;Kamran Vezari;Azerbaïdjan;79;Commune;Contre-attaquant patient;#e4002b;#00af66;#0092bc
+azerbaidjan-7;Rashad Alverzan;Azerbaïdjan;70;Commune;Explosif, enchaîne les attaques aux jambes;#e4002b;#00af66;#0092bc
+azerbaidjan-5;Rashad Velzari;Azerbaïdjan;86;Commune;Contre-attaquant patient;#e4002b;#00af66;#0092bc
+azerbaidjan-8;Farid Zeyran;Azerbaïdjan;92;Commune;Contre-attaquant patient;#e4002b;#00af66;#0092bc
+turquie-1;Ozan Karaberen;Turquie;125;Légendaire;Lutteur de pression, très physique;#ffffff;#e30a17;#c8102e
+turquie-3;Emre Yildizhan;Turquie;70;Épique;Technicien, feintes et ceintures;#ffffff;#e30a17;#c8102e
+turquie-4;Burak Demirven;Turquie;97;Épique;Lutteur de pression, très physique;#ffffff;#e30a17;#c8102e
+turquie-10;Kerem Aydorel;Turquie;125;Rare;Lutteur de pression, très physique;#ffffff;#e30a17;#c8102e
+turquie-5;Mert Yalderen;Turquie;79;Rare;Défenseur, immense réserve d'énergie;#ffffff;#e30a17;#c8102e
+turquie-6;Cem Yilmaz;Turquie;74;Rare;Technicien, feintes et ceintures;#ffffff;#e30a17;#c8102e
+turquie-7;Emre Yildarven;Turquie;97;Commune;Lutteur de pression, très physique;#ffffff;#e30a17;#c8102e
+turquie-9;Deniz Akveren;Turquie;61;Commune;Technicien, feintes et ceintures;#ffffff;#e30a17;#c8102e
+turquie-2;Emir Karatay;Turquie;86;Commune;Défenseur, immense réserve d'énergie;#ffffff;#e30a17;#c8102e
+turquie-8;Selim Karaveren;Turquie;92;Commune;Défenseur, immense réserve d'énergie;#ffffff;#e30a17;#c8102e
+ouzbekistan-3;Jasur Rakhimel;Ouzbékistan;61;Légendaire;Explosif, feintes et bras roulés;#1eb53a;#ffffff;#0099b5
+ouzbekistan-6;Rustam Akhmedov;Ouzbékistan;74;Épique;Explosif, feintes et bras roulés;#1eb53a;#ffffff;#0099b5
+ouzbekistan-1;Javokhir Rashidov;Ouzbékistan;92;Épique;Puissant et athlétique;#1eb53a;#ffffff;#0099b5
+ouzbekistan-7;Bakhrom Tavren;Ouzbékistan;97;Rare;Puissant et athlétique;#1eb53a;#ffffff;#0099b5
+ouzbekistan-2;Timur Zarvani;Ouzbékistan;79;Rare;Technicien précis;#1eb53a;#ffffff;#0099b5
+ouzbekistan-10;Rustam Bekzarel;Ouzbékistan;125;Rare;Puissant et athlétique;#1eb53a;#ffffff;#0099b5
+ouzbekistan-9;Bekzod Nurakov;Ouzbékistan;57;Commune;Explosif, feintes et bras roulés;#1eb53a;#ffffff;#0099b5
+ouzbekistan-4;Sardor Mirzavel;Ouzbékistan;92;Commune;Puissant et athlétique;#1eb53a;#ffffff;#0099b5
+ouzbekistan-5;Sardor Mirzanel;Ouzbékistan;86;Commune;Technicien précis;#1eb53a;#ffffff;#0099b5
+ouzbekistan-8;Ulugbek Ravzani;Ouzbékistan;86;Commune;Technicien précis;#1eb53a;#ffffff;#0099b5
+kazakhstan-2;Arlan Sarybek;Kazakhstan;74;Légendaire;Défenseur, un mur qui use l'adversaire;#fec50c;#00afca;#00afca
+kazakhstan-3;Arsen Zhetarov;Kazakhstan;57;Épique;Explosif, enchaîne les attaques aux jambes;#fec50c;#00afca;#00afca
+kazakhstan-5;Nurlan Bekzaren;Kazakhstan;86;Épique;Défenseur, un mur qui use l'adversaire;#fec50c;#00afca;#00afca
+kazakhstan-1;Askar Nurzhanek;Kazakhstan;86;Rare;Poids lourd, suplex dévastateur;#fec50c;#00afca;#00afca
+kazakhstan-4;Aldar Bektemir;Kazakhstan;92;Rare;Poids lourd, suplex dévastateur;#fec50c;#00afca;#00afca
+kazakhstan-6;Alikhan Tursanek;Kazakhstan;61;Rare;Explosif, enchaîne les attaques aux jambes;#fec50c;#00afca;#00afca
+kazakhstan-7;Barys Tulegen;Kazakhstan;125;Commune;Poids lourd, suplex dévastateur;#fec50c;#00afca;#00afca
+kazakhstan-9;Nurlan Zhaksylyk;Kazakhstan;74;Commune;Explosif, enchaîne les attaques aux jambes;#fec50c;#00afca;#00afca
+kazakhstan-8;Damir Altayven;Kazakhstan;79;Commune;Défenseur, un mur qui use l'adversaire;#fec50c;#00afca;#00afca
+kazakhstan-10;Bauran Temirbek;Kazakhstan;125;Commune;Poids lourd, suplex dévastateur;#fec50c;#00afca;#00afca
+kirghizistan-1;Almaz Terekov;Kirghizistan;65;Légendaire;Rapide et explosif;#ffef00;#e8112d;#e8112d
+kirghizistan-5;Erlan Toktosunov;Kirghizistan;70;Épique;Équilibré, solide partout;#ffef00;#e8112d;#e8112d
+kirghizistan-8;Ermek Ak-Toren;Kirghizistan;79;Épique;Équilibré, solide partout;#ffef00;#e8112d;#e8112d
+kirghizistan-4;Aibek Tashven;Kirghizistan;57;Rare;Rapide et explosif;#ffef00;#e8112d;#e8112d
+kirghizistan-6;Nurlan Temirbek;Kirghizistan;92;Rare;Défenseur, immense réserve d'énergie;#ffef00;#e8112d;#e8112d
+kirghizistan-2;Nursultan Akverek;Kirghizistan;92;Rare;Équilibré, solide partout;#ffef00;#e8112d;#e8112d
+kirghizistan-9;Temirlan Arzakev;Kirghizistan;97;Commune;Défenseur, immense réserve d'énergie;#ffef00;#e8112d;#e8112d
+kirghizistan-7;Aibek Saryven;Kirghizistan;61;Commune;Rapide et explosif;#ffef00;#e8112d;#e8112d
+kirghizistan-3;Kubat Arkenov;Kirghizistan;125;Commune;Défenseur, immense réserve d'énergie;#ffef00;#e8112d;#e8112d
+kirghizistan-10;Azamat Kervan;Kirghizistan;65;Commune;Rapide et explosif;#ffef00;#e8112d;#e8112d
+afrique-4;Bakary N’Dale;Afrique;à définir;Légendaire;Puissant et athlétique;#f2c230;#d33a2c;#14804a
+afrique;Amadou Kassaré;Afrique;97;Épique;Puissant et athlétique;#f2c230;#d33a2c;#14804a
+afrique-explosif;Sékou Damaré;Afrique;65;Épique;Explosif, feintes et bras roulés;#f2c230;#d33a2c;#14804a
+afrique-5;Idriss Kévaré;Afrique;57;Rare;Explosif, feintes et bras roulés;#f2c230;#d33a2c;#14804a
+afrique-defenseur;Issa Dambaré;Afrique;74;Rare;Défenseur, immense réserve d'énergie;#f2c230;#d33a2c;#14804a
+afrique-9;Amadou Diallo;Afrique;79;Rare;Défenseur, immense réserve d'énergie;#f2c230;#d33a2c;#14804a
+afrique-8;Koffi Banzaré;Afrique;74;Commune;Explosif, feintes et bras roulés;#f2c230;#d33a2c;#14804a
+afrique-10;Amadou Darsané;Afrique;97;Commune;Puissant et athlétique;#f2c230;#d33a2c;#14804a
+afrique-6;Bakary N’Darven;Afrique;86;Commune;Défenseur, immense réserve d'énergie;#f2c230;#d33a2c;#14804a
+afrique-7;Malick Sombaré;Afrique;125;Commune;Puissant et athlétique;#f2c230;#d33a2c;#14804a
+europe-technicien;Mathis Valcourt;Europe;61;Légendaire;Technicien, feintes et ceintures;#1a49a8;#f5c518;#1d4ea0
+europe-puissant;Viktor Eisenvar;Europe;125;Épique;Poids lourd, suplex dévastateur;#1a49a8;#f5c518;#1d4ea0
+europe-4;Adrian Valdoren;Europe;70;Épique;Équilibré, solide partout;#1a49a8;#f5c518;#1d4ea0
+europe;Lukas Müller;Europe;74;Rare;Équilibré, solide partout;#1a49a8;#f5c518;#1d4ea0
+europe-6;Armand Valtoren;Europe;92;Rare;Poids lourd, suplex dévastateur;#1a49a8;#f5c518;#1d4ea0
+europe-5;Leon Vossner;Europe;65;Rare;Technicien, feintes et ceintures;#1a49a8;#f5c518;#1d4ea0
+europe-8;Elias Varden;Europe;61;Commune;Technicien, feintes et ceintures;#1a49a8;#f5c518;#1d4ea0
+europe-9;Erik Nordvahl;Europe;97;Commune;Poids lourd, suplex dévastateur;#1a49a8;#f5c518;#1d4ea0
+europe-10;Viktor Arden;Europe;74;Commune;Équilibré, solide partout;#1a49a8;#f5c518;#1d4ea0
+europe-7;Lukas Reinhardt;Europe;86;Commune;Équilibré, solide partout;#1a49a8;#f5c518;#1d4ea0
