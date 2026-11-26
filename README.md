@@ -41,6 +41,8 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `tournois`, `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
 - `tests/` : un test par règle.
 - `scripts/simuler.ts` : simule des milliers de combats pour vérifier l'équilibrage.
+- `scripts/captures.mjs` : photographie chaque écran en taille téléphone et signale les défauts d'affichage.
+- `.claude/skills/` : les recettes de travail de Claude (`/fin-etape`, `/captures`…), à taper dans Claude Code.
 
 ## Commandes
 
@@ -50,6 +52,7 @@ npm test             # lance tous les tests
 npm run simuler      # simule les combats (ordinateur au hasard puis fort) et vérifie les raretés
 npm run simuler -- 400 150   # plus de combats, résultat plus précis (environ 1 minute)
 npm run dev          # lance le jeu sur l'ordinateur (adresse affichée, à ouvrir dans le navigateur)
+npm run captures     # (après build) photos de chaque écran dans .captures/, non enregistrées
 npm run build        # construit le jeu en un seul fichier : dist/index.html
 npm run apercu       # sert le jeu construit sur http://localhost:4173 ; le combat entre amis
                      # y marche entre deux onglets du même navigateur (pour tester)
