@@ -1,5 +1,6 @@
 // La carte d'un lutteur : portrait, stats, actions et cadre selon la rareté.
 
+import { blocIllustre } from './illustrations';
 import { ACTIONS, NIVEAUX, REGLES, coutAction, niveauCarte, nomLocal, type DefLutteur, type IdAction, type NiveauCarte, type Rarete } from '../moteur';
 import { COULEURS_NATION, portraitSVG } from './portrait';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
@@ -109,8 +110,12 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
     return `<li class="${spe}"><span class="ico f-${f}">${ICONE[f]}</span><span>${echap(nomLocal(def.nation, a))}${etoiles}<small class="cl-effet">${effetAction(a)}</small></span><b>${coutAction(def, a)}</b></li>`;
   }).join('');
   const gemmes = '◆'.repeat(GEMMES[niveau]);
+  // Carte illustrée du pack graphique : l'image porte déjà le nom, le cadre et la rareté ;
+  // la fiche d'origine (en-tête, portrait, jauges) ne réapparaît que si l'image manque.
+  const illu = blocIllustre(def, niveau, 'grande');
   return `
-    <article class="carte-l" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+    <article class="carte-l ${illu ? 'avec-illu' : ''}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+      ${illu ?? ''}
       <div class="cl-interieur">
         <header class="cl-tete">
           <span class="cl-nom">${echap(def.nom)}</span>

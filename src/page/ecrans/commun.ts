@@ -1,5 +1,6 @@
 // État de la page et petits outils d'affichage partagés par tous les écrans.
 
+import { imgPortrait } from '../illustrations';
 import { ACTIONS, nomLocal, type Choix, type DefLutteur, type EtatCombat, type Famille, type Joueur, type NiveauCarte, type Niveau } from '../../moteur';
 import { Partie, type TourJoue } from '../partie';
 import { Duel, type Salle, type Vue } from '../enligne';
@@ -112,7 +113,8 @@ export function nouvelleGraine(): number {
   return Math.floor(Math.random() * 1_000_000) + 1;
 }
 
-export const portrait = (def: DefLutteur, niveau?: NiveauCarte) => portraitSVG(def, `m${S.idPortrait++}`, { niveau });
+// Portrait illustré du pack graphique s'il existe ; sinon (ou s'il manque) le dessin d'origine.
+export const portrait = (def: DefLutteur, niveau?: NiveauCarte) => imgPortrait(def) ?? portraitSVG(def, `m${S.idPortrait++}`, { niveau });
 
 
 

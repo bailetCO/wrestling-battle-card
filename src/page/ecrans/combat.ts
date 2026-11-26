@@ -1,5 +1,6 @@
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
+import { blocIllustre, imagePresentationCocoach } from '../illustrations';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
@@ -382,7 +383,22 @@ export function encartRival(): string {
   return `<div class="encart-rival si-infini" ${S.infiniChoisi ? '' : 'hidden'}>
     <span class="vignette">${portrait(defRival(S.collection))}</span>
     <span><b>Adversaire : Cocoach, ton rival</b><small>${niv}${et ? ` · ${et} étoile${et > 1 ? 's' : ''}` : ''} · ordinateur ${niveauOrdiRival(S.collection)} · battu ${r.victoires} fois${r.bonus ? ` · +${Math.round(r.bonus * 100)} % (saisons)` : ''}</small>
-    <small>À chaque victoire, il monte de niveau${r.grade < 4 ? ` (prochain : ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade + 1)]}, 1 booster rare)` : ' (étoiles)'}.</small></span></div>`;
+    <small>À chaque victoire, il monte de niveau${r.grade < 4 ? ` (prochain : ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade + 1)]}, 1 booster rare)` : ' (étoiles)'}.</small>
+    ${imagePresentationCocoach() ? '<button class="lien" data-carte-rival>Voir sa carte</button>' : ''}</span></div>`;
+}
+
+// Fiche de Cocoach : sa carte de présentation et sa carte du niveau atteint (personnage spécial,
+// hors de la collection classique).
+export function fenetreCarteRival() {
+  const def = defRival(S.collection);
+  const niv = niveauCarte(COCOACH_RIVAL, S.collection.rival.grade);
+  const pres = imagePresentationCocoach();
+  ouvrirFenetre(`<h2>Cocoach, ton rival</h2>
+    <p class="note">Personnage spécial : il ne se gagne pas dans les boosters. Il monte de niveau à chaque fois que tu le bats.</p>
+    ${pres ? `<img class="illu rival-presentation" src="${pres}" alt="Cocoach, le rival" loading="lazy" decoding="async" width="720" height="1080" data-repli="carte">` : ''}
+    <p><b>Niveau actuel : ${NOM_RARETE[niv]}</b></p>
+    <div class="rival-carte">${blocIllustre(def, niv, 'grande') ?? ''}</div>
+    <div class="fin-boutons"><button class="principal" data-fermer>Fermer</button></div>`, true);
 }
 
 // Réglages « Style de combat » : le format (normal ou Enchaînement) et la durée.

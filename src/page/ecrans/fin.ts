@@ -1,5 +1,7 @@
 // Fin du combat et ouverture des boosters.
 
+import { defRival } from '../rival';
+import { blocIllustre } from '../illustrations';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, trouverLutteur, niveauCarte, REGLES as R_ } from '../../moteur';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
 import { gagnerMedailles, joindreGains, consoler, sauver, type Booster } from '../collection';
@@ -284,7 +286,8 @@ export function ecranFin() {
         ${S.combatEnAuto ? `<p class="hist">${texteAuto()}</p>` : ''}
         ${idOrdi === ID_RIVAL && S.rivalFin ? `<p class="rival-fin">${S.rivalFin.monte
           ? `Cocoach passe au niveau <b>${NOM_RARETE[niveauCarte(COCOACH_RIVAL, S.rivalFin.grade)]}</b> ! Il sera plus fort au prochain combat. Tu gagnes ${R_.rival.boostersRaresParMontee} booster rare.`
-          : S.rivalFin.etoile ? `Cocoach gagne une étoile sur ${echap(ACTIONS[S.rivalFin.etoile].nom)}.` : 'Cocoach est à son maximum.'}</p>` : ''}
+          : S.rivalFin.etoile ? `Cocoach gagne une étoile sur ${echap(ACTIONS[S.rivalFin.etoile].nom)}.` : 'Cocoach est à son maximum.'}</p>
+          ${S.rivalFin.monte ? `<div class="rival-carte">${blocIllustre(defRival(S.collection), niveauCarte(COCOACH_RIVAL, S.rivalFin.grade), 'grande') ?? ''}</div>` : ''}` : ''}
       </section>
       ${booster}
       <div class="fin-boutons">

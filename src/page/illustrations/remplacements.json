@@ -1,0 +1,3 @@
+{
+  "_mode_emploi": "Pour remplacer une illustration sans toucher au code : ajouter une ligne « clé »: « chemin ». Clés : idDuJeu/niveau (commune, rare, epique, legendaire, champion), idDuJeu/portrait, cocoach/niveau, cocoach/portrait, cocoach/presentation, embleme/CODE (AFR, USA…). Le chemin est relatif à public/illustrations/v1/ (ou une adresse complète). Exemple : \"afrique-6/rare\": \"corrections/bakary-rare.webp\"."
+}

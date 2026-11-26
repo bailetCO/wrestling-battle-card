@@ -1,0 +1,148 @@
+{
+ "version": "v1",
+ "lutteurs": {
+  "afrique-6": {
+   "pack": "wbc-s25-1",
+   "nom": "Bakary N’Darven",
+   "poids": 86,
+   "delegation": "AFR",
+   "images": {
+    "commune": {
+     "chemin": "assets/cards/AFR/wbc-s25-1/commune.webp",
+     "zone": {
+      "x": 2.4,
+      "y": 74.26,
+      "l": 96.46,
+      "h": 12.96
+     }
+    },
+    "rare": {
+     "chemin": "assets/cards/AFR/wbc-s25-1/rare.webp",
+     "zone": {
+      "x": 2.29,
+      "y": 74.26,
+      "l": 95.42,
+      "h": 12.96
+     }
+    },
+    "epique": {
+     "chemin": "assets/cards/AFR/wbc-s25-1/epique.webp",
+     "zone": {
+      "x": 0.99,
+      "y": 74.44,
+      "l": 99.01,
+      "h": 12.41
+     }
+    },
+    "legendaire": {
+     "chemin": "assets/cards/AFR/wbc-s25-1/legendaire.webp",
+     "zone": {
+      "x": 2.34,
+      "y": 74.35,
+      "l": 95.94,
+      "h": 12.69
+     }
+    },
+    "champion": {
+     "chemin": "assets/cards/AFR/wbc-s25-1/champion_du_monde.webp",
+     "zone": {
+      "x": 4.06,
+      "y": 74.81,
+      "l": 93.12,
+      "h": 11.48
+     }
+    }
+   },
+   "portrait": "assets/portraits/wbc-s25-1.webp"
+  }
+ },
+ "cocoach": {
+  "nom": "Cocoach",
+  "titre": "Le Rival",
+  "images": {
+   "commune": {
+    "chemin": "assets/rival/cocoach/commune.webp",
+    "zone": {
+     "x": 5.17,
+     "y": 76.85,
+     "l": 91.46,
+     "h": 11.48
+    }
+   },
+   "rare": {
+    "chemin": "assets/rival/cocoach/rare.webp",
+    "zone": {
+     "x": 5.26,
+     "y": 76.85,
+     "l": 90.1,
+     "h": 10.93
+    }
+   },
+   "epique": {
+    "chemin": "assets/rival/cocoach/epique.webp",
+    "zone": {
+     "x": 4.64,
+     "y": 76.85,
+     "l": 89.69,
+     "h": 10.93
+    }
+   },
+   "legendaire": {
+    "chemin": "assets/rival/cocoach/legendaire.webp",
+    "zone": {
+     "x": 4.9,
+     "y": 76.85,
+     "l": 89.89,
+     "h": 10.93
+    }
+   },
+   "champion": {
+    "chemin": "assets/rival/cocoach/champion_du_monde.webp",
+    "zone": {
+     "x": 4.32,
+     "y": 76.85,
+     "l": 89.06,
+     "h": 10.93
+    }
+   }
+  },
+  "presentation": "assets/rival/cocoach/presentation.webp",
+  "portrait": "assets/portraits/RIVAL-COCOACH.webp"
+ },
+ "emblemes": {
+  "AFR": "flags/AFR.svg",
+  "UZB": "flags/UZB.svg",
+  "KGZ": "flags/KGZ.svg",
+  "IRN": "flags/IRN.svg",
+  "GEO": "flags/GEO.svg",
+  "TUR": "flags/TUR.svg",
+  "EUR": "flags/EUR.svg",
+  "USA": "flags/USA.svg",
+  "RUS": "flags/RUS.svg",
+  "AZE": "flags/AZE.svg",
+  "KAZ": "flags/KAZ.svg",
+  "JPN": "flags/JPN.svg",
+  "RIVAL-COCOACH": "flags/RIVAL-COCOACH.svg"
+ },
+ "cadres": {
+  "commune": "frames/commune.svg",
+  "rare": "frames/rare.svg",
+  "epique": "frames/epique.svg",
+  "legendaire": "frames/legendaire.svg",
+  "champion_du_monde": "frames/champion_du_monde.svg"
+ },
+ "nations": {
+  "afrique": "AFR",
+  "ouzbekistan": "UZB",
+  "kirghizistan": "KGZ",
+  "iran": "IRN",
+  "georgie": "GEO",
+  "turquie": "TUR",
+  "europe": "EUR",
+  "usa": "USA",
+  "russie": "RUS",
+  "azerbaidjan": "AZE",
+  "kazakhstan": "KAZ",
+  "japon": "JPN"
+ }
+}

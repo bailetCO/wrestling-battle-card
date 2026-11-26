@@ -194,7 +194,7 @@ const LIGNES: Ligne[] = [
   ['afrique-9', 'Ousmane Kane', 'Sénégal', 'afrique', 'Défenseur, immense réserve d\'énergie', 75, 155, 0.36, 'rare', 'defense', 'bras_roule sprawl contre attaque_base', 'parade relance defense matraquage', true],
   ['afrique-8', 'Moussa Ba', 'Cameroun', 'afrique', 'Explosif, feintes et bras roulés', 55, 185, 0.53, 'commune', 'feinte', 'simple_jambe feinte esquive bras_roule', 'double_jambe matraquage relance sprawl', true],
   ['afrique-10', 'Kwame Ekotto', 'Côte d\'Ivoire', 'afrique', 'Puissant et athlétique', 65, 240, 0.48, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe feinte defense german_suplex', true],
-  ['afrique-6', 'Tunde Adeyemi', 'Nigeria', 'afrique', 'Défenseur, immense réserve d\'énergie', 73, 155, 0.35, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', true],
+  ['afrique-6', 'Bakary N’Darven', 'Nigeria', 'afrique', 'Défenseur, immense réserve d\'énergie', 73, 155, 0.35, 'commune', 'defense', 'bras_roule sprawl contre attaque_base', 'parade defense relance matraquage', true],
   ['afrique-7', 'Amadou Ndour', 'Sénégal', 'afrique', 'Puissant et athlétique', 64, 240, 0.49, 'commune', 'attaque', 'grande_projection sprawl bras_roule relance', 'double_jambe defense feinte german_suplex', true],
   // ----- Europe -----
   ['europe-technicien', 'Lucas Ferrand', 'Europe', 'europe', 'Technicien, feintes et ceintures', 56, 160, 0.43, 'legendaire', 'feinte', 'simple_jambe ceinture_arriere parade feinte', 'contre esquive bras_roule matraquage', false],

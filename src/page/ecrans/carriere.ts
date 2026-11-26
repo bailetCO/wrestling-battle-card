@@ -1,5 +1,6 @@
 // Menu Combat, Carrière et Entraînement (choix du lutteur et de l'adversaire).
 
+import { imgEmbleme } from '../illustrations';
 import { LUTTEURS, LUTTEUR_TEST, NATIONS, ID_RIVAL, trouverLutteur, REGLES as R_ } from '../../moteur';
 import { NOM_RARETE, activerReflets } from '../carte';
 import { adversaireAuto, deckDe, possede, sauver } from '../collection';
@@ -9,7 +10,7 @@ import { TUTOS, type IdTuto } from '../tutos';
 import { DEV } from '../dev';
 import { carteJoueur } from './accueil';
 import { CARTES, fenetreDeck } from './collection';
-import { boutonAuto, brancherStyle, encartRival, lancer, lancerArene, reglagesStyle } from './combat';
+import { boutonAuto, brancherStyle, encartRival, fenetreCarteRival, lancer, lancerArene, reglagesStyle } from './combat';
 import { S, app, choixNiveau, echap, enTete, niveauOrdi, nouvelleGraine, portrait } from './commun';
 import { NOM_NIVEAU, boutonTuto, brancherTutos, tutoAuto } from './tutos-courts';
 
@@ -62,7 +63,7 @@ export function blocArene(): string {
   if (S.bossChoisi) {
     const n = nationsArene().find((x) => x.id === S.bossChoisi)!;
     const boss = trouverLutteur(adversairesDe(n.id)[PAR_NATION - 1]);
-    return `<section class="bloc arene-nation">${drapeauSVG(n.id)}<h2>Revanche : ${echap(boss.nom)}</h2>
+    return `<section class="bloc arene-nation">${imgEmbleme(n.id, n.nom) ?? drapeauSVG(n.id)}<h2>Revanche : ${echap(boss.nom)}</h2>
       <p>Boss de ${echap(n.nom)}, ordinateur fort. Victoire : +1 médaille et 1 chance sur 3 de gagner sa carte.</p>
       <button class="lien" data-annuler-boss>Revenir à la Carrière</button></section>`;
   }
@@ -72,7 +73,7 @@ export function blocArene(): string {
     ? `<section class="bloc"><h2>Boss à réaffronter</h2><p>1 chance sur 3 de gagner sa carte à chaque victoire.</p>
         <div class="boss-liste">${battues.map((n) => {
           const b = trouverLutteur(adversairesDe(n.id)[PAR_NATION - 1]);
-          return `<button class="boss" data-boss="${n.id}">${drapeauSVG(n.id)}<span><b>${echap(b.nom)}</b><small>${echap(n.nom)}${possede(S.collection, b.id) ? ' · carte obtenue' : ''}</small></span></button>`;
+          return `<button class="boss" data-boss="${n.id}">${imgEmbleme(n.id, n.nom) ?? drapeauSVG(n.id)}<span><b>${echap(b.nom)}</b><small>${echap(n.nom)}${possede(S.collection, b.id) ? ' · carte obtenue' : ''}</small></span></button>`;
         }).join('')}</div></section>`
     : '';
   if (!e.nation) {
@@ -88,7 +89,7 @@ export function blocArene(): string {
   const adv = trouverLutteur(e.adversaire!);
   return `
     <section class="bloc arene-nation">
-      <div class="arene-titre">${drapeauSVG(e.nation.id)}<h2>${echap(e.nation.nom)}</h2><small>Nation ${nationsArene().indexOf(e.nation) + 1}/${nationsArene().length}</small></div>
+      <div class="arene-titre">${imgEmbleme(e.nation.id, e.nation.nom) ?? drapeauSVG(e.nation.id)}<h2>${echap(e.nation.nom)}</h2><small>Nation ${nationsArene().indexOf(e.nation) + 1}/${nationsArene().length}</small></div>
       <ol class="etapes-arene">${etapes}</ol>
       <p class="prochain">${e.rang === PAR_NATION - 1 ? '👑 Boss : ' : 'Adversaire : '}<b>${echap(adv.nom)}</b> · ${NOM_RARETE[adv.rarete]} · ordinateur ${NOM_NIVEAU[e.niveau].toLowerCase()}</p>
       <p class="note">Bats les 5 lutteurs pour gagner 2 ou 3 boosters et ${R_.arene.medaillesParNation} médailles (+1 médaille par victoire). Le boss : 1 chance sur 3 de gagner sa carte. Choisis ton lutteur ci-dessous.</p>
@@ -168,6 +169,7 @@ export function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((b) =>
     b.addEventListener('click', () => { S.bossChoisi = b.dataset.boss!; ecranArene(); }),
   );
+  app.querySelector('[data-carte-rival]')?.addEventListener('click', fenetreCarteRival);
   brancherStyle('solo', (cle, v) => {
     if (cle === 'format') { S.enchainementChoisi = v === 'enchainement'; if (S.enchainementChoisi) tutoAuto('enchainement'); }
     else { S.infiniChoisi = v === 'infinie'; ecranArene(true); if (S.infiniChoisi) tutoAuto('infini'); } // l'adversaire change (Cocoach) : boutons auto à jour

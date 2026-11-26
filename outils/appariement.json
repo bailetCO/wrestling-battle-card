@@ -1,0 +1,722 @@
+[
+ {
+  "jeu": "afrique-5",
+  "pack": "wbc-s33-1",
+  "nom": "Idriss Kévaré",
+  "poids": 57
+ },
+ {
+  "jeu": "afrique-explosif",
+  "pack": "candidate-s12-1",
+  "nom": "Sékou Damaré",
+  "poids": 65
+ },
+ {
+  "jeu": "afrique-8",
+  "pack": "candidate-s21-1",
+  "nom": "Koffi Banzaré",
+  "poids": 74
+ },
+ {
+  "jeu": "afrique-defenseur",
+  "pack": "wbc-afr-missing-1",
+  "nom": "Issa Dambaré",
+  "poids": 74
+ },
+ {
+  "jeu": "afrique-9",
+  "pack": "candidate-source48-1",
+  "nom": "Amadou Diallo",
+  "poids": 79
+ },
+ {
+  "jeu": "afrique-6",
+  "pack": "wbc-s25-1",
+  "nom": "Bakary N’Darven",
+  "poids": 86
+ },
+ {
+  "jeu": "afrique-4",
+  "pack": "candidate-source33-1",
+  "nom": "Bakary N’Dale",
+  "poids": null
+ },
+ {
+  "jeu": "afrique",
+  "pack": "wbc-s37-1",
+  "nom": "Amadou Kassaré",
+  "poids": 97
+ },
+ {
+  "jeu": "afrique-10",
+  "pack": "candidate-s16-1",
+  "nom": "Amadou Darsané",
+  "poids": 97
+ },
+ {
+  "jeu": "afrique-7",
+  "pack": "wbc-s29-1",
+  "nom": "Malick Sombaré",
+  "poids": 125
+ },
+ {
+  "jeu": "ouzbekistan-9",
+  "pack": "candidate-source49-2",
+  "nom": "Bekzod Nurakov",
+  "poids": 57
+ },
+ {
+  "jeu": "ouzbekistan-3",
+  "pack": "candidate-s16-2",
+  "nom": "Jasur Rakhimel",
+  "poids": 61
+ },
+ {
+  "jeu": "ouzbekistan-6",
+  "pack": "candidate-source33-2",
+  "nom": "Rustam Akhmedov",
+  "poids": 74
+ },
+ {
+  "jeu": "ouzbekistan-2",
+  "pack": "candidate-s21-2",
+  "nom": "Timur Zarvani",
+  "poids": 79
+ },
+ {
+  "jeu": "ouzbekistan-8",
+  "pack": "wbc-s37-2",
+  "nom": "Ulugbek Ravzani",
+  "poids": 86
+ },
+ {
+  "jeu": "ouzbekistan-5",
+  "pack": "candidate-s12-2",
+  "nom": "Sardor Mirzanel",
+  "poids": 86
+ },
+ {
+  "jeu": "ouzbekistan-4",
+  "pack": "wbc-s33-2",
+  "nom": "Sardor Mirzavel",
+  "poids": 92
+ },
+ {
+  "jeu": "ouzbekistan-1",
+  "pack": "candidate-source48-2",
+  "nom": "Javokhir Rashidov",
+  "poids": 92
+ },
+ {
+  "jeu": "ouzbekistan-7",
+  "pack": "wbc-s29-2",
+  "nom": "Bakhrom Tavren",
+  "poids": 97
+ },
+ {
+  "jeu": "ouzbekistan-10",
+  "pack": "wbc-s25-2",
+  "nom": "Rustam Bekzarel",
+  "poids": 125
+ },
+ {
+  "jeu": "kirghizistan-4",
+  "pack": "candidate-s12-3",
+  "nom": "Aibek Tashven",
+  "poids": 57
+ },
+ {
+  "jeu": "kirghizistan-7",
+  "pack": "wbc-s37-3",
+  "nom": "Aibek Saryven",
+  "poids": 61
+ },
+ {
+  "jeu": "kirghizistan-10",
+  "pack": "wbc-s25-3",
+  "nom": "Azamat Kervan",
+  "poids": 65
+ },
+ {
+  "jeu": "kirghizistan-1",
+  "pack": "candidate-source44-1",
+  "nom": "Almaz Terekov",
+  "poids": 65
+ },
+ {
+  "jeu": "kirghizistan-5",
+  "pack": "candidate-source48-3",
+  "nom": "Erlan Toktosunov",
+  "poids": 70
+ },
+ {
+  "jeu": "kirghizistan-8",
+  "pack": "candidate-s16-3",
+  "nom": "Ermek Ak-Toren",
+  "poids": 79
+ },
+ {
+  "jeu": "kirghizistan-2",
+  "pack": "wbc-s29-3",
+  "nom": "Nursultan Akverek",
+  "poids": 92
+ },
+ {
+  "jeu": "kirghizistan-6",
+  "pack": "candidate-source49-3",
+  "nom": "Nurlan Temirbek",
+  "poids": 92
+ },
+ {
+  "jeu": "kirghizistan-9",
+  "pack": "wbc-s33-3",
+  "nom": "Temirlan Arzakev",
+  "poids": 97
+ },
+ {
+  "jeu": "kirghizistan-3",
+  "pack": "candidate-s21-3",
+  "nom": "Kubat Arkenov",
+  "poids": 125
+ },
+ {
+  "jeu": "iran-9",
+  "pack": "candidate-s17-1",
+  "nom": "Reza Mehradin",
+  "poids": 57
+ },
+ {
+  "jeu": "iran-3",
+  "pack": "candidate-source55-1",
+  "nom": "Arash Zandivar",
+  "poids": 61
+ },
+ {
+  "jeu": "iran-6",
+  "pack": "candidate-s22-1",
+  "nom": "Reza Kaviranel",
+  "poids": 65
+ },
+ {
+  "jeu": "iran-5",
+  "pack": "wbc-s38-1",
+  "nom": "Reza Navzaren",
+  "poids": 74
+ },
+ {
+  "jeu": "iran-2",
+  "pack": "wbc-s26-1",
+  "nom": "Kian Rostavari",
+  "poids": 79
+ },
+ {
+  "jeu": "iran-8",
+  "pack": "candidate-source00-1",
+  "nom": "Reza Mousavi",
+  "poids": 86
+ },
+ {
+  "jeu": "iran-7",
+  "pack": "candidate-s13-1",
+  "nom": "Arman Navid",
+  "poids": 92
+ },
+ {
+  "jeu": "iran-4",
+  "pack": "wbc-s34-1",
+  "nom": "Arash Mehravan",
+  "poids": 97
+ },
+ {
+  "jeu": "iran-10",
+  "pack": "candidate-source33-3",
+  "nom": "Kian Mehravan",
+  "poids": 97
+ },
+ {
+  "jeu": "iran-1",
+  "pack": "wbc-s30-1",
+  "nom": "Farhad Zandavar",
+  "poids": 125
+ },
+ {
+  "jeu": "georgie-9",
+  "pack": "wbc-s30-2",
+  "nom": "Levan Tseradeli",
+  "poids": 57
+ },
+ {
+  "jeu": "georgie-6",
+  "pack": "wbc-s34-2",
+  "nom": "Giorgi Vardaneli",
+  "poids": 61
+ },
+ {
+  "jeu": "georgie-3",
+  "pack": "candidate-s13-2",
+  "nom": "Giorgi Kvaratskheli",
+  "poids": 65
+ },
+ {
+  "jeu": "georgie-1",
+  "pack": "candidate-source55-2",
+  "nom": "Luka Meskari",
+  "poids": 79
+ },
+ {
+  "jeu": "georgie-4",
+  "pack": "wbc-s38-2",
+  "nom": "Lasha Bakurveli",
+  "poids": 86
+ },
+ {
+  "jeu": "georgie-10",
+  "pack": "candidate-s22-2",
+  "nom": "Luka Makhareli",
+  "poids": 86
+ },
+ {
+  "jeu": "georgie-7",
+  "pack": "candidate-s17-2",
+  "nom": "Nika Darsveli",
+  "poids": 92
+ },
+ {
+  "jeu": "georgie-5",
+  "pack": "wbc-s26-2",
+  "nom": "Davit Kordaneli",
+  "poids": 125
+ },
+ {
+  "jeu": "georgie-2",
+  "pack": "candidate-source00-2",
+  "nom": "Levan Kvaratskhelia",
+  "poids": 125
+ },
+ {
+  "jeu": "georgie-8",
+  "pack": "candidate-source11-1",
+  "nom": "Davit Karsheli",
+  "poids": 125
+ },
+ {
+  "jeu": "turquie-9",
+  "pack": "candidate-s17-3",
+  "nom": "Deniz Akveren",
+  "poids": 61
+ },
+ {
+  "jeu": "turquie-3",
+  "pack": "candidate-s13-3",
+  "nom": "Emre Yildizhan",
+  "poids": 70
+ },
+ {
+  "jeu": "turquie-6",
+  "pack": "candidate-source00-3",
+  "nom": "Cem Yilmaz",
+  "poids": 74
+ },
+ {
+  "jeu": "turquie-5",
+  "pack": "candidate-s22-3",
+  "nom": "Mert Yalderen",
+  "poids": 79
+ },
+ {
+  "jeu": "turquie-2",
+  "pack": "candidate-source11-2",
+  "nom": "Emir Karatay",
+  "poids": 86
+ },
+ {
+  "jeu": "turquie-8",
+  "pack": "wbc-s26-3",
+  "nom": "Selim Karaveren",
+  "poids": 92
+ },
+ {
+  "jeu": "turquie-4",
+  "pack": "wbc-s30-3",
+  "nom": "Burak Demirven",
+  "poids": 97
+ },
+ {
+  "jeu": "turquie-7",
+  "pack": "wbc-s38-3",
+  "nom": "Emre Yildarven",
+  "poids": 97
+ },
+ {
+  "jeu": "turquie-1",
+  "pack": "wbc-s34-3",
+  "nom": "Ozan Karaberen",
+  "poids": 125
+ },
+ {
+  "jeu": "turquie-10",
+  "pack": "candidate-source55-3",
+  "nom": "Kerem Aydorel",
+  "poids": 125
+ },
+ {
+  "jeu": "europe-technicien",
+  "pack": "wbc-s35-1",
+  "nom": "Mathis Valcourt",
+  "poids": 61
+ },
+ {
+  "jeu": "europe-8",
+  "pack": "candidate-source09-1",
+  "nom": "Elias Varden",
+  "poids": 61
+ },
+ {
+  "jeu": "europe-5",
+  "pack": "candidate-s18-1",
+  "nom": "Leon Vossner",
+  "poids": 65
+ },
+ {
+  "jeu": "europe-4",
+  "pack": "candidate-s19-1",
+  "nom": "Adrian Valdoren",
+  "poids": 70
+ },
+ {
+  "jeu": "europe",
+  "pack": "candidate-s10-1",
+  "nom": "Lukas Müller",
+  "poids": 74
+ },
+ {
+  "jeu": "europe-10",
+  "pack": "candidate-source12-1",
+  "nom": "Viktor Arden",
+  "poids": 74
+ },
+ {
+  "jeu": "europe-7",
+  "pack": "candidate-s14-1",
+  "nom": "Lukas Reinhardt",
+  "poids": 86
+ },
+ {
+  "jeu": "europe-6",
+  "pack": "wbc-s39-1",
+  "nom": "Armand Valtoren",
+  "poids": 92
+ },
+ {
+  "jeu": "europe-9",
+  "pack": "wbc-s31-1",
+  "nom": "Erik Nordvahl",
+  "poids": 97
+ },
+ {
+  "jeu": "europe-puissant",
+  "pack": "wbc-s27-1",
+  "nom": "Viktor Eisenvar",
+  "poids": 125
+ },
+ {
+  "jeu": "usa-8",
+  "pack": "candidate-s19-2",
+  "nom": "Jayden Crosswell",
+  "poids": 57
+ },
+ {
+  "jeu": "usa-5",
+  "pack": "candidate-source28-2",
+  "nom": "Caleb Ashford",
+  "poids": 70
+ },
+ {
+  "jeu": "usa-explosif",
+  "pack": "wbc-s39-2",
+  "nom": "Logan Steelvern",
+  "poids": 79
+ },
+ {
+  "jeu": "usa-defenseur",
+  "pack": "candidate-s14-2",
+  "nom": "Tyler Monroe",
+  "poids": 79
+ },
+ {
+  "jeu": "usa-6",
+  "pack": "wbc-s27-2",
+  "nom": "Mason Blackridge",
+  "poids": 86
+ },
+ {
+  "jeu": "usa-9",
+  "pack": "candidate-s10-2",
+  "nom": "Jaylen Brooks",
+  "poids": 86
+ },
+ {
+  "jeu": "usa",
+  "pack": "candidate-s18-2",
+  "nom": "Marcus Stonewell",
+  "poids": 92
+ },
+ {
+  "jeu": "usa-4",
+  "pack": "wbc-s35-2",
+  "nom": "Cameron Ashfield",
+  "poids": 97
+ },
+ {
+  "jeu": "usa-10",
+  "pack": "wbc-s31-2",
+  "nom": "Darius Westford",
+  "poids": 125
+ },
+ {
+  "jeu": "usa-7",
+  "pack": "candidate-source09-2",
+  "nom": "Darius Westrell",
+  "poids": 125
+ },
+ {
+  "jeu": "russie-contre",
+  "pack": "wbc-s31-3",
+  "nom": "Pavel Zoravin",
+  "poids": 57
+ },
+ {
+  "jeu": "russie-6",
+  "pack": "candidate-source09-3",
+  "nom": "Anton Zarev",
+  "poids": 57
+ },
+ {
+  "jeu": "russie-9",
+  "pack": "wbc-s27-3",
+  "nom": "Nikita Belzarin",
+  "poids": 61
+ },
+ {
+  "jeu": "russie-10",
+  "pack": "candidate-s18-3",
+  "nom": "Alexei Voranek",
+  "poids": 70
+ },
+ {
+  "jeu": "russie-4",
+  "pack": "candidate-s19-3",
+  "nom": "Dmitri Karsenov",
+  "poids": 74
+ },
+ {
+  "jeu": "russie",
+  "pack": "wbc-s39-3",
+  "nom": "Alexei Volzaren",
+  "poids": 86
+ },
+ {
+  "jeu": "russie-7",
+  "pack": "candidate-s10-3",
+  "nom": "Timur Velkanov",
+  "poids": 97
+ },
+ {
+  "jeu": "russie-5",
+  "pack": "candidate-source12-3",
+  "nom": "Sergei Volkov",
+  "poids": 97
+ },
+ {
+  "jeu": "russie-8",
+  "pack": "wbc-s35-3",
+  "nom": "Boris Velkarov",
+  "poids": 125
+ },
+ {
+  "jeu": "russie-pression",
+  "pack": "candidate-s14-3",
+  "nom": "Ivan Kotov",
+  "poids": 125
+ },
+ {
+  "jeu": "azerbaidjan-10",
+  "pack": "candidate-s20-1",
+  "nom": "Emin Zardanel",
+  "poids": 57
+ },
+ {
+  "jeu": "azerbaidjan-1",
+  "pack": "wbc-s32-1",
+  "nom": "Elvin Narzade",
+  "poids": 65
+ },
+ {
+  "jeu": "azerbaidjan-4",
+  "pack": "candidate-source68-2",
+  "nom": "Tural Arazli",
+  "poids": 65
+ },
+ {
+  "jeu": "azerbaidjan-7",
+  "pack": "wbc-s40-1",
+  "nom": "Rashad Alverzan",
+  "poids": 70
+ },
+ {
+  "jeu": "azerbaidjan-2",
+  "pack": "candidate-source14-1",
+  "nom": "Kamran Vezari",
+  "poids": 79
+ },
+ {
+  "jeu": "azerbaidjan-5",
+  "pack": "candidate-s24-1",
+  "nom": "Rashad Velzari",
+  "poids": 86
+ },
+ {
+  "jeu": "azerbaidjan-8",
+  "pack": "candidate-source30-1",
+  "nom": "Farid Zeyran",
+  "poids": 92
+ },
+ {
+  "jeu": "azerbaidjan-9",
+  "pack": "wbc-s36-1",
+  "nom": "Murad Zervanel",
+  "poids": 97
+ },
+ {
+  "jeu": "azerbaidjan-6",
+  "pack": "candidate-s15-1",
+  "nom": "Azad Mammadov",
+  "poids": 97
+ },
+ {
+  "jeu": "azerbaidjan-3",
+  "pack": "wbc-s28-1",
+  "nom": "Tural Kazveri",
+  "poids": 125
+ },
+ {
+  "jeu": "kazakhstan-3",
+  "pack": "wbc-s28-2",
+  "nom": "Arsen Zhetarov",
+  "poids": 57
+ },
+ {
+  "jeu": "kazakhstan-6",
+  "pack": "candidate-s24-2",
+  "nom": "Alikhan Tursanek",
+  "poids": 61
+ },
+ {
+  "jeu": "kazakhstan-9",
+  "pack": "candidate-s15-2",
+  "nom": "Nurlan Zhaksylyk",
+  "poids": 74
+ },
+ {
+  "jeu": "kazakhstan-2",
+  "pack": "candidate-source68-3",
+  "nom": "Arlan Sarybek",
+  "poids": 74
+ },
+ {
+  "jeu": "kazakhstan-8",
+  "pack": "wbc-s36-2",
+  "nom": "Damir Altayven",
+  "poids": 79
+ },
+ {
+  "jeu": "kazakhstan-5",
+  "pack": "wbc-s40-2",
+  "nom": "Nurlan Bekzaren",
+  "poids": 86
+ },
+ {
+  "jeu": "kazakhstan-1",
+  "pack": "candidate-source14-2",
+  "nom": "Askar Nurzhanek",
+  "poids": 86
+ },
+ {
+  "jeu": "kazakhstan-4",
+  "pack": "candidate-s20-2",
+  "nom": "Aldar Bektemir",
+  "poids": 92
+ },
+ {
+  "jeu": "kazakhstan-10",
+  "pack": "wbc-s32-2",
+  "nom": "Bauran Temirbek",
+  "poids": 125
+ },
+ {
+  "jeu": "kazakhstan-7",
+  "pack": "candidate-source30-2",
+  "nom": "Barys Tulegen",
+  "poids": 125
+ },
+ {
+  "jeu": "japon-4",
+  "pack": "candidate-source11-3",
+  "nom": "Ren Kazemori",
+  "poids": 57
+ },
+ {
+  "jeu": "japon-10",
+  "pack": "candidate-source14-3",
+  "nom": "Sora Takemori",
+  "poids": 61
+ },
+ {
+  "jeu": "japon",
+  "pack": "candidate-source30-3",
+  "nom": "Haruto Mizunari",
+  "poids": 65
+ },
+ {
+  "jeu": "japon-7",
+  "pack": "candidate-s15-3",
+  "nom": "Riku Moriyama",
+  "poids": 70
+ },
+ {
+  "jeu": "japon-contre",
+  "pack": "wbc-s40-3",
+  "nom": "Haru Kazemori",
+  "poids": 74
+ },
+ {
+  "jeu": "japon-9",
+  "pack": "candidate-s20-3",
+  "nom": "Daichi Kazehara",
+  "poids": 74
+ },
+ {
+  "jeu": "japon-6",
+  "pack": "candidate-s24-3",
+  "nom": "Renji Kurozane",
+  "poids": 79
+ },
+ {
+  "jeu": "japon-technicien",
+  "pack": "wbc-s28-3",
+  "nom": "Kaito Arashino",
+  "poids": 86
+ },
+ {
+  "jeu": "japon-5",
+  "pack": "wbc-s32-3",
+  "nom": "Takeshi Kurogane",
+  "poids": 92
+ },
+ {
+  "jeu": "japon-8",
+  "pack": "wbc-s36-3",
+  "nom": "Kenzo Takemori",
+  "poids": 125
+ }
+]
