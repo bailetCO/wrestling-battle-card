@@ -7,11 +7,12 @@
 //   --sauver fichier.json      garde les résultats, pour comparer plus tard
 //   --avant fichier.json       compare avec des résultats gardés : affiche l'écart pour chaque lutteur
 //   --lutteurs id1,id2         ne mesure que ces lutteurs (toujours contre les 120) : plus rapide
+// Les 12 cartes Champion du Monde sont aussi mesurées (contre les 120 lutteurs ordinaires).
 // Les combats sont rejouables : mêmes chiffres = mêmes résultats.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { LUTTEURS, NATIONS } from '../src/moteur/config';
+import { CHAMPIONS, LUTTEURS, NATIONS } from '../src/moteur/config';
 import { creerCombat, jouerTour } from '../src/moteur/combat';
 import { choixAleatoire, choixFort } from '../src/moteur/ia';
 import { creerHasard } from '../src/moteur/hasard';
@@ -26,7 +27,8 @@ const parFort = nombres[1] ?? 150;
 const fichierSauver = option('--sauver');
 const fichierAvant = option('--avant');
 const choisis = option('--lutteurs')?.split(',').map((x) => x.trim()).filter(Boolean);
-if (choisis) for (const id of choisis) if (!LUTTEURS.some((l) => l.id === id)) throw new Error(`Lutteur inconnu : ${id}`);
+const CARTES = [...LUTTEURS, ...CHAMPIONS];
+if (choisis) for (const id of choisis) if (!CARTES.some((l) => l.id === id)) throw new Error(`Lutteur inconnu : ${id}`);
 
 // Fourchettes : leur moyenne (pondérée par 4 communes, 3 rares, 2 épiques, 1 légendaire) fait 50 %.
 const FOURCHETTES: Record<Rarete, [number, number]> = {
@@ -37,11 +39,11 @@ const FOURCHETTES: Record<Rarete, [number, number]> = {
 const ECART_MAX = 0.25;
 
 // Les graines dépendent du rang du lutteur, pas de l'ordre de mesure : mesurer un seul lutteur
-// donne exactement le même résultat que dans la simulation complète.
+// donne exactement le même résultat que dans la simulation complète. Adversaires : les 120 lutteurs.
 function mesurer(n: number, fort: boolean, i: number): number {
   const choisir = fort ? choixFort : choixAleatoire;
   let graine = (fort ? 900000 : 1) + i * n;
-  const a = LUTTEURS[i];
+  const a = CARTES[i];
   let v = 0;
   for (let k = 0; k < n; k++) {
     const h = creerHasard(graine++);
@@ -66,7 +68,7 @@ function verdict(rarete: Rarete, m: number): string {
 }
 
 const resultats: Resultat[] = [];
-LUTTEURS.forEach((l, i) => {
+CARTES.forEach((l, i) => {
   if (choisis && !choisis.includes(l.id)) return;
   const h = mesurer(parHasard, false, i);
   const f = mesurer(parFort, true, i);
@@ -85,8 +87,8 @@ const pct = (x: number) => `${(x * 100).toFixed(1)} %`;
 const signe = (x: number) => `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}`;
 const MOTS: Record<string, string> = { ok: '', presque: '(à 1 point près)', 'trop fort': 'TROP FORT', 'trop faible': 'TROP FAIBLE' };
 console.log(`\n${resultats.length * (parHasard + parFort)} combats simulés (${parHasard} par lutteur au hasard, ${parFort} en fort)\n`);
-for (const n of NATIONS) {
-  const liste = resultats.filter((r) => r.nation === n.id).sort((x, y) => y.moyenne - x.moyenne);
+for (const n of [...NATIONS, { id: 'champions', nom: 'Champions du Monde' }]) {
+  const liste = resultats.filter((r) => (n.id === 'champions' ? r.rarete === 'champion' : r.nation === n.id && r.rarete !== 'champion')).sort((x, y) => y.moyenne - x.moyenne);
   if (!liste.length) continue;
   console.log(`----- ${n.nom} -----`);
   for (const r of liste) {
@@ -96,12 +98,15 @@ for (const n of NATIONS) {
     console.log(`${r.nom.padEnd(26)} ${r.rarete.padEnd(10)} hasard ${pct(r.hasard)} · fort ${pct(r.fort)} · moyenne ${pct(r.moyenne)} ${MOTS[r.verdict]}${ecart}${compare}`);
   }
 }
-const compte = (v: string) => resultats.filter((r) => r.verdict === v).length;
-const dependants = resultats.filter((r) => Math.abs(r.hasard - r.fort) > ECART_MAX).length;
-console.log(`\nDans la fourchette : ${compte('ok')}/${resultats.length} · à 1 point près : ${compte('presque')} · trop forts : ${compte('trop fort')} · trop faibles : ${compte('trop faible')}`);
+const ordinaires = resultats.filter((r) => r.rarete !== 'champion');
+const champions = resultats.filter((r) => r.rarete === 'champion');
+const compte = (v: string) => ordinaires.filter((r) => r.verdict === v).length;
+const dependants = ordinaires.filter((r) => Math.abs(r.hasard - r.fort) > ECART_MAX).length;
+console.log(`\nDans la fourchette : ${compte('ok')}/${ordinaires.length} · à 1 point près : ${compte('presque')} · trop forts : ${compte('trop fort')} · trop faibles : ${compte('trop faible')}`);
 console.log(`Dépendent trop du niveau de jeu (écart hasard/fort de plus de ${ECART_MAX * 100} points) : ${dependants}`);
+if (champions.length) console.log(`Champions du Monde dans leur fourchette (62,5 à 67,5 %) : ${champions.filter((r) => r.verdict === 'ok').length}/${champions.length}`);
 if (avant) {
-  const avantOk = resultats.filter((r) => avant!.get(r.id)?.verdict === 'ok').length;
+  const avantOk = ordinaires.filter((r) => avant!.get(r.id)?.verdict === 'ok').length;
   console.log(`Avant : ${avantOk} dans la fourchette · après : ${compte('ok')}`);
 }
 if (fichierSauver) {

@@ -73,6 +73,7 @@ Le dossier `.equilibrage/` n'est pas enregistré dans le projet.
 ## Les cartes Champion du Monde
 
 Elles sont définies à part (`LIGNES_CHAMPIONS` dans `config.ts`). Elles reprennent la légendaire
-de leur nation avec plus d'endurance et de force, et visent environ 65 %. La simulation actuelle
-ne mesure que les 120 lutteurs ordinaires. Pour les champions, le signaler à l'utilisateur
-plutôt que de régler à l'aveugle.
+de leur nation avec plus d'endurance et de force, et visent 62,5 à 67,5 % (environ 65 %).
+La simulation les mesure aussi, contre les 120 lutteurs ordinaires (section « Champions du Monde »
+et ligne de bilan à part). On les règle par leur endurance et leur force dans `LIGNES_CHAMPIONS` :
+**jamais** en changeant la légendaire de référence, qui changerait aussi la légendaire elle-même.
