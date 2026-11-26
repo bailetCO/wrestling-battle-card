@@ -85,7 +85,9 @@ test('codage des choix aller-retour', () => {
 
 test('deux amis jouent des combats complets et voient exactement le même combat', async () => {
   let initiatives = 0, faces = 0;
-  for (let partie = 0; partie < 12; partie++) {
+  // Au moins 12 combats, et on continue (40 au plus) tant qu'on n'a pas vu de pile ou face et
+  // d'initiative : ils dépendent du hasard du combat.
+  for (let partie = 0; partie < 40 && (partie < 12 || faces === 0 || initiatives === 0); partie++) {
     const salle = salleMemoire();
     const a = new Duel(salle('a'), 'hote');
     const b = new Duel(salle('b'), 'invite');
