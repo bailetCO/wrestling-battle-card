@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutPrevu, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
@@ -2401,7 +2401,7 @@ function caseSequenceHTML(e: EtatCombat, c: Choix | undefined, k: number): strin
   if (!c) return `<span class="seq-case vide">${k + 1}</span>`;
   const lib = libelleAction(e.joueurs[HUMAIN].def.nation, c.action);
   const f = famille(c.action);
-  const cout = c.action === 'lutte' || c.action === 'souffle' ? 0 : coutPrevu(e, HUMAIN, c);
+  const cout = c.action === 'lutte' || c.action === 'souffle' ? 0 : coutALaPlace(e, HUMAIN, sequenceHumain.slice(0, k), c);
   return `<button class="seq-case pleine ${c.speciale ? 'speciale' : ''}" data-retirer="${k}" aria-label="Retirer ${echap(lib.local)}">
     <small>${k + 1}</small><span class="ico f-${f}">${ICONE[f]}</span><b>${c.speciale ? '★ ' : ''}${echap(lib.local)}</b><i>−${fmt(cout)}</i></button>`;
 }
@@ -2580,7 +2580,7 @@ function caseDernierTour(e: EtatCombat): string {
         <span class="vs">VS</span>
         <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
         <p class="case-aide">${e.enchainement
-          ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi à la 1re action brise la chaîne ; une feinte réussie à la 2e action peut annuler la dernière action adverse.`
+          ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi à la 1re action brise la chaîne ; un matraquage réussi à la 2e action peut annuler la dernière action adverse. L'action spéciale est possible dès le 2e tour, puis après 3 actions de recharge.`
           : `Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}</p>
       </section>`;
   }
@@ -2740,7 +2740,7 @@ function demanderSpeciale(b: HTMLButtonElement, suite: (c: Choix) => void) {
   el.innerHTML = `<div class="choix-spe-boite" role="dialog" aria-modal="true" aria-label="Activer l'action spéciale ?">
     <h3>★ Activer l'action spéciale ?</h3>
     <button class="principal" data-oui ${g && !g.conseil.speciale ? 'disabled' : ''}>
-      <b>★ ${nom} spéciale</b><small>${EFFET_SPECIALE[ACTIONS[a].famille]} · −${fmt(coutSpeciale(e, HUMAIN, a))} d'endurance</small></button>
+      <b>★ ${nom} spéciale</b><small>${EFFET_SPECIALE[ACTIONS[a].famille]} · −${fmt(b.dataset.mode === 'sequence' ? coutALaPlace(e, HUMAIN, sequenceHumain, { action: a, speciale: true }) : coutSpeciale(e, HUMAIN, a))} d'endurance</small></button>
     <button class="secondaire" data-non ${normaleOk && !(g && g.conseil.speciale) ? '' : 'disabled'}>
       <b>${nom} normale</b><small>${effetAction(a, { feinte: l.bonusFeinte > 0, enchainement: l.bonusEnchainement, combo: pointsCombo(l, a) })} · −${fmt(coutDuTour(e, HUMAIN, a))} d'endurance</small></button>
     <button class="lien" data-annuler>Annuler</button></div>`;

@@ -56,9 +56,9 @@ describe('Rupture de chaîne', () => {
     assert.equal(r.etat.joueurs[1].score, 2); // l'attaque du 1er duel a marqué
   });
 
-  it('feinte réussie au 2e duel : la dernière action adverse est annulée mais payée, celle du feinteur se joue', () => {
+  it('matraquage réussi au 2e duel : la dernière action adverse est annulée mais payée, celle du lutteur qui a matraqué se joue', () => {
     const r = jouerSequence(combat(), seq('defense', 'matraquage', 'attaque_base'), seq('defense', 'defense', 'grande_projection'), toujours(0));
-    assert.deepEqual(r.rupture, { par: 0, duel: 2, cause: 'feinte' });
+    assert.deepEqual(r.rupture, { par: 0, duel: 2, cause: 'matraquage' });
     assert.equal(r.duels.length, 3);
     assert.ok(r.etat.journal.some((l) => l.includes('est annulée')));
     // La grande projection de B ne marque rien, mais elle est payée ; l'attaque de A passe (+2 du bonus de feinte).
@@ -68,10 +68,17 @@ describe('Rupture de chaîne', () => {
     assert.equal(r.etat.joueurs[1].endurance, avant3 - ACTIONS.grande_projection.cout); // payée quand même
   });
 
-  it('la feinte au 2e duel ne casse la chaîne que 2 fois sur 3', () => {
-    const tient = jouerSequence(combat(), seq('defense', 'feinte', 'attaque_base'), seq('defense', 'defense', 'attaque_base'), toujours(0.99));
+  it('le matraquage au 2e duel ne casse la chaîne que 2 fois sur 3', () => {
+    const tient = jouerSequence(combat(), seq('defense', 'matraquage', 'attaque_base'), seq('defense', 'defense', 'attaque_base'), toujours(0.99));
     assert.equal(tient.rupture, null);
     assert.equal(tient.duels.length, 3);
+  });
+
+  it('une autre feinte réussie au 2e duel ne casse rien', () => {
+    for (const f of ['feinte', 'changement_niveau'] as const) {
+      const r = jouerSequence(combat(), seq('defense', f, 'attaque_base'), seq('defense', 'defense', 'attaque_base'), toujours(0));
+      assert.equal(r.rupture, null, f);
+    }
   });
 
   it('feinte réussie au 1er duel : pas de rupture', () => {
@@ -92,11 +99,24 @@ describe('Endurance', () => {
     assert.equal(validerSequence(e, 0, seq('grande_projection', 'attaque_base', 'lutte')), null);
   });
 
+  it('action spéciale : pas avant le 2e tour, puis 3 actions de recharge', () => {
+    const e = combat(); // tour 1
+    assert.equal(validerSequence(e, 0, [c('attaque_base', true), c('defense'), c('defense')]), 'Action spéciale pas disponible à cette place.');
+    assert.equal(validerSequence(e, 0, [c('defense'), c('attaque_base', true), c('defense')]), null);
+    // Spéciale au tour 3 (fin de la 1re séquence) : la prochaine au tour 7 au plus tôt.
+    const r = jouerSequence(e, [c('defense'), c('defense'), c('attaque_base', true)], seq('defense', 'defense', 'defense'), toujours(0.99));
+    const e2 = r.etat; // tour 4
+    for (let k = 0; k < 3; k++) {
+      const debut = Array.from({ length: k }, () => c('defense'));
+      assert.equal(validerSequence(e2, 0, [...debut, c('attaque_base', true), ...Array.from({ length: 2 - k }, () => c('defense'))]), 'Action spéciale pas disponible à cette place.', `tour ${4 + k}`);
+    }
+  });
+
   it('une seule action spéciale par séquence', () => {
     const e = combat();
     e.tour = 3;
     e.tourGlobal = 3;
-    assert.equal(validerSequence(e, 0, [c('attaque_base', true), c('attaque_base', true), c('defense')]), 'Pas assez d\'endurance pour toute la séquence.');
+    assert.equal(validerSequence(e, 0, [c('attaque_base', true), c('attaque_base', true), c('defense')]), 'Action spéciale pas disponible à cette place.');
     assert.equal(validerSequence(e, 0, [c('attaque_base', true), c('attaque_base'), c('defense')]), null);
   });
 

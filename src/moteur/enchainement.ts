@@ -4,8 +4,10 @@
 // - Rupture de chaîne par un contre réussi au 1er duel : les deux séquences s'arrêtent. Ce qui a
 //   été joué compte (points compris). L'adversaire paie quand même l'endurance de ses actions
 //   annulées ; celui qui a contré ne paie pas les siennes.
-// - Feinte réussie au 2e duel (2 chances sur 3) : la dernière action de l'adversaire est annulée
-//   (payée, sans effet) ; celle du feinteur se joue normalement.
+// - Matraquage réussi au 2e duel (2 chances sur 3) : la dernière action de l'adversaire est annulée
+//   (payée, sans effet) ; celle du lutteur qui a matraqué se joue normalement.
+// - Action spéciale : mêmes règles qu'un combat normal, place par place (dès le 2e tour, puis
+//   3 tours de recharge ; coût selon le tour où elle tombe).
 // - Endurance : une séquence doit pouvoir être payée en entier (coût de base de chaque action) ;
 //   s'il ne reste plus de quoi payer aucune action, la place est prise par « Lutte ». Si, pendant
 //   la séquence, une action devient impossible (endurance perdue, spéciale plus disponible),
@@ -34,12 +36,12 @@ export function coutPrevu(etat: EtatCombat, j: Joueur, c: Choix): number {
 
 // Endurance qui resterait après avoir payé ces actions (le souffle rend de l'endurance).
 export function enduranceApres(etat: EtatCombat, j: Joueur, debut: Sequence): number {
-  let reste = etat.joueurs[j].endurance;
-  for (const c of debut) {
-    reste -= coutPrevu(etat, j, c);
-    if (c.action === 'souffle') reste = Math.min(etat.joueurs[j].def.enduranceMax, reste + REGLES.souffle.gain);
-  }
-  return reste;
+  return projeter(etat, j, debut).joueurs[j].endurance;
+}
+
+// Coût d'une action à sa place dans la séquence (une spéciale coûte selon le tour où elle tombe).
+export function coutALaPlace(etat: EtatCombat, j: Joueur, debut: Sequence, c: Choix): number {
+  return coutPrevu(projeter(etat, j, debut), j, c);
 }
 
 // Actions qu'on peut encore ajouter à une séquence déjà commencée.
@@ -49,11 +51,11 @@ export function actionsAjoutables(etat: EtatCombat, j: Joueur, debut: Sequence):
   return etat.joueurs[j].def.actions.filter((a) => coutAction(etat.joueurs[j].def, a) <= reste);
 }
 
-// L'action spéciale est-elle possible à cette place de la séquence ? (une seule par séquence)
+// L'action spéciale est-elle possible à cette place de la séquence ? Mêmes règles qu'un combat
+// normal, au tour où tombe cette place : dès le 2e tour, puis 3 tours de recharge.
 export function speciaux(etat: EtatCombat, j: Joueur, debut: Sequence, a: IdAction): boolean {
-  if (debut.some((c) => c.speciale)) return false;
-  if (!peutJouerSpeciale(etat, j, a)) return false;
-  return coutSpeciale(etat, j, a) <= enduranceApres(etat, j, debut);
+  const p = projeter(etat, j, debut);
+  return peutJouerSpeciale(p, j, a) && coutSpeciale(p, j, a) <= p.joueurs[j].endurance;
 }
 
 // Le second souffle est-il possible à cette place ? (une fois, sous le seuil d'endurance)
@@ -76,9 +78,8 @@ export function validerSequence(etat: EtatCombat, j: Joueur, seq: Sequence): str
       continue;
     }
     if (!etat.joueurs[j].def.actions.includes(c.action)) return 'Action inconnue pour ce lutteur.';
-    if (c.speciale ? !speciaux(etat, j, debut, c.action) : !actionsAjoutables(etat, j, debut).includes(c.action)) {
-      return 'Pas assez d\'endurance pour toute la séquence.';
-    }
+    if (c.speciale && !speciaux(etat, j, debut, c.action)) return 'Action spéciale pas disponible à cette place.';
+    if (!c.speciale && !actionsAjoutables(etat, j, debut).includes(c.action)) return 'Pas assez d\'endurance pour toute la séquence.';
   }
   return null;
 }
@@ -92,7 +93,7 @@ export interface DuelJoue { avant: EtatCombat; choix: [Choix, Choix]; lignes: st
 export interface ResultatSequence {
   etat: EtatCombat;
   duels: DuelJoue[];
-  rupture: { par: Joueur; duel: number; cause: 'contre' | 'feinte' } | null;
+  rupture: { par: Joueur; duel: number; cause: 'contre' | 'matraquage' } | null;
 }
 
 // Joue une séquence complète (ou jusqu'à la rupture, la fin de la période ou du combat).
@@ -130,12 +131,12 @@ export function jouerSequence(
         l.endurance = Math.max(0, l.endurance - perte);
         e.journal.push(`Chaîne brisée : le contre de ${e.joueurs[j].def.nom} casse l'enchaînement de ${l.def.nom}, qui s'épuise sur ses actions annulées (−${Math.round(perte * 10) / 10} d'endurance). La séquence s'arrête là.`);
         duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
-      // Feinte réussie au 2e duel : la dernière action de l'adversaire est annulée (et payée).
-      } else if (f === 'feinte' && k + 1 === E.ruptureFeinte && !rupture && reussit(hasard, E.chanceFeinteRupture)) {
-        rupture = { par: j, duel: k + 1, cause: 'feinte' };
+      // Matraquage réussi au 2e duel : la dernière action de l'adversaire est annulée (et payée).
+      } else if (r === E.actionRuptureFeinte && k + 1 === E.ruptureFeinte && !rupture && reussit(hasard, E.chanceFeinteRupture)) {
+        rupture = { par: j, duel: k + 1, cause: 'matraquage' };
         annulee = o;
         e = structuredClone(e);
-        e.journal.push(`Chaîne brisée : la feinte de ${e.joueurs[j].def.nom} casse l'enchaînement de ${e.joueurs[o].def.nom}, dont la dernière action sera annulée.`);
+        e.journal.push(`Chaîne brisée : le matraquage de ${e.joueurs[j].def.nom} casse l'enchaînement de ${e.joueurs[o].def.nom}, dont la dernière action sera annulée.`);
         duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
       }
     }

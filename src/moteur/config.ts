@@ -522,10 +522,10 @@ export const REGLES = {
   // Rupture (25/11/2026, 2e version) :
   // - contre réussi au 1er duel : les deux séquences s'arrêtent ; l'adversaire paie quand même
   //   l'endurance de ses actions annulées (celui qui contre ne paie pas les siennes) ;
-  // - feinte réussie au 2e duel (`chanceFeinteRupture`) : la dernière action de l'adversaire est
-  //   annulée (il la paie quand même), celle du feinteur se joue normalement.
+  // - Matraquage réussi au 2e duel (`chanceFeinteRupture`) : la dernière action de l'adversaire est
+  //   annulée (il la paie quand même), celle du lutteur qui a matraqué se joue normalement.
   // Initiative : on voit la dernière action de l'adversaire et on peut changer sa dernière action.
-  enchainement: { actions: 3, toursParPeriode: 12, rupturesContre: [1], ruptureFeinte: 2, chanceFeinteRupture: 2 / 3 },
+  enchainement: { actions: 3, toursParPeriode: 12, rupturesContre: [1], ruptureFeinte: 2, actionRuptureFeinte: 'matraquage' as IdAction, chanceFeinteRupture: 2 / 3 },
 
   // Niveau de compte : +1 toutes les 15 médailles, seulement pour montrer l'expérience du joueur.
   compte: { medaillesParNiveau: 15 },
