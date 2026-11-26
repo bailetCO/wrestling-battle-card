@@ -76,7 +76,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'La consécration', objectif: 'Gagner un tournoi individuel sans passer par le tableau des perdants',
-    guide: 'Gagne le tournoi individuel sans perdre un seul combat. Cette étape ouvre aussi la saison sportive.',
+    guide: 'Gagne le tournoi individuel sans perdre un seul combat.',
     lien: '#tournois', bouton: 'Voir les tournois',
   },
   {
@@ -112,7 +112,6 @@ export const ETAPES: DefEtape[] = [
 ];
 
 export const NB_ETAPES = ETAPES.length;
-export const ETAPE_SAISON = H.etapeSaison; // la saison sportive s'ouvre après cette étape
 
 // Ce qui se passe dans le jeu et peut faire avancer l'histoire.
 export type EvenementHistoire =

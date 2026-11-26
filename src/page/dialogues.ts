@@ -11,8 +11,8 @@ export const PERSONNAGES: Record<Personnage, { nom: string; role: string }> = {
 
 export interface Replique { qui: Personnage; texte: string }
 
-// Clés : h0 à h17 = étapes 1 à 18 du mode histoire ; hfin = étape 12 réussie (la saison
-// s'ouvre ; avant le 26/11/2026, cette scène s'appelait h12) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
+// Clés : h0 à h17 = étapes 1 à 18 du mode histoire ; hfin = ouverture de la saison sportive (Mon Club
+// niveau 10 ; avant le 26/11/2026, cette scène s'appelait h12) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
 // championnats du monde et fin de saison quand il n'y a pas de Jeux Olympiques.
 export const SCENES: Record<string, Replique[]> = {
   h0: [
@@ -63,15 +63,15 @@ export const SCENES: Record<string, Replique[]> = {
   h11: [
     { qui: 'philippe', texte: 'Dernière épreuve : gagner un tournoi individuel sans perdre un seul combat. Le tableau principal, de bout en bout.' },
     { qui: 'cocoach', texte: 'Sans une seule défaite ? Même moi, il m\'a fallu trois essais. Bon courage.' },
-    { qui: 'philippe', texte: 'Réussis, et la saison sportive t\'ouvrira ses portes.' },
+    { qui: 'philippe', texte: 'Réussis, et tu sauras gérer un tournoi de bout en bout. La suite, c\'est la technique.' },
   ],
   hfin: [
-    { qui: 'philippe', texte: 'Coach, tu as fait tes preuves. Place aux choses sérieuses : une vraie saison sportive.' },
+    { qui: 'philippe', texte: 'Coach, ton club a atteint le niveau 10 : tu as fait tes preuves. Place aux choses sérieuses, une vraie saison sportive.' },
     { qui: 'philippe', texte: 'Interclub, régional, national, international, championnats du monde… et au bout, les Jeux Olympiques.' },
     { qui: 'cocoach', texte: 'Les Jeux ? On s\'y retrouvera. Sur le podium, il n\'y a qu\'une seule marche tout en haut.' },
   ],
   h12: [
-    { qui: 'philippe', texte: 'Pendant que la saison commence, on travaille la technique. En vrai combat, les meilleurs enchaînent leurs actions.' },
+    { qui: 'philippe', texte: 'On travaille la technique. En vrai combat, les meilleurs enchaînent leurs actions.' },
     { qui: 'philippe', texte: 'Un matraquage puis une ceinture arrière, un sprawl puis une attaque… Le bouton s\'allume en vert quand un combo est possible.' },
     { qui: 'philippe', texte: 'Réussis-en deux dans un même combat.' },
     { qui: 'cocoach', texte: 'Deux combos ? Moi, j\'en place trois par période. Mais bon, chacun son rythme.' },
@@ -145,11 +145,11 @@ export const SCENES: Record<string, Replique[]> = {
 };
 
 // Scènes liées à l'avancement du joueur (étape ou palier en cours), dans l'ordre où les montrer.
-// La saison s'ouvre après l'étape `etapeSaison` ; les étapes suivantes se jouent en parallèle.
+// Le mode histoire et la saison sportive (ouverte au niveau 10 de Mon Club) se jouent en parallèle.
 export function scenesEnCours(
-  etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean, olympique = true, premiereSaison = true, etapeSaison = nbEtapes,
+  etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean, olympique = true, premiereSaison = true, saisonOuverte = false,
 ): string[] {
-  if (etapeHistoire < etapeSaison) return [`h${etapeHistoire}`];
+  if (!saisonOuverte) return etapeHistoire < nbEtapes ? [`h${etapeHistoire}`] : [];
   const saison = saisonFinie ? [olympique ? 's6' : 's6b']
     : palier === 0 ? (premiereSaison ? ['hfin', 's0'] : ['s0'])
     : palier === 4 && !olympique ? ['s4b'] : [`s${palier}`];

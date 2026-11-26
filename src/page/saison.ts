@@ -1,11 +1,12 @@
-// Saison sportive (mode histoire 2), sans affichage, ouverte quand le mode histoire 1 est fini.
+// Saison sportive, sans affichage : un mode à part, ouvert au niveau 10 de Mon Club (avant le 26/11/2026,
+// elle s'ouvrait après l'étape 12 du mode histoire ; la progression d'un ancien joueur est gardée).
 // Paliers dans l'ordre : interclub (combats rapides), puis compétitions individuelles de plus en plus
 // grandes : régional, national, international, championnats du monde, et Jeux Olympiques une saison
 // sur 4 (la 1re, puis la 5e, la 9e…). Une saison finie, on peut en commencer une nouvelle.
 
 import { CHAMPIONS, REGLES, type Hasard } from '../moteur';
-import { ouvrirBooster, type Booster, type Collection } from './collection';
-import { ETAPE_SAISON, legendaireOfferte } from './histoire';
+import { niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
+import { legendaireOfferte } from './histoire';
 import { rivalNouvelleSaison } from './rival';
 import { creerIndividuel, type Individuel } from './tournoi';
 
@@ -17,7 +18,7 @@ export const saisonOlympique = (numero: number) => (numero - 1) % S.joTousLes ==
 // Nombre de paliers de la saison en cours : 6 avec les JO, 5 sinon (fin aux championnats du monde).
 export const nbPaliers = (c: Collection) => (saisonOlympique(c.saison.numero) ? NB_PALIERS : NB_PALIERS - 1);
 
-export const saisonOuverte = (c: Collection) => c.histoire.etape >= ETAPE_SAISON;
+export const saisonOuverte = (c: Collection) => niveauClub(c) >= REGLES.club.niveauSaison;
 export const saisonFinie = (c: Collection) => c.saison.palier >= nbPaliers(c);
 
 // Objectif d'un palier, en mots.

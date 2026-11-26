@@ -16,7 +16,7 @@ import {
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets, carteHTML } from './carte';
 import {
-  acheterBooster, acheterChampion, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
+  acheterBooster, acheterChampion, cartesPossedees, charger, enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, joindreGains, recompensesClub, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, choisirDeck, consoler, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbDoubles, nbEtoiles, nbExemplaires,
   nouvelleCollection, possede, prochaineFusion, recompenser, sauver, verifierPseudo, type Booster, type Collection,
   nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection,
 } from './collection';
@@ -31,7 +31,7 @@ import {
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
 import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from './quetes';
-import { ETAPES, ETAPE_SAISON, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
+import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { defRival, etoilesRival, niveauOrdiRival, rivalBattu, type MonteeRival } from './rival';
@@ -153,6 +153,7 @@ const ICONES_MENU: Record<string, string> = {
   tournois: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v12a10 10 0 0 1-20 0z" fill="currentColor"/><path d="M14 10H7c0 7 3 11 8 11M34 10h7c0 7-3 11-8 11" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 28v8M16 42h16l-2-6H18z" fill="currentColor"/></svg>',
   club: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3l17 6v13c0 11-8 19-17 23C15 41 7 33 7 22V9z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 13l3 6.2 6.8.9-5 4.7 1.3 6.7L24 28.2l-6.1 3.3 1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>',
   social: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  saison: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="36" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="18" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="30" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 40h28" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
   fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
@@ -222,6 +223,16 @@ function palierValide(r: ReturnType<typeof noterSaison>) {
   annoncer(r.finSaison ? `Saison ${collection.saison.numero} terminée !` : `${PALIERS[r.palier].nom} : objectif atteint !`, '#saison');
 }
 
+// Boosters rares des nouveaux niveaux de Mon Club (6 à 10), à ouvrir dans Mon Club.
+function recompenseClub() {
+  const r = recompensesClub(collection, Math.random);
+  if (!r.length) return;
+  for (const x of r) recompensesHistoire.push({ titre: `Mon Club niveau ${x.niveau}${x.niveau === R_.club.niveauSaison ? ' : la saison sportive est ouverte' : ''}`, lien: '#club', boosters: [x.booster] });
+  sauver(collection);
+  const der = r[r.length - 1].niveau;
+  annoncer(der >= R_.club.niveauSaison ? `Mon Club niveau ${der} : saison sportive ouverte !` : `Mon Club passe au niveau ${der} !`, '#club');
+}
+
 function annoncer(titre: string, lien: string) {
   document.querySelector('.bulle-histoire')?.remove();
   const b = document.createElement('a');
@@ -239,9 +250,9 @@ const jauge = (p: [number, number]) => `<span class="jauge-histoire" style="--p:
 function bandeauHistoire(): string {
   if (recompensesHistoire.length) {
     const r = recompensesHistoire[0];
-    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : r.lien === '#quetes' ? 'Quêtes du jour' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
+    return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : r.lien === '#quetes' ? 'Quêtes du jour' : r.lien === '#club' ? 'Mon Club' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
   }
-  // Saison ouverte et étapes 13 à 15 pas finies : un petit rappel du mode histoire en dessous.
+  // Saison ouverte et mode histoire pas fini : un petit rappel du mode histoire en dessous.
   const reste = saisonOuverte(collection) && !histoireFinie(collection)
     ? `<a class="bandeau-histoire petit" href="#histoire"><small>Mode histoire · étape ${collection.histoire.etape + 1}/${NB_ETAPES}</small><b>${echap(ETAPES[collection.histoire.etape].objectif)}</b></a>` : '';
   if (saisonOuverte(collection)) {
@@ -251,6 +262,11 @@ function bandeauHistoire(): string {
     const v = PALIERS[i].victoires;
     return `<a class="bandeau-histoire" href="#saison"><small>Saison ${num} · palier ${i + 1}/${nbPaliers(collection)} · ${echap(PALIERS[i].nom)}</small>
       <b>${echap(objectifPalier(i))}</b>${v ? `${jauge([collection.saison.victoires, v])}<span>${collection.saison.victoires}/${v}</span>` : ''}</a>${reste}`;
+  }
+  // Mode histoire fini, saison pas encore ouverte : on vise le niveau 10 de Mon Club.
+  if (histoireFinie(collection)) {
+    const n = niveauClub(collection);
+    return `<a class="bandeau-histoire fini" href="#club"><small>Mode histoire terminé · Mon Club niveau ${n || 'fermé'}/${R_.club.niveauSaison}</small><b>Monte Mon Club au niveau ${R_.club.niveauSaison} pour ouvrir la saison sportive</b></a>`;
   }
   const i = collection.histoire.etape;
   const p = progression(collection);
@@ -389,7 +405,7 @@ const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutteur('eur
 // Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
 function scenesAuto() {
   if (document.querySelector('.voile, .scene-dialogue, .revelation')) return;
-  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection), saisonOlympique(collection.saison.numero), collection.saison.numero === 1, ETAPE_SAISON)
+  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection), saisonOlympique(collection.saison.numero), collection.saison.numero === 1, saisonOuverte(collection))
     .filter((k) => !collection.scenesVues.includes(k));
   if (cles.length) montrerScene(cles);
 }
@@ -453,8 +469,7 @@ function ecranHistoire() {
     <main class="sous-menu">
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
       ${blocPaquet('#histoire')}
-      ${saisonOuverte(collection) ? '<section class="bloc saison-ouverte"><h2>La saison sportive est ouverte</h2><p>Interclub, régional, national, international, championnats du monde et Jeux Olympiques.</p><a class="principal lien-bouton" href="#saison">Commencer la saison</a></section>' : ''}
-      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape. La saison sportive s'ouvre après l'étape ${ETAPE_SAISON} ; les étapes suivantes se jouent en même temps.</p></section>
+      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape. La saison sportive est un mode à part, ouvert au niveau ${R_.club.niveauSaison} de Mon Club.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
@@ -476,8 +491,9 @@ function ecranSaison() {
   document.querySelector('.bulle-histoire')?.remove();
   if (!saisonOuverte(collection)) {
     app.innerHTML = `<main class="sous-menu">${enTete('Saison sportive', 'Verrouillée')}
-      <section class="bloc"><p>🔒 La saison s'ouvre quand les 12 étapes du mode histoire sont validées (étape ${collection.histoire.etape + 1} en cours).</p>
-      <a class="principal lien-bouton" href="#histoire">Voir le mode histoire</a></section></main>`;
+      <section class="bloc"><p>🔒 La saison sportive s'ouvre au <b>niveau ${R_.club.niveauSaison} de Mon Club</b> (niveau actuel : ${niveauClub(collection) || 'fermé'}). Gagne des médailles en combat pour faire monter ton club.</p>
+      ${collection.saison.palier > 0 || collection.saison.terminees > 0 ? `<p class="note">Ta progression est gardée : saison ${collection.saison.numero}, palier ${Math.min(collection.saison.palier + 1, nbPaliers(collection))}. Tu la retrouves dès que ton club atteint le niveau ${R_.club.niveauSaison}.</p>` : ''}
+      <a class="principal lien-bouton" href="#club">Voir Mon Club</a></section></main>`;
     return;
   }
   preparerPaquet('#saison');
@@ -577,6 +593,7 @@ function lancerInterclub(id: string, auto: boolean) {
 
 function ecranMenu() {
   partie = null;
+  recompenseClub();
   histoire({ type: 'etat' });
   quete({ type: 'etat' });
   const session = sessionLigne();
@@ -606,6 +623,7 @@ function ecranMenu() {
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Arène contre l\'ordinateur ou en ligne contre un ami', '#combat')}
         ${tuile('tournois', 'Tournois', 'Individuel et par équipe', '#tournois', tournoiActif ? 'En cours' : '')}
+        ${tuile('saison', 'Saison sportive', saisonOuverte(collection) ? `Saison ${collection.saison.numero} · ${saisonFinie(collection) ? 'terminée' : PALIERS[collection.saison.palier].nom}` : 'Interclub, championnats, Jeux Olympiques', '#saison', '', saisonOuverte(collection) ? '' : `Club niveau ${R_.club.niveauSaison}`)}
         ${tuile('collection', 'Collection', `${collection.toutDebloque ? LUTTEURS.length : cartesPossedees(collection)}/${LUTTEURS.length} cartes · régler les actions`, '#collection')}
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${collection.club.length}/${placesClub(collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
@@ -698,7 +716,7 @@ function lancerEssai(id: IdTuto) {
   const moi = CARTES.find((l) => possede(collection, l.id))?.id ?? 'europe';
   tournoi = e.type === 'individuel'
     ? { ...creerIndividuel(moi, R_.tournoi.individuel.minimum, nouvelleGraine()), essai: true }
-    : { ...creerTournoiEquipe([...collection.club], nouvelleGraine()), essai: true };
+    : { ...creerTournoiEquipe(collection.club.slice(0, R_.tournoi.equipe.duels), nouvelleGraine()), essai: true };
   paquetTournoi = null;
   sauverTournoi();
   location.hash = '#tournois';
@@ -1454,12 +1472,13 @@ function ecranCreationAdmin(message = '') {
 
 function ecranInscriptionEquipe(ordre: string[]) {
   const n = R_.tournoi.equipe.duels;
-  const liste = ordre.slice(0, n).map((id, i) => {
+  const dernier = ordre.length - 1;
+  const liste = ordre.map((id, i) => {
     const l = trouverLutteur(id);
     return `<li class="ordre-ligne"><span class="ordre-n">${i + 1}</span><span class="vignette">${portrait(l, niveauDe(id))}</span>
       <span class="ordre-nom"><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[niveauDe(id)]}</small></span>
       <button class="rond" data-monter="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
-      <button class="rond" data-descendre="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></li>`;
+      <button class="rond" data-descendre="${i}" ${i === dernier ? 'disabled' : ''} aria-label="Descendre">↓</button></li>${i === n - 1 && dernier > i ? '<li class="ordre-separation">Remplaçants : ils ne combattent pas. Fais-en monter un pour l\'aligner.</li>' : ''}`;
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
@@ -1480,7 +1499,7 @@ function ecranInscriptionEquipe(ordre: string[]) {
   app.querySelector('[data-valider-equipe]')!.addEventListener('click', () => {
     const erreur = payerInscription(collection, 'equipe');
     if (erreur) return ecranTournois(`<p class="alerte">${echap(erreur)}</p>`);
-    tournoi = creerTournoiEquipe(ordre, nouvelleGraine());
+    tournoi = creerTournoiEquipe(ordre.slice(0, n), nouvelleGraine());
     paquetTournoi = null;
     sauver(collection);
     sauverTournoi();
@@ -1738,6 +1757,9 @@ function finCombatTournoi(abandon: boolean) {
 
 function ecranMonClub(message = '') {
   partie = null;
+  recompenseClub();
+  document.querySelector('.bulle-histoire')?.remove();
+  preparerPaquet('#club');
   const K = R_.club;
   const niv = niveauClub(collection);
   if (!niv) {
@@ -1777,23 +1799,25 @@ function ecranMonClub(message = '') {
       ${enTete('Mon Club', `Club de ${echap(collection.coach ?? '')}`)}
       ${porteMonnaie()}
       ${message}
+      ${blocPaquet('#club')}
       <section class="bloc">
         <div class="club-niveau">
           <span class="club-blason" aria-hidden="true">${niv}</span>
           <b>Niveau ${niv}/${K.niveauMax} · ${collection.club.length}/${places} lutteur${places > 1 ? 's' : ''}</b>
           <div>
             <div class="jauge-club" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progression)}"><i style="width:${progression}%"></i></div>
-            <small>${suivant === null ? 'Niveau maximum : le tournoi par équipe est ouvert.' : `Niveau ${niv + 1} à ${suivant} médailles (encore ${suivant - collection.medailles}).`}</small>
+            <small>${suivant === null ? 'Niveau maximum : la saison sportive est ouverte.' : `Niveau ${niv + 1} à ${suivant} médailles (encore ${suivant - collection.medailles})${niv + 1 >= K.niveauBooster ? ' · 1 booster rare' : ''}${niv + 1 === K.niveauSaison ? ' · saison sportive' : ''}.`}</small>
           </div>
         </div>
       </section>
       <section class="bloc">
         <h2>Mes lutteurs</h2>
-        <p>Une place par niveau. Le lutteur reste utilisable partout : c'est seulement sa place dans l'équipe. Il faut un club de niveau ${K.niveauTournoiEquipe} (5 lutteurs) pour le tournoi par équipe.</p>
+        <p>Une place par niveau. Le lutteur reste utilisable partout : c'est seulement sa place dans l'équipe. Il faut un club de niveau ${K.niveauTournoiEquipe} (5 lutteurs) pour le tournoi par équipe : avec plus de 5 lutteurs, tu choisis les 5 qui combattent. Dès le niveau ${K.niveauBooster}, chaque niveau donne un booster rare ; le niveau ${K.niveauSaison} ouvre la saison sportive.</p>
         <div class="club-places">${cases}</div>
       </section>
     </main>`;
   activerReflets(app);
+  brancherPaquet('#club', () => ecranMonClub());
   app.querySelectorAll<HTMLButtonElement>('[data-recruter]').forEach((b) => b.addEventListener('click', fenetreRecruter));
   app.querySelectorAll<HTMLButtonElement>('[data-liberer]').forEach((b) =>
     b.addEventListener('click', () => {

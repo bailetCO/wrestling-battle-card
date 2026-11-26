@@ -1416,3 +1416,8 @@ b.moi { color: #ff8a95; }
 .tuto-court p,.tuto-court li{line-height:1.45}
 .bulle-coach.conseil{margin-top:6px}
 .bouton-tuto:disabled{opacity:.45;cursor:not-allowed}
+
+/* Saison sportive : tuile du menu sur toute la largeur */
+.t-saison { --t: #7fd3ff; grid-column: 1 / -1; min-height: 120px; }
+/* Tournoi par équipe : séparation titulaires / remplaçants */
+.ordre-separation { list-style: none; margin: 6px 0; padding: 6px 10px; border-top: 2px dashed var(--doux); font-size: 13px; color: var(--doux); }

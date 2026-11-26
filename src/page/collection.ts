@@ -27,6 +27,7 @@ export interface Collection {
   styles: Record<string, number>; // style de carte choisi (0 = cadre Champion du Monde classique)
   medailles: number; // médailles gagnées (progression, jamais dépensées)
   club: string[]; // lutteurs recrutés dans Mon Club (une place, la carte reste utilisable partout)
+  clubRecompense: number; // dernier niveau de Mon Club dont le booster rare a été donné (niveaux 6 à 10)
   fragments: Record<string, number>; // fragments de la légendaire de chaque nation
   arene: number; // progression dans l'arène : nation × 5 + rang de l'adversaire en cours
   departComplet: boolean; // a reçu ses 20 cartes de départ (les anciennes sauvegardes sont complétées)
@@ -87,7 +88,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true, arene: 0,
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
@@ -218,6 +219,17 @@ export function medaillesNiveauSuivant(c: Collection): number | null {
   const n = niveauClub(c);
   if (n >= K.niveauMax) return null;
   return K.medaillesOuverture + n * K.medaillesParNiveau;
+}
+
+// Boosters rares des niveaux de Mon Club atteints (à partir du 6e) et pas encore donnés.
+export function recompensesClub(c: Collection, hasard: Hasard): { niveau: number; booster: Booster }[] {
+  const K = REGLES.club;
+  const r: { niveau: number; booster: Booster }[] = [];
+  for (let n = Math.max(c.clubRecompense + 1, K.niveauBooster); n <= niveauClub(c); n++) {
+    for (let k = 0; k < K.boostersRaresParNiveau; k++) r.push({ niveau: n, booster: ouvrirBooster(c, hasard, 'rare') });
+    c.clubRecompense = n;
+  }
+  return r;
 }
 
 export function recruter(c: Collection, id: string): string | null {
@@ -386,6 +398,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   const entier = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
   c.medailles = entier(b.medailles);
   c.arene = entier(b.arene);
+  c.clubRecompense = Math.min(REGLES.club.niveauMax, entier(b.clubRecompense));
   const sa = b.saison as { palier?: unknown; victoires?: unknown; numero?: unknown; terminees?: unknown } | undefined;
   if (sa && typeof sa === 'object') {
     c.saison = {

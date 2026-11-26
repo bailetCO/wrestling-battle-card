@@ -54,7 +54,7 @@ test('la nouvelle saison sportive remet Cocoach à Rare', async () => {
   const { nouvelleSaison, passerPalier, nbPaliers } = await import('../src/page/saison');
   const { creerHasard } = await import('../src/moteur/hasard');
   const c = nouvelleCollection();
-  c.histoire.etape = 12;
+  c.medailles = 55; // Mon Club niveau 10 : saison ouverte
   rivalBattu(c);
   const h = creerHasard(2);
   for (let i = 0; i < nbPaliers(c); i++) passerPalier(c, h);

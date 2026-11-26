@@ -8,7 +8,8 @@ import { depuisSauvegarde, nouvelleCollection } from '../src/page/collection';
 import { NB_PALIERS, PALIERS, creerCompetitionSaison, noterSaison, saisonFinie, saisonOuverte } from '../src/page/saison';
 
 const h = creerHasard(3);
-const ouverte = () => { const c = nouvelleCollection(); c.histoire.etape = 12; return c; };
+// Saison ouverte : Mon Club au niveau 10 (10 + 9 × 5 = 55 médailles).
+const ouverte = () => { const c = nouvelleCollection(); c.medailles = 55; return c; };
 
 test('saison : 6 paliers, tailles et objectifs du cahier des charges', () => {
   assert.equal(NB_PALIERS, 6);
@@ -17,9 +18,10 @@ test('saison : 6 paliers, tailles et objectifs du cahier des charges', () => {
   assert.equal(PALIERS[0].victoires, 3);
 });
 
-test('saison : fermée tant que le mode histoire 1 n\'est pas fini', () => {
+test('saison : fermée tant que Mon Club n\'est pas au niveau 10, même avec le mode histoire fini', () => {
   const c = nouvelleCollection();
-  c.histoire.etape = 11;
+  c.histoire.etape = 18;
+  c.medailles = 54; // niveau 9
   assert.ok(!saisonOuverte(c));
   assert.equal(noterSaison(c, { type: 'interclub' }, h), null);
   assert.equal(c.saison.victoires, 0);
@@ -91,12 +93,14 @@ test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins
   assert.ok(SCENES.hfin?.length);
   for (let i = 0; i <= 6; i++) assert.ok(SCENES[`s${i}`]?.length, `s${i}`);
   for (const r of Object.values(SCENES).flat()) assert.ok(r.texte.length <= 160, r.texte);
-  assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, 12), ['h3']);
-  // Étapes 13 à 18 en même temps que la saison.
-  assert.deepEqual(scenesEnCours(12, 18, 0, false, true, true, 12), ['hfin', 's0', 'h12']);
-  assert.deepEqual(scenesEnCours(16, 18, 4, false, true, true, 12), ['s4', 'h16']);
-  assert.deepEqual(scenesEnCours(18, 18, 4, false, true, true, 12), ['s4']);
-  assert.deepEqual(scenesEnCours(18, 18, 6, true, true, true, 12), ['s6']);
+  assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, false), ['h3']);
+  assert.deepEqual(scenesEnCours(15, 18, 0, false, true, true, false), ['h15']);
+  assert.deepEqual(scenesEnCours(18, 18, 0, false, true, true, false), []);
+  // Saison ouverte (club niveau 10) : ses scènes, plus l'étape d'histoire en cours.
+  assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, true), ['hfin', 's0', 'h3']);
+  assert.deepEqual(scenesEnCours(16, 18, 4, false, true, true, true), ['s4', 'h16']);
+  assert.deepEqual(scenesEnCours(18, 18, 4, false, true, true, true), ['s4']);
+  assert.deepEqual(scenesEnCours(18, 18, 6, true, true, true, true), ['s6']);
 });
 
 test('saisons suivantes : fin aux Mondiaux, JO toutes les 4 saisons, cartes Champion du Monde', async () => {

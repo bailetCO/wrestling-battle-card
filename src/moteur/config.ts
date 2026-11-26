@@ -380,7 +380,10 @@ export const REGLES = {
 
   // Mon Club : s'ouvre à 10 médailles, puis +1 niveau toutes les 5 médailles de plus (niveau 5 au
   // maximum). Le niveau donne le nombre de places pour les lutteurs recrutés (1 place par niveau).
-  club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 5, placesParNiveau: 1, niveauTournoiEquipe: 5 },
+  // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
+  // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.
+  club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 10, placesParNiveau: 1, niveauTournoiEquipe: 5,
+    niveauBooster: 6, boostersRaresParNiveau: 1, niveauSaison: 10 },
 
   // Tournois contre l'ordinateur. +1 médaille par combat gagné, en plus des gains de fin.
   tournoi: {
@@ -425,10 +428,9 @@ export const REGLES = {
   // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
   // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
   histoire: {
-    // Boosters de chaque étape (18). La dernière donne aussi une carte légendaire. La saison
-    // sportive s'ouvre après l'étape `etapeSaison` (12) ; les étapes 13 à 15 se jouent en parallèle.
+    // Boosters de chaque étape (18). La dernière donne aussi une carte légendaire. Depuis le
+    // 26/11/2026, la saison sportive est un mode à part, ouvert au niveau 10 de Mon Club.
     boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3],
-    etapeSaison: 12,
     combosTacticien: 2, // étape 13 : combos réussis dans un même combat
     nationsEtape1: 3, // victoires contre des lutteurs de 3 nations différentes
     memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club

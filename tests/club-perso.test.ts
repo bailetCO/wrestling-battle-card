@@ -9,14 +9,14 @@ import {
 
 const K = REGLES.club;
 
-test('Mon Club : fermé avant 10 médailles, puis un niveau toutes les 5 médailles (5 au maximum)', () => {
+test('Mon Club : fermé avant 10 médailles, puis un niveau toutes les 5 médailles (10 au maximum)', () => {
   const c = nouvelleCollection();
   const niveau = (m: number) => { c.medailles = m; return niveauClub(c); };
-  assert.deepEqual([9, 10, 14, 15, 20, 25, 30, 99].map(niveau), [0, 1, 1, 2, 3, 4, 5, 5]);
+  assert.deepEqual([9, 10, 14, 15, 20, 25, 30, 54, 55, 99].map(niveau), [0, 1, 1, 2, 3, 4, 5, 9, 10, 10]);
   c.medailles = 12;
   assert.equal(placesClub(c), 1);
   assert.equal(medaillesNiveauSuivant(c), 15);
-  c.medailles = 30;
+  c.medailles = 55;
   assert.equal(placesClub(c), K.niveauMax);
   assert.equal(medaillesNiveauSuivant(c), null);
 });

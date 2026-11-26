@@ -37,6 +37,8 @@ test('passer l\'étape (test) : tout le mode histoire puis toute la saison, avec
   assert.equal(c.histoire.etape, 18);
   assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 2 + 3 + 3 + 1);
   assert.deepEqual(passerEtape(c, h), []);
+  assert.equal(passerPalier(c, h), null); // saison fermée : Mon Club pas au niveau 10
+  c.medailles = 55;
   for (let i = 0; i < NB_PALIERS; i++) assert.equal(passerPalier(c, h)!.palier, i);
   assert.equal(c.saison.palier, NB_PALIERS);
   assert.equal(passerPalier(c, h), null);

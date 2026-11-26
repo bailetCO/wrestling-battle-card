@@ -299,9 +299,9 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 ### Mon Club
 
-- Tuile du menu, verrouillée jusqu'à 10 médailles. Ensuite, un niveau de plus toutes les 5 médailles : niveau 1 à 10, 2 à 15, 3 à 20, 4 à 25, 5 à 30 (maximum). Les médailles ne sont jamais dépensées.
-- Une place par niveau (5 places au niveau 5). On y recrute ses propres lutteurs ; ce n'est qu'une place dans l'équipe : la carte reste utilisable partout. On peut libérer une place.
-- Il faut un club de niveau 5 (5 lutteurs) pour le tournoi par équipe.
+- Tuile du menu, verrouillée jusqu'à 10 médailles. Ensuite, un niveau de plus toutes les 5 médailles : niveau 1 à 10, 2 à 15, 3 à 20, 4 à 25, 5 à 30… jusqu'au niveau 10 à 55 médailles (maximum ; jusqu'au 26/11/2026, le maximum était le niveau 5). Les médailles ne sont jamais dépensées.
+- Une place par niveau (10 places au niveau 10). À partir du niveau 6, chaque nouveau niveau donne aussi 1 booster rare, à ouvrir dans Mon Club (annoncé par une bulle et par le bandeau du menu ; donné une seule fois, y compris pour un ancien joueur qui a déjà les médailles). Le niveau 10 ouvre la saison sportive. On y recrute ses propres lutteurs ; ce n'est qu'une place dans l'équipe : la carte reste utilisable partout. On peut libérer une place.
+- Il faut un club de niveau 5 (5 lutteurs) pour le tournoi par équipe. Avec plus de 5 lutteurs, l'écran d'inscription les montre tous : les 5 premiers combattent, les autres sont remplaçants (on les fait monter avec les flèches).
 
 ### Tournois
 
@@ -321,9 +321,10 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
 - Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
 
-### Saison sportive (mode histoire 2)
+### Saison sportive (mode à part)
 
-- S'ouvre quand les 12 étapes du mode histoire sont validées. 6 paliers, à valider dans l'ordre (écran « Saison sportive », bandeau du menu) :
+- Depuis le 26/11/2026, c'est un mode à part : tuile « Saison sportive » du menu, sur toute la largeur, verrouillée avec la raison tant que Mon Club n'est pas au niveau 10. Elle se joue en même temps que le mode histoire (avant, elle s'ouvrait après l'étape 12 du mode histoire). Un joueur qui l'avait déjà ouverte garde sa progression, mais doit atteindre le niveau 10 pour y rejouer ; l'écran verrouillé lui rappelle où il en est. Mode histoire fini et club pas encore au niveau 10 : le bandeau du menu invite à faire monter Mon Club.
+- 6 paliers, à valider dans l'ordre (écran « Saison sportive », bandeau du menu) :
 
 | Palier | Format | Ordinateur | Objectif | Récompense du palier |
 | --- | --- | --- | --- | --- |
@@ -403,7 +404,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris, mais pas en combat automatique) : 3 boosters.
   10. Gagner un combat en ligne contre un ami : 3 boosters.
   11. Terminer l'arène en battant toutes les nations : 3 boosters.
-  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : 3 boosters. La saison sportive s'ouvre ; les étapes 13 à 15 se jouent en même temps qu'elle.
+  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : 3 boosters. (Jusqu'au 26/11/2026, cette étape ouvrait la saison sportive.)
   13. Le tacticien : réussir 2 combos dans un même combat (pas en combat auto ; gagner n'est pas obligatoire) : 2 boosters.
   14. L'enchaîneur : gagner un combat en format Enchaînement : 2 boosters.
   15. Jusqu'au bout : gagner un combat en durée infinie : 3 boosters.

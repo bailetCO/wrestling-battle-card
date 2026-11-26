@@ -126,14 +126,14 @@ test('étapes 7 et 11 : validées dès le déblocage si l\'arène est déjà ava
   assert.equal(d.histoire.etape, 11);
 });
 
-test('étape 12 : tournoi sans défaite = 3 boosters, et la saison s\'ouvre', async () => {
+test('étape 12 : tournoi sans défaite = 3 boosters ; la saison ne s\'ouvre plus avec l\'histoire', async () => {
   const { saisonOuverte } = await import('../src/page/saison');
   const c = nouvelleCollection();
   c.histoire.etape = 11;
   assert.deepEqual(noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: false }), []);
   const r = noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: true });
   assert.equal(r[0].boosters.length, 3);
-  assert.ok(saisonOuverte(c));
+  assert.ok(!saisonOuverte(c));
   assert.ok(!histoireFinie(c));
 });
 
