@@ -60,6 +60,7 @@ export interface DefLutteur {
   actionsPossibles: IdAction[]; // les actions parmi lesquelles on compose le deck
   deblocages: IdAction[]; // actions débloquées aux grades 2 à 5, dans l'ordre
   couts?: Partial<Record<IdAction, number>>; // coûts propres à cette carte (grade, étoiles)
+  actionChampion?: IdAction; // nouvelle action débloquée au niveau Champion du Monde
   familleSpeciale: Famille; // famille de l'action spéciale
 }
 

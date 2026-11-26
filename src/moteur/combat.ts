@@ -229,12 +229,11 @@ function valider(e: EtatCombat, j: Joueur, c: Choix): Choix {
 // Compare deux actions qui ont toutes les deux passé leur tirage de précision.
 // Situations du tour qui changent le duel « contre contre attaque ».
 export interface OptionsDuel {
-  contreGaranti?: [boolean, boolean]; // combo Esquive puis contre : le contre gagne sans avantage
   incontrable?: [boolean, boolean]; // Changement de niveau au tour précédent : l'attaque ne peut pas être contrée
 }
 
 function duel(
-  e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
+  _e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
   opts: OptionsDuel = {},
 ): { res: [Resultat, Resultat] } {
   const [f0, f1] = f;
@@ -255,20 +254,11 @@ function duel(
   for (const c of LES_DEUX) {
     const a = autre(c);
     if (f[c] === 'contre' && f[a] === 'attaque') {
-      const plusEndurance = endDebut[c] > endDebut[a];
-      const plusForce = e.joueurs[c].def.force > e.joueurs[a].def.force;
+      // Depuis le 25/11/2026 (soir) : le contre qui passe son tirage de précision prend l'attaque,
+      // sans condition d'endurance ni de force. Seule exception : l'attaque préparée par un
+      // Changement de niveau, impossible à contrer.
       const res: [Resultat, Resultat] = ['perd', 'perd'];
-      // Attaque préparée par un Changement de niveau : impossible à contrer.
-      if (opts.incontrable?.[a]) {
-        res[a] = 'gagne';
-        return { res };
-      }
-      // Le contre gagne avec plus d'endurance OU plus de force que l'attaquant (ou grâce au combo Esquive).
-      if (plusEndurance || plusForce || opts.contreGaranti?.[c]) {
-        res[c] = 'gagne';
-        return { res };
-      }
-      res[a] = 'gagne';
+      res[opts.incontrable?.[a] ? a : c] = 'gagne';
       return { res };
     }
   }
@@ -293,15 +283,9 @@ function expliquerDuel(
     return `Le contre spécial de ${nomG} prend ${LIBELLE[f[p]]} de ${nomP} à contretemps.`;
   }
   if (f[g] === f[p]) return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
-  if (f[g] === 'contre' && f[p] === 'attaque') {
-    if (opts.contreGaranti?.[g]) return `Après son esquive, ${nomG} prend l'attaque à contretemps : le contre renvoie l'attaque.`;
-    return `${nomG} a plus d'endurance ou plus de force : le contre renvoie l'attaque.`;
-  }
+  if (f[g] === 'contre' && f[p] === 'attaque') return `Le contre de ${nomG} prend l'attaque de ${nomP} et la renvoie.`;
   if (f[g] === 'attaque' && f[p] === 'contre' && opts.incontrable?.[g]) {
     return `${nomG} a changé de niveau : son attaque ne peut pas être contrée.`;
-  }
-  if (f[g] === 'attaque' && f[p] === 'contre') {
-    return `${nomP} n'a ni plus d'endurance ni plus de force : son contre ne tient pas, l'attaque passe.`;
   }
   return `${maj(LIBELLE[f[g]])} de ${nomG} l'emporte sur ${LIBELLE[f[p]]} de ${nomP}.`;
 }
@@ -335,10 +319,7 @@ export function comparerFamilles(
   e: EtatCombat, f: [Famille, Famille], endurances: [number, number], speciale: [boolean, boolean],
 ): 'gagne' | 'perd' | 'neutre' {
   const J = e.joueurs;
-  const r = duel(e, f, endurances, speciale, {
-    contreGaranti: [0, 1].map((j) => f[j] === 'contre' && J[j].derniereReussie === REGLES.combos.esquiveContre.avant) as [boolean, boolean],
-    incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable],
-  }).res[0];
+  const r = duel(e, f, endurances, speciale, { incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable] }).res[0];
   return r === 'gagne' ? 'gagne' : r === 'perd' ? 'perd' : 'neutre';
 }
 
@@ -513,10 +494,7 @@ export function jouerTour(
     res[percee] = 'gagne';
     res[autre(percee)] = 'perd';
   } else if (passe[0] && passe[1]) {
-    const opts: OptionsDuel = {
-      contreGaranti: [0, 1].map((j) => fam[j] === 'contre' && J[j].derniereReussie === REGLES.combos.esquiveContre.avant) as [boolean, boolean],
-      incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable],
-    };
+    const opts: OptionsDuel = { incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable] };
     const d = duel(e, [fam[0]!, fam[1]!], endDebut, spe, opts);
     res = d.res;
     if (res[0] === 'neutre') log(e, 'Même famille et pas le double d\'endurance : personne ne marque.');
@@ -630,13 +608,13 @@ export function jouerTour(
         if (bf) bonusUtilise[j] = true;
         const extras = `${ench ? ' + enchaînement' : ''}${bf ? ' + bonus de feinte' : ''}`;
         if (opposee?.famille === 'attaque') {
-          if (l.derniereReussie === REGLES.combos.esquiveContre.avant) {
-            log(e, `Combo « Esquive et contre » : ${l.def.nom} prend l'attaque à contretemps.`);
-          }
           const v = valeurAttaque(e, o, opposee.id, endDebut);
           // La Relance (non spéciale) ne renvoie que la moitié des points (arrondie au-dessus).
           const moitie = a.id === 'relance' && !c.speciale;
-          const renvoi = moitie ? Math.ceil(v * REGLES.relance.partRenvoyee) : v;
+          const EC = REGLES.combos.esquiveContre;
+          const combo = l.derniereReussie === EC.avant ? EC.points : 0;
+          if (combo) log(e, `Combo « Esquive et contre » : ${l.def.nom} prend l'attaque à contretemps (+${combo}).`);
+          const renvoi = (moitie ? Math.ceil(v * REGLES.relance.partRenvoyee) : v) + combo;
           marquer(e, j, renvoi + ench + bf, `${a.nom} : ${moitie ? 'la moitié des points' : 'points'} de l'attaque renvoyés${extras}`);
           const perte = perteDesequilibre(v);
           retirerEndurance(adv, perte * adv.def.enduranceMax);

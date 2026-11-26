@@ -3,7 +3,7 @@
 import { describe, it } from 'node:test';
 import { ACTIONS, REGLES } from '../src/moteur/config';
 import assert from 'node:assert/strict';
-import { c, combatTest, tour } from './outils';
+import { c, combatTest, tour, toujours } from './outils';
 
 describe('Interactions entre les familles', () => {
   it("l'attaque bat la feinte", () => {
@@ -78,8 +78,19 @@ describe('Contre contre attaque', () => {
     assert.equal(e.joueurs[1].score, 0);
   });
 
-  it("aucun des deux : l'attaque passe", () => {
-    const e = tour(combatTest(), c('contre'), c('attaque_base'));
+  it("sans plus d'endurance ni plus de force, le contre prend quand même l'attaque", () => {
+    const depart = combatTest({ force: 100 }, { force: 200 });
+    depart.joueurs[0].endurance = 60;
+    const e = tour(depart, c('contre'), c('attaque_base'));
+    assert.equal(e.joueurs[0].score, 2);
+    assert.equal(e.joueurs[1].score, 0);
+  });
+
+  it("seule la précision compte : un contre raté laisse passer l'attaque", () => {
+    const depart = combatTest();
+    depart.joueurs[0].endurance = 30; // 76 % de chances : raté avec ce tirage
+    depart.joueurs[1].endurance = 55; // 100 %, et pas le double : l'attaque vaut 2
+    const e = tour(depart, c('contre'), c('attaque_base'), toujours(0.9));
     assert.equal(e.joueurs[0].score, 0);
     assert.equal(e.joueurs[1].score, 2);
   });

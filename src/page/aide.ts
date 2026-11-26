@@ -21,7 +21,7 @@ export function schemaFamilles(): string {
     </g>`;
   return `
     <figure class="schema">
-      <svg class="schema-familles" viewBox="0 0 320 256" role="img" aria-label="L'attaque bat la feinte. La feinte bat la défense et le contre. La défense bat l'attaque. Le contre bat la défense, et bat l'attaque sous condition.">
+      <svg class="schema-familles" viewBox="0 0 320 256" role="img" aria-label="L'attaque bat la feinte. La feinte bat la défense et le contre. La défense bat l'attaque. Le contre bat la défense et l'attaque.">
         <defs><marker id="sf-pointe" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="currentColor"/></marker></defs>
         <g class="sf-fleches" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" marker-end="url(#sf-pointe)">
           <path d="M106 60 L210 60" />
@@ -29,14 +29,14 @@ export function schemaFamilles(): string {
           <path d="M248 94 L248 162" />
           <path d="M72 162 L72 94" />
           <path d="M212 196 L110 196" />
-          <path d="M224 176 L98 82" stroke-dasharray="7 6" class="sf-condition" />
+          <path d="M224 176 L98 82" class="sf-condition" />
         </g>
         ${bulle('attaque', 'Attaque', 72, 60, true)}
         ${bulle('feinte', 'Feinte', 248, 60, true)}
         ${bulle('defense', 'Défense', 72, 196, false)}
         ${bulle('contre', 'Contre', 248, 196, false)}
       </svg>
-      <figcaption>La flèche va du gagnant vers le perdant. En pointillés (violet) : le contre bat l'attaque seulement avec plus d'endurance <i>ou</i> plus de force.</figcaption>
+      <figcaption>La flèche va du gagnant vers le perdant. En violet : le contre bat aussi l'attaque, s'il ne rate pas (précision).</figcaption>
     </figure>`;
 }
 
@@ -57,7 +57,7 @@ export function reglesHTML(): string {
         <li><b>Attaque</b> : marque des points (1 à 5 selon la prise). Plus elle rapporte, plus elle coûte : ${ACTIONS.sortie_zone.cout} pour 1 point, ${ACTIONS.simple_jambe.cout} pour 2, ${ACTIONS.double_jambe.cout} pour 4, ${ACTIONS.grande_projection.cout} pour 5.</li>
         <li><b>Défense</b> (coût ${ACTIONS.defense.cout}) : bloque l'attaque et fait récupérer de l'endurance.</li>
         <li><b>Feinte</b> (coût ${ACTIONS.feinte.cout}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque ou ton prochain contre réussi vaut +${R.bonusFeinte}, pendant ${R.toursBonusFeinte} tours.</li>
-        <li><b>Contre</b> (coût ${ACTIONS.contre.cout}) : bat la défense. Face à une attaque, il renvoie ses points si tu as plus d'endurance <i>ou</i> plus de force que l'attaquant (sinon l'attaque passe).</li>
+        <li><b>Contre</b> (coût ${ACTIONS.contre.cout}) : bat la défense. Face à une attaque, il la prend et renvoie ses points : seule la précision compte (un contre raté laisse passer l'attaque).</li>
         <li>Deux actions de la même famille s'annulent, sauf si l'un a au moins le double d'endurance de l'autre.</li>
       </ul>
     </section>
@@ -85,7 +85,7 @@ export function reglesHTML(): string {
         <li><b>Passage dans le dos</b> : Matraquage puis Ceinture arrière, +${R.combos.passageDansLeDos.points} points.</li>
         <li><b>Contre-temps</b> : Sprawl puis n'importe quelle attaque, qui ne peut pas rater.</li>
         <li><b>Enchaînement aux jambes</b> : Simple jambe puis Double jambe, +${R.combos.enchainementJambes.points} point et ${R.combos.enchainementJambes.reductionCout} d'endurance en moins.</li>
-        <li><b>Esquive et contre</b> : Esquive puis contre, qui renvoie l'attaque même sans avoir plus d'endurance ou de force.</li>
+        <li><b>Esquive et contre</b> : Esquive puis un contre qui prend l'attaque, +${R.combos.esquiveContre.points} points.</li>
       </ul>
     </section>
     <section class="regle">
@@ -159,7 +159,7 @@ export function ecransTutoriel(illus: { cartes: string; fusion: string; club: st
       titre: 'La fusion',
       html: `${illus.fusion}
         <p>Fusionne tes doubles pour faire monter une carte d'une rareté : Commune, Rare, Épique, Légendaire, jusqu'à <b>Champion du Monde</b>. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde.</p>
-        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e). Plus la carte est rare, plus elle a d'<b>actions débloquées</b> (moins chères) : un Champion du Monde les a toutes.</p>
+        <p>Chaque niveau gagné ajoute +5 % sur les statistiques (+10 % pour le 4e). Plus la carte est rare, plus elle a d'<b>actions débloquées</b> (moins chères) : un Champion du Monde les a toutes, plus une <b>action de Champion</b> (Bras tiré, Sortie de zone, Tour de hanche, Cravate ou Changement de niveau selon la carte).</p>
         <p>Champion du Monde, chaque fusion de 5 doubles donne une <b>étoile</b> : −1 d'endurance sur l'action de ton choix. Chaque quart des étoiles débloque un <b>nouveau style de carte</b>.</p>`,
     },
     {

@@ -78,6 +78,7 @@ function gain(etat: EtatCombat, qui: Joueur, c: Candidat, autre: Candidat | null
       if (autre && famAutre === 'attaque') {
         const v = ACTIONS[autre.action].points;
         pts += a.id === 'relance' && !c.speciale ? Math.ceil(v * REGLES.relance.partRenvoyee) : v;
+        if (l.derniereReussie === REGLES.combos.esquiveContre.avant) pts += REGLES.combos.esquiveContre.points;
         if (a.id === 'cravate' && REGLES.attaquesAuxJambes.includes(autre.action)) pts += 0.5;
       }
       if (a.id === 'relance' && famAutre === 'defense') pts += REGLES.relance.pointsSurDefense;

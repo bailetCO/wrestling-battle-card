@@ -80,7 +80,7 @@ test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, ave
   // Bonus d'un seul niveau gagné ; Champion du Monde : toutes les actions débloquées.
   const d = defPossede(c, 'usa');
   assert.equal(d.force, Math.round(usa.force * 1.05));
-  assert.equal(d.actionsPossibles.length, usa.actions.length + usa.deblocages.length);
+  assert.equal(d.actionsPossibles.length, usa.actions.length + usa.deblocages.length + 1); // + action de Champion
   assert.equal(d.niveau, 'champion');
   // Ancienne sauvegarde au-delà du maximum : ramenée au maximum.
   c.grades.usa = 5;
@@ -159,24 +159,24 @@ test('deck : enregistré seulement s\'il est valide', () => {
 test('styles de carte : un par quart des étoiles possibles, une fois Champion du Monde', () => {
   const c = nouvelleCollection();
   const usa = trouverLutteur('usa');
-  c.exemplaires.usa = 1 + 5 * 24;
+  c.exemplaires.usa = 1 + 5 * 27;
   assert.equal(nbStyles(c, 'usa'), 0);
   c.grades.usa = 2; // Champion du Monde
   const possibles = defPossede(c, 'usa').actionsPossibles;
-  assert.equal(possibles.length * 3, etoilesPossibles(usa)); // 8 actions × 3 = 24 étoiles
+  assert.equal(possibles.length * 3, etoilesPossibles(usa)); // 9 actions (dont l'action de Champion) × 3 = 27 étoiles
   const palier = etoilesPossibles(usa) / 4;
   let n = 0;
   for (const a of possibles) {
     for (let k = 0; k < 3; k++) {
       assert.equal(fusionner(c, 'usa', a), null);
       n++;
-      assert.equal(nbStyles(c, 'usa'), Math.floor(n / palier));
+      assert.equal(nbStyles(c, 'usa'), Math.min(4, Math.floor(n / palier + 1e-9)));
     }
   }
   assert.equal(nbStyles(c, 'usa'), 4);
   assert.equal(styleDe(c, 'usa'), 4); // le dernier style débloqué s'affiche
-  assert.equal(nbFusions(c, 'usa'), 1 + 24);
-  assert.equal(stylesDebloques(usa, 1, 24), 0); // pas Champion du Monde : aucun style
+  assert.equal(nbFusions(c, 'usa'), 1 + 27);
+  assert.equal(stylesDebloques(usa, 1, 27), 0); // pas Champion du Monde : aucun style
 });
 
 test('collection : le tri et le style choisi sont gardés dans la sauvegarde', () => {

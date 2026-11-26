@@ -67,13 +67,14 @@ describe('Combos', () => {
     assert.equal(e.joueurs[0].score - avant, ACTIONS.double_jambe.points + 1);
   });
 
-  it('Esquive et contre : le contre gagne même sans avantage d\'endurance ni de force', () => {
-    let e = tour(combatTest({ force: 100 }, { force: 200 }), c('esquive'), c('attaque_base'));
-    e.joueurs[0].endurance = 50; // moins que l'attaquant, mais pas la moitié (pas de bonus de double)
+  it('Esquive et contre : après une esquive réussie, le contre qui prend l\'attaque rapporte +2', () => {
+    let e = tour(combatTest(), c('esquive'), c('attaque_base'));
     e.joueurs[0].initiative = false;
+    e.joueurs[0].endurance = 60;
+    e.joueurs[1].endurance = 60;
     e = tour(e, c('contre'), c('double_jambe'));
-    assert.equal(e.joueurs[0].score, ACTIONS.double_jambe.points);
-    assert.equal(e.joueurs[1].score, 0);
+    assert.equal(e.joueurs[0].score, ACTIONS.double_jambe.points + REGLES.combos.esquiveContre.points);
+    assert.ok(e.journal.some((l) => l.startsWith('Combo « Esquive et contre »')));
   });
 });
 

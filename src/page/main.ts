@@ -777,9 +777,11 @@ function fenetreDeck(base: DefLutteur) {
   const et = etoilesDe(collection, base.id);
   let choix: IdAction[] = [...(deckDe(collection, def.id) ?? def.actions)];
   const verrouillees = def.deblocages.filter((a) => !def.actionsPossibles.includes(a));
+  // L'action de Champion, débloquée au niveau Champion du Monde (au coût normal de l'action).
+  const champion = def.actionChampion && !def.actionsPossibles.includes(def.actionChampion) ? def.actionChampion : null;
   const ligne = (a: IdAction, ouverte: boolean, gradeDeblocage = 0) => {
     const fam = ACTIONS[a].famille;
-    const cout = ouverte ? coutAction(def, a) : Math.max(R_.fusion.coutMinimum, ACTIONS[a].cout - R_.fusion.reductionDeblocage);
+    const cout = ouverte ? coutAction(def, a) : a === champion ? ACTIONS[a].cout : Math.max(R_.fusion.coutMinimum, ACTIONS[a].cout - R_.fusion.reductionDeblocage);
     const etoiles = et[a] ? `<span class="etoiles-action">${'★'.repeat(et[a]!)}</span>` : '';
     return `
       <button class="deck-action ${ouverte ? '' : 'verrouillee'}" ${ouverte ? `data-a="${a}" aria-pressed="false"` : 'disabled'}>
@@ -791,10 +793,11 @@ function fenetreDeck(base: DefLutteur) {
   };
   const f = ouvrirFenetre(`
     <h2>Actions de ${echap(def.nom)}</h2>
-    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque niveau de rareté donne une action de plus (Champion du Monde : toutes), qui coûte 1 d'endurance de moins.</p>
+    <p>Choisis ${TAILLE_DECK} actions parmi les ${def.actionsPossibles.length} débloquées, dont au moins une de la famille de son action spéciale (${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}). Chaque niveau de rareté donne une action de plus (Champion du Monde : toutes), qui coûte 1 d'endurance de moins. Au niveau Champion du Monde, la carte gagne aussi son <b>action de Champion</b>.</p>
     <div class="deck-liste">
       ${def.actionsPossibles.map((a) => ligne(a, true)).join('')}
       ${verrouillees.map((a) => ligne(a, false, def.deblocages.indexOf(a) + 2)).join('')}
+      ${champion ? ligne(champion, false, NIVEAUX.length) : ''}
     </div>
     <p class="deck-etat" aria-live="polite"></p>
     <div class="deck-boutons">
@@ -2128,16 +2131,16 @@ function badges(e: EtatCombat, j: Joueur): string {
   const l = e.joueurs[j];
   const b: string[] = [];
   if (l.initiative) b.push('Initiative');
-  if (l.bonusFeinte > 0) b.push(`+${REGLES.bonusFeinte} sur la prochaine attaque ou le prochain contre réussi (${l.bonusFeinte} tour${l.bonusFeinte > 1 ? 's' : ''})`);
-  if (l.bonusEnchainement) b.push('Enchaînement : +4 si attaque ou contre réussi');
-  if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % de précision (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
-  if (l.attaqueIncontrable) b.push('Niveau changé : attaque impossible à contrer');
-  if (l.derniereReussie === 'bras_tire') b.push(`Bras tiré : attaque −${REGLES.brasTire.reductionCout} d'endurance`);
+  if (l.bonusFeinte > 0) b.push(`Feinte : +${REGLES.bonusFeinte} (${l.bonusFeinte} tour${l.bonusFeinte > 1 ? 's' : ''})`);
+  if (l.bonusEnchainement) b.push(`Enchaînement : +${REGLES.speciale.bonusEnchainementFeinte}`);
+  if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
+  if (l.attaqueIncontrable) b.push('Attaque incontrable');
+  if (l.derniereReussie === 'bras_tire') b.push(`Attaque −${REGLES.brasTire.reductionCout} d'endurance`);
   let serie = 0;
   for (let i = l.historique.length - 1; i >= 0 && l.historique[i].reussie; i--) serie++;
   const attaques = l.historique.slice(l.historique.length - serie).filter((h) => h.attaque).length;
   if (serie >= 2 && attaques >= 1) b.push(`Combo en vue (${serie}/3)`);
-  if (l.toursSansAttaque === REGLES.pression.tours - 1) b.push('Passif : attaque ou contre au prochain tour');
+  if (l.toursSansAttaque === REGLES.pression.tours - 1) b.push('Passif : attaque ou contre !');
   if (l.toursSansEndurance > 0) b.push(`Épuisé : ${l.toursSansEndurance}/${REGLES.toursSansEnduranceAvantTombe}`);
   return b.map((t) => `<span class="badge">${echap(t)}</span>`).join('');
 }
@@ -2303,6 +2306,78 @@ function lignesTour(t: TourJoue, e: EtatCombat): string {
 
 const titreTour = (t: TourJoue) => (t.lignes[0] ?? '').replace(/ :.*$/, '');
 
+// Un tour dans la liste « combat tour par tour » de l'écran de fin.
+function htmlTourAncien(t: TourJoue, e: EtatCombat): string {
+  const h = libelleAction(e.joueurs[HUMAIN].def.nation, t.choixHumain.action);
+  const o = libelleAction(e.joueurs[ORDI].def.nation, t.choixOrdi.action);
+  return `
+    <article class="tour">
+      <h3>${echap(titreTour(t))} : <span class="rouge">${t.choixHumain.speciale ? '★ ' : ''}${echap(h.local)}</span> contre <span class="bleu">${t.choixOrdi.speciale ? '★ ' : ''}${echap(o.local)}</span></h3>
+      <ul>${lignesTour(t, e)}</ul>
+    </article>`;
+}
+
+// ---------- Récapitulatif du combat, façon chat ----------
+// Tout le détail des tours s'ouvre dans un panneau par-dessus l'écran : l'écran de combat tient
+// ainsi sur une seule page, sans défiler. Le bouton montre le nombre de tours pas encore lus.
+let chatOuvert = false;
+let chatLus = 0;
+
+function boutonChat(): string {
+  if (tours.length < chatLus) chatLus = 0; // nouveau combat
+  const nb = chatOuvert ? 0 : tours.length - chatLus;
+  return `<button class="bouton-chat" data-chat aria-label="Récapitulatif du combat${nb ? ` (${nb} nouveau${nb > 1 ? 'x' : ''})` : ''}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    Récap${nb ? `<span class="chat-nb">${nb}</span>` : ''}</button>`;
+}
+
+function filChat(e: EtatCombat): string {
+  const nh = e.joueurs[HUMAIN].def.nom;
+  const no = e.joueurs[ORDI].def.nom;
+  // La bulle va du côté du lutteur dont le nom apparaît en premier dans la phrase.
+  const cote = (l: string) => {
+    const ih = l.indexOf(nh), io = l.indexOf(no);
+    if (ih < 0 && io < 0) return 'neutre';
+    return io < 0 || (ih >= 0 && ih <= io && !(nh.length < no.length && no.includes(nh) && ih === io)) ? 'moi' : 'lui';
+  };
+  return tours.map((t) => {
+    const h = libelleAction(e.joueurs[HUMAIN].def.nation, t.choixHumain.action);
+    const o = libelleAction(e.joueurs[ORDI].def.nation, t.choixOrdi.action);
+    const lignes = [
+      ...(t.ordiAChange ? [`${no} avait l'initiative : il a vu deux de tes actions possibles et a changé la sienne.`] : []),
+      ...t.lignes.slice(1),
+    ];
+    return `
+      <div class="chat-tour"><b>${echap(titreTour(t))}</b>
+        <span><i class="rouge">${t.choixHumain.speciale ? '★ ' : ''}${echap(h.local)}</i> contre <i class="bleu">${t.choixOrdi.speciale ? '★ ' : ''}${echap(o.local)}</i></span></div>
+      ${lignes.map((l) => `<p class="bulle-chat ${cote(l)} ${classeLigne(l, e)}">${echap(l)}</p>`).join('')}`;
+  }).join('') || '<p class="chat-vide">Le récapitulatif des tours apparaîtra ici.</p>';
+}
+
+function panneauChat(e: EtatCombat): string {
+  return `
+    <div class="chat-voile ${chatOuvert ? 'ouvert' : ''}" data-chat-fermer></div>
+    <aside class="chat ${chatOuvert ? 'ouvert' : ''}" aria-label="Récapitulatif du combat" ${chatOuvert ? '' : 'hidden'}>
+      <header class="chat-tete"><b>Récapitulatif</b><button class="lien" data-chat-fermer>Fermer</button></header>
+      <div class="chat-fil">${filChat(e)}</div>
+    </aside>`;
+}
+
+function brancherChat() {
+  const basculer = (ouvrir: boolean) => {
+    chatOuvert = ouvrir;
+    if (ouvrir) chatLus = tours.length;
+    ecranCombat();
+  };
+  app.querySelectorAll('[data-chat]').forEach((b) => b.addEventListener('click', () => basculer(true)));
+  app.querySelectorAll('[data-chat-fermer]').forEach((b) => b.addEventListener('click', () => basculer(false)));
+  if (chatOuvert) {
+    chatLus = tours.length;
+    const fil = app.querySelector<HTMLElement>('.chat-fil');
+    if (fil) fil.scrollTop = fil.scrollHeight;
+  }
+}
+
 // La case du dernier tour : les deux actions se révèlent, puis le mot du résultat.
 function caseDernierTour(e: EtatCombat): string {
   const t = tours[tours.length - 1];
@@ -2318,24 +2393,16 @@ function caseDernierTour(e: EtatCombat): string {
       </section>`;
   }
   const ono = onomatopee(t, e);
+  // Le détail du tour est dans le récapitulatif (chat) ; ici, seulement les points marqués.
+  const pts = t.lignes.filter((l) => / marque \d/.test(l)).map((l) => `<li class="${classeLigne(l, e)}">${echap(l.replace(/ \(.*\)\.$/, ''))}</li>`).join('');
   return `
     <section class="case ${ono?.fort ? 'secoue' : ''}" aria-live="polite">
       ${ono?.fort ? '<div class="rayons" aria-hidden="true"></div>' : ''}
-      <h3>${echap(titreTour(t))}</h3>
+      <div class="case-tete"><h3>${echap(titreTour(t))}</h3>${boutonChat()}</div>
       ${htmlDuel(t.choixHumain, t.choixOrdi, e)}
       ${ono ? `<p class="onomato ${ono.cote}">${ono.texte}</p>` : ''}
-      <ul class="case-texte">${lignesTour(t, e)}</ul>
+      ${pts ? `<ul class="case-points">${pts}</ul>` : ''}
     </section>`;
-}
-
-function htmlTourAncien(t: TourJoue, e: EtatCombat): string {
-  const h = libelleAction(e.joueurs[HUMAIN].def.nation, t.choixHumain.action);
-  const o = libelleAction(e.joueurs[ORDI].def.nation, t.choixOrdi.action);
-  return `
-    <article class="tour">
-      <h3>${echap(titreTour(t))} : <span class="rouge">${t.choixHumain.speciale ? '★ ' : ''}${echap(h.local)}</span> contre <span class="bleu">${t.choixOrdi.speciale ? '★ ' : ''}${echap(o.local)}</span></h3>
-      <ul>${lignesTour(t, e)}</ul>
-    </article>`;
 }
 
 function tableau(e: EtatCombat): string {
@@ -2376,7 +2443,6 @@ function ecranCombat() {
   if (e.termine) return mode === 'ligne' ? ecranFinLigne() : ecranFin();
   const h = e.joueurs[HUMAIN];
   const o = e.joueurs[ORDI];
-  const anciens = tours.slice(0, -1).reverse().map((t) => htmlTourAncien(t, e)).join('');
 
   app.innerHTML = `
     <main class="combat">
@@ -2393,7 +2459,6 @@ function ecranCombat() {
         <div class="badges bleu">${badges(e, ORDI)}${bonusEnCours?.lui ? `<span class="badge">🚩 Nation +${Math.round(bonusEnCours.lui * 100)} %</span>` : ''}</div>
       </section>
       ${caseDernierTour(e)}
-      ${anciens ? `<section class="journal"><h2>Tours précédents</h2>${anciens}</section>` : ''}
       <footer class="pave">
         ${h.initiative ? `<p class="spe-info init">Tu as l'initiative : après ton choix, tu verras deux actions possibles ${mode === 'ligne' ? 'de ton ami' : 'de l\'ordinateur'}.</p>` : ''}
         ${mode === 'ligne' ? '<p class="statut" aria-live="polite"></p>' : ''}
@@ -2402,7 +2467,9 @@ function ecranCombat() {
         <div class="actions-zone">${boutonsActions(e, 'tour')}</div>
         <p class="graine">${mode === 'ligne' ? `Salle ${codeSalle.toUpperCase()} · combat n° ${vueLigne?.graine ?? ''}` : tuto ? 'Combat guidé' : `Combat n° ${partie!.hasard.graine}`} · <button class="lien" data-quitter>${tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
       </footer>
+      ${panneauChat(e)}
     </main>`;
+  brancherChat();
 
   // Les barres partent de l'endurance d'avant le tour et glissent vers la nouvelle valeur.
   requestAnimationFrame(() =>

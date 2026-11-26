@@ -463,7 +463,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 | Contre contre défense | Le contre l'emporte |
 | Feinte contre contre | La feinte l'emporte |
 | Feinte contre défense | La feinte l'emporte : le défenseur perd 10 % de son endurance totale et le feinteur a 2 chances sur 3 de gagner l'initiative |
-| Contre contre attaque | Plus d'endurance OU plus de force que l'attaquant (depuis le 25/11/2026) : le contre renvoie les points de l'attaque et l'attaquant subit un déséquilibre. Aucun des deux : l'attaque passe. (Le point de sortie a été supprimé.) Exceptions : actions spéciales (voir Action spéciale), combo Esquive et contre, Changement de niveau, Sortie de zone, Relance (voir Gameplay 2) |
+| Contre contre attaque | Depuis le 25/11/2026 (soir) : seule la précision compte. Un contre qui passe son tirage de précision prend l'attaque, renvoie ses points et l'attaquant subit un déséquilibre ; un contre raté laisse passer l'attaque. (Avant : il fallait plus d'endurance ou plus de force que l'attaquant.) Exceptions : actions spéciales (voir Action spéciale), Changement de niveau (attaque incontrable), Sortie de zone (prise 1 fois sur 2), Relance (moitié des points) |
 | Même famille | Le lutteur qui a au moins le double d'endurance gagne, sinon personne ne marque |
 
 ### Format du match
@@ -502,7 +502,7 @@ Chaque action a son caractère :
 - Relance : face à une défense, 2 points ; face à une attaque, ne renvoie que la moitié des points (arrondie au-dessus). La Relance spéciale renvoie tout.
 - Défense : inchangée (bloque et fait récupérer).
 
-Nouvelles actions (données pour l'instant aux 12 Champions du Monde, une chacun, en 9e action, et au lutteur de test Cocoach, qui a toutes les actions) :
+Nouvelles actions (actions de Champion) : chaque carte en a une, débloquée au niveau Champion du Monde (de naissance, ou par fusion), en plus de ses 8 actions, au coût normal de l'action. Le lutteur de test Cocoach a toutes les actions :
 
 | Action | Famille | Coût | Points | Effet |
 | --- | --- | --- | --- | --- |
@@ -512,21 +512,25 @@ Nouvelles actions (données pour l'instant aux 12 Champions du Monde, une chacun
 | Cravate | Contre | 6 | Renvoi | Sur une attaque aux jambes (simple ou double), 5 d'endurance en plus pour l'attaquant |
 | Changement de niveau | Feinte | 3 | 0 | Pas de bonus de +2, mais l'attaque du tour suivant ne peut pas être contrée (sauf contre spécial) |
 
-Champions du Monde : USA et Kirghizistan Changement de niveau ; Russie, Kazakhstan et Afrique Sortie de zone ; Japon et Azerbaïdjan Bras tiré ; Iran, Ouzbékistan et Europe Cravate ; Géorgie et Turquie Tour de hanche.
+Répartition selon la rareté de départ et le style : communes et rares reçoivent une action simple (Sortie de zone pour les poids lourds, puissants, lutteurs de pression et défenseurs ; Bras tiré pour les autres) ; épiques et légendaires une action forte (Tour de hanche pour les poids lourds, puissants et techniciens « ceinture et relances » ; Cravate pour les contre-attaquants, défenseurs, équilibrés et techniciens précis ; Changement de niveau pour les autres). Sur la carte, l'action de Champion s'affiche avec les déblocages ; elle compte pour les étoiles (9 actions × 3 = 27 étoiles, un style toutes les 6,75 étoiles).
+
+Champions du Monde de naissance : USA et Kirghizistan Changement de niveau ; Russie, Kazakhstan et Afrique Sortie de zone ; Japon et Azerbaïdjan Bras tiré ; Iran, Ouzbékistan et Europe Cravate ; Géorgie et Turquie Tour de hanche.
 
 Combos (deux actions réussies à la suite ; le bouton de l'action qui déclenche un combo s'allume en vert avec « Combo ! ») :
 
 - Passage dans le dos : Matraquage puis Ceinture arrière, +2 points.
 - Contre-temps : Sprawl puis n'importe quelle attaque, qui ne peut pas rater.
 - Enchaînement aux jambes : Simple jambe puis Double jambe, +1 point et 2 d'endurance en moins.
-- Esquive et contre : Esquive puis une action de contre, qui renvoie l'attaque même sans avoir plus d'endurance ou de force.
+- Esquive et contre : Esquive puis une action de contre qui prend l'attaque, +2 points.
 - Le combo de tombé (3 actions réussies dont 2 attaques) reste en place.
 
 Second souffle : une fois par combat, sous 25 d'endurance (même à 0), l'action « Souffler » (gratuite, elle ne fait rien d'autre) rend 15 d'endurance. Si l'adversaire attaque pendant ce tour, son attaque passe et il marque 1 point de plus. L'ordinateur souffle sous 12 d'endurance.
 
 Affichage : chaque bouton montre sa chance de réussite quand elle est sous 100 %, son coût réel du tour (en vert s'il est réduit), et le combo possible. Le contour de la barre d'endurance devient orange puis rouge avec la fatigue.
 
-Équilibrage : les 120 cartes et les 12 Champions du Monde ont été rééquilibrés par simulation (2 500 combats par carte) en ajustant l'endurance : 113 cartes dans la fourchette de leur rareté, 4 à un point près, 3 en dehors ; Champions du Monde entre 62,8 et 67,1 %.
+Équilibrage : les 120 cartes et les 12 Champions du Monde ont été rééquilibrés par simulation (2 500 combats par carte) en ajustant l'endurance. Après la nouvelle règle du contre (25/11/2026, soir) : 119 cartes dans la fourchette de leur rareté, 1 à un point près ; Champions du Monde entre 62,5 et 66,4 %. Combat auto expert contre l'ordinateur fort : 74 %.
+
+Écran de combat (25/11/2026, soir) : tout tient sur une page, sans défiler. En haut, le score et les barres d'endurance ; au milieu, la case du dernier tour (les deux actions, le mot du résultat et les points marqués) ; en bas, des boutons d'action plus petits (effet sur une ligne). Le détail de tous les tours s'ouvre comme un chat (bouton « Récap » avec le nombre de tours pas encore lus) : un panneau monte du bas de l'écran, avec une bulle par événement, à droite pour son lutteur, à gauche pour l'adversaire, au centre pour le reste. L'écran de fin garde la liste complète « tour par tour ».
 
 ### Avantages
 
@@ -594,7 +598,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - Facile : au hasard, sans action spéciale, et 45 % du temps l'action la moins bonne (comme un débutant qui se trompe) ; avec l'initiative, change d'action 1 fois sur 4.
 - Normal : au hasard ; avec l'initiative, change d'action 1 fois sur 2.
 - Fort : il retient les 6 dernières familles d'actions du joueur et estime ce que rapporte chacune de ses actions (points, tombé, endurance, passivité) face à ce que le joueur joue d'habitude ; il joue la meilleure 9 fois sur 10. Avec l'initiative, il joue l'action qui contre celle du joueur 3 fois sur 4. Varier ses actions ou feinter permet de le piéger.
-- Mesures (`npm run niveaux`, 2 000 combats par case, cartes au hasard, 25/11/2026 après le gameplay 2) : joueur au hasard (débutant) 67 % contre le facile, 51 % contre le normal, 22 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 52 % contre le fort. Le joueur simulé prend son second souffle comme l'ordinateur. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
+- Mesures (`npm run niveaux`, 2 000 combats par case, cartes au hasard, 25/11/2026 après le gameplay 2 et la règle du contre) : joueur au hasard (débutant) 65 % contre le facile, 51 % contre le normal, 26 % contre le fort ; joueur qui calcule comme l'ordinateur fort (expérimenté) 50 % contre le fort. Le joueur simulé prend son second souffle comme l'ordinateur. Un joueur humain expérimenté devrait se situer entre les deux, vers 40 %.
 - Le choix du facile au lieu du hasard pur est voulu : un ordinateur qui joue entièrement au hasard laisse 50 % de victoires à un joueur au hasard, pas 70 %.
 
 ### Arène par nation

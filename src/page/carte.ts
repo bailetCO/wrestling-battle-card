@@ -128,7 +128,7 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
           ${jauge(def.recuperation, 0.6, 'Récupération', `${Math.round(def.recuperation * 100)} %`)}
         </div>
         <ul class="cl-actions">${actions}</ul>
-        <p class="cl-deblocages">${def.deblocages.map((a, k) => `<span class="${k < rang + grade - 1 ? 'ouvert' : ''}">${NOM_RARETE[NIVEAUX[k + 1]]} : ${echap(nomLocal(def.nation, a))}</span>`).join('')}</p>
+        <p class="cl-deblocages">${def.deblocages.map((a, k) => `<span class="${k < rang + grade - 1 ? 'ouvert' : ''}">${NOM_RARETE[NIVEAUX[k + 1]]} : ${echap(nomLocal(def.nation, a))}</span>`).join('')}${def.actionChampion ? `<span class="${niveau === 'champion' ? 'ouvert' : ''} action-champion">★ Action de Champion : ${echap(nomLocal(def.nation, def.actionChampion))}</span>` : ''}</p>
         <p class="cl-spe"><b>★ Spéciale ${NOM_FAMILLE[def.familleSpeciale].toLowerCase()}</b> ${EFFET_SPECIALE[def.familleSpeciale]}
           Dès le tour ${REGLES.speciale.premierTour}, recharge ${REGLES.speciale.toursRecharge} tours.</p>
         ${bouton}

@@ -1253,3 +1253,83 @@ b.moi { color: #ff8a95; }
 .endu-barre.moyenne { border-color: #b86a12; }
 .endu-barre.faible { border-color: #b3202f; }
 .a-combo { grid-column: 2 / 3; font: 700 11px/1.2 var(--police); color: #9be3a6; }
+
+/* ---------- Écran de combat sur une seule page (25/11/2026) ----------
+   Tout tient dans la hauteur de l'écran : en haut le score et les barres, au milieu la case du
+   dernier tour (qui prend la place restante), en bas les actions. Le détail est dans le chat. */
+.combat {
+  height: 100dvh; padding-bottom: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.combat .haut-combat { position: static; flex: none; }
+.combat .badges-ligne { flex: none; padding-top: 4px; }
+.combat .badges { min-width: 0; }
+.combat .badge { font-size: 10.5px; padding: 1px 7px; line-height: 1.25; }
+.combat .case {
+  flex: 1 1 auto; min-height: 0; margin: 6px 12px; padding: 8px 10px 10px;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+}
+.combat .case.face-a-face { display: grid; align-content: center; }
+.combat .vs-portrait svg { max-width: min(120px, 17dvh); }
+.combat .case-aide { font-size: 13px; }
+.case-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.combat .onomato { font-size: clamp(26px, 5dvh, 40px); }
+.combat .mini { padding: 6px 4px; }
+.combat .mini b { font-size: 15px; }
+.case-points { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 1px; text-align: center; font: 700 13px var(--police); }
+.case-points li.pts { color: var(--coin-encre); }
+.case-points li.pts.rouge { --coin-encre: #a3142a; }
+.case-points li.pts.bleu { --coin-encre: #1d4f9c; }
+
+/* Le pavé des actions reste en bas, sans recouvrir la case. */
+.combat .pave { position: static; flex: none; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 6px; }
+.combat .grille { gap: 6px; }
+.combat .action { min-height: 46px; padding: 5px 8px; border-radius: 10px; }
+.combat .action .ico { width: 18px; height: 18px; }
+.combat .a-nom { font-size: 14.5px; }
+.combat .a-fr { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combat .a-cout { font-size: 15px; }
+.combat .a-combo { font-size: 10px; }
+.combat .action.souffle { min-height: 40px; }
+.combat .graine { font-size: 11px; }
+.combat .bulle-coach p { font-size: 13.5px; }
+
+/* Bouton du récapitulatif, dans l'en-tête de la case. */
+.bouton-chat {
+  position: relative; display: inline-flex; align-items: center; gap: 4px; flex: none;
+  padding: 3px 9px; border-radius: 999px; border: 2px solid var(--encre);
+  background: #fff; color: var(--encre); font: 700 12px var(--police);
+}
+.bouton-chat svg { width: 15px; height: 15px; }
+.chat-nb {
+  position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; background: #c8102e; color: #fff; font: 800 11px/18px var(--police); text-align: center;
+  box-shadow: 1px 1px 0 var(--encre);
+}
+
+/* Le panneau du chat : il monte du bas de l'écran, par-dessus le combat. */
+.chat-voile { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, .5); display: none; }
+.chat-voile.ouvert { display: block; }
+.chat {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-width: 560px; margin: 0 auto;
+  height: min(78dvh, 640px); display: flex; flex-direction: column;
+  background: var(--nuit); border-top: 2px solid var(--orange); border-radius: 16px 16px 0 0;
+  animation: monte .25s ease-out;
+}
+@keyframes monte { from { transform: translateY(30%); opacity: 0; } }
+.chat-tete { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--tapis-ligne); }
+.chat-tete b { font: 800 17px var(--police); }
+.chat-fil { flex: 1; overflow-y: auto; padding: 10px 12px calc(14px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 5px; }
+.chat-tour { align-self: center; text-align: center; margin: 8px 0 2px; font-size: 12px; color: var(--doux); display: grid; }
+.chat-tour b { color: var(--texte); font-size: 12.5px; }
+.chat-tour .rouge { color: #ff8a95; font-style: normal; font-weight: 700; }
+.chat-tour .bleu { color: #8fb8ff; font-style: normal; font-weight: 700; }
+.bulle-chat { margin: 0; max-width: 82%; padding: 6px 10px; border-radius: 14px; font-size: 13.5px; line-height: 1.3; }
+.bulle-chat.moi { align-self: flex-end; background: rgba(200, 16, 46, .22); border-bottom-right-radius: 4px; }
+.bulle-chat.lui { align-self: flex-start; background: rgba(60, 120, 220, .22); border-bottom-left-radius: 4px; }
+.bulle-chat.neutre { align-self: center; max-width: 92%; background: rgba(255, 255, 255, .07); font-size: 12.5px; color: var(--doux); text-align: center; }
+.bulle-chat.pts { font-weight: 700; }
+.bulle-chat.periode, .bulle-chat.fort { color: var(--orange); font-weight: 800; }
+.chat-vide { color: var(--doux); text-align: center; margin: auto; }
+@media (prefers-reduced-motion: reduce) { .chat { animation: none; } }
+.chat:not(.ouvert) { display: none; }

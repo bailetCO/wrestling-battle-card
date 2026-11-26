@@ -103,8 +103,8 @@ test('grades : chaque niveau de rareté donne une action qui coûte 1 de moins (
   // Le niveau fixe le nombre d'actions : une légendaire en a 3 dès le départ, toutes en Champion du Monde.
   const usa = trouverLutteur('usa'); // déblocages : simple jambe, feinte, défense, ceinture arrière
   assert.deepEqual(avecGrade(usa, 1).actionsPossibles, [...usa.actions, 'simple_jambe', 'feinte', 'defense']);
-  assert.deepEqual(avecGrade(usa, 2).actionsPossibles, [...usa.actions, ...usa.deblocages]);
-  assert.deepEqual(avecGrade(eu, 5).actionsPossibles, [...eu.actions, ...eu.deblocages]);
+  assert.deepEqual(avecGrade(usa, 2).actionsPossibles, [...usa.actions, ...usa.deblocages, usa.actionChampion]);
+  assert.deepEqual(avecGrade(eu, 5).actionsPossibles, [...eu.actions, ...eu.deblocages, eu.actionChampion]);
   assert.equal(coutAction(avecGrade(usa, 2, { double_jambe: 1 }), 'double_jambe'), 5);
 });
 
@@ -130,3 +130,16 @@ test('récupération régulière : tous les 2 tours, 0,1 × récupération × ba
   assert.equal(Math.round(e.joueurs[0].endurance * 100), Math.round(Math.min(d.enduranceMax, apres + 0.1 * d.recuperation * d.enduranceMax) * 100));
 });
 
+
+test('action de Champion : débloquée seulement au niveau Champion du Monde, selon rareté et style', () => {
+  for (const l of LUTTEURS) {
+    assert.ok(l.actionChampion, l.id);
+    const simples = ['bras_tire', 'sortie_zone'];
+    assert.equal(simples.includes(l.actionChampion!), l.rarete === 'commune' || l.rarete === 'rare', l.id);
+    const max = avecGrade(l, 5);
+    assert.ok(max.actionsPossibles.includes(l.actionChampion!), l.id);
+    assert.equal(coutAction(max, l.actionChampion!), ACTIONS[l.actionChampion!].cout, l.id); // coût normal
+    if (l.rarete !== 'legendaire') assert.ok(!avecGrade(l, 4 - ['commune', 'rare', 'epique'].indexOf(l.rarete)).actionsPossibles.includes(l.actionChampion!), l.id);
+    else assert.ok(!avecGrade(l, 1).actionsPossibles.includes(l.actionChampion!), l.id);
+  }
+});
