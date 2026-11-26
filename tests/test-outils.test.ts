@@ -29,13 +29,13 @@ test('passer l\'étape (test) : tout le mode histoire puis toute la saison, avec
   const c = nouvelleCollection();
   const h = creerHasard(5);
   let boosters = 0;
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 18; i++) {
     const r = passerEtape(c, h);
     assert.ok(r.length >= 1);
     boosters += r.reduce((n, x) => n + x.boosters.length, 0);
   }
-  assert.equal(c.histoire.etape, 15);
-  assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 1);
+  assert.equal(c.histoire.etape, 18);
+  assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 2 + 3 + 3 + 1);
   assert.deepEqual(passerEtape(c, h), []);
   for (let i = 0; i < NB_PALIERS; i++) assert.equal(passerPalier(c, h)!.palier, i);
   assert.equal(c.saison.palier, NB_PALIERS);

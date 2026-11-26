@@ -1,4 +1,4 @@
-// Mode histoire : 15 étapes dans l'ordre, validées seulement une fois débloquées.
+// Mode histoire : 18 étapes dans l'ordre, validées seulement une fois débloquées.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,9 +12,9 @@ const h = creerHasard(1);
 const noter = (c: Collection, ev: EvenementHistoire) => noterHistoire(c, ev, h);
 const deNation = (n: string) => LUTTEURS.filter((l) => l.nation === n);
 
-test('histoire : 15 étapes, récompenses du PDF puis des étapes 13 à 15', () => {
-  assert.equal(ETAPES.length, 15);
-  assert.deepEqual(REGLES.histoire.boosters, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3]);
+test('histoire : 18 étapes, récompenses du PDF puis des étapes 13 à 18', () => {
+  assert.equal(ETAPES.length, 18);
+  assert.deepEqual(REGLES.histoire.boosters, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3]);
 });
 
 test('étape 1 : 3 nations différentes ; la même nation ne compte qu\'une fois', () => {
@@ -149,11 +149,23 @@ test('étapes 13 à 15 : combos, Enchaînement, durée infinie (pas en combat au
   assert.deepEqual(noter(c, fin({ enchainement: true })), []); // il faut gagner
   assert.equal(noter(c, fin({ gagne: true, enchainement: true })).length, 1);
   assert.deepEqual(noter(c, fin({ gagne: true })), []);
-  const legendaires = LUTTEURS.filter((l) => l.rarete === 'legendaire');
-  for (const l of legendaires.slice(1)) c.exemplaires[l.id] = 1;
   const r = noter(c, fin({ gagne: true, infini: true }));
   assert.equal(r.length, 1);
-  // Étape 15 : 3 boosters et une légendaire que le joueur n'a pas.
+  assert.equal(r[0].boosters.length, 3);
+  assert.ok(!histoireFinie(c));
+});
+
+test('étapes 16 à 18 : battre Cocoach, puis Légendaire, puis Champion du Monde (+ légendaire)', () => {
+  const c = nouvelleCollection();
+  c.histoire.etape = 15;
+  assert.deepEqual(noter(c, { type: 'rival', grade: 1, auto: true }), []);
+  assert.equal(noter(c, { type: 'rival', grade: 1, auto: false }).length, 1);
+  assert.deepEqual(noter(c, { type: 'rival', grade: 2, auto: false }), []);
+  assert.equal(noter(c, { type: 'rival', grade: 3, auto: false }).length, 1);
+  assert.deepEqual(noter(c, { type: 'rival', grade: 3, auto: false }), []);
+  const legendaires = LUTTEURS.filter((l) => l.rarete === 'legendaire');
+  for (const l of legendaires.slice(1)) c.exemplaires[l.id] = 1;
+  const r = noter(c, { type: 'rival', grade: 4, auto: false });
   assert.equal(r[0].boosters.length, 4);
   assert.deepEqual(r[0].boosters[3].cartes, [legendaires[0].id]);
   assert.ok(histoireFinie(c));
@@ -173,5 +185,5 @@ test('histoire gardée dans la sauvegarde', () => {
   c.histoire = { etape: 4, nations: [] };
   assert.equal(depuisSauvegarde(JSON.parse(JSON.stringify(c))).histoire.etape, 4);
   assert.equal(depuisSauvegarde({}).histoire.etape, 0);
-  assert.equal(depuisSauvegarde({ histoire: { etape: 99 } }).histoire.etape, 15);
+  assert.equal(depuisSauvegarde({ histoire: { etape: 99 } }).histoire.etape, 18);
 });

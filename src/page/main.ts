@@ -323,6 +323,7 @@ function queteCombat(e: EtatCombat, mode: 'arene' | 'rapide' | 'tournoi' | 'equi
     ecart: moi.score - e.joueurs[HUMAIN === 0 ? 1 : 0].score, points, nation: moi.def.nation,
     niveauCarte: niveauDe(moi.def.id), feintes, contres, champion,
     combos, ruptures, souffle, enchainement: !!e.enchainement, infini: !!e.infini,
+    rival: e.joueurs[HUMAIN === 0 ? 1 : 0].def.id === ID_RIVAL, tours: e.tourGlobal, epuisement: e.epuisementDes,
   });
   histoire({ type: 'combat', gagne, combos, enchainement: !!e.enchainement, infini: !!e.infini, auto: combatEnAuto });
 }
@@ -3175,6 +3176,7 @@ function ecranFin() {
           const gradeAvant = collection.rival.grade;
           const m = rivalBattu(collection);
           rivalFin = { ...m, gradeAvant };
+          histoire({ type: 'rival', grade: gradeAvant, auto: combatEnAuto });
           if (m.monte) for (let k = 0; k < R_.rival.boostersRaresParMontee; k++) boostersRival.push(ouvrirBooster(collection, Math.random, 'rare'));
         }
         paquetSolo = { titre: rivalFin?.monte ? 'Victoire contre Cocoach' : 'Victoire', boosters: joindreGains(boostersRival, gagnerMedailles(collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };

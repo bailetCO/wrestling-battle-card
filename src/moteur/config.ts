@@ -425,9 +425,9 @@ export const REGLES = {
   // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
   // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
   histoire: {
-    // Boosters de chaque étape (15). La dernière donne aussi une carte légendaire. La saison
+    // Boosters de chaque étape (18). La dernière donne aussi une carte légendaire. La saison
     // sportive s'ouvre après l'étape `etapeSaison` (12) ; les étapes 13 à 15 se jouent en parallèle.
-    boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3],
+    boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3],
     etapeSaison: 12,
     combosTacticien: 2, // étape 13 : combos réussis dans un même combat
     nationsEtape1: 3, // victoires contre des lutteurs de 3 nations différentes

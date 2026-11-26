@@ -11,7 +11,7 @@ export const PERSONNAGES: Record<Personnage, { nom: string; role: string }> = {
 
 export interface Replique { qui: Personnage; texte: string }
 
-// Clés : h0 à h14 = étapes 1 à 15 du mode histoire ; hfin = étape 12 réussie (la saison
+// Clés : h0 à h17 = étapes 1 à 18 du mode histoire ; hfin = étape 12 réussie (la saison
 // s'ouvre ; avant le 26/11/2026, cette scène s'appelait h12) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
 // championnats du monde et fin de saison quand il n'y a pas de Jeux Olympiques.
 export const SCENES: Record<string, Replique[]> = {
@@ -84,7 +84,21 @@ export const SCENES: Record<string, Replique[]> = {
   h14: [
     { qui: 'philippe', texte: 'Dernière épreuve du mode histoire : la durée infinie. Pas de chrono, pas de points qui arrêtent le combat.' },
     { qui: 'philippe', texte: 'Il n\'y a qu\'une façon de gagner : faire tomber ton adversaire. Gère ton endurance et garde ton second souffle pour le bon moment.' },
-    { qui: 'cocoach', texte: 'Jusqu\'au tombé ? Ça, c\'est de la lutte. Si tu y arrives, tu auras mérité ta légendaire.' },
+    { qui: 'cocoach', texte: 'Jusqu\'au tombé ? Ça, c\'est de la lutte. Si tu y arrives, je viendrai te défier moi-même.' },
+  ],
+  h15: [
+    { qui: 'cocoach', texte: 'Assez parlé, Coach. En durée infinie, c\'est moi qui t\'attends sur le tapis.' },
+    { qui: 'cocoach', texte: 'Je commence en carte rare, pour être sympa. Fais-moi tomber… si tu peux.' },
+    { qui: 'philippe', texte: 'Méfie-toi de ses feintes. Et souviens-toi : chaque fois que tu le bats, il revient plus fort.' },
+  ],
+  h16: [
+    { qui: 'cocoach', texte: 'Tu m\'as eu deux fois, d\'accord. Mais maintenant, je suis légendaire.' },
+    { qui: 'philippe', texte: 'À ce niveau, l\'ordinateur qui le joue lit tes habitudes. Varie tes actions, garde des réserves d\'endurance.' },
+  ],
+  h17: [
+    { qui: 'cocoach', texte: 'Champion du Monde. Toutes mes actions, le changement de niveau compris. C\'est le sommet, Coach.' },
+    { qui: 'philippe', texte: 'Bats-le à son meilleur niveau, et tu auras fait le tour de tout ce que je pouvais t\'apprendre.' },
+    { qui: 'cocoach', texte: 'Et si tu gagnes… une carte légendaire t\'attend. Je l\'ai choisie moi-même.' },
   ],
   s0: [
     { qui: 'philippe', texte: 'Une saison commence toujours par les échanges interclub : des combats rapides, une seule période.' },

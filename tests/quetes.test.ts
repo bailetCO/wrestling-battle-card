@@ -142,3 +142,17 @@ test('quêtes uniques : première action de Champion par fusion, les 4 combos di
   assert.equal(queteDe('u-4-combos').etat!(c), true);
   assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify(c))).combosVus, c.combosVus);
 });
+
+test('quêtes du rival et de la durée infinie', () => {
+  const av = (id: string, ev: EvenementQuete) => queteDe(id).avance!(ev, '');
+  assert.equal(av('rival-1', combat({ rival: true })), 1);
+  assert.equal(av('rival-1', combat({ rival: true, auto: true })), 0);
+  assert.equal(av('tenir-30', combat({ infini: true, tours: 31, gagne: false })), 1);
+  assert.equal(av('tenir-30', combat({ infini: true, tours: 25 })), 0);
+  assert.equal(av('infini-40', combat({ infini: true, epuisement: 40 })), 1);
+  assert.equal(av('infini-40', combat({ infini: true, epuisement: 30 })), 0);
+  const c = nouvelleCollection();
+  assert.equal(queteDe('u-rival-champion').etat!(c), false);
+  c.rival.grade = 4;
+  assert.equal(queteDe('u-rival-champion').etat!(c), true);
+});

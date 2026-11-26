@@ -32,6 +32,9 @@ export type EvenementQuete =
       souffle?: boolean; // second souffle pris pendant le combat
       enchainement?: boolean; // format Enchaînement
       infini?: boolean; // durée infinie
+      rival?: boolean; // contre Cocoach, le rival
+      tours?: number; // nombre de tours joués
+      epuisement?: number; // durée infinie : tour où commence l'épuisement
     }
   | { type: 'arene' } // un adversaire de l'arène battu (progression)
   | { type: 'tournoi'; place: number } // tournoi individuel terminé
@@ -83,6 +86,8 @@ export const QUETES: DefQuete[] = [
   { id: 'combos-3', difficulte: 'moyenne', niveauMin: 1, but: 3, texte: () => 'Réussir 3 combos en combat', avance: (ev) => combat(ev)?.combos ?? 0 },
   { id: 'chaine-2', difficulte: 'moyenne', niveauMin: 2, but: 2, texte: () => 'Briser 2 fois la chaîne adverse (format Enchaînement)', avance: (ev) => combat(ev)?.ruptures ?? 0 },
   { id: 'souffle-gagne', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat après avoir pris ton second souffle', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.souffle && !combat(ev)!.auto ? 1 : 0) },
+  { id: 'rival-1', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Battre Cocoach, ton rival (combat rapide, durée infinie)', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.rival && !combat(ev)!.auto ? 1 : 0) },
+  { id: 'tenir-30', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Tenir 30 tours dans un combat en durée infinie', avance: (ev) => (combat(ev)?.infini && !combat(ev)!.auto && (combat(ev)!.tours ?? 0) >= 30 ? 1 : 0) },
   { id: 'auto-2', difficulte: 'moyenne', niveauMin: 3, but: 2, texte: () => 'Gagner 2 combats en mode auto', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.auto ? 1 : 0) },
   { id: 'fusion', difficulte: 'moyenne', niveauMin: 3, but: 1, texte: () => 'Faire une fusion', avance: (ev) => (ev.type === 'fusion' ? 1 : 0) },
   { id: 'arene-2', difficulte: 'moyenne', niveauMin: 4, but: 2, texte: () => 'Avancer de 2 adversaires dans l\'arène', avance: (ev) => (ev.type === 'arene' ? 1 : 0) },
@@ -96,6 +101,7 @@ export const QUETES: DefQuete[] = [
   { id: 'en-ligne', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Gagner un combat en ligne contre un ami', avance: (ev) => (combat(ev)?.mode === 'enLigne' && combat(ev)!.gagne ? 1 : 0) },
   { id: 'infini', difficulte: 'difficile', niveauMin: 3, but: 1, texte: () => 'Gagner un combat en durée infinie', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.infini && !combat(ev)!.auto ? 1 : 0) },
   { id: 'ench-3', difficulte: 'difficile', niveauMin: 3, but: 3, texte: () => 'Gagner 3 combats en format Enchaînement', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.enchainement ? 1 : 0) },
+  { id: 'infini-40', difficulte: 'difficile', niveauMin: 4, but: 1, texte: () => 'Gagner un combat en durée infinie avec l\'épuisement réglé au tour 40 ou plus', avance: (ev) => { const c = combat(ev); return c?.gagne && c.infini && !c.auto && (c.epuisement ?? 0) >= 40 ? 1 : 0; } },
   { id: 'serie-fort', difficulte: 'difficile', niveauMin: 8, but: 3, texte: () => 'Gagner 3 combats d\'affilée contre l\'ordinateur fort', avance: (ev) => { const c = contreOrdi(ev); if (!c || c.niveau !== 'fort') return 0; return c.gagne ? 1 : 'remise'; } },
   // ----- Uniques -----
   { id: 'u-tutoriel', difficulte: 'unique', niveauMin: 1, but: 1, texte: () => 'Finir le tutoriel', avance: (ev) => (ev.type === 'tutoriel' ? 1 : 0), etat: (c) => c.bonusTutoriel, recompense: { boosters: 1 } },
@@ -104,6 +110,7 @@ export const QUETES: DefQuete[] = [
   { id: 'u-club', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Ouvrir Mon Club', etat: (c) => niveauClub(c) > 0, recompense: { boostersRares: 1 } },
   { id: 'u-action-champion', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Débloquer une première action de Champion (une carte montée Champion du Monde par fusion)', etat: (c) => LUTTEURS.some((l) => nbExemplaires(c, l.id) > 0 && niveauCarte(l, gradeDe(c, l.id)) === 'champion'), recompense: { boostersRares: 1 } },
   { id: 'u-4-combos', difficulte: 'unique', niveauMin: 2, but: 1, texte: () => 'Réussir les 4 combos différents (Passage dans le dos, Contre-temps, Enchaînement aux jambes, Esquive et contre)', etat: (c) => c.combosVus.length >= 4, recompense: { boosters: 2 } },
+  { id: 'u-rival-champion', difficulte: 'unique', niveauMin: 4, but: 1, texte: () => 'Faire monter Cocoach, ton rival, au niveau Champion du Monde', etat: (c) => c.rival.grade >= 4, recompense: { boostersRares: 2 } },
   { id: 'u-auto', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Lancer ton premier combat auto', avance: (ev) => (combat(ev)?.auto ? 1 : 0), recompense: { dollars: 10 } },
   { id: 'u-ami', difficulte: 'unique', niveauMin: 4, but: 1, texte: () => 'Ajouter un premier ami (combat ou transfert en ligne)', etat: (c) => Object.keys(c.amis).length > 0, recompense: { boosters: 1 } },
   { id: 'u-club-plein', difficulte: 'unique', niveauMin: 5, but: 1, texte: () => 'Remplir les 5 places de Mon Club', etat: (c) => placesClub(c) >= 5 && c.club.length >= 5, recompense: { boostersRares: 1 } },

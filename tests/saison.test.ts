@@ -87,16 +87,16 @@ test('saison et scènes gardées dans la sauvegarde', () => {
 
 test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins', async () => {
   const { SCENES, scenesEnCours } = await import('../src/page/dialogues');
-  for (let i = 0; i <= 14; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
+  for (let i = 0; i <= 17; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
   assert.ok(SCENES.hfin?.length);
   for (let i = 0; i <= 6; i++) assert.ok(SCENES[`s${i}`]?.length, `s${i}`);
   for (const r of Object.values(SCENES).flat()) assert.ok(r.texte.length <= 160, r.texte);
-  assert.deepEqual(scenesEnCours(3, 15, 0, false, true, true, 12), ['h3']);
-  // Étapes 13 à 15 en même temps que la saison.
-  assert.deepEqual(scenesEnCours(12, 15, 0, false, true, true, 12), ['hfin', 's0', 'h12']);
-  assert.deepEqual(scenesEnCours(13, 15, 4, false, true, true, 12), ['s4', 'h13']);
-  assert.deepEqual(scenesEnCours(15, 15, 4, false, true, true, 12), ['s4']);
-  assert.deepEqual(scenesEnCours(15, 15, 6, true, true, true, 12), ['s6']);
+  assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, 12), ['h3']);
+  // Étapes 13 à 18 en même temps que la saison.
+  assert.deepEqual(scenesEnCours(12, 18, 0, false, true, true, 12), ['hfin', 's0', 'h12']);
+  assert.deepEqual(scenesEnCours(16, 18, 4, false, true, true, 12), ['s4', 'h16']);
+  assert.deepEqual(scenesEnCours(18, 18, 4, false, true, true, 12), ['s4']);
+  assert.deepEqual(scenesEnCours(18, 18, 6, true, true, true, 12), ['s6']);
 });
 
 test('saisons suivantes : fin aux Mondiaux, JO toutes les 4 saisons, cartes Champion du Monde', async () => {

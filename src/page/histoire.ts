@@ -1,5 +1,5 @@
-// Mode histoire, sans affichage : 15 étapes dans l'ordre (la saison sportive s'ouvre après la 12e ;
-// les étapes 13 à 15, ajoutées le 26/11/2026, font découvrir les combos, l'Enchaînement et la durée infinie). Une étape ne se valide qu'une fois
+// Mode histoire, sans affichage : 18 étapes dans l'ordre. Les étapes 13 à 15 (26/11/2026) font
+// découvrir les combos, l'Enchaînement et la durée infinie ; les étapes 16 à 18, le rival Cocoach. Une étape ne se valide qu'une fois
 // débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 6 (3 lutteurs
 // d'une même nation dans Mon Club), 7 (une nation battue dans l'arène) et 11 (arène terminée), validées
 // tout de suite si c'est déjà le cas.
@@ -91,7 +91,22 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Jusqu\'au bout', objectif: 'Gagner un combat en durée infinie',
-    guide: 'Dans Combat rapide (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin. Récompense : des boosters et une carte légendaire que tu n\'as pas encore.',
+    guide: 'Dans Combat rapide (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin.',
+    lien: '#rapide', bouton: 'Combat rapide',
+  },
+  {
+    titre: 'Le rival', objectif: 'Battre Cocoach une première fois',
+    guide: 'En combat rapide, la durée « Infinie » se joue contre Cocoach, ton rival. Il commence en carte rare : fais-le tomber. À chaque défaite, il monte de niveau.',
+    lien: '#rapide', bouton: 'Combat rapide',
+  },
+  {
+    titre: 'Rival de taille', objectif: 'Battre Cocoach au niveau Légendaire',
+    guide: 'Cocoach monte d\'un niveau à chaque fois que tu le bats : Épique, puis Légendaire. Au niveau Légendaire, l\'ordinateur qui le joue passe en fort. Bats-le à ce niveau.',
+    lien: '#rapide', bouton: 'Combat rapide',
+  },
+  {
+    titre: 'Le sommet', objectif: 'Battre Cocoach Champion du Monde',
+    guide: 'Dernier défi : Cocoach au niveau Champion du Monde, avec toutes ses actions. Récompense : des boosters et une carte légendaire que tu n\'as pas encore.',
     lien: '#rapide', bouton: 'Combat rapide',
   },
 ];
@@ -110,6 +125,7 @@ export type EvenementHistoire =
   | { type: 'fusion'; id: string }
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
   | { type: 'combat'; gagne: boolean; combos: number; enchainement: boolean; infini: boolean; auto: boolean } // tout combat terminé
+  | { type: 'rival'; grade: number; auto: boolean } // Cocoach battu (grade : son niveau pendant le combat, 1 = rare … 4 = Champion du Monde)
   | { type: 'etat' }; // simple vérification (Mon Club, arène)
 
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
@@ -147,6 +163,9 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
     case 12: return ev.type === 'combat' && !ev.auto && ev.combos >= H.combosTacticien;
     case 13: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.enchainement;
     case 14: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.infini;
+    case 15: return ev.type === 'rival' && !ev.auto;
+    case 16: return ev.type === 'rival' && !ev.auto && ev.grade >= 3;
+    case 17: return ev.type === 'rival' && !ev.auto && ev.grade >= 4;
     default: return false;
   }
 }
