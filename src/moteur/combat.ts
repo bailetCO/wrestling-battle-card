@@ -64,6 +64,18 @@ export function toursPeriode(e: EtatCombat): number {
   return e.enchainement ? REGLES.enchainement.toursParPeriode : REGLES.toursParPeriode;
 }
 
+// Durée infinie : surcoût de fatigue de chaque action (0 avant le tour 30, puis +1 par palier de 10).
+export function surcoutFatigue(e: EtatCombat): number {
+  if (!e.infini) return 0;
+  const I = REGLES.infini;
+  return Math.max(0, Math.floor((e.tourGlobal - I.finRecuperation) / I.palier));
+}
+
+// Durée infinie : la récupération tous les 2 tours s'arrête à partir du tour 20.
+export function recuperationArretee(e: EtatCombat): boolean {
+  return !!e.infini && e.tourGlobal >= REGLES.infini.finRecuperation;
+}
+
 // ---------- Précision ----------
 
 export function precisionDe(endurance: number): number {
@@ -94,7 +106,7 @@ export function reductionCout(etat: EtatCombat, j: Joueur, id: IdAction): number
 export function coutDuTour(etat: EtatCombat, j: Joueur, id: IdAction): number {
   const base = coutAction(etat.joueurs[j].def, id);
   const r = reductionCout(etat, j, id);
-  return r ? Math.max(REGLES.fusion.coutMinimum, base - r) : base;
+  return (r ? Math.max(REGLES.fusion.coutMinimum, base - r) : base) + surcoutFatigue(etat);
 }
 
 export function actionsJouables(etat: EtatCombat, j: Joueur): IdAction[] {
@@ -133,7 +145,7 @@ export function multiplicateurSpeciale(etat: EtatCombat, j: Joueur): number {
 }
 
 export function coutSpeciale(etat: EtatCombat, j: Joueur, id: IdAction): number {
-  return coutAction(etat.joueurs[j].def, id) * multiplicateurSpeciale(etat, j);
+  return coutAction(etat.joueurs[j].def, id) * multiplicateurSpeciale(etat, j) + surcoutFatigue(etat);
 }
 
 export function specialeOuverte(etat: EtatCombat, j: Joueur): boolean {
@@ -736,10 +748,12 @@ export function jouerTour(
     }
   }
 
-  // 8. Épuisement : 3 tours à 0 d'endurance = tombé.
+  // 8. Épuisement : 3 tours à 0 d'endurance = tombé. En durée infinie (plus de récupération),
+  // 3 tours sans pouvoir payer aucune action comptent aussi, sinon le combat ne finirait jamais.
   for (const j of LES_DEUX) {
     const l = J[j];
-    l.toursSansEndurance = l.endurance <= 0 ? l.toursSansEndurance + 1 : 0;
+    const aBout = l.endurance <= 0 || (recuperationArretee(e) && actionsJouables(e, j).length === 0);
+    l.toursSansEndurance = aBout ? l.toursSansEndurance + 1 : 0;
     if (l.toursSansEndurance >= REGLES.toursSansEnduranceAvantTombe) {
       log(e, `${l.def.nom} est épuisé depuis 3 tours et se fait tomber.`);
       finirCombat(e, autre(j), 'tombe');
@@ -750,7 +764,7 @@ export function jouerTour(
   // 8 bis. Récupération régulière : tous les 2 tours, part × récupération × barre d'endurance,
   // avec la précision du lutteur comme chance de réussite.
   const RR = REGLES.recuperationReguliere;
-  if (e.tour % RR.tousLesTours === 0) {
+  if (e.tour % RR.tousLesTours === 0 && !recuperationArretee(e)) {
     for (const j of LES_DEUX) {
       const l = J[j];
       if (l.endurance <= 0) continue;

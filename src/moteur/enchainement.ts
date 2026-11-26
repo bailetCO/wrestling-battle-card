@@ -17,7 +17,7 @@
 //   pour la séquence suivante. Si les deux lutteurs l'ont gagnée, elles s'annulent.
 
 import { ACTIONS, REGLES, coutAction } from './config';
-import { actionsJouables, coutSpeciale, jouerTour, peutJouerSpeciale, souffleDispo } from './combat';
+import { actionsJouables, coutSpeciale, jouerTour, peutJouerSpeciale, souffleDispo, surcoutFatigue } from './combat';
 import { reussit, type Hasard } from './hasard';
 import { choixOrdinateur, reactionOrdinateur, type Niveau } from './ia';
 import type { Choix, EtatCombat, IdAction, Joueur, OptionsTour } from './types';
@@ -31,7 +31,7 @@ export const TAILLE_SEQUENCE = REGLES.enchainement.actions;
 // dépendent de la réussite des actions précédentes).
 export function coutPrevu(etat: EtatCombat, j: Joueur, c: Choix): number {
   if (c.action === 'lutte' || c.action === 'souffle') return 0;
-  return c.speciale ? coutSpeciale(etat, j, c.action) : coutAction(etat.joueurs[j].def, c.action);
+  return c.speciale ? coutSpeciale(etat, j, c.action) : coutAction(etat.joueurs[j].def, c.action) + surcoutFatigue(etat);
 }
 
 // Endurance qui resterait après avoir payé ces actions (le souffle rend de l'endurance).
@@ -46,9 +46,10 @@ export function coutALaPlace(etat: EtatCombat, j: Joueur, debut: Sequence, c: Ch
 
 // Actions qu'on peut encore ajouter à une séquence déjà commencée.
 export function actionsAjoutables(etat: EtatCombat, j: Joueur, debut: Sequence): IdAction[] {
-  const reste = enduranceApres(etat, j, debut);
+  const p = projeter(etat, j, debut);
+  const reste = p.joueurs[j].endurance;
   if (reste <= 0) return [];
-  return etat.joueurs[j].def.actions.filter((a) => coutAction(etat.joueurs[j].def, a) <= reste);
+  return etat.joueurs[j].def.actions.filter((a) => coutPrevu(p, j, { action: a }) <= reste);
 }
 
 // L'action spéciale est-elle possible à cette place de la séquence ? Mêmes règles qu'un combat

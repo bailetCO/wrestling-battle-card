@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { c, testeur, toujours } from './outils';
 import { ACTIONS, REGLES } from '../src/moteur/config';
-import { creerCombat, jouerTour, toursPeriode } from '../src/moteur/combat';
+import { coutDuTour, creerCombat, jouerTour, recuperationArretee, toursPeriode } from '../src/moteur/combat';
 import { choixOrdinateur } from '../src/moteur/ia';
 import {
   apercuSequence, actionsAjoutables, jouerSequence, reactionSequence, sequenceOrdinateur, validerSequence,
@@ -218,5 +218,32 @@ describe('Durée infinie', () => {
       assert.ok(e.termine, `graine ${g}`);
       assert.equal(e.finPar, 'tombe');
     }
+  });
+});
+
+describe('Durée infinie : fatigue croissante', () => {
+  it('plus de récupération à partir du tour 20, puis +1 par action à chaque palier de 10 tours', () => {
+    const e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
+    const cout = (tour: number) => { e.tour = tour; e.tourGlobal = tour; return coutDuTour(e, 0, 'attaque_base'); };
+    assert.equal(cout(19), ACTIONS.attaque_base.cout);
+    assert.equal(recuperationArretee(e), false);
+    assert.equal(cout(20), ACTIONS.attaque_base.cout);
+    assert.equal(recuperationArretee(e), true);
+    assert.equal(cout(29), ACTIONS.attaque_base.cout);
+    assert.equal(cout(30), ACTIONS.attaque_base.cout + 1);
+    assert.equal(cout(45), ACTIONS.attaque_base.cout + 2);
+    // Combat normal : jamais de fatigue.
+    const n = creerCombat(testeur(), testeur(), { rapide: true });
+    n.tourGlobal = 50;
+    assert.equal(coutDuTour(n, 0, 'attaque_base'), ACTIONS.attaque_base.cout);
+  });
+
+  it('au tour 20 et après, pas de récupération tous les 2 tours', () => {
+    let e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
+    e.tour = 22; e.tourGlobal = 22;
+    e.joueurs[0].endurance = 50; e.joueurs[1].endurance = 50;
+    e = jouerTour(e, c('defense'), c('defense'), toujours(0));
+    assert.equal(e.joueurs[0].endurance, 50 - ACTIONS.defense.cout);
+    assert.ok(!e.journal.some((l) => l.includes('tous les 2 tours')));
   });
 });

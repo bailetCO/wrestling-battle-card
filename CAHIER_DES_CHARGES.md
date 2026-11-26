@@ -622,7 +622,8 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
   - Format : Normal (une action par tour) ou Enchaînement (séquences de 3 actions, voir ci-dessous).
   - Durée : en combat rapide, Normale (une période) ou Infinie ; entre amis, 3 périodes, Rapide (une période) ou Infinie.
 - Durée infinie : pas de périodes, pas d'arrêt à 10 points d'écart ; le combat ne s'arrête que sur un tombé (combo, action spéciale, épuisement : 3 tours à 0 d'endurance) ou un abandon. Les points restent affichés. Récompenses du combat rapide (1 médaille contre l'ordinateur, 2 en ligne, pas de booster).
-- Mesure (1 000 combats simulés, ordinateur normal des deux côtés) : 94 tours en moyenne en format Normal (le plus long : 1 053), 70 en Enchaînement (le plus long : 536). À surveiller : ces combats peuvent être longs.
+- Fatigue croissante (26/11/2026) : à partir du tour 20, plus de récupération tous les 2 tours ; puis chaque action coûte 1 d'endurance de plus à chaque palier de 10 tours (+1 dès le tour 30, +2 dès le tour 40…). Lutte et Souffler restent gratuits. Un lutteur qui ne peut plus payer aucune action pendant 3 tours est épuisé et se fait tomber (comme à 0 d'endurance). Une étiquette « Fatigue » le rappelle en combat.
+- Mesures (1 000 combats simulés, ordinateur normal des deux côtés) : sans fatigue, 94 tours en moyenne (le plus long : 1 053) ; avec la fatigue, 19,5 tours en moyenne, 23 au plus ; 81 % des combats finissent par épuisement, surtout entre les tours 20 et 25.
 
 ### Mode Enchaînement (à l'essai, 25/11/2026)
 

@@ -3,7 +3,7 @@
 import './style.css';
 import {
   ACTIONS, CHAMPIONS, LUTTEURS, LUTTEUR_TEST, NATIONS, REGLES, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, bonusNation, actionsJouables, chanceReussite, coutSpeciale, nomLocal,
-  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
+  peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, recuperationArretee, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, NIVEAUX, niveauCarte, etoilesPossibles, avecDeck, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_,
   type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type Famille, type IdAction,
   type Joueur, type NiveauCarte,
   type Niveau,
@@ -2160,6 +2160,10 @@ function badges(e: EtatCombat, j: Joueur): string {
   if (l.bonusEnchainement) b.push(`Enchaînement : +${REGLES.speciale.bonusEnchainementFeinte}`);
   if (l.malusPrecisionTours > 0) b.push(`Matraqué : −5 % (${l.malusPrecisionTours} tour${l.malusPrecisionTours > 1 ? 's' : ''})`);
   if (l.attaqueIncontrable) b.push('Attaque incontrable');
+  if (j === HUMAIN && recuperationArretee(e)) {
+    const f = surcoutFatigue(e);
+    b.push(f ? `Fatigue : +${f} par action` : 'Fatigue : plus de récupération');
+  }
   if (l.derniereReussie === 'bras_tire') b.push(`Attaque −${REGLES.brasTire.reductionCout} d'endurance`);
   let serie = 0;
   for (let i = l.historique.length - 1; i >= 0 && l.historique[i].reussie; i--) serie++;
@@ -2466,7 +2470,7 @@ function paveSequence(e: EtatCombat): string {
           <span class="ico f-${f}">${ICONE[f]}</span>
           <span class="a-nom">${echap(nomLocal(l.def.nation, a))}</span>
           <span class="a-fr"><b class="a-effet">${effetAction(a)}</b></span>
-          <span class="a-cout">−${fmt(coutAction(l.def, a))}</span></button>`;
+          <span class="a-cout">−${fmt(coutALaPlace(e, HUMAIN, seq, { action: a }))}</span></button>`;
       }).join('')}${souffle ? `<button class="action souffle" data-action="souffle" data-mode="sequence">
           <span class="ico">${ICONE.souffle}</span><span class="a-nom">Souffler</span>
           <span class="a-fr"><b class="a-effet">+${R_.souffle.gain} d'endurance · 1 fois par combat</b></span><span class="a-cout">0</span></button>` : ''}</div>`;
@@ -2538,7 +2542,7 @@ function fenetreDerniereAction(e: EtatCombat, maSeq: Choix[], vue: Choix, qui: s
     const f = ACTIONS[a].famille;
     return `<button class="action" data-autre="${a}"><span class="ico f-${f}">${ICONE[f]}</span>
       <span class="a-nom">${echap(nomLocal(e.joueurs[HUMAIN].def.nation, a))}</span>
-      <span class="a-fr"><b class="a-effet">${effetAction(a)}</b></span><span class="a-cout">−${fmt(coutAction(e.joueurs[HUMAIN].def, a))}</span></button>`;
+      <span class="a-fr"><b class="a-effet">${effetAction(a)}</b></span><span class="a-cout">−${fmt(coutALaPlace(e, HUMAIN, debut, { action: a }))}</span></button>`;
   }).join('');
   const f = ouvrirFenetre(`
     <h2>Initiative</h2>

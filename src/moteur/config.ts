@@ -521,6 +521,11 @@ export const REGLES = {
   // `mortSubiteMax` tours sans point, on départage comme une période normale).
   rapide: { mortSubiteMax: 10 },
 
+  // Durée infinie : fatigue croissante pour que le combat finisse. À partir du tour
+  // `finRecuperation`, plus de récupération tous les 2 tours ; puis, à chaque palier de `palier`
+  // tours, chaque action coûte 1 d'endurance de plus (+1 dès le tour 30, +2 dès le tour 40…).
+  infini: { finRecuperation: 20, palier: 10 },
+
   // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
   // séquence de `actions` actions, comparées une à une. 12 tours par période (4 séquences).
   // Rupture (25/11/2026, 2e version) :
