@@ -78,22 +78,25 @@ test('saison : compétitions à la bonne taille et au bon niveau', () => {
 test('saison et scènes gardées dans la sauvegarde', () => {
   const c = ouverte();
   c.saison = { palier: 2, victoires: 0, numero: 1, terminees: 0 };
-  c.scenesVues = ['h0', 's1'];
+  c.scenesVues = ['histoire15', 'h0', 's1'];
   const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
   assert.deepEqual(d.saison, { palier: 2, victoires: 0, numero: 1, terminees: 0 });
-  assert.deepEqual(d.scenesVues, ['h0', 's1']);
+  assert.deepEqual(d.scenesVues, ['histoire15', 'h0', 's1']);
   assert.deepEqual(depuisSauvegarde({}).saison, { palier: 0, victoires: 0, numero: 1, terminees: 0 });
 });
 
 test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins', async () => {
   const { SCENES, scenesEnCours } = await import('../src/page/dialogues');
-  for (let i = 0; i <= 12; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
+  for (let i = 0; i <= 14; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
+  assert.ok(SCENES.hfin?.length);
   for (let i = 0; i <= 6; i++) assert.ok(SCENES[`s${i}`]?.length, `s${i}`);
   for (const r of Object.values(SCENES).flat()) assert.ok(r.texte.length <= 160, r.texte);
-  assert.deepEqual(scenesEnCours(3, 12, 0, false), ['h3']);
-  assert.deepEqual(scenesEnCours(12, 12, 0, false), ['h12', 's0']);
-  assert.deepEqual(scenesEnCours(12, 12, 4, false), ['s4']);
-  assert.deepEqual(scenesEnCours(12, 12, 6, true), ['s6']);
+  assert.deepEqual(scenesEnCours(3, 15, 0, false, true, true, 12), ['h3']);
+  // Étapes 13 à 15 en même temps que la saison.
+  assert.deepEqual(scenesEnCours(12, 15, 0, false, true, true, 12), ['hfin', 's0', 'h12']);
+  assert.deepEqual(scenesEnCours(13, 15, 4, false, true, true, 12), ['s4', 'h13']);
+  assert.deepEqual(scenesEnCours(15, 15, 4, false, true, true, 12), ['s4']);
+  assert.deepEqual(scenesEnCours(15, 15, 6, true, true, true, 12), ['s6']);
 });
 
 test('saisons suivantes : fin aux Mondiaux, JO toutes les 4 saisons, cartes Champion du Monde', async () => {

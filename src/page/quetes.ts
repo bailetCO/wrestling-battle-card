@@ -3,9 +3,9 @@
 // remplace la quête facile. Une quête (pas unique) peut être changée une fois par jour pour 5 $.
 // Une quête non finie disparaît à minuit.
 
-import { CHAMPIONS, LUTTEURS, NATIONS, REGLES, creerHasard, trouverLutteur, type Hasard, type Niveau } from '../moteur';
+import { CHAMPIONS, LUTTEURS, NATIONS, REGLES, creerHasard, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
 import {
-  cartesPossedees, gagnerMedailles, nbExemplaires, nbStyles, niveauClub, niveauCompte, ouvrirBooster, placesClub,
+  cartesPossedees, gagnerMedailles, gradeDe, nbExemplaires, nbStyles, niveauClub, niveauCompte, ouvrirBooster, placesClub,
   type Booster, type Collection,
 } from './collection';
 
@@ -27,6 +27,11 @@ export type EvenementQuete =
       feintes: number; // feintes réussies
       contres: number; // contres qui ont marqué
       champion: boolean; // champion d'une nation battu dans l'arène
+      combos?: number; // combos réussis (combat joué à la main)
+      ruptures?: number; // chaînes adverses brisées (mode Enchaînement)
+      souffle?: boolean; // second souffle pris pendant le combat
+      enchainement?: boolean; // format Enchaînement
+      infini?: boolean; // durée infinie
     }
   | { type: 'arene' } // un adversaire de l'arène battu (progression)
   | { type: 'tournoi'; place: number } // tournoi individuel terminé
@@ -67,6 +72,7 @@ export const QUETES: DefQuete[] = [
   { id: 'booster', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Ouvrir 1 booster', avance: (ev) => (ev.type === 'booster' ? ev.n : 0) },
   { id: 'feintes', difficulte: 'facile', niveauMin: 1, but: 3, texte: () => 'Réussir 3 feintes en combat', avance: (ev) => combat(ev)?.feintes ?? 0 },
   { id: 'contres', difficulte: 'facile', niveauMin: 1, but: 2, texte: () => 'Réussir 2 contres en combat', avance: (ev) => combat(ev)?.contres ?? 0 },
+  { id: 'ench-jouer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Jouer 1 combat en format Enchaînement', avance: (ev) => (combat(ev)?.enchainement ? 1 : 0) },
   { id: 'deck', difficulte: 'facile', niveauMin: 2, but: 1, texte: () => 'Régler les actions d\'un de tes lutteurs', avance: (ev) => (ev.type === 'deck' ? 1 : 0) },
   // ----- Moyennes -----
   { id: 'gagner-3', difficulte: 'moyenne', niveauMin: 1, but: 3, texte: () => 'Gagner 3 combats contre l\'ordinateur', avance: (ev) => (contreOrdi(ev)?.gagne ? 1 : 0) },
@@ -74,6 +80,9 @@ export const QUETES: DefQuete[] = [
   { id: 'points-20', difficulte: 'moyenne', niveauMin: 1, but: 20, texte: () => 'Marquer 20 points au total en combat', avance: (ev) => combat(ev)?.points ?? 0 },
   { id: 'tombe', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat par tombé', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.tombe ? 1 : 0) },
   { id: 'rapide-10', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat rapide par 10 points d\'écart', avance: (ev) => { const c = combat(ev); return c?.mode === 'rapide' && c.gagne && c.ecart >= REGLES.ecartSuperiorite ? 1 : 0; } },
+  { id: 'combos-3', difficulte: 'moyenne', niveauMin: 1, but: 3, texte: () => 'Réussir 3 combos en combat', avance: (ev) => combat(ev)?.combos ?? 0 },
+  { id: 'chaine-2', difficulte: 'moyenne', niveauMin: 2, but: 2, texte: () => 'Briser 2 fois la chaîne adverse (format Enchaînement)', avance: (ev) => combat(ev)?.ruptures ?? 0 },
+  { id: 'souffle-gagne', difficulte: 'moyenne', niveauMin: 2, but: 1, texte: () => 'Gagner un combat après avoir pris ton second souffle', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.souffle && !combat(ev)!.auto ? 1 : 0) },
   { id: 'auto-2', difficulte: 'moyenne', niveauMin: 3, but: 2, texte: () => 'Gagner 2 combats en mode auto', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.auto ? 1 : 0) },
   { id: 'fusion', difficulte: 'moyenne', niveauMin: 3, but: 1, texte: () => 'Faire une fusion', avance: (ev) => (ev.type === 'fusion' ? 1 : 0) },
   { id: 'arene-2', difficulte: 'moyenne', niveauMin: 4, but: 2, texte: () => 'Avancer de 2 adversaires dans l\'arène', avance: (ev) => (ev.type === 'arene' ? 1 : 0) },
@@ -85,12 +94,16 @@ export const QUETES: DefQuete[] = [
   { id: 'equipe', difficulte: 'difficile', niveauMin: 5, but: 1, texte: () => 'Gagner un duel d\'un tournoi par équipe', avance: (ev) => (combat(ev)?.mode === 'equipe' && combat(ev)!.gagne ? 1 : 0) },
   { id: 'champion', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Battre le champion d\'une nation dans l\'arène', avance: (ev) => (combat(ev)?.champion ? 1 : 0) },
   { id: 'en-ligne', difficulte: 'difficile', niveauMin: 6, but: 1, texte: () => 'Gagner un combat en ligne contre un ami', avance: (ev) => (combat(ev)?.mode === 'enLigne' && combat(ev)!.gagne ? 1 : 0) },
+  { id: 'infini', difficulte: 'difficile', niveauMin: 3, but: 1, texte: () => 'Gagner un combat en durée infinie', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.infini && !combat(ev)!.auto ? 1 : 0) },
+  { id: 'ench-3', difficulte: 'difficile', niveauMin: 3, but: 3, texte: () => 'Gagner 3 combats en format Enchaînement', avance: (ev) => (combat(ev)?.gagne && combat(ev)!.enchainement ? 1 : 0) },
   { id: 'serie-fort', difficulte: 'difficile', niveauMin: 8, but: 3, texte: () => 'Gagner 3 combats d\'affilée contre l\'ordinateur fort', avance: (ev) => { const c = contreOrdi(ev); if (!c || c.niveau !== 'fort') return 0; return c.gagne ? 1 : 'remise'; } },
   // ----- Uniques -----
   { id: 'u-tutoriel', difficulte: 'unique', niveauMin: 1, but: 1, texte: () => 'Finir le tutoriel', avance: (ev) => (ev.type === 'tutoriel' ? 1 : 0), etat: (c) => c.bonusTutoriel, recompense: { boosters: 1 } },
   { id: 'u-30-cartes', difficulte: 'unique', niveauMin: 1, but: 1, texte: () => 'Posséder 30 cartes différentes', etat: (c) => cartesPossedees(c) >= 30, recompense: { boosters: 1 } },
   { id: 'u-etoile', difficulte: 'unique', niveauMin: 2, but: 1, texte: () => 'Donner une première étoile à une action', avance: (ev) => (ev.type === 'fusion' && ev.etoile ? 1 : 0), etat: (c) => Object.values(c.etoiles).some((e) => Object.values(e ?? {}).some((n) => (n ?? 0) > 0)), recompense: { dollars: 20 } },
   { id: 'u-club', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Ouvrir Mon Club', etat: (c) => niveauClub(c) > 0, recompense: { boostersRares: 1 } },
+  { id: 'u-action-champion', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Débloquer une première action de Champion (une carte montée Champion du Monde par fusion)', etat: (c) => LUTTEURS.some((l) => nbExemplaires(c, l.id) > 0 && niveauCarte(l, gradeDe(c, l.id)) === 'champion'), recompense: { boostersRares: 1 } },
+  { id: 'u-4-combos', difficulte: 'unique', niveauMin: 2, but: 1, texte: () => 'Réussir les 4 combos différents (Passage dans le dos, Contre-temps, Enchaînement aux jambes, Esquive et contre)', etat: (c) => c.combosVus.length >= 4, recompense: { boosters: 2 } },
   { id: 'u-auto', difficulte: 'unique', niveauMin: 3, but: 1, texte: () => 'Lancer ton premier combat auto', avance: (ev) => (combat(ev)?.auto ? 1 : 0), recompense: { dollars: 10 } },
   { id: 'u-ami', difficulte: 'unique', niveauMin: 4, but: 1, texte: () => 'Ajouter un premier ami (combat ou transfert en ligne)', etat: (c) => Object.keys(c.amis).length > 0, recompense: { boosters: 1 } },
   { id: 'u-club-plein', difficulte: 'unique', niveauMin: 5, but: 1, texte: () => 'Remplir les 5 places de Mon Club', etat: (c) => placesClub(c) >= 5 && c.club.length >= 5, recompense: { boostersRares: 1 } },

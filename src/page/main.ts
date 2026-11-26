@@ -31,7 +31,7 @@ import {
   joueurInvaincu, type CleMatch, type Competition, type Individuel, type MatchI, type Tournoi, type TournoiEquipe,
 } from './tournoi';
 import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from './quetes';
-import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
+import { ETAPES, ETAPE_SAISON, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from './histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from './saison';
 import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from './dialogues';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from './aide';
@@ -239,13 +239,16 @@ function bandeauHistoire(): string {
     const r = recompensesHistoire[0];
     return `<a class="bandeau-histoire pret" href="${r.lien}"><small>${r.lien === '#saison' ? 'Saison sportive' : r.lien === '#quetes' ? 'Quêtes du jour' : 'Mode histoire'}</small><b>🎁 Récompense à ouvrir</b><span>${echap(r.titre)}</span></a>`;
   }
+  // Saison ouverte et étapes 13 à 15 pas finies : un petit rappel du mode histoire en dessous.
+  const reste = saisonOuverte(collection) && !histoireFinie(collection)
+    ? `<a class="bandeau-histoire petit" href="#histoire"><small>Mode histoire · étape ${collection.histoire.etape + 1}/${NB_ETAPES}</small><b>${echap(ETAPES[collection.histoire.etape].objectif)}</b></a>` : '';
   if (saisonOuverte(collection)) {
     const num = collection.saison.numero;
-    if (saisonFinie(collection)) return `<a class="bandeau-histoire fini" href="#saison"><small>Saison ${num} terminée</small><b>Commencer la saison ${num + 1} ▶</b></a>`;
+    if (saisonFinie(collection)) return `<a class="bandeau-histoire fini" href="#saison"><small>Saison ${num} terminée</small><b>Commencer la saison ${num + 1} ▶</b></a>${reste}`;
     const i = collection.saison.palier;
     const v = PALIERS[i].victoires;
     return `<a class="bandeau-histoire" href="#saison"><small>Saison ${num} · palier ${i + 1}/${nbPaliers(collection)} · ${echap(PALIERS[i].nom)}</small>
-      <b>${echap(objectifPalier(i))}</b>${v ? `${jauge([collection.saison.victoires, v])}<span>${collection.saison.victoires}/${v}</span>` : ''}</a>`;
+      <b>${echap(objectifPalier(i))}</b>${v ? `${jauge([collection.saison.victoires, v])}<span>${collection.saison.victoires}/${v}</span>` : ''}</a>${reste}`;
   }
   const i = collection.histoire.etape;
   const p = progression(collection);
@@ -304,11 +307,23 @@ function queteCombat(e: EtatCombat, mode: 'arene' | 'rapide' | 'tournoi' | 'equi
     if (fam === 'feinte' && apres.joueurs[HUMAIN].bonusFeinte === REGLES.toursBonusFeinte) feintes++;
     if (fam === 'contre' && marque.length) contres++;
   });
+  // Combos, chaînes brisées, second souffle : seulement dans un combat joué à la main.
+  const lignes = combatEnAuto ? [] : tours.flatMap((t) => t.lignes);
+  const deMoi = (l: string) => { const fin = l.slice(l.indexOf('»')); return fin.includes(` ${nom} `) && !fin.includes(` ${nom} (`); };
+  const combosNoms = lignes.filter((l) => l.startsWith('Combo « ') && deMoi(l)).map((l) => l.match(/« (.+?) »/)?.[1] ?? '');
+  const combos = combosNoms.length + lignes.filter((l) => l === `Combo pour ${nom} !`).length;
+  const ruptures = lignes.filter((l) => l.startsWith(`Chaîne brisée : le contre de ${nom} `) || l.startsWith(`Chaîne brisée : le matraquage de ${nom} `)).length;
+  const souffle = lignes.some((l) => l.startsWith(`${nom} reprend son souffle`));
+  const nouveaux = combosNoms.filter((n) => n && !collection.combosVus.includes(n));
+  if (nouveaux.length) collection.combosVus = [...new Set([...collection.combosVus, ...nouveaux])];
+  const gagne = e.vainqueur === HUMAIN;
   quete({
-    type: 'combat', mode, gagne: e.vainqueur === HUMAIN, niveau, auto: combatEnAuto, tombe: e.finPar === 'tombe',
+    type: 'combat', mode, gagne, niveau, auto: combatEnAuto, tombe: e.finPar === 'tombe',
     ecart: moi.score - e.joueurs[HUMAIN === 0 ? 1 : 0].score, points, nation: moi.def.nation,
     niveauCarte: niveauDe(moi.def.id), feintes, contres, champion,
+    combos, ruptures, souffle, enchainement: !!e.enchainement, infini: !!e.infini,
   });
+  histoire({ type: 'combat', gagne, combos, enchainement: !!e.enchainement, infini: !!e.infini, auto: combatEnAuto });
 }
 
 function blocQuetes(): string {
@@ -371,7 +386,7 @@ const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutteur('eur
 // Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
 function scenesAuto() {
   if (document.querySelector('.voile, .scene-dialogue, .revelation')) return;
-  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection), saisonOlympique(collection.saison.numero), collection.saison.numero === 1)
+  const cles = scenesEnCours(collection.histoire.etape, NB_ETAPES, collection.saison.palier, saisonFinie(collection), saisonOlympique(collection.saison.numero), collection.saison.numero === 1, ETAPE_SAISON)
     .filter((k) => !collection.scenesVues.includes(k));
   if (cles.length) montrerScene(cles);
 }
@@ -421,7 +436,8 @@ function ecranHistoire() {
   const p = progression(collection);
   const lignes = ETAPES.map((e, i) => {
     const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
-    const recompense = R_.histoire.boosters[i] ? `${R_.histoire.boosters[i]} booster${R_.histoire.boosters[i] > 1 ? 's' : ''}` : '1 carte légendaire';
+    const nb = R_.histoire.boosters[i];
+    const recompense = `${nb ? `${nb} booster${nb > 1 ? 's' : ''}` : ''}${i === NB_ETAPES - 1 ? `${nb ? ' + ' : ''}1 carte légendaire` : ''}`;
     return `<li class="etape-histoire ${etat}">
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
       <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
@@ -434,8 +450,8 @@ function ecranHistoire() {
     <main class="sous-menu">
       ${enTete('Mode histoire', histoireFinie(collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
       ${blocPaquet('#histoire')}
-      ${histoireFinie(collection) ? '<section class="bloc saison-ouverte"><h2>La saison sportive est ouverte</h2><p>Interclub, régional, national, international, championnats du monde et Jeux Olympiques.</p><a class="principal lien-bouton" href="#saison">Commencer la saison</a></section>' : ''}
-      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape.</p></section>
+      ${saisonOuverte(collection) ? '<section class="bloc saison-ouverte"><h2>La saison sportive est ouverte</h2><p>Interclub, régional, national, international, championnats du monde et Jeux Olympiques.</p><a class="principal lien-bouton" href="#saison">Commencer la saison</a></section>' : ''}
+      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et l'arène (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape. La saison sportive s'ouvre après l'étape ${ETAPE_SAISON} ; les étapes suivantes se jouent en même temps.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
@@ -718,7 +734,7 @@ function ecranArene(rapide = false) {
       ${rapide
         ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
            <div class="marge">${choixNiveau(collection.niveau)}
-             <label class="case-rapide"><input type="checkbox" id="enchainement" ${enchainementChoisi ? 'checked' : ''}> Mode Enchaînement <small>(à l'essai : séquences de ${TAILLE_SEQUENCE} actions, ${R_.enchainement.toursParPeriode} tours)</small></label></div>`
+             ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé']])}</div>`
         : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
       ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
@@ -767,9 +783,8 @@ function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((b) =>
     b.addEventListener('click', () => { bossChoisi = b.dataset.boss!; ecranArene(); }),
   );
-  app.querySelector<HTMLInputElement>('#enchainement')?.addEventListener('change', (ev) => {
-    enchainementChoisi = (ev.target as HTMLInputElement).checked;
-  });
+  app.querySelectorAll<HTMLInputElement>('input[name="solo-format"]').forEach((i) => i.addEventListener('change', () => { enchainementChoisi = i.value === 'enchainement'; }));
+  app.querySelectorAll<HTMLInputElement>('input[name="solo-duree"]').forEach((i) => i.addEventListener('change', () => { infiniChoisi = i.value === 'infinie'; }));
   app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { bossChoisi = null; ecranArene(); });
   if (areneTerminee(collection) && !bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
@@ -1944,8 +1959,8 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   HUMAIN = 0;
   ORDI = 1;
   // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
-  const ench = rapide && !interclub && !ctx && enchainementChoisi;
-  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, ench);
+  const libre = rapide && !interclub && !ctx; // les styles de combat : combat rapide seulement
+  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, libre && enchainementChoisi, libre && infiniChoisi);
   sequenceHumain = [];
   areneCtx = ctx;
   interclubEnCours = interclub;
@@ -2392,7 +2407,23 @@ function brancherChat() {
 // ---------- Mode Enchaînement (à l'essai, combat rapide) ----------
 // Le joueur compose sa séquence de 3 actions en touchant les boutons dans l'ordre ; une case
 // remplie se retire d'un toucher (avec celles qui suivent). Puis les 3 duels se révèlent.
-let enchainementChoisi = false; // case cochée sur l'écran du combat rapide
+let enchainementChoisi = false; // format choisi sur l'écran du combat rapide
+let infiniChoisi = false; // durée choisie sur l'écran du combat rapide
+
+// Réglages « Style de combat » : le format (normal ou Enchaînement) et la durée.
+function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: string, durees: [string, string, string][]): string {
+  const choix = (groupe: string, valeur: string, actuel: string, titre: string, sous: string) => `
+    <label class="choix-style"><input type="radio" name="${nom}-${groupe}" value="${valeur}" ${valeur === actuel ? 'checked' : ''}>
+      <span><b>${titre}</b><small>${sous}</small></span></label>`;
+  return `
+    <fieldset class="style-combat"><legend>Format</legend>
+      ${choix('format', 'normal', format, 'Normal', 'Une action par tour')}
+      ${choix('format', 'enchainement', format, 'Enchaînement', `Séquences de ${TAILLE_SEQUENCE} actions`)}
+    </fieldset>
+    <fieldset class="style-combat"><legend>Durée</legend>
+      ${durees.map(([v, t, sous]) => choix('duree', v, duree, t, sous)).join('')}
+    </fieldset>`;
+}
 let sequenceHumain: Choix[] = [];
 
 // La dernière séquence jouée, retrouvée dans la liste des tours (contre l'ordinateur ou en ligne).
@@ -2600,7 +2631,7 @@ function caseDernierTour(e: EtatCombat): string {
         <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
         <p class="case-aide">${e.enchainement
           ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi à la 1re action brise la chaîne ; un matraquage réussi à la 2e action peut annuler la dernière action adverse. L'action spéciale est possible dès le 2e tour, puis après 3 actions de recharge.`
-          : `Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}</p>
+          : `Choisis ton action en bas. ${mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}${e.infini ? ' Durée infinie : le combat ne s\'arrête que sur un tombé ou un abandon.' : ''}</p>
       </section>`;
   }
   const ono = onomatopee(t, e);
@@ -2634,7 +2665,10 @@ function tableau(e: EtatCombat): string {
     <header class="tableau">
       ${coin(h, 'rouge', `${echap(moiNom())} ${pastilleNiveau(niveauCompte(collection))}`)}
       <div class="centre">
-        ${e.rapide
+        ${e.infini
+          ? `<span class="per">Durée <b>infinie</b></span>
+             <span class="trn">Tour <b>${e.tour}</b></span>`
+          : e.rapide
           ? `<span class="per">${e.mortSubite ? '<b class="mort-subite">Mort subite</b>' : 'Combat <b>rapide</b>'}</span>
              <span class="trn">Tour <b>${e.tour}</b>${e.mortSubite ? '' : `/${toursPeriode(e)}`}</span>`
           : `<span class="per">Période <b>${e.periode}</b>/3</span>
@@ -3237,8 +3271,7 @@ function ecranAmis(message = '') {
       <section class="bloc">
         <h2>Créer une salle</h2>
         <p>Choisis comment vous jouez :</p>
-        <label class="case-rapide"><input type="checkbox" id="rapide"> Combat rapide <small>(une période, mort subite, sans booster)</small></label>
-        <label class="case-rapide"><input type="checkbox" id="enchainement-ligne"> Mode Enchaînement <small>(à l'essai : séquences de ${TAILLE_SEQUENCE} actions, ${R_.enchainement.toursParPeriode} tours par période)</small></label>
+        ${reglagesStyle('ligne', 'normal', 'periodes', [['periodes', '3 périodes', 'Le combat complet'], ['rapide', 'Rapide', 'Une période, sans booster'], ['infinie', 'Infinie', 'Jusqu\'au tombé, sans booster']])}
         <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes fusionnées · 2 boosters et 2 médailles par victoire</small></button>
         <button class="secondaire" data-creer="base">Cartes de base<small>Toutes les cartes, sans fusion · 2 médailles par victoire, pas de booster</small></button>
       </section>
@@ -3253,7 +3286,11 @@ function ecranAmis(message = '') {
       <a class="lien" href="#">Retour</a>
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
-    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', app.querySelector<HTMLInputElement>('#rapide')?.checked, app.querySelector<HTMLInputElement>('#enchainement-ligne')?.checked)),
+    b.addEventListener('click', () => {
+      const duree = app.querySelector<HTMLInputElement>('input[name="ligne-duree"]:checked')?.value;
+      const format = app.querySelector<HTMLInputElement>('input[name="ligne-format"]:checked')?.value;
+      connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', duree === 'rapide', format === 'enchainement', duree === 'infinie');
+    }),
   );
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -3264,7 +3301,7 @@ function ecranAmis(message = '') {
   window.scrollTo(0, 0);
 }
 
-async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false, enchainement = false) {
+async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false, enchainement = false, infini = false) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
@@ -3294,7 +3331,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
-  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide, enchainement });
+  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide, enchainement, infini });
   duel.surVue(rafraichirLigne);
 }
 
@@ -3334,7 +3371,7 @@ function rafraichirLigne(v: Vue) {
   if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
 
   if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
-    const sig = `${v.enchainement}|${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}|${v.autoMoi}|${v.autoAmi}`;
+    const sig = `${v.enchainement}|${v.infini}|${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}|${v.autoMoi}|${v.autoAmi}`;
     if (sig !== signatureSalle) ecranSalle(v);
     signatureSalle = sig;
     return;
@@ -3432,6 +3469,7 @@ function ecranSalle(v: Vue) {
     </button>`;
   }).join('');
   const modeTexte = (v.enchainement ? `Mode Enchaînement (séquences de ${TAILLE_SEQUENCE} actions) · ` : '') + (v.modeSalle === null ? 'Connexion à la salle…'
+    : v.infini ? `Durée infinie (fin par tombé ou abandon) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : v.rapide ? `Combat rapide (une période, mort subite) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : enCollection ? 'Mode : vos collections (fusions comprises) · 2 boosters et 2 médailles par victoire.'
     : 'Mode : cartes de base, toutes permises · 2 médailles par victoire, pas de booster.');

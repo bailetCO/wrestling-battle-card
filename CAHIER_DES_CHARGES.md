@@ -345,7 +345,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   - faciles : lancer un combat dans l'arène (1), gagner 1 combat contre l'ordinateur (1), jouer 1 combat rapide (1), ouvrir 1 booster (1), réussir 3 feintes (1), réussir 2 contres qui marquent (1), régler les actions d'un lutteur (2) ;
   - moyennes : gagner 3 combats contre l'ordinateur (1), gagner avec un lutteur d'une nation tirée au hasard (1), marquer 20 points au total (1), gagner par tombé (2), gagner un combat rapide par 10 points d'écart (2), gagner 2 combats en auto (3), faire une fusion (3), avancer de 2 adversaires dans l'arène (4) ;
   - difficiles : gagner contre l'ordinateur fort en jouant soi-même (2), gagner avec une carte commune contre l'ordinateur normal ou fort (3), podium d'un tournoi individuel (4), gagner un tournoi individuel (5), gagner un duel d'un tournoi par équipe (5), battre le champion d'une nation dans l'arène (6), gagner un combat en ligne contre un ami (6), gagner 3 combats d'affilée contre l'ordinateur fort (8 ; une défaite contre le fort remet la série à zéro).
-- Quêtes uniques (niveau minimum, récompense) : finir le tutoriel (1, 1 booster) ; posséder 30 cartes différentes (1, 1 booster) ; première étoile (2, 20 $) ; ouvrir Mon Club (3, 1 booster rare) ; premier combat auto (3, 10 $) ; premier ami (4, 1 booster) ; remplir les 5 places de Mon Club (5, 1 booster rare) ; bonus de nation de +10 % (5, 2 boosters) ; une carte de chaque nation (6, 1 booster rare) ; légendaire débloquée par les fragments (7, 50 $) ; 60 cartes différentes (8, 2 boosters rares) ; une carte Champion du Monde (10, 100 $) ; un style de carte (10, 2 boosters rares) ; les 120 cartes (12, 1 Champion du Monde au hasard). Les quêtes uniques sur la collection sont validées dès qu'elles apparaissent si c'est déjà le cas.
+  - ajoutées le 26/11/2026 : jouer 1 combat en format Enchaînement (facile, 1) ; réussir 3 combos (moyenne, 1) ; briser 2 fois la chaîne adverse (moyenne, 2) ; gagner un combat après avoir pris son second souffle (moyenne, 2) ; gagner un combat en durée infinie (difficile, 3) ; gagner 3 combats en format Enchaînement (difficile, 3). Combos, chaînes brisées et souffle ne comptent pas en combat auto.
+- Quêtes uniques (niveau minimum, récompense) : finir le tutoriel (1, 1 booster) ; posséder 30 cartes différentes (1, 1 booster) ; première étoile (2, 20 $) ; ouvrir Mon Club (3, 1 booster rare) ; premier combat auto (3, 10 $) ; premier ami (4, 1 booster) ; remplir les 5 places de Mon Club (5, 1 booster rare) ; bonus de nation de +10 % (5, 2 boosters) ; une carte de chaque nation (6, 1 booster rare) ; légendaire débloquée par les fragments (7, 50 $) ; 60 cartes différentes (8, 2 boosters rares) ; une carte Champion du Monde (10, 100 $) ; un style de carte (10, 2 boosters rares) ; les 120 cartes (12, 1 Champion du Monde au hasard) ; ajoutées le 26/11/2026 : première action de Champion, c'est-à-dire une carte montée Champion du Monde par fusion (3, 1 booster rare) ; réussir les 4 combos différents, sur plusieurs combats (2, 2 boosters). Les quêtes uniques sur la collection sont validées dès qu'elles apparaissent si c'est déjà le cas.
 
 ### Saisons à répétition et cartes Champion du Monde
 
@@ -386,7 +387,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 ### Mode histoire
 
-- Un parcours de 12 étapes qui fait découvrir tout le jeu. L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
+- Un parcours de 15 étapes qui fait découvrir tout le jeu (12 à l'origine, 3 ajoutées le 26/11/2026). L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
 - Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf pour les étapes 3, 6, 7 et 11 : elles sont validées dès leur déblocage si le joueur remplit déjà la condition (Mon Club ouvert, 3 lutteurs d'une même nation dans Mon Club, une nation battue dans l'arène, arène terminée).
   1. Gagner 3 combats contre des lutteurs de 3 nations différentes (tous les combats comptent : ordinateur, arène, combat rapide, tournoi, en ligne) : 1 booster.
   2. Gagner un tournoi individuel : 1 booster.
@@ -399,8 +400,13 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris, mais pas en combat automatique) : 3 boosters.
   10. Gagner un combat en ligne contre un ami : 3 boosters.
   11. Terminer l'arène en battant toutes les nations : 3 boosters.
-  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : une carte légendaire au hasard parmi celles que le joueur n'a pas ; s'il les a toutes, une légendaire au hasard (un double).
-- Les boosters des étapes 1 à 11 sont des boosters classiques. Une bulle annonce chaque étape validée ; la récompense s'ouvre dans l'écran du mode histoire. Le mode histoire ne donne pas de médailles.
+  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : 3 boosters. La saison sportive s'ouvre ; les étapes 13 à 15 se jouent en même temps qu'elle.
+  13. Le tacticien : réussir 2 combos dans un même combat (pas en combat auto ; gagner n'est pas obligatoire) : 2 boosters.
+  14. L'enchaîneur : gagner un combat en format Enchaînement : 2 boosters.
+  15. Jusqu'au bout : gagner un combat en durée infinie : 3 boosters et une carte légendaire au hasard parmi celles que le joueur n'a pas ; s'il les a toutes, une légendaire au hasard (un double).
+- Anciennes sauvegardes : un joueur qui avait fini les 12 étapes garde sa saison et commence l'étape 13 ; la scène d'ouverture de la saison (ancienne clé h12, nouvelle clé hfin) n'est pas remontrée. Il recevra une seconde légendaire à l'étape 15.
+- Quand la saison est ouverte et que l'histoire n'est pas finie, l'accueil montre les deux bandeaux : la saison, puis l'étape du mode histoire en cours.
+- Les boosters des étapes sont des boosters classiques. Une bulle annonce chaque étape validée ; la récompense s'ouvre dans l'écran du mode histoire. Le mode histoire ne donne pas de médailles.
 - Le tutoriel présente les modes de jeu et se termine sur le mode histoire ; la page des règles décrit tous les modes.
 
 
@@ -609,6 +615,14 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - +1 médaille par victoire. Nation battue : 2 ou 3 boosters (au hasard), 3 médailles, et 1 chance sur 3 de gagner la carte du boss. Le booster de consolation (toutes les 2 défaites d'affilée) est gardé.
 - Les boss des nations battues peuvent être réaffrontés (ordinateur fort) : +1 médaille et 1 chance sur 3 de gagner leur carte à chaque victoire.
 - Objectif : battre les 12 nations. Le bonus du tutoriel donne 2 boosters en plus à la prochaine victoire dans l'arène.
+
+### Style de combat : format et durée (26/11/2026)
+
+- En combat rapide et entre amis seulement, deux réglages :
+  - Format : Normal (une action par tour) ou Enchaînement (séquences de 3 actions, voir ci-dessous).
+  - Durée : en combat rapide, Normale (une période) ou Infinie ; entre amis, 3 périodes, Rapide (une période) ou Infinie.
+- Durée infinie : pas de périodes, pas d'arrêt à 10 points d'écart ; le combat ne s'arrête que sur un tombé (combo, action spéciale, épuisement : 3 tours à 0 d'endurance) ou un abandon. Les points restent affichés. Récompenses du combat rapide (1 médaille contre l'ordinateur, 2 en ligne, pas de booster).
+- Mesure (1 000 combats simulés, ordinateur normal des deux côtés) : 94 tours en moyenne en format Normal (le plus long : 1 053), 70 en Enchaînement (le plus long : 536). À surveiller : ces combats peuvent être longs.
 
 ### Mode Enchaînement (à l'essai, 25/11/2026)
 

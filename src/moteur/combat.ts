@@ -37,7 +37,9 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
   };
 }
 
-export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean; enchainement?: boolean } = {}): EtatCombat {
+// Durée infinie (combat rapide et entre amis) : `rapide` est aussi vrai (récompenses du combat
+// rapide), mais le combat ne s'arrête ni en fin de période ni à 10 points d'écart.
+export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean; enchainement?: boolean; infini?: boolean } = {}): EtatCombat {
   const defA = typeof a === 'string' ? trouverLutteur(a) : a;
   const defB = typeof b === 'string' ? trouverLutteur(b) : b;
   return {
@@ -50,8 +52,9 @@ export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts
     vainqueur: null,
     finPar: null,
     journal: [],
-    rapide: !!opts.rapide,
+    rapide: !!opts.rapide || !!opts.infini,
     enchainement: !!opts.enchainement,
+    infini: !!opts.infini,
     mortSubite: false,
   };
 }
@@ -773,6 +776,11 @@ export function jouerTour(
 
   const ecart = J[0].score - J[1].score;
   if (e.termine) return e;
+  if (e.infini) {
+    // Durée infinie : le combat continue jusqu'au tombé (combo, action spéciale, épuisement) ou l'abandon.
+    e.tour++;
+    return e;
+  }
   if (e.rapide) return finTourRapide(e, ecart, hasard);
   if (Math.abs(ecart) >= REGLES.ecartSuperiorite) {
     finirPeriode(e, ecart > 0 ? 0 : 1, 'supériorité technique');

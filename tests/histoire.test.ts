@@ -1,4 +1,4 @@
-// Mode histoire : 12 étapes dans l'ordre, validées seulement une fois débloquées.
+// Mode histoire : 15 étapes dans l'ordre, validées seulement une fois débloquées.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,9 +12,9 @@ const h = creerHasard(1);
 const noter = (c: Collection, ev: EvenementHistoire) => noterHistoire(c, ev, h);
 const deNation = (n: string) => LUTTEURS.filter((l) => l.nation === n);
 
-test('histoire : 12 étapes, récompenses du PDF', () => {
-  assert.equal(ETAPES.length, 12);
-  assert.deepEqual(REGLES.histoire.boosters, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 0]);
+test('histoire : 15 étapes, récompenses du PDF puis des étapes 13 à 15', () => {
+  assert.equal(ETAPES.length, 15);
+  assert.deepEqual(REGLES.histoire.boosters, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3]);
 });
 
 test('étape 1 : 3 nations différentes ; la même nation ne compte qu\'une fois', () => {
@@ -126,24 +126,46 @@ test('étapes 7 et 11 : validées dès le déblocage si l\'arène est déjà ava
   assert.equal(d.histoire.etape, 11);
 });
 
-test('étape 12 : tournoi sans défaite = une légendaire que le joueur n\'a pas', () => {
+test('étape 12 : tournoi sans défaite = 3 boosters, et la saison s\'ouvre', async () => {
+  const { saisonOuverte } = await import('../src/page/saison');
   const c = nouvelleCollection();
   c.histoire.etape = 11;
   assert.deepEqual(noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: false }), []);
+  const r = noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: true });
+  assert.equal(r[0].boosters.length, 3);
+  assert.ok(saisonOuverte(c));
+  assert.ok(!histoireFinie(c));
+});
+
+const fin = (ev: Partial<Extract<EvenementHistoire, { type: 'combat' }>>): EvenementHistoire =>
+  ({ type: 'combat', gagne: false, combos: 0, enchainement: false, infini: false, auto: false, ...ev });
+
+test('étapes 13 à 15 : combos, Enchaînement, durée infinie (pas en combat auto)', () => {
+  const c = nouvelleCollection();
+  c.histoire.etape = 12;
+  assert.deepEqual(noter(c, fin({ combos: 1 })), []);
+  assert.deepEqual(noter(c, fin({ combos: 3, auto: true })), []);
+  assert.equal(noter(c, fin({ combos: 2 })).length, 1); // même sans gagner
+  assert.deepEqual(noter(c, fin({ enchainement: true })), []); // il faut gagner
+  assert.equal(noter(c, fin({ gagne: true, enchainement: true })).length, 1);
+  assert.deepEqual(noter(c, fin({ gagne: true })), []);
   const legendaires = LUTTEURS.filter((l) => l.rarete === 'legendaire');
   for (const l of legendaires.slice(1)) c.exemplaires[l.id] = 1;
-  const r = noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: true });
-  assert.deepEqual(r[0].boosters[0].cartes, [legendaires[0].id]);
-  assert.deepEqual(r[0].boosters[0].nouvelles, [legendaires[0].id]);
+  const r = noter(c, fin({ gagne: true, infini: true }));
+  assert.equal(r.length, 1);
+  // Étape 15 : 3 boosters et une légendaire que le joueur n'a pas.
+  assert.equal(r[0].boosters.length, 4);
+  assert.deepEqual(r[0].boosters[3].cartes, [legendaires[0].id]);
   assert.ok(histoireFinie(c));
-  assert.deepEqual(noter(c, { type: 'enLigne' }), []);
-  // Toutes possédées : une légendaire quand même (un double).
-  const d = nouvelleCollection();
-  d.histoire.etape = 11;
-  for (const l of legendaires) d.exemplaires[l.id] = 1;
-  const r2 = noter(d, { type: 'tournoiIndividuel', place: 1, invaincu: true });
-  assert.equal(r2[0].boosters[0].cartes.length, 1);
-  assert.equal(d.exemplaires[r2[0].boosters[0].cartes[0]], 2);
+});
+
+test('ancienne sauvegarde (histoire finie à 12 étapes) : la scène de la saison est gardée, les étapes 13 à 15 s\'ouvrent', () => {
+  const d = depuisSauvegarde({ histoire: { etape: 12, nations: [] }, scenesVues: ['h11', 'h12', 's0'] });
+  assert.equal(d.histoire.etape, 12);
+  assert.ok(!histoireFinie(d));
+  assert.deepEqual(d.scenesVues, ['h11', 'hfin', 's0', 'histoire15']);
+  // Une sauvegarde déjà convertie ne l'est pas deux fois (h12 = scène de l'étape 13).
+  assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify({ ...d, scenesVues: [...d.scenesVues, 'h12'] }))).scenesVues, ['h11', 'hfin', 's0', 'histoire15', 'h12']);
 });
 
 test('histoire gardée dans la sauvegarde', () => {
@@ -151,5 +173,5 @@ test('histoire gardée dans la sauvegarde', () => {
   c.histoire = { etape: 4, nations: [] };
   assert.equal(depuisSauvegarde(JSON.parse(JSON.stringify(c))).histoire.etape, 4);
   assert.equal(depuisSauvegarde({}).histoire.etape, 0);
-  assert.equal(depuisSauvegarde({ histoire: { etape: 99 } }).histoire.etape, 12);
+  assert.equal(depuisSauvegarde({ histoire: { etape: 99 } }).histoire.etape, 15);
 });

@@ -11,8 +11,8 @@ export const PERSONNAGES: Record<Personnage, { nom: string; role: string }> = {
 
 export interface Replique { qui: Personnage; texte: string }
 
-// Clés : h0 à h11 = étapes 1 à 12 du mode histoire ; h12 = mode histoire terminé (la saison
-// s'ouvre) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
+// Clés : h0 à h14 = étapes 1 à 15 du mode histoire ; hfin = étape 12 réussie (la saison
+// s'ouvre ; avant le 26/11/2026, cette scène s'appelait h12) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et s6b =
 // championnats du monde et fin de saison quand il n'y a pas de Jeux Olympiques.
 export const SCENES: Record<string, Replique[]> = {
   h0: [
@@ -63,12 +63,28 @@ export const SCENES: Record<string, Replique[]> = {
   h11: [
     { qui: 'philippe', texte: 'Dernière épreuve : gagner un tournoi individuel sans perdre un seul combat. Le tableau principal, de bout en bout.' },
     { qui: 'cocoach', texte: 'Sans une seule défaite ? Même moi, il m\'a fallu trois essais. Bon courage.' },
-    { qui: 'philippe', texte: 'Réussis, et une carte légendaire rejoindra ta collection.' },
+    { qui: 'philippe', texte: 'Réussis, et la saison sportive t\'ouvrira ses portes.' },
   ],
-  h12: [
+  hfin: [
     { qui: 'philippe', texte: 'Coach, tu as fait tes preuves. Place aux choses sérieuses : une vraie saison sportive.' },
     { qui: 'philippe', texte: 'Interclub, régional, national, international, championnats du monde… et au bout, les Jeux Olympiques.' },
     { qui: 'cocoach', texte: 'Les Jeux ? On s\'y retrouvera. Sur le podium, il n\'y a qu\'une seule marche tout en haut.' },
+  ],
+  h12: [
+    { qui: 'philippe', texte: 'Pendant que la saison commence, on travaille la technique. En vrai combat, les meilleurs enchaînent leurs actions.' },
+    { qui: 'philippe', texte: 'Un matraquage puis une ceinture arrière, un sprawl puis une attaque… Le bouton s\'allume en vert quand un combo est possible.' },
+    { qui: 'philippe', texte: 'Réussis-en deux dans un même combat.' },
+    { qui: 'cocoach', texte: 'Deux combos ? Moi, j\'en place trois par période. Mais bon, chacun son rythme.' },
+  ],
+  h13: [
+    { qui: 'philippe', texte: 'Nouvel exercice : tu prépares tes actions par trois, d\'avance, comme une séquence travaillée à l\'entraînement.' },
+    { qui: 'philippe', texte: 'Choisis le format « Enchaînement » et gagne un combat. Méfie-toi : un contre en 1re action, ou un matraquage en 2e, brise la chaîne.' },
+    { qui: 'cocoach', texte: 'Trois coups d\'avance… C\'est comme aux échecs. Sauf qu\'ici, ça fait mal.' },
+  ],
+  h14: [
+    { qui: 'philippe', texte: 'Dernière épreuve du mode histoire : la durée infinie. Pas de chrono, pas de points qui arrêtent le combat.' },
+    { qui: 'philippe', texte: 'Il n\'y a qu\'une façon de gagner : faire tomber ton adversaire. Gère ton endurance et garde ton second souffle pour le bon moment.' },
+    { qui: 'cocoach', texte: 'Jusqu\'au tombé ? Ça, c\'est de la lutte. Si tu y arrives, tu auras mérité ta légendaire.' },
   ],
   s0: [
     { qui: 'philippe', texte: 'Une saison commence toujours par les échanges interclub : des combats rapides, une seule période.' },
@@ -115,10 +131,13 @@ export const SCENES: Record<string, Replique[]> = {
 };
 
 // Scènes liées à l'avancement du joueur (étape ou palier en cours), dans l'ordre où les montrer.
-export function scenesEnCours(etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean, olympique = true, premiereSaison = true): string[] {
-  if (etapeHistoire < nbEtapes) return [`h${etapeHistoire}`];
-  if (saisonFinie) return [olympique ? 's6' : 's6b'];
-  if (palier === 0) return premiereSaison ? ['h12', 's0'] : ['s0'];
-  if (palier === 4 && !olympique) return ['s4b'];
-  return [`s${palier}`];
+// La saison s'ouvre après l'étape `etapeSaison` ; les étapes suivantes se jouent en parallèle.
+export function scenesEnCours(
+  etapeHistoire: number, nbEtapes: number, palier: number, saisonFinie: boolean, olympique = true, premiereSaison = true, etapeSaison = nbEtapes,
+): string[] {
+  if (etapeHistoire < etapeSaison) return [`h${etapeHistoire}`];
+  const saison = saisonFinie ? [olympique ? 's6' : 's6b']
+    : palier === 0 ? (premiereSaison ? ['hfin', 's0'] : ['s0'])
+    : palier === 4 && !olympique ? ['s4b'] : [`s${palier}`];
+  return etapeHistoire < nbEtapes ? [...saison, `h${etapeHistoire}`] : saison;
 }

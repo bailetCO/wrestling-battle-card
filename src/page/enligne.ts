@@ -91,6 +91,7 @@ export interface Presence {
   nc?: number; // niveau de compte du coach (affiché à côté de son nom)
   rp?: boolean; // combat rapide (publié par l'hôte)
   en?: boolean; // mode Enchaînement : séquences de 3 actions (publié par l'hôte)
+  if?: boolean; // durée infinie : fin par tombé ou abandon (publié par l'hôte)
   au?: boolean; // je veux le combat automatique (il a lieu seulement si les deux le veulent)
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
@@ -111,8 +112,8 @@ export interface Presence {
   jt?: string; // jeton tiré au hasard : départage deux joueurs qui ont le même rôle
 }
 
-export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; en?: boolean; au?: boolean }): Presence {
-  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, en: moi?.en, au: moi?.au, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; en?: boolean; if?: boolean; au?: boolean }): Presence {
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, en: moi?.en, if: moi?.if, au: moi?.au, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -171,6 +172,7 @@ export interface Vue {
   amiNiveau: number | null; // niveau de compte de l'ami
   rapide: boolean; // combat rapide (une période, mort subite)
   enchainement: boolean; // mode Enchaînement : séquences de 3 actions
+  infini: boolean; // durée infinie
   autoMoi: boolean; // j'ai demandé le combat automatique
   autoAmi: boolean; // mon ami l'a demandé
   auto: boolean; // le combat a été joué en automatique (les deux l'ont demandé)
@@ -207,24 +209,26 @@ export class Duel {
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
-  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; en?: boolean; au?: boolean };
+  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; en?: boolean; if?: boolean; au?: boolean };
 
   constructor(
     private salle: Salle, role: Role,
     depart?: Presence | null, private sauvegarder: (p: Presence) => void = () => undefined,
-    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean; enchainement?: boolean } = {},
+    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean; enchainement?: boolean; infini?: boolean } = {},
   ) {
     this.role = role;
     this.ident = {
       mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null,
       nc: ident.niveauCompte, rp: role === 'hote' ? !!ident.rapide : undefined,
       en: role === 'hote' ? !!ident.enchainement : undefined,
+      if: role === 'hote' ? !!ident.infini : undefined,
     };
     this.moiP = depart && depart.role === role && depart.v === 1
       ? {
         ...presenceVide(role), ...depart, co: this.ident.co ?? depart.co ?? null, ic: this.ident.ic ?? depart.ic ?? null,
         nc: this.ident.nc ?? depart.nc, rp: role === 'hote' ? depart.rp ?? this.ident.rp : undefined,
         en: role === 'hote' ? depart.en ?? this.ident.en : undefined,
+        if: role === 'hote' ? depart.if ?? this.ident.if : undefined,
       }
       : presenceVide(role, 0, this.ident);
     this.moiP.jt ??= nouveauSel();
@@ -345,7 +349,7 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false, enchainement: false, autoMoi: false, autoAmi: false, auto: false,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false, enchainement: false, infini: false, autoMoi: false, autoAmi: false, auto: false,
       etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, maSequence: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
@@ -371,6 +375,7 @@ export class Duel {
     this.ident.mo = voulu === 'hote' ? this.ident.mo ?? 'base' : null;
     this.ident.rp = voulu === 'hote' ? !!this.ident.rp : undefined;
     this.ident.en = voulu === 'hote' ? !!this.ident.en : undefined;
+    this.ident.if = voulu === 'hote' ? !!this.ident.if : undefined;
     this.moiP = { ...presenceVide(voulu, Math.max(this.moiP.m, meme.m), this.ident), jt: this.moiP.jt };
     this.secret = null;
     this.publier();
@@ -405,6 +410,7 @@ export class Duel {
     v.amiNiveau = ami?.nc ?? null;
     v.rapide = this.role === 'hote' ? !!moi.rp : !!ami?.rp;
     v.enchainement = this.role === 'hote' ? !!moi.en : !!ami?.en;
+    v.infini = this.role === 'hote' ? !!moi.if : !!ami?.if;
     v.amiIdCoach = ami?.ic ?? null;
     v.autoMoi = !!moi.au;
     v.autoAmi = !!ami?.au;
@@ -448,7 +454,7 @@ export class Duel {
     let defInvite = def(invite);
     if (defInvite.nom === defHote.nom) defInvite = { ...defInvite, nom: `${defInvite.nom} (2)` };
     const ench = !!hote.en;
-    let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp, enchainement: ench });
+    let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp, enchainement: ench, infini: !!hote.if });
     // Combat automatique (les deux l'ont demandé) : chaque téléphone calcule le même combat d'un coup.
     // L'ordinateur joue pour chacun selon son niveau de compte.
     if (hote.au && invite.au) {

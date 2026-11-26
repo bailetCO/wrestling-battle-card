@@ -1,4 +1,5 @@
-// Mode histoire, sans affichage : 12 étapes dans l'ordre. Une étape ne se valide qu'une fois
+// Mode histoire, sans affichage : 15 étapes dans l'ordre (la saison sportive s'ouvre après la 12e ;
+// les étapes 13 à 15, ajoutées le 26/11/2026, font découvrir les combos, l'Enchaînement et la durée infinie). Une étape ne se valide qu'une fois
 // débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 6 (3 lutteurs
 // d'une même nation dans Mon Club), 7 (une nation battue dans l'arène) et 11 (arène terminée), validées
 // tout de suite si c'est déjà le cas.
@@ -75,12 +76,28 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'La consécration', objectif: 'Gagner un tournoi individuel sans passer par le tableau des perdants',
-    guide: 'Gagne le tournoi individuel sans perdre un seul combat. Récompense : une carte légendaire que tu n\'as pas encore.',
+    guide: 'Gagne le tournoi individuel sans perdre un seul combat. Cette étape ouvre aussi la saison sportive.',
     lien: '#tournois', bouton: 'Voir les tournois',
+  },
+  {
+    titre: 'Le tacticien', objectif: 'Réussir 2 combos dans un même combat',
+    guide: 'Un combo, ce sont deux actions qui s\'enchaînent : Matraquage puis Ceinture arrière, Sprawl puis une attaque, Simple jambe puis Double jambe, Esquive puis un contre. Le bouton de l\'action qui déclenche un combo s\'allume en vert. Le combat auto ne compte pas.',
+    lien: '#rapide', bouton: 'Combat rapide',
+  },
+  {
+    titre: 'L\'enchaîneur', objectif: 'Gagner un combat en format Enchaînement',
+    guide: 'Dans Combat rapide (ou entre amis), choisis le format « Enchaînement » : tu composes des séquences de 3 actions. Attention au contre en 1re action et au Matraquage en 2e : ils brisent la chaîne.',
+    lien: '#rapide', bouton: 'Combat rapide',
+  },
+  {
+    titre: 'Jusqu\'au bout', objectif: 'Gagner un combat en durée infinie',
+    guide: 'Dans Combat rapide (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin. Récompense : des boosters et une carte légendaire que tu n\'as pas encore.',
+    lien: '#rapide', bouton: 'Combat rapide',
   },
 ];
 
 export const NB_ETAPES = ETAPES.length;
+export const ETAPE_SAISON = H.etapeSaison; // la saison sportive s'ouvre après cette étape
 
 // Ce qui se passe dans le jeu et peut faire avancer l'histoire.
 export type EvenementHistoire =
@@ -92,6 +109,7 @@ export type EvenementHistoire =
   | { type: 'nationArene' } // une nation battue dans l'arène
   | { type: 'fusion'; id: string }
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
+  | { type: 'combat'; gagne: boolean; combos: number; enchainement: boolean; infini: boolean; auto: boolean } // tout combat terminé
   | { type: 'etat' }; // simple vérification (Mon Club, arène)
 
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
@@ -126,15 +144,18 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
     case 9: return ev.type === 'enLigne';
     case 10: return areneTerminee(c);
     case 11: return ev.type === 'tournoiIndividuel' && ev.place === 1 && ev.invaincu;
+    case 12: return ev.type === 'combat' && !ev.auto && ev.combos >= H.combosTacticien;
+    case 13: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.enchainement;
+    case 14: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.infini;
     default: return false;
   }
 }
 
-// Récompense de l'étape `i` (0 à 11) : boosters classiques, ou la légendaire de l'étape 12.
+// Récompense de l'étape `i` : boosters classiques, plus une légendaire pour la dernière étape.
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
   const n = H.boosters[i] ?? 0;
-  if (n > 0) return Array.from({ length: n }, () => ouvrirBooster(c, hasard, 'classique'));
-  return [legendaireOfferte(c, hasard)];
+  const boosters = Array.from({ length: n }, () => ouvrirBooster(c, hasard, 'classique'));
+  return i === NB_ETAPES - 1 ? [...boosters, legendaireOfferte(c, hasard)] : boosters;
 }
 
 // Une carte légendaire que le joueur n'a pas encore (s'il les a toutes : une au hasard, un double).

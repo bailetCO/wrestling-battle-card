@@ -113,3 +113,32 @@ test('quêtes gardées dans la sauvegarde', () => {
   const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
   assert.deepEqual(d.quetes, c.quetes);
 });
+
+test('nouvelles quêtes : Enchaînement, combos, chaîne brisée, second souffle, durée infinie', () => {
+  const av = (id: string, ev: EvenementQuete) => queteDe(id).avance!(ev, '');
+  assert.equal(av('ench-jouer', combat({ enchainement: true, gagne: false })), 1);
+  assert.equal(av('ench-jouer', combat()), 0);
+  assert.equal(av('combos-3', combat({ combos: 2 })), 2);
+  assert.equal(av('chaine-2', combat({ ruptures: 1 })), 1);
+  assert.equal(av('souffle-gagne', combat({ souffle: true })), 1);
+  assert.equal(av('souffle-gagne', combat({ souffle: true, gagne: false })), 0);
+  assert.equal(av('souffle-gagne', combat({ souffle: true, auto: true })), 0);
+  assert.equal(av('infini', combat({ infini: true })), 1);
+  assert.equal(av('infini', combat({ infini: true, auto: true })), 0);
+  assert.equal(av('ench-3', combat({ enchainement: true })), 1);
+  assert.equal(av('ench-3', combat({ enchainement: true, gagne: false })), 0);
+});
+
+test('quêtes uniques : première action de Champion par fusion, les 4 combos différents', async () => {
+  const { LUTTEURS } = await import('../src/moteur/config');
+  const c = nouvelleCollection();
+  const commune = LUTTEURS.find((l) => l.rarete === 'commune')!;
+  c.exemplaires[commune.id] = 1;
+  assert.equal(queteDe('u-action-champion').etat!(c), false);
+  c.grades[commune.id] = 5; // commune montée Champion du Monde
+  assert.equal(queteDe('u-action-champion').etat!(c), true);
+  assert.equal(queteDe('u-4-combos').etat!(c), false);
+  c.combosVus = ['Passage dans le dos', 'Contre-temps', 'Enchaînement aux jambes', 'Esquive et contre'];
+  assert.equal(queteDe('u-4-combos').etat!(c), true);
+  assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify(c))).combosVus, c.combosVus);
+});

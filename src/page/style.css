@@ -1373,3 +1373,18 @@ b.moi { color: #ff8a95; }
 /* Case déjà vue : pas de nouvelle animation quand l'écran se redessine. */
 .case.fige, .case.fige * { animation: none !important; }
 .case-rapide input { flex: none; }
+
+/* Style de combat : format et durée (combat rapide et entre amis). */
+.style-combat { border: 0; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.style-combat legend { padding: 0; margin-bottom: 4px; font: 700 13px var(--police); color: var(--doux); }
+.choix-style { position: relative; display: block; cursor: pointer; }
+.choix-style input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.choix-style span {
+  display: grid; gap: 1px; height: 100%; padding: 7px 10px; border-radius: 10px;
+  border: 2px solid var(--tapis-ligne); background: var(--tapis-clair);
+}
+.choix-style b { font: 700 14px/1.1 var(--police); }
+.choix-style small { font-size: 11px; color: var(--doux); line-height: 1.2; }
+.choix-style input:checked + span { border-color: var(--orange); background: color-mix(in srgb, var(--orange) 18%, var(--tapis-clair)); }
+.choix-style input:focus-visible + span { outline: 2px solid var(--texte); outline-offset: 2px; }
+.bandeau-histoire.petit { padding-top: 6px; padding-bottom: 6px; } .bandeau-histoire.petit b { font-size: 13.5px; }

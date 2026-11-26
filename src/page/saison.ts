@@ -5,7 +5,7 @@
 
 import { CHAMPIONS, REGLES, type Hasard } from '../moteur';
 import { ouvrirBooster, type Booster, type Collection } from './collection';
-import { NB_ETAPES, legendaireOfferte } from './histoire';
+import { ETAPE_SAISON, legendaireOfferte } from './histoire';
 import { creerIndividuel, type Individuel } from './tournoi';
 
 const S = REGLES.saison;
@@ -16,7 +16,7 @@ export const saisonOlympique = (numero: number) => (numero - 1) % S.joTousLes ==
 // Nombre de paliers de la saison en cours : 6 avec les JO, 5 sinon (fin aux championnats du monde).
 export const nbPaliers = (c: Collection) => (saisonOlympique(c.saison.numero) ? NB_PALIERS : NB_PALIERS - 1);
 
-export const saisonOuverte = (c: Collection) => c.histoire.etape >= NB_ETAPES;
+export const saisonOuverte = (c: Collection) => c.histoire.etape >= ETAPE_SAISON;
 export const saisonFinie = (c: Collection) => c.saison.palier >= nbPaliers(c);
 
 // Objectif d'un palier, en mots.

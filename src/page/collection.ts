@@ -35,6 +35,7 @@ export interface Collection {
   histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
+  combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
   quetes: { jour: string; liste: { id: string; param: string; progres: number; faite: boolean }[]; change: boolean; bonus: boolean; uniques: string[] }; // quêtes journalières
 }
 
@@ -88,7 +89,8 @@ export function nouvelleCollection(): Collection {
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
-    scenesVues: [],
+    scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
+    combosVus: [],
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
 }
@@ -402,6 +404,11 @@ export function depuisSauvegarde(brut: unknown): Collection {
     };
   }
   if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
+  if (Array.isArray(b.combosVus)) c.combosVus = [...new Set(b.combosVus.filter((x): x is string => typeof x === 'string'))].slice(0, 10);
+  // 26/11/2026 : la scène d'ouverture de la saison s'appelait h12 ; h12 est maintenant l'étape 13.
+  if (!c.scenesVues.includes('histoire15')) {
+    c.scenesVues = [...c.scenesVues.map((k) => (k === 'h12' ? 'hfin' : k)), 'histoire15'];
+  }
   const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;
   if (hi && typeof hi === 'object') {
     c.histoire = {

@@ -4,7 +4,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { c, testeur, toujours } from './outils';
 import { ACTIONS, REGLES } from '../src/moteur/config';
-import { creerCombat, toursPeriode } from '../src/moteur/combat';
+import { creerCombat, jouerTour, toursPeriode } from '../src/moteur/combat';
+import { choixOrdinateur } from '../src/moteur/ia';
 import {
   apercuSequence, actionsAjoutables, jouerSequence, reactionSequence, sequenceOrdinateur, validerSequence,
 } from '../src/moteur/enchainement';
@@ -184,6 +185,38 @@ describe('Ordinateur', () => {
       let n = 0;
       while (!e.termine && n++ < 60) e = jouerSequence(e, sequenceOrdinateur(e, 0, h, 'normal'), sequenceOrdinateur(e, 1, h, 'fort'), h).etat;
       assert.ok(e.termine, `graine ${g}`);
+    }
+  });
+});
+
+describe('Durée infinie', () => {
+  it('pas de fin de période ni de supériorité : seul le tombé arrête le combat', () => {
+    let e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true });
+    assert.equal(e.rapide, true);
+    // 15 attaques à 5 points qui passent : 75 - 0, et le combat continue.
+    for (let k = 0; k < 15; k++) {
+      e = jouerTour(e, c('grande_projection'), c('feinte'), toujours(0.5));
+      if (e.termine) break;
+      e.joueurs[0].endurance = 100;
+      e.joueurs[0].historique = [];
+    }
+    assert.equal(e.periode, 1);
+    assert.ok(e.joueurs[0].score >= 50);
+    assert.equal(e.termine, false);
+  });
+
+  it('les combats en durée infinie finissent toujours (tombé ou épuisement)', () => {
+    for (let g = 1; g <= 40; g++) {
+      const h = creerHasard(g);
+      let e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true, enchainement: g % 2 === 0 });
+      let n = 0;
+      while (!e.termine && n++ < 400) {
+        e = e.enchainement
+          ? jouerSequence(e, sequenceOrdinateur(e, 0, h, 'normal'), sequenceOrdinateur(e, 1, h, 'fort'), h).etat
+          : jouerTour(e, choixOrdinateur(e, 0, h, 'normal'), choixOrdinateur(e, 1, h, 'fort'), h);
+      }
+      assert.ok(e.termine, `graine ${g}`);
+      assert.equal(e.finPar, 'tombe');
     }
   });
 });
