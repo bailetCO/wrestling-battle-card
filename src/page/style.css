@@ -1438,3 +1438,4 @@ b.moi { color: #ff8a95; }
 .barre-details { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 12px; }
 .barre-details .lien { font-size: 12px; padding: 2px 0; white-space: nowrap; }
 .astuce-appui { color: var(--doux); }
+.principal.gros { font-size: 1.15rem; padding: 16px; }

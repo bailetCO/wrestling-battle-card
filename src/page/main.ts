@@ -2257,6 +2257,9 @@ function ecranFinTutoriel() {
   collection.bonusTutoriel = true;
   sauver(collection);
   quete({ type: 'tutoriel' });
+  // Premier vrai combat : le meilleur lutteur du joueur contre le premier adversaire de la Carrière.
+  const adv = etapeArene(collection).adversaire;
+  const premier = adv ? [...CARTES].filter((l) => possede(collection, l.id)).sort((x, y) => NIVEAUX.indexOf(niveauDe(y.id)) - NIVEAUX.indexOf(niveauDe(x.id)))[0] ?? null : null;
   app.innerHTML = `
     <main class="sous-menu tuto">
       ${enTete('Tutoriel terminé', '', '#combat')}
@@ -2265,14 +2268,15 @@ function ecranFinTutoriel() {
         <p class="tuto-score">${score[0]} - ${score[1]}</p>
         <p>Un vrai combat se joue en 3 périodes : gagne-en 2, ou fais un tombé. Sans le coach, tu ne verras pas le choix de l'adversaire : à toi de deviner son jeu.</p>
         <p><b>Bonus :</b> ta prochaine victoire en Carrière rapporte 2 boosters en plus.</p>
-        <p><b>Et maintenant ?</b> Le mode histoire te guide pas à pas. Première étape : ${echap(ETAPES[0].objectif.toLowerCase())}.</p>
+        <p><b>Et maintenant ?</b> ${premier ? `Ton premier vrai combat : <b>${echap(premier.nom)}</b> contre <b>${echap(trouverLutteur(adv!).nom)}</b>, premier adversaire de la Carrière. ` : ''}Le mode histoire te guide ensuite pas à pas. Première étape : ${echap(ETAPES[0].objectif.toLowerCase())}.</p>
       </section>
       <div class="fin-boutons marge">
-        <a class="principal lien-bouton" href="#histoire">Commencer le mode histoire</a>
-        <a class="secondaire lien-bouton" href="#arene">Combattre l'ordinateur</a>
-        <a class="secondaire lien-bouton" href="#">Retour au menu</a>
+        ${premier ? '<button class="principal gros" data-premier-combat>Ton premier vrai combat</button>' : '<a class="principal lien-bouton" href="#arene">Combattre l\'ordinateur</a>'}
+        <a class="secondaire lien-bouton" href="#histoire">Voir le mode histoire</a>
+        <a class="lien" href="#">Retour au menu</a>
       </div>
     </main>`;
+  app.querySelector('[data-premier-combat]')?.addEventListener('click', () => premier && lancerArene(premier.id));
   window.scrollTo(0, 0);
 }
 
