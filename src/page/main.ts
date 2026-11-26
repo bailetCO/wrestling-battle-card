@@ -2918,6 +2918,7 @@ function ecranFin() {
           ? `${etapeArene(collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>${boutonAuto('data-suivant-arene-auto')}` : ''}`
           : `<button class="principal" data-revanche>${interclubEnCours ? 'Combat interclub suivant' : enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto')}`}
         <button class="secondaire" data-changer>${enArene ? 'Retour à l\'arène' : 'Changer de lutteur'}</button>
+        <button class="lien" data-menu>Retour au menu</button>
       </div>
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
@@ -2936,6 +2937,13 @@ function ecranFin() {
   app.querySelector('[data-changer]')!.addEventListener('click', () => {
     if (ctx?.type === 'boss' && !gagne) bossChoisi = ctx.nation; else bossChoisi = null;
     ecranArene(e.rapide);
+  });
+  // Retour direct à l'accueil, sans repasser par le choix du lutteur.
+  app.querySelector('[data-menu]')!.addEventListener('click', () => {
+    bossChoisi = null;
+    partie = null;
+    if (location.hash && location.hash !== '#') location.hash = '';
+    else route();
   });
   app.querySelector('[data-ouvrir-paquet]')?.addEventListener('click', () => paquetSolo && revelerPaquet(paquetSolo, ecranFin));
   window.scrollTo(0, 0);

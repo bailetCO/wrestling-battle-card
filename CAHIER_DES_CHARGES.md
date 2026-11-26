@@ -612,6 +612,8 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 
 ### Combat rapide
 
+- Fin de combat (arène, combat rapide) : un bouton « Retour au menu » ramène directement à l'accueil, sans repasser par le choix du lutteur.
+
 - Une seule période. Victoire à 10 points d'écart, par tombé, ou aux points à la fin de la période.
 - Égalité à la fin de la période : mort subite, le premier qui marque gagne. Au bout de 10 tours de mort subite sans point, on départage comme une période normale.
 - Contre l'ordinateur (niveau au choix) : +1 médaille par victoire, sans booster ni consolation. Entre amis (case « Combat rapide » à la création de la salle) : +2 médailles par victoire, sans booster.
