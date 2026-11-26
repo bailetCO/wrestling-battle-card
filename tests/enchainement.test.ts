@@ -252,3 +252,19 @@ describe('Durée infinie : fatigue croissante', () => {
     }
   });
 });
+
+describe('Durée infinie : tour d\'épuisement réglable', () => {
+  it('épuisement dès le tour choisi seulement (20 par défaut)', () => {
+    const tester = (ep: number | undefined, tour: number) => {
+      let e = creerCombat(testeur({ nom: 'A' }), testeur({ nom: 'B' }), { infini: true, epuisement: ep });
+      e.tour = tour; e.tourGlobal = tour;
+      e.joueurs[0].endurance = 2; // ne peut payer aucune action
+      for (let k = 0; k < 3; k++) e = jouerTour(e, c('lutte'), c('defense'), toujours(0.99));
+      return e.termine;
+    };
+    assert.equal(creerCombat(testeur(), testeur(), { infini: true }).epuisementDes, 20);
+    assert.equal(tester(undefined, 21), true);
+    assert.equal(tester(40, 21), false);
+    assert.equal(tester(40, 41), true);
+  });
+});

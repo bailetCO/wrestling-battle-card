@@ -108,6 +108,7 @@ export interface EtatCombat {
   mortSubite: boolean; // combat rapide à égalité après la période : le premier qui marque gagne
   enchainement?: boolean; // mode Enchaînement : séquences de 3 actions, 12 tours par période
   infini?: boolean; // durée infinie : pas de périodes ni d'écart, fin par tombé (ou abandon)
+  epuisementDes?: number; // durée infinie : tour à partir duquel 3 tours sans action possible = tombé
   derniersChoix?: [Choix, Choix]; // les actions réellement jouées au dernier tour (Lutte si remplacée)
 }
 

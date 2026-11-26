@@ -528,7 +528,8 @@ export const REGLES = {
   //   `palier` tours (+2 au tour 35, +3 au tour 45…). Lutte et Souffler restent gratuits.
   // - Dès le tour `debutEpuisement`, 3 tours sans pouvoir payer aucune action = épuisement (tombé).
   //   Sans cette règle, deux lutteurs à bout peuvent lutter l'un contre l'autre sans fin.
-  infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 20 },
+  //   Le joueur règle ce tour (`choixEpuisement`, 20 par défaut).
+  infini: { debutFatigue: 20, debutSurcout: 25, palier: 10, debutEpuisement: 20, choixEpuisement: [20, 30, 40, 50] },
 
   // Mode Enchaînement (à l'essai : combat rapide et entre amis). Chacun compose en secret une
   // séquence de `actions` actions, comparées une à une. 12 tours par période (4 séquences).

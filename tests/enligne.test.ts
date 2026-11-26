@@ -380,7 +380,7 @@ test('mode Enchaînement entre amis : une séquence modifiée après l\'envoi es
 test('durée infinie entre amis : le combat va jusqu\'au tombé, même combat des deux côtés', async () => {
   for (let partie = 0; partie < 3; partie++) {
     const salle = salleMemoire();
-    const a = new Duel(salle('a'), 'hote', null, undefined, { infini: true, enchainement: partie === 2 });
+    const a = new Duel(salle('a'), 'hote', null, undefined, { infini: true, enchainement: partie === 2, epuisement: 30 });
     const b = new Duel(salle('b'), 'invite');
     if (partie === 2) { joueurAutoSeq(a, 5); joueurAutoSeq(b, 6); } else { joueurAuto(a, partie + 1); joueurAuto(b, partie + 7); }
     await attendre();
@@ -389,7 +389,9 @@ test('durée infinie entre amis : le combat va jusqu\'au tombé, même combat de
     await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
     assert.equal(a.vue.phase, 'fin');
     assert.equal(b.vue.infini, true);
+    assert.equal(b.vue.epuisement, 30);
     assert.equal(a.vue.etat!.infini, true);
+    assert.equal(b.vue.etat!.epuisementDes, 30);
     assert.equal(a.vue.etat!.finPar, 'tombe');
     assert.deepEqual(a.vue.etat!.journal, b.vue.etat!.journal);
     a.fermer(); b.fermer();

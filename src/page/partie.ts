@@ -56,9 +56,9 @@ export class Partie {
   constructor(
     readonly idHumain: string, readonly idOrdi: string, graine: number,
     readonly niveau: Niveau = 'normal', defHumain?: DefLutteur, readonly script: Choix[] = [], rapide = false,
-    defOrdi?: DefLutteur, enchainement = false, infini = false,
+    defOrdi?: DefLutteur, enchainement = false, infini = false, epuisement?: number,
   ) {
-    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), defOrdi ?? idOrdi, { rapide, enchainement, infini });
+    this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), defOrdi ?? idOrdi, { rapide, enchainement, infini, epuisement });
     this.hasard = new HasardRejouable(graine);
   }
 

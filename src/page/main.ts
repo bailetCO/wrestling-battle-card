@@ -734,7 +734,7 @@ function ecranArene(rapide = false) {
       ${rapide
         ? `${enTete('Combat rapide', `Ordinateur ${niveauOrdi(collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
            <div class="marge">${choixNiveau(collection.niveau)}
-             ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé']])}</div>`
+             ${reglagesStyle('solo', enchainementChoisi ? 'enchainement' : 'normal', infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé']], epuisementChoisi)}</div>`
         : `${enTete('Arène', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}</div>`}
       ${collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
@@ -783,8 +783,11 @@ function ecranArene(rapide = false) {
   app.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((b) =>
     b.addEventListener('click', () => { bossChoisi = b.dataset.boss!; ecranArene(); }),
   );
-  app.querySelectorAll<HTMLInputElement>('input[name="solo-format"]').forEach((i) => i.addEventListener('change', () => { enchainementChoisi = i.value === 'enchainement'; }));
-  app.querySelectorAll<HTMLInputElement>('input[name="solo-duree"]').forEach((i) => i.addEventListener('change', () => { infiniChoisi = i.value === 'infinie'; }));
+  brancherStyle('solo', (cle, v) => {
+    if (cle === 'format') enchainementChoisi = v === 'enchainement';
+    else if (cle === 'duree') infiniChoisi = v === 'infinie';
+    else epuisementChoisi = Number(v);
+  });
   app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { bossChoisi = null; ecranArene(); });
   if (areneTerminee(collection) && !bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
@@ -1960,7 +1963,7 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   ORDI = 1;
   // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
   const libre = rapide && !interclub && !ctx; // les styles de combat : combat rapide seulement
-  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, libre && enchainementChoisi, libre && infiniChoisi);
+  partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, libre && enchainementChoisi, libre && infiniChoisi, epuisementChoisi);
   sequenceHumain = [];
   areneCtx = ctx;
   interclubEnCours = interclub;
@@ -2413,9 +2416,10 @@ function brancherChat() {
 // remplie se retire d'un toucher (avec celles qui suivent). Puis les 3 duels se révèlent.
 let enchainementChoisi = false; // format choisi sur l'écran du combat rapide
 let infiniChoisi = false; // durée choisie sur l'écran du combat rapide
+let epuisementChoisi: number = R_.infini.debutEpuisement; // durée infinie : tour où commence l'épuisement
 
 // Réglages « Style de combat » : le format (normal ou Enchaînement) et la durée.
-function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: string, durees: [string, string, string][]): string {
+function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: string, durees: [string, string, string][], epuisement: number = R_.infini.debutEpuisement): string {
   const choix = (groupe: string, valeur: string, actuel: string, titre: string, sous: string) => `
     <label class="choix-style"><input type="radio" name="${nom}-${groupe}" value="${valeur}" ${valeur === actuel ? 'checked' : ''}>
       <span><b>${titre}</b><small>${sous}</small></span></label>`;
@@ -2426,7 +2430,19 @@ function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: st
     </fieldset>
     <fieldset class="style-combat"><legend>Durée</legend>
       ${durees.map(([v, t, sous]) => choix('duree', v, duree, t, sous)).join('')}
+    </fieldset>
+    <fieldset class="style-combat si-infini" ${duree === 'infinie' ? '' : 'hidden'}><legend>Épuisement à partir du tour</legend>
+      ${R_.infini.choixEpuisement.map((t) => choix('epuise', String(t), String(epuisement), `Tour ${t}`, t === R_.infini.debutEpuisement ? 'Par défaut' : '')).join('')}
     </fieldset>`;
+}
+
+// Le réglage d'épuisement n'apparaît que pour la durée infinie.
+function brancherStyle(nom: string, changer: (cle: 'format' | 'duree' | 'epuise', valeur: string) => void) {
+  app.querySelectorAll<HTMLInputElement>(`input[name^="${nom}-"]`).forEach((i) => i.addEventListener('change', () => {
+    const cle = i.name.slice(nom.length + 1) as 'format' | 'duree' | 'epuise';
+    changer(cle, i.value);
+    if (cle === 'duree') app.querySelector<HTMLElement>('.si-infini')!.hidden = i.value !== 'infinie';
+  }));
 }
 let sequenceHumain: Choix[] = [];
 
@@ -3289,11 +3305,13 @@ function ecranAmis(message = '') {
       </section>
       <a class="lien" href="#">Retour</a>
     </main>`;
+  brancherStyle('ligne', () => undefined);
   app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
     b.addEventListener('click', () => {
       const duree = app.querySelector<HTMLInputElement>('input[name="ligne-duree"]:checked')?.value;
       const format = app.querySelector<HTMLInputElement>('input[name="ligne-format"]:checked')?.value;
-      connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', duree === 'rapide', format === 'enchainement', duree === 'infinie');
+      const epuise = Number(app.querySelector<HTMLInputElement>('input[name="ligne-epuise"]:checked')?.value ?? R_.infini.debutEpuisement);
+      connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', duree === 'rapide', format === 'enchainement', duree === 'infinie', epuise);
     }),
   );
   app.querySelector('form')!.addEventListener('submit', (ev) => {
@@ -3305,7 +3323,7 @@ function ecranAmis(message = '') {
   window.scrollTo(0, 0);
 }
 
-async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false, enchainement = false, infini = false) {
+async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false, enchainement = false, infini = false, epuisement?: number) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
@@ -3335,7 +3353,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
-  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide, enchainement, infini });
+  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide, enchainement, infini, epuisement });
   duel.surVue(rafraichirLigne);
 }
 
@@ -3473,7 +3491,7 @@ function ecranSalle(v: Vue) {
     </button>`;
   }).join('');
   const modeTexte = (v.enchainement ? `Mode Enchaînement (séquences de ${TAILLE_SEQUENCE} actions) · ` : '') + (v.modeSalle === null ? 'Connexion à la salle…'
-    : v.infini ? `Durée infinie (fin par tombé ou abandon) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
+    : v.infini ? `Durée infinie (fin par tombé ou abandon, épuisement dès le tour ${v.epuisement ?? R_.infini.debutEpuisement}) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : v.rapide ? `Combat rapide (une période, mort subite) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : enCollection ? 'Mode : vos collections (fusions comprises) · 2 boosters et 2 médailles par victoire.'
     : 'Mode : cartes de base, toutes permises · 2 médailles par victoire, pas de booster.');

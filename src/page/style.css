@@ -1395,3 +1395,5 @@ b.moi { color: #ff8a95; }
 .badge.fatigue.f3 { background: #ec7a2c; }
 .badge.fatigue.f4 { background: #e5393a; color: #fff; }
 .badge.fatigue.f5 { background: #9e1023; color: #fff; }
+.style-combat[hidden] { display: none; }
+.style-combat.si-infini { grid-template-columns: repeat(4, 1fr); } .si-infini .choix-style span { padding: 6px 6px; } .si-infini .choix-style b { font-size: 13px; }

@@ -39,7 +39,7 @@ export function creerLutteur(def: DefLutteur): EtatLutteur {
 
 // Durée infinie (combat rapide et entre amis) : `rapide` est aussi vrai (récompenses du combat
 // rapide), mais le combat ne s'arrête ni en fin de période ni à 10 points d'écart.
-export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean; enchainement?: boolean; infini?: boolean } = {}): EtatCombat {
+export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts: { rapide?: boolean; enchainement?: boolean; infini?: boolean; epuisement?: number } = {}): EtatCombat {
   const defA = typeof a === 'string' ? trouverLutteur(a) : a;
   const defB = typeof b === 'string' ? trouverLutteur(b) : b;
   return {
@@ -55,6 +55,7 @@ export function creerCombat(a: string | DefLutteur, b: string | DefLutteur, opts
     rapide: !!opts.rapide || !!opts.infini,
     enchainement: !!opts.enchainement,
     infini: !!opts.infini,
+    epuisementDes: opts.infini ? opts.epuisement ?? REGLES.infini.debutEpuisement : undefined,
     mortSubite: false,
   };
 }
@@ -767,7 +768,7 @@ export function jouerTour(
   for (const j of LES_DEUX) {
     const l = J[j];
     const aBout = l.endurance <= 0
-      || (!!e.infini && e.tourGlobal >= REGLES.infini.debutEpuisement && actionsJouables(e, j).length === 0);
+      || (!!e.infini && e.tourGlobal >= (e.epuisementDes ?? REGLES.infini.debutEpuisement) && actionsJouables(e, j).length === 0);
     l.toursSansEndurance = aBout ? l.toursSansEndurance + 1 : 0;
     if (l.toursSansEndurance >= REGLES.toursSansEnduranceAvantTombe) {
       log(e, `${l.def.nom} est épuisé depuis 3 tours et se fait tomber.`);
