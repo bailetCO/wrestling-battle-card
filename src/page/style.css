@@ -1476,6 +1476,8 @@ b.moi { color: #ff8a95; }
 /* Grille de la collection : la carte illustrée entière. */
 .mini-carte.avec-illu { padding: 0; background: none; display: block; border-radius: 10px; box-shadow: 3px 3px 0 var(--encre); }
 .mini-carte.avec-illu .cl-illu { border-radius: 10px; }
+.mini-carte.avec-illu > .mc-portrait, .mini-carte.avec-illu > .mc-nom, .mini-carte.avec-illu > .mc-bas:not(.mc-gagner) { display: none; }
+.mini-carte:not(.avec-illu) > .mc-etoiles { display: none; }
 .mini-carte.avec-illu .mc-bas { position: absolute; left: 0; right: 0; bottom: 8%; margin: 0; justify-content: center; background: rgba(7, 13, 34, .85); padding: 4px; font-weight: 700; color: #fff; border-radius: 0; }
 .mc-etoiles { position: absolute; top: 4px; left: 4px; padding: 1px 6px; border-radius: 8px; background: rgba(7, 13, 34, .85); color: var(--orange); font-size: 12px; font-weight: 700; }
 .rival-presentation { max-width: 280px; margin: 0 auto; border-radius: 14px; }

@@ -117,3 +117,20 @@ with open(os.path.join(RACINE, 'src', 'page', 'illustrations', 'pack-v1.json'), 
     f.write('\n')
 taille = sum(os.path.getsize(os.path.join(d, x)) for d, _, fs in os.walk(DEST) for x in fs)
 print(f"{len(donnees['lutteurs'])} lutteurs associés, Cocoach, {len(donnees['emblemes'])} emblèmes, {len(donnees['cadres'])} cadres ; {taille/1e6:.1f} Mo ; manquants : {manquants}")
+
+# Noms affichés : chaque lutteur associé prend le nom imprimé sur sa carte (registre du pack).
+# Seul le nom change dans src/moteur/config.ts ; identifiant, statistiques et rareté restent.
+if '--sans-noms' not in sys.argv:
+    import re
+    chemin = os.path.join(RACINE, 'src', 'moteur', 'config.ts')
+    texte = open(chemin, encoding='utf-8').read()
+    changes = 0
+    for id_jeu, l in donnees['lutteurs'].items():
+        nom = l['nom'].replace("'", "\\'")
+        motif = re.compile(r"(\[\s*'" + re.escape(id_jeu) + r"',\s*')((?:[^'\\]|\\.)*)(')")
+        texte, n = motif.subn(lambda m: m.group(1) + nom + m.group(3), texte, count=1)
+        if n == 0:
+            print('ATTENTION : lutteur introuvable dans config.ts :', id_jeu)
+        changes += n
+    open(chemin, 'w', encoding='utf-8').write(texte)
+    print(changes, 'noms appliqués dans config.ts')

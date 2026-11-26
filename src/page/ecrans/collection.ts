@@ -237,24 +237,25 @@ export function miniCarteCollection(l: DefLutteur): string {
   const et = nbEtoiles(S.collection, l.id);
   const etoiles = et ? `<span class="mc-grade">★${et}</span>` : '';
   const niv = niveauDe(l.id);
+  // Carte illustrée : l'image s'ajoute devant le contenu d'origine, masqué tant qu'elle s'affiche
+  // (si elle manque, la classe avec-illu tombe et la mini-carte d'origine réapparaît).
   const illu = blocIllustre(l, a ? niv : l.rarete, 'mini');
+  const classeIllu = illu ? ' avec-illu' : '';
   if (!a) {
-    if (illu) return `<div class="mini-carte avec-illu verrouillee" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">${illu}<span class="mc-bas">À gagner</span></div>`;
     return `
-      <div class="mini-carte verrouillee" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">
+      <div class="mini-carte verrouillee${classeIllu}" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">
+        ${illu ?? ''}
         <span class="mc-portrait">${portrait(l)}</span>
         <span class="mc-nom">${echap(l.nom)}</span>
-        <span class="mc-bas">À gagner</span>
+        <span class="mc-bas mc-gagner">À gagner</span>
       </div>`;
   }
-  if (illu) {
-    return `<button class="mini-carte avec-illu" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
-      ${illu}${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}${et ? `<span class="mc-etoiles">★${et}</span>` : ''}</button>`;
-  }
   return `
-    <button class="mini-carte" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+    <button class="mini-carte${classeIllu}" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+      ${illu ?? ''}
       <span class="mc-portrait">${portrait(l, niv)}</span>
       ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
+      ${et ? `<span class="mc-etoiles">★${et}</span>` : ''}
       <span class="mc-nom">${echap(l.nom)}</span>
       <span class="mc-bas">${echap(l.origine)} ${etoiles}</span>
     </button>`;

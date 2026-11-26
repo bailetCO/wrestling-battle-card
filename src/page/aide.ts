@@ -1,7 +1,7 @@
 // Aide au joueur : la page de règles et les écrans du tutoriel.
 // Les chiffres viennent de la configuration : si on rééquilibre, les textes suivent.
 
-import { ACTIONS, REGLES, type Choix, type IdAction } from '../moteur';
+import { ACTIONS, REGLES, trouverLutteur, type Choix, type IdAction } from '../moteur';
 import { ICONE } from './textes';
 
 const R = REGLES;
@@ -152,7 +152,7 @@ export function ecransTutoriel(): EcranTuto[] {
     {
       titre: 'Bienvenue, coach !',
       html: `<p>Ton rôle : réunir des lutteurs, régler leurs actions et les mener à la victoire.</p>
-        <p>Commence par un combat express de ${R.tutoriel.toursCombat} tours avec Hugo Delmas : le coach te guide. Le reste (collection, fusion, ton club, les tournois) se découvre ensuite, pas à pas, avec le mode histoire.</p>`,
+        <p>Commence par un combat express de ${R.tutoriel.toursCombat} tours avec ${trouverLutteur('europe').nom} : le coach te guide. Le reste (collection, fusion, ton club, les tournois) se découvre ensuite, pas à pas, avec le mode histoire.</p>`,
     },
     {
       titre: 'Le combat',
@@ -162,7 +162,7 @@ export function ecransTutoriel(): EcranTuto[] {
   ];
 }
 
-// Combat guidé : Hugo Delmas (toi) contre Colt Ramsey, sur une période.
+// Combat guidé : le lutteur « europe » (toi) contre « usa-explosif » (noms : voir config).
 export const TUTO_COMBAT = { moi: 'europe', adversaire: 'usa-explosif', graine: 2026 };
 
 export interface EtapeGuidee {

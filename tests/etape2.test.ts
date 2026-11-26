@@ -31,7 +31,7 @@ test('initiative de l\'ordinateur : il change pour une autre action jouable sino
 test('le journal explique pourquoi un duel est gagné', () => {
   let e = creerCombat('europe', 'usa');
   e = jouerTour(e, c('defense'), c('double_jambe'), toujours(0));
-  assert.ok(e.journal.some((l) => l.includes('La défense de Hugo Delmas l\'emporte sur l\'attaque de Tanner Briggs')));
+  assert.ok(e.journal.some((l) => l.includes(`La défense de ${trouverLutteur('europe').nom} l'emporte sur l'attaque de ${trouverLutteur('usa').nom}`)));
 });
 
 test('feinte contre attaque ratée : la feinte est dissipée, sans bonus ni initiative', () => {
@@ -42,7 +42,7 @@ test('feinte contre attaque ratée : la feinte est dissipée, sans bonus ni init
   const apres = jouerTour(e, c('feinte'), c('double_jambe'), () => tirages[i++] ?? 0.5);
   assert.equal(apres.joueurs[0].bonusFeinte, 0);
   assert.equal(apres.joueurs[0].initiative, false);
-  assert.ok(apres.journal.some((l) => l.includes('la feinte de Kenji Arata est dissipée')));
+  assert.ok(apres.journal.some((l) => l.includes(`la feinte de ${trouverLutteur('japon').nom} est dissipée`)));
 });
 
 test('feinte sur défense : seul le feinteur peut prendre l\'initiative', () => {

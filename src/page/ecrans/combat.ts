@@ -1,6 +1,6 @@
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
-import { blocIllustre, imagePresentationCocoach } from '../illustrations';
+import { blocIllustre, imagePresentationCocoach, imgPresentationCocoach } from '../illustrations';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
@@ -395,7 +395,7 @@ export function fenetreCarteRival() {
   const pres = imagePresentationCocoach();
   ouvrirFenetre(`<h2>Cocoach, ton rival</h2>
     <p class="note">Personnage spécial : il ne se gagne pas dans les boosters. Il monte de niveau à chaque fois que tu le bats.</p>
-    ${pres ? `<img class="illu rival-presentation" src="${pres}" alt="Cocoach, le rival" loading="lazy" decoding="async" width="720" height="1080" data-repli="carte">` : ''}
+    ${pres ? imgPresentationCocoach() : ''}
     <p><b>Niveau actuel : ${NOM_RARETE[niv]}</b></p>
     <div class="rival-carte">${blocIllustre(def, niv, 'grande') ?? ''}</div>
     <div class="fin-boutons"><button class="principal" data-fermer>Fermer</button></div>`, true);
