@@ -35,7 +35,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/quetes.ts` : les quêtes journalières (tirage du jour, progression, récompenses, quêtes uniques), sans affichage.
 - `src/page/saison.ts` : la saison sportive (mode histoire 2 : interclub, régional, national, international, Mondiaux, JO), sans affichage.
 - `src/page/dialogues.ts` : les scènes de dialogue des modes histoire (Philippe et Cocoach).
-- `src/page/histoire.ts` : le mode histoire (12 étapes, validation dans l'ordre, récompenses), sans affichage.
+- `src/page/histoire.ts` : le mode histoire (18 étapes, validation dans l'ordre, récompenses), sans affichage.
 - `src/page/tournoi.ts` : les tournois (individuel à double tableau de 6 à 15 lutteurs, tournoi par équipe avec bonus de nation, ancienne compétition à 6, inscriptions et gains), sans affichage.
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.
 - Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `tournois`, `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
