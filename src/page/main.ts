@@ -1947,7 +1947,6 @@ function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false
   const ench = rapide && !interclub && !ctx && enchainementChoisi;
   partie = new Partie(idHumain, idOrdi, graine, niveau, avecDeck(defPossede(collection, idHumain), deckDe(collection, idHumain)), [], rapide, undefined, ench);
   sequenceHumain = [];
-  derniereSequence = null;
   areneCtx = ctx;
   interclubEnCours = interclub;
   tours = [];
@@ -2395,7 +2394,14 @@ function brancherChat() {
 // remplie se retire d'un toucher (avec celles qui suivent). Puis les 3 duels se révèlent.
 let enchainementChoisi = false; // case cochée sur l'écran du combat rapide
 let sequenceHumain: Choix[] = [];
-let derniereSequence: SequenceJouee | null = null;
+
+// La dernière séquence jouée, retrouvée dans la liste des tours (contre l'ordinateur ou en ligne).
+function sequenceAffichee(): SequenceJouee | null {
+  const der = tours[tours.length - 1];
+  if (!der?.sequence) return null;
+  const ts = tours.filter((t) => t.sequence === der.sequence);
+  return { tours: ts, rupture: ts[ts.length - 1].rupture ?? null, ordiAChange: ts.some((t) => t.ordiAChange) };
+}
 
 function caseSequenceHTML(e: EtatCombat, c: Choix | undefined, k: number): string {
   if (!c) return `<span class="seq-case vide">${k + 1}</span>`;
@@ -2460,6 +2466,14 @@ function brancherSequence() {
 }
 
 function validerSequenceHumain() {
+  if (mode === 'ligne') {
+    const e = vueLigne?.etat;
+    if (!e || !vueLigne?.aChoisir || validerSequence(e, HUMAIN, sequenceHumain)) return;
+    void duel?.jouerSequence(sequenceHumain);
+    sequenceHumain = [];
+    ecranCombat();
+    return;
+  }
   if (!partie || enAttente) return;
   const erreur = validerSequence(partie.etat, HUMAIN, sequenceHumain);
   if (erreur) {
@@ -2476,10 +2490,15 @@ function validerSequenceHumain() {
 
 // Initiative : le joueur voit la dernière action de l'ordinateur et peut changer la sienne.
 function fenetreInitiativeSequence(seqO: Choix[], vue: Choix) {
-  const e = partie!.etat;
+  fenetreDerniereAction(partie!.etat, sequenceHumain, vue, 'l\'ordinateur', (seq) => suiteSequence(seq, seqO));
+}
+
+// Fenêtre d'initiative du mode Enchaînement : la dernière action adverse, et le choix de garder
+// ou de changer sa propre dernière action. `decider` reçoit la séquence finale.
+function fenetreDerniereAction(e: EtatCombat, maSeq: Choix[], vue: Choix, qui: string, decider: (seq: Choix[]) => void) {
   const n = TAILLE_SEQUENCE - 1;
-  const debut = sequenceHumain.slice(0, n);
-  const mien = sequenceHumain[n];
+  const debut = maSeq.slice(0, n);
+  const mien = maSeq[n];
   const libO = libelleAction(e.joueurs[ORDI].def.nation, vue.action);
   const fO = famille(vue.action);
   const libM = libelleAction(e.joueurs[HUMAIN].def.nation, mien.action);
@@ -2492,13 +2511,13 @@ function fenetreInitiativeSequence(seqO: Choix[], vue: Choix) {
   }).join('');
   const f = ouvrirFenetre(`
     <h2>Initiative</h2>
-    <p>La dernière action de l'ordinateur sera :</p>
+    <p>La dernière action de ${qui} sera :</p>
     <ul class="apercu"><li class="bleu"><span class="ico f-${fO}">${ICONE[fO]}</span><b>${vue.speciale ? '★ ' : ''}${echap(libO.local)}</b> <small>${echap(libO.fr)}${legendeFamille(fO)}</small></li></ul>
     <button class="principal" data-garder>Garder ma dernière action : ${mien.speciale ? '★ ' : ''}${echap(libM.local)}</button>
     ${autres ? `<p class="ou">ou la changer pour :</p><div class="pave-fenetre"><div class="grille">${autres}</div></div>` : ''}`);
-  f.querySelector('[data-garder]')!.addEventListener('click', () => suiteSequence(sequenceHumain, seqO));
+  f.querySelector('[data-garder]')!.addEventListener('click', () => decider(maSeq));
   f.querySelectorAll<HTMLButtonElement>('[data-autre]').forEach((b) =>
-    b.addEventListener('click', () => suiteSequence([...debut, { action: b.dataset.autre as IdAction }], seqO)),
+    b.addEventListener('click', () => decider([...debut, { action: b.dataset.autre as IdAction }])),
   );
 }
 
@@ -2532,7 +2551,6 @@ function resoudreSequenceHumain(seqH: Choix[], seqO: Choix[], change: boolean, f
       if (m) scoresPeriodes.push([Number(m[1]), Number(m[2])]);
     }
   }
-  derniereSequence = r;
   sequenceHumain = [];
   fermerFenetre();
   enAttente = false;
@@ -2569,7 +2587,8 @@ function caseSequence(e: EtatCombat, s: SequenceJouee): string {
 
 // La case du dernier tour : les deux actions se révèlent, puis le mot du résultat.
 function caseDernierTour(e: EtatCombat): string {
-  if (e.enchainement && derniereSequence) return caseSequence(e, derniereSequence);
+  const seqVue = e.enchainement ? sequenceAffichee() : null;
+  if (seqVue) return caseSequence(e, seqVue);
   const t = tours[tours.length - 1];
   const h = e.joueurs[HUMAIN];
   const o = e.joueurs[ORDI];
@@ -3219,6 +3238,7 @@ function ecranAmis(message = '') {
         <h2>Créer une salle</h2>
         <p>Choisis comment vous jouez :</p>
         <label class="case-rapide"><input type="checkbox" id="rapide"> Combat rapide <small>(une période, mort subite, sans booster)</small></label>
+        <label class="case-rapide"><input type="checkbox" id="enchainement-ligne"> Mode Enchaînement <small>(à l'essai : séquences de ${TAILLE_SEQUENCE} actions, ${R_.enchainement.toursParPeriode} tours par période)</small></label>
         <button class="principal" data-creer="collection">Avec nos collections<small>Vos cartes fusionnées · 2 boosters et 2 médailles par victoire</small></button>
         <button class="secondaire" data-creer="base">Cartes de base<small>Toutes les cartes, sans fusion · 2 médailles par victoire, pas de booster</small></button>
       </section>
@@ -3233,7 +3253,7 @@ function ecranAmis(message = '') {
       <a class="lien" href="#">Retour</a>
     </main>`;
   app.querySelectorAll<HTMLButtonElement>('[data-creer]').forEach((b) =>
-    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', app.querySelector<HTMLInputElement>('#rapide')?.checked)),
+    b.addEventListener('click', () => connecter(nouveauCode(), 'hote', b.dataset.creer === 'collection' ? 'collection' : 'base', app.querySelector<HTMLInputElement>('#rapide')?.checked, app.querySelector<HTMLInputElement>('#enchainement-ligne')?.checked)),
   );
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -3244,7 +3264,7 @@ function ecranAmis(message = '') {
   window.scrollTo(0, 0);
 }
 
-async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false) {
+async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide = false, enchainement = false) {
   app.innerHTML = '<main class="amis"><header class="titre"><h1>Connexion…</h1><p>Ouverture de la salle.</p></header></main>';
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
@@ -3274,7 +3294,7 @@ async function connecter(code: string, role: Role, modeSalle?: ModeSalle, rapide
     } catch {
       // pas de sauvegarde possible : la reprise après rechargement ne marchera pas
     }
-  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide });
+  }, { mode: modeSalle, coach: collection.coach, idCoach: collection.idCoach, niveauCompte: niveauCompte(collection), rapide, enchainement });
   duel.surVue(rafraichirLigne);
 }
 
@@ -3314,7 +3334,7 @@ function rafraichirLigne(v: Vue) {
   if (absentDepuis) minuteurAbsence = window.setTimeout(() => vueLigne && rafraichirLigne(vueLigne), 5000);
 
   if (v.phase === 'attente-ami' || v.phase === 'choix-lutteur') {
-    const sig = `${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}|${v.autoMoi}|${v.autoAmi}`;
+    const sig = `${v.enchainement}|${v.phase}|${v.amiPresent}|${v.monLutteur}|${v.amiLutteur}|${v.attente}|${salleActive?.connecte()}|${v.modeSalle}|${v.amiCoach}|${v.autoMoi}|${v.autoAmi}`;
     if (sig !== signatureSalle) ecranSalle(v);
     signatureSalle = sig;
     return;
@@ -3333,6 +3353,7 @@ function rafraichirLigne(v: Vue) {
   }
   // Combat : on ne redessine tout que quand un nouveau tour est joué.
   if (v.tours.length !== toursAffiches || !app.querySelector('.combat')) {
+    if (v.tours.length !== toursAffiches) sequenceHumain = []; // nouvelle séquence jouée : on recompose
     toursAffiches = v.tours.length;
     tours = v.tours;
     scoresPeriodes = [];
@@ -3362,7 +3383,10 @@ function majStatutLigne() {
   } else if (v.desaccord) {
     texte = 'Attention : vos deux téléphones ne calculent pas la même chose. Recommencez le combat.';
   } else if (v.aChoisir) {
-    texte = 'À toi de choisir ton action.';
+    texte = v.enchainement ? 'À toi de composer ta séquence.' : 'À toi de choisir ton action.';
+  } else if (v.maSequence && v.attente) {
+    const noms = v.maSequence.map((c) => `${c.speciale ? '★ ' : ''}${libelleAction(e.joueurs[HUMAIN].def.nation, c.action).local}`).join(', ');
+    texte = `Ta séquence : ${noms}. ${v.attente}`;
   } else if (v.monChoix && v.attente) {
     const lib = libelleAction(e.joueurs[HUMAIN].def.nation, v.monChoix.action);
     texte = `Ton choix : ${v.monChoix.speciale ? '★ ' : ''}${lib.local}. ${v.attente}`;
@@ -3407,10 +3431,10 @@ function ecranSalle(v: Vue) {
       <span><b>${echap(l.nom)}</b><small>${echap(l.origine)} · ${NOM_RARETE[niveauCarte(l, g)]}</small></span>
     </button>`;
   }).join('');
-  const modeTexte = v.modeSalle === null ? 'Connexion à la salle…'
+  const modeTexte = (v.enchainement ? `Mode Enchaînement (séquences de ${TAILLE_SEQUENCE} actions) · ` : '') + (v.modeSalle === null ? 'Connexion à la salle…'
     : v.rapide ? `Combat rapide (une période, mort subite) · ${enCollection ? 'vos collections' : 'cartes de base'} · 2 médailles par victoire, pas de booster.`
     : enCollection ? 'Mode : vos collections (fusions comprises) · 2 boosters et 2 médailles par victoire.'
-    : 'Mode : cartes de base, toutes permises · 2 médailles par victoire, pas de booster.';
+    : 'Mode : cartes de base, toutes permises · 2 médailles par victoire, pas de booster.');
   const ami = v.amiLutteur ? trouverLutteur(v.amiLutteur) : null;
   app.innerHTML = `
     <main class="amis">
@@ -3448,6 +3472,10 @@ function ecranSalle(v: Vue) {
 
 function fenetreInitiativeLigne(v: Vue) {
   const e = v.etat!;
+  if (v.enchainement) {
+    if (!v.maSequence || !v.initiative?.length) return;
+    return fenetreDerniereAction(e, v.maSequence, { action: v.initiative[0] }, 'ton ami', (seq) => duel?.deciderSequence(seq));
+  }
   const choix = v.monChoix;
   const nationA = e.joueurs[ORDI].def.nation;
   const options = v.initiative!.map((a) => {

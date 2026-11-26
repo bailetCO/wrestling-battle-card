@@ -144,6 +144,14 @@ describe('Initiative', () => {
     assert.equal(r.etat.joueurs[1].initiative, false);
   });
 
+  it('deux initiatives gagnées dans la même séquence s\'annulent', () => {
+    // A feinte sur la défense au 1er duel, B feinte sur la défense au 3e : les deux gagnent l'initiative.
+    const r = jouerSequence(combat(), seq('feinte', 'defense', 'defense'), seq('defense', 'defense', 'feinte'), toujours(0));
+    assert.equal(r.etat.joueurs[0].initiative, false);
+    assert.equal(r.etat.joueurs[1].initiative, false);
+    assert.ok(r.etat.journal.some((l) => l.includes('elles s\'annulent')));
+  });
+
   it('l\'ordinateur avec l\'initiative ne change que sa dernière action', () => {
     const e = combat();
     e.joueurs[1].initiative = true;

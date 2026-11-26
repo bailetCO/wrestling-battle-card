@@ -15,7 +15,7 @@
 // Tout l'historique est dans la présence : après un rechargement, le combat reprend.
 
 import {
-  ACTIONS, ID_LUTTEUR_TEST, apercuInitiative, avecDeck, avecGrade, chanceFortAuto, combatAuto, creerCombat, creerHasard, jouerTour, trouverLutteur,
+  ACTIONS, ID_LUTTEUR_TEST, TAILLE_SEQUENCE, apercuInitiative, avecDeck, avecGrade, chanceFortAuto, combatAuto, creerCombat, creerHasard, jouerSequence, jouerTour, trouverLutteur,
   type Choix, type EtatCombat, type Face, type IdAction, type Joueur,
 } from '../moteur';
 import mqtt from 'mqtt';
@@ -63,6 +63,14 @@ export function decoder(n: number): Choix {
   return { action: IDS[Math.floor(n / 2)], speciale: n % 2 === 1 };
 }
 
+// Mode Enchaînement : une séquence de 3 choix tient dans un seul nombre (chaque choix < 128).
+export function coderSequence(seq: Choix[]): number {
+  return seq.reduce((n, c, k) => n + coder(c) * 128 ** k, 0);
+}
+export function decoderSequence(n: number): Choix[] {
+  return Array.from({ length: TAILLE_SEQUENCE }, (_, k) => decoder(Math.floor(n / 128 ** k) % 128));
+}
+
 const codeAction = (a: ActionChoix) => (a === 'lutte' ? LUTTE : a === 'souffle' ? SOUFFLE : IDS.indexOf(a) * 2);
 const actionDuCode = (n: number): ActionChoix => (n === LUTTE ? 'lutte' : n === SOUFFLE ? 'souffle' : IDS[Math.floor(n / 2)]);
 
@@ -82,6 +90,7 @@ export interface Presence {
   co: string | null; // pseudo du coach
   nc?: number; // niveau de compte du coach (affiché à côté de son nom)
   rp?: boolean; // combat rapide (publié par l'hôte)
+  en?: boolean; // mode Enchaînement : séquences de 3 actions (publié par l'hôte)
   au?: boolean; // je veux le combat automatique (il a lieu seulement si les deux le veulent)
   ic: string | null; // identifiant du coach (pour la liste d'amis)
   gr: number; // grade du lutteur choisi (mode collection)
@@ -94,7 +103,7 @@ export interface Presence {
   eng: string | null; // empreinte du choix secret du tour t
   rev: { c: number; s: string } | null; // choix dévoilé du tour t, avec son sel
   ap: number[] | null; // initiative : les 2 actions possibles montrées à l'adversaire (tour t)
-  fc: Record<string, Face>; // annonces pile ou face, par tour
+  fc: Record<string, Face>; // annonces pile ou face, par tour (mode Enchaînement : « séquence.n° de l'annonce »)
   h: number[]; // mes choix définitifs, tour par tour
   ab: boolean; // abandon
   rv: boolean; // demande de revanche
@@ -102,8 +111,8 @@ export interface Presence {
   jt?: string; // jeton tiré au hasard : départage deux joueurs qui ont le même rôle
 }
 
-export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; au?: boolean }): Presence {
-  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, au: moi?.au, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
+export function presenceVide(role: Role, m = 0, moi?: { mo?: ModeSalle | null; co?: string | null; ic?: string | null; nc?: number; rp?: boolean; en?: boolean; au?: boolean }): Presence {
+  return { v: 1, jeu: 'wbc', role, m, mo: moi?.mo ?? null, co: moi?.co ?? null, ic: moi?.ic ?? null, nc: moi?.nc, rp: moi?.rp, en: moi?.en, au: moi?.au, gr: 1, et: {}, lu: null, dk: null, g: null, t: 0, eng: null, rev: null, ap: null, fc: {}, h: [], ab: false, rv: false, ck: null };
 }
 
 function lirePresence(p: Readonly<Record<string, unknown>>): Presence | null {
@@ -136,7 +145,7 @@ export function resume(e: EtatCombat): string {
 const hasardApercu = (graine: number, t: number) => creerHasard((graine * 31 + t * 7919 + 1) >>> 0);
 
 class BesoinFace extends Error {
-  constructor(readonly joueur: Joueur) {
+  constructor(readonly joueur: Joueur, readonly cle: string) {
     super('pile ou face');
   }
 }
@@ -161,6 +170,7 @@ export interface Vue {
   amiStyle: number; // style de carte de l'ami (Champion du Monde), 0 = classique
   amiNiveau: number | null; // niveau de compte de l'ami
   rapide: boolean; // combat rapide (une période, mort subite)
+  enchainement: boolean; // mode Enchaînement : séquences de 3 actions
   autoMoi: boolean; // j'ai demandé le combat automatique
   autoAmi: boolean; // mon ami l'a demandé
   auto: boolean; // le combat a été joué en automatique (les deux l'ont demandé)
@@ -171,7 +181,8 @@ export interface Vue {
   // Pendant le combat : ce que l'écran doit faire.
   aChoisir: boolean; // je peux choisir mon action
   monChoix: Choix | null; // mon choix secret du tour en cours
-  initiative: ActionChoix[] | null; // j'ai l'initiative : voici les 2 actions possibles de mon ami
+  maSequence: Choix[] | null; // mode Enchaînement : ma séquence secrète en cours
+  initiative: ActionChoix[] | null; // j'ai l'initiative : les 2 actions possibles de mon ami (Enchaînement : sa dernière action)
   pileOuFace: boolean; // je dois annoncer pile ou face
   attente: string | null; // ce qu'on attend de l'ami
   abandon: 'moi' | 'ami' | null;
@@ -184,7 +195,8 @@ export interface Vue {
 
 export class Duel {
   private moiP: Presence;
-  private secret: { t: number; m: number; choix: Choix; sel: string } | null = null;
+  private secret: { t: number; m: number; choix: Choix; sel: string; seq?: Choix[] } | null = null;
+  private faceCle = ''; // l'annonce pile ou face attendue de moi (clé dans fc)
   private enCours = false; // un calcul asynchrone (empreinte) est en cours
   private empreinteVerifiee = ''; // dernier choix de l'ami dont l'empreinte a été contrôlée
   private empreinteOk = true; // résultat de ce contrôle
@@ -195,22 +207,24 @@ export class Duel {
 
   // depart : mon état sauvegardé sur ce téléphone (reprise après un rechargement).
   // sauvegarder : appelé à chaque changement de mon état.
-  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; au?: boolean };
+  private ident: { mo: ModeSalle | null; co: string | null; ic: string | null; nc?: number; rp?: boolean; en?: boolean; au?: boolean };
 
   constructor(
     private salle: Salle, role: Role,
     depart?: Presence | null, private sauvegarder: (p: Presence) => void = () => undefined,
-    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean } = {},
+    ident: { mode?: ModeSalle; coach?: string | null; idCoach?: string | null; niveauCompte?: number; rapide?: boolean; enchainement?: boolean } = {},
   ) {
     this.role = role;
     this.ident = {
       mo: role === 'hote' ? ident.mode ?? 'base' : null, co: ident.coach ?? null, ic: ident.idCoach ?? null,
       nc: ident.niveauCompte, rp: role === 'hote' ? !!ident.rapide : undefined,
+      en: role === 'hote' ? !!ident.enchainement : undefined,
     };
     this.moiP = depart && depart.role === role && depart.v === 1
       ? {
         ...presenceVide(role), ...depart, co: this.ident.co ?? depart.co ?? null, ic: this.ident.ic ?? depart.ic ?? null,
         nc: this.ident.nc ?? depart.nc, rp: role === 'hote' ? depart.rp ?? this.ident.rp : undefined,
+        en: role === 'hote' ? depart.en ?? this.ident.en : undefined,
       }
       : presenceVide(role, 0, this.ident);
     this.moiP.jt ??= nouveauSel();
@@ -265,6 +279,28 @@ export class Duel {
     else this.avancer();
   }
 
+  // Mode Enchaînement : envoie l'empreinte de ma séquence de 3 actions.
+  async jouerSequence(seq: Choix[]) {
+    const v = this.vue;
+    if (!v.aChoisir || !v.etat || !v.enchainement || seq.length !== TAILLE_SEQUENCE) return;
+    const t = this.moiP.t;
+    const sel = nouveauSel();
+    this.secret = { t, m: this.moiP.m, choix: seq[seq.length - 1], sel, seq: [...seq] };
+    this.enCours = true;
+    const eng = await empreinte(t, coderSequence(seq), sel);
+    this.enCours = false;
+    if (this.moiP.t === t && this.secret?.t === t) this.maj({ eng, rev: null });
+    else this.avancer();
+  }
+
+  // Mode Enchaînement, initiative : garder ma séquence ou changer sa dernière action.
+  deciderSequence(seq: Choix[]) {
+    if (!this.vue.initiative || !this.vue.enchainement) return;
+    const sel = nouveauSel();
+    this.secret = { t: this.moiP.t, m: this.moiP.m, choix: seq[seq.length - 1], sel, seq: [...seq] };
+    this.maj({ rev: { c: coderSequence(seq), s: sel } });
+  }
+
   // Initiative : garder ou changer d'action après avoir vu les 2 possibilités adverses.
   decider(choix: Choix) {
     if (!this.vue.initiative) return;
@@ -275,7 +311,7 @@ export class Duel {
 
   annoncer(face: Face) {
     if (!this.vue.pileOuFace) return;
-    this.maj({ fc: { ...this.moiP.fc, [String(this.moiP.t)]: face } });
+    this.maj({ fc: { ...this.moiP.fc, [this.faceCle || String(this.moiP.t)]: face } });
   }
 
   abandonner() {
@@ -309,8 +345,8 @@ export class Duel {
 
   private vueVide(): Vue {
     return {
-      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false, autoMoi: false, autoAmi: false, auto: false,
-      etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, initiative: null, pileOuFace: false,
+      phase: 'attente-ami', moi: this.moi, modeSalle: null, amiCoach: null, amiIdCoach: null, amiPresent: false, amiLutteur: null, monLutteur: null, amiStyle: 0, monStyle: 0, amiNiveau: null, rapide: false, enchainement: false, autoMoi: false, autoAmi: false, auto: false,
+      etat: null, tours: [], graine: null, aChoisir: false, monChoix: null, maSequence: null, initiative: null, pileOuFace: false,
       attente: null, abandon: null, revancheAmi: false, revancheMoi: false, desaccord: false,
     };
   }
@@ -334,6 +370,7 @@ export class Duel {
     this.role = voulu;
     this.ident.mo = voulu === 'hote' ? this.ident.mo ?? 'base' : null;
     this.ident.rp = voulu === 'hote' ? !!this.ident.rp : undefined;
+    this.ident.en = voulu === 'hote' ? !!this.ident.en : undefined;
     this.moiP = { ...presenceVide(voulu, Math.max(this.moiP.m, meme.m), this.ident), jt: this.moiP.jt };
     this.secret = null;
     this.publier();
@@ -367,6 +404,7 @@ export class Duel {
     v.amiCoach = ami?.co ?? null;
     v.amiNiveau = ami?.nc ?? null;
     v.rapide = this.role === 'hote' ? !!moi.rp : !!ami?.rp;
+    v.enchainement = this.role === 'hote' ? !!moi.en : !!ami?.en;
     v.amiIdCoach = ami?.ic ?? null;
     v.autoMoi = !!moi.au;
     v.autoAmi = !!ami?.au;
@@ -409,7 +447,8 @@ export class Duel {
     const defHote = def(hote);
     let defInvite = def(invite);
     if (defInvite.nom === defHote.nom) defInvite = { ...defInvite, nom: `${defInvite.nom} (2)` };
-    let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp });
+    const ench = !!hote.en;
+    let etat = creerCombat(defHote, defInvite, { rapide: !!hote.rp, enchainement: ench });
     // Combat automatique (les deux l'ont demandé) : chaque téléphone calcule le même combat d'un coup.
     // L'ordinateur joue pour chacun selon son niveau de compte.
     if (hote.au && invite.au) {
@@ -423,31 +462,43 @@ export class Duel {
     }
     const hasard = new HasardRejouable(graine);
     const P: [Presence, Presence] = [hote, invite];
-    const face = (j: Joueur, t: number): Face | undefined => P[j].fc[String(t)];
-    const jouerT = (t: number, c0: Choix, c1: Choix): EtatCombat => {
+    // Annonces pile ou face : une par tour ; en mode Enchaînement, une par tentative dans la
+    // séquence (clé « séquence.numéro »), car il peut y en avoir plusieurs.
+    const tours: TourJoue[] = [];
+    // Joue l'étape t (un tour, ou une séquence en mode Enchaînement) à partir des deux codes.
+    // `garder` : ajouter les tours joués à l'historique affiché (pas pour un simple essai).
+    const jouerT = (t: number, code0: number, code1: number, garder = true): EtatCombat => {
       const marque = hasard.marque();
+      const essais: [number, number] = [0, 0];
+      const choisirFace = (j: Joueur): Face => {
+        const cle = ench ? `${t}.${essais[j]++}` : String(t);
+        const f = P[j].fc[cle];
+        if (!f) throw new BesoinFace(j, cle);
+        return f;
+      };
       try {
-        return jouerTour(etat, c0, c1, hasard.fn, {
-          choisirFace: (j) => {
-            const f = face(j, t);
-            if (!f) throw new BesoinFace(j);
-            return f;
-          },
-        });
+        if (!ench) {
+          const c0 = decoder(code0);
+          const c1 = decoder(code1);
+          const apres = jouerTour(etat, c0, c1, hasard.fn, { choisirFace });
+          if (garder) tours.push({ avant: etat, choixHumain: this.moi === 0 ? c0 : c1, choixOrdi: this.moi === 0 ? c1 : c0, ordiAChange: false, lignes: apres.journal.slice(etat.journal.length) });
+          return apres;
+        }
+        const r = jouerSequence(etat, decoderSequence(code0), decoderSequence(code1), hasard.fn, { choisirFace });
+        if (garder) r.duels.forEach((d, k) => tours.push({
+          avant: d.avant, choixHumain: d.choix[this.moi], choixOrdi: d.choix[this.moi === 0 ? 1 : 0], ordiAChange: false,
+          lignes: d.lignes, sequence: t + 1, rupture: k === r.duels.length - 1 ? r.rupture : null,
+        }));
+        return r.etat;
       } catch (err) {
         hasard.revenirA(marque);
         throw err;
       }
     };
-    const tours: TourJoue[] = [];
     let n = 0;
     try {
       while (!etat.termine && n < hote.h.length && n < invite.h.length) {
-        const avant = etat;
-        const c0 = decoder(hote.h[n]);
-        const c1 = decoder(invite.h[n]);
-        etat = jouerT(n, c0, c1);
-        tours.push({ avant, choixHumain: this.moi === 0 ? c0 : c1, choixOrdi: this.moi === 0 ? c1 : c0, ordiAChange: false, lignes: etat.journal.slice(avant.journal.length) });
+        etat = jouerT(n, hote.h[n], invite.h[n]);
         n++;
       }
     } catch {
@@ -485,7 +536,8 @@ export class Duel {
     if (!secret) {
       // Après un rechargement, on retrouve le choix déjà dévoilé dans la présence.
       if (moi.rev) {
-        this.secret = { t, m: moi.m, choix: decoder(moi.rev.c), sel: moi.rev.s };
+        const seq = ench ? decoderSequence(moi.rev.c) : undefined;
+        this.secret = { t, m: moi.m, choix: seq ? seq[seq.length - 1] : decoder(moi.rev.c), sel: moi.rev.s, seq };
         return this.avancer();
       }
       if (moi.eng) {
@@ -497,6 +549,7 @@ export class Duel {
       return this.emettre(v);
     }
     v.monChoix = secret.choix;
+    v.maSequence = secret.seq ?? null;
     if (!moi.eng && !moi.rev) {
       v.attente = 'Envoi de ton choix…';
       return this.emettre(v);
@@ -526,7 +579,8 @@ export class Duel {
       return this.emettre(v);
     }
     if (initAmi && !moi.ap && !moi.rev) {
-      const ap = apercuInitiative(etat, amiJ, secret.choix.action, hasardApercu(graine, t)) ?? [secret.choix.action];
+      // Mode Enchaînement : l'ami voit ma dernière action.
+      const ap = ench ? [secret.seq![secret.seq!.length - 1].action] : apercuInitiative(etat, amiJ, secret.choix.action, hasardApercu(graine, t)) ?? [secret.choix.action];
       this.maj({ ap: ap.map(codeAction) });
       return;
     }
@@ -535,7 +589,7 @@ export class Duel {
       return this.emettre(v);
     }
     if (!moi.rev) {
-      this.maj({ rev: { c: coder(secret.choix), s: secret.sel } });
+      this.maj({ rev: { c: secret.seq ? coderSequence(secret.seq) : coder(secret.choix), s: secret.sel } });
       return;
     }
     if (!amiRev) {
@@ -567,18 +621,18 @@ export class Duel {
 
   private resoudre(
     _etat: EtatCombat, _h: HasardRejouable, t: number, moi: Presence, codeAmi: number, v: Vue,
-    jouerT: (t: number, c0: Choix, c1: Choix) => EtatCombat,
+    jouerT: (t: number, code0: number, code1: number, garder?: boolean) => EtatCombat,
   ) {
     const monCode = moi.rev!.c;
-    const c0 = decoder(this.moi === 0 ? monCode : codeAmi);
-    const c1 = decoder(this.moi === 0 ? codeAmi : monCode);
     try {
-      jouerT(t, c0, c1);
+      jouerT(t, this.moi === 0 ? monCode : codeAmi, this.moi === 0 ? codeAmi : monCode, false);
     } catch (err) {
       if (err instanceof BesoinFace) {
         if (err.joueur === this.moi) {
           v.pileOuFace = true;
-          v.monChoix = decoder(monCode);
+          this.faceCle = err.cle;
+          if (v.enchainement) v.maSequence = decoderSequence(monCode);
+          else v.monChoix = decoder(monCode);
         } else {
           v.attente = 'Ton ami annonce pile ou face…';
         }

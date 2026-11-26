@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { actionsJouables } from '../src/moteur/combat';
 import { creerHasard } from '../src/moteur/hasard';
 import { trouverLutteur } from '../src/moteur/config';
-import { Duel, coder, decoder, resume, type Presence, type Salle } from '../src/page/enligne';
+import { Duel, coder, coderSequence, decoder, decoderSequence, resume, type Presence, type Salle } from '../src/page/enligne';
+import { sequenceOrdinateur } from '../src/moteur/enchainement';
 
 function salleMemoire() {
   const presences = new Map<string, Presence>();
@@ -287,3 +288,91 @@ for (const cas of ['une autre action de sa carte', 'une action que sa carte n\'a
     a.fermer(); b.fermer();
   });
 }
+
+// ---------- Mode Enchaînement entre amis ----------
+
+function joueurAutoSeq(d: Duel, graine: number) {
+  const h = creerHasard(graine);
+  const stats = { initiatives: 0, faces: 0 };
+  let dernier = '';
+  const agir = () => {
+    const vv = d.vue;
+    if (vv.phase !== 'combat' || !vv.etat) return;
+    const cle = `${vv.etat.tourGlobal}:${vv.aChoisir}:${!!vv.initiative}:${vv.pileOuFace}:${vv.tours.length}`;
+    if (cle === dernier) return;
+    if (vv.aChoisir || vv.initiative || vv.pileOuFace) dernier = cle;
+    if (vv.aChoisir) void d.jouerSequence(sequenceOrdinateur(vv.etat, vv.moi, h, 'normal'));
+    else if (vv.initiative && vv.maSequence) {
+      stats.initiatives++;
+      const seq = [...vv.maSequence];
+      if (h() < 0.5) seq[seq.length - 1] = { action: 'lutte' }; // change sa dernière action (Lutte : toujours jouable)
+      d.deciderSequence(seq);
+    } else if (vv.pileOuFace) {
+      stats.faces++;
+      d.annoncer(h() < 0.5 ? 'pile' : 'face');
+    }
+  };
+  d.surVue(() => queueMicrotask(agir));
+  const veille = setInterval(() => {
+    if (d.vue.phase === 'fin') clearInterval(veille);
+    else agir();
+  }, 20);
+  veille.unref?.();
+  return stats;
+}
+
+test('codage d\'une séquence aller-retour', () => {
+  const seq = [{ action: 'double_jambe' as const, speciale: true }, { action: 'lutte' as const }, { action: 'souffle' as const }];
+  assert.deepEqual(decoderSequence(coderSequence(seq)), seq);
+});
+
+test('mode Enchaînement entre amis : combats complets, même combat des deux côtés, initiative et pile ou face', async () => {
+  let initiatives = 0, faces = 0;
+  for (let partie = 0; partie < 40 && (partie < 8 || faces === 0 || initiatives === 0); partie++) {
+    const salle = salleMemoire();
+    const a = new Duel(salle('a'), 'hote', null, undefined, { rapide: partie % 2 === 0, enchainement: true });
+    const b = new Duel(salle('b'), 'invite');
+    const sa = joueurAutoSeq(a, partie * 2 + 1);
+    const sb = joueurAutoSeq(b, partie * 2 + 2);
+    await attendre();
+    a.choisirLutteur(['usa', 'japon', 'europe-technicien', 'russie-contre'][partie % 4], undefined);
+    b.choisirLutteur(['afrique', 'europe', 'japon-contre', 'usa-defenseur'][partie % 4], undefined);
+    await attendreQue(() => a.vue.phase === 'fin' && b.vue.phase === 'fin');
+    assert.equal(a.vue.phase, 'fin', `partie ${partie} : l'hôte n'a pas fini`);
+    assert.equal(b.vue.phase, 'fin', `partie ${partie} : l'invité n'a pas fini`);
+    assert.equal(a.vue.enchainement && b.vue.enchainement, true);
+    assert.equal(a.vue.etat!.enchainement, true);
+    assert.deepEqual(a.vue.etat!.journal, b.vue.etat!.journal);
+    assert.equal(a.vue.desaccord || b.vue.desaccord, false);
+    assert.ok(a.vue.tours.every((t) => t.sequence! >= 1));
+    initiatives += sa.initiatives + sb.initiatives;
+    faces += sa.faces + sb.faces;
+    a.fermer(); b.fermer();
+  }
+  assert.ok(faces > 0, 'au moins un pile ou face');
+  assert.ok(initiatives > 0, 'au moins une initiative');
+});
+
+test('mode Enchaînement entre amis : une séquence modifiée après l\'envoi est détectée', async () => {
+  const salle = salleMemoire();
+  const a = new Duel(salle('a'), 'hote', null, undefined, { rapide: true, enchainement: true });
+  const vraie = salle('b');
+  const deck = trouverLutteur('japon').actions.map((x) => coder({ action: x }));
+  const truquee: Salle = {
+    ...vraie,
+    publier(p) {
+      const q = JSON.parse(JSON.stringify(p));
+      if (q.rev && q.t === 0) q.rev.c = coderSequence(decoderSequence(q.rev.c).reverse()) === q.rev.c ? q.rev.c + deck[1] - (q.rev.c % 128) : coderSequence(decoderSequence(q.rev.c).reverse());
+      vraie.publier(q);
+    },
+  };
+  const b = new Duel(truquee, 'invite');
+  joueurAutoSeq(a, 1);
+  joueurAutoSeq(b, 2);
+  await attendre();
+  a.choisirLutteur('usa', undefined);
+  b.choisirLutteur('japon', undefined);
+  await attendreQue(() => a.vue.desaccord, 20000);
+  assert.equal(a.vue.desaccord, true);
+  a.fermer(); b.fermer();
+});

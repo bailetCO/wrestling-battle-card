@@ -41,7 +41,7 @@ export interface TourJoue {
   ordiAChange: boolean;
   lignes: string[];
   sequence?: number; // mode Enchaînement : numéro de la séquence (les 3 duels d'une séquence ont le même)
-  rupture?: boolean; // mode Enchaînement : la chaîne a été brisée à ce duel
+  rupture?: ResultatSequence['rupture']; // mode Enchaînement : la chaîne a été brisée à ce duel (sinon null)
 }
 
 // Une séquence jouée (mode Enchaînement) : ses duels, et l'éventuelle rupture de chaîne.
@@ -116,7 +116,7 @@ export class Partie {
       const num = ++this.sequencesJouees;
       const tours = r.duels.map((d, k): TourJoue => ({
         avant: d.avant, choixHumain: d.choix[HUMAIN], choixOrdi: d.choix[ORDI], ordiAChange: ordiAChange && k === r.duels.length - 1,
-        lignes: d.lignes, sequence: num, rupture: !!r.rupture && k === r.duels.length - 1,
+        lignes: d.lignes, sequence: num, rupture: k === r.duels.length - 1 ? r.rupture : null,
       }));
       return { tours, rupture: r.rupture, ordiAChange };
     } catch (err) {

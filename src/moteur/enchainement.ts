@@ -14,7 +14,7 @@
 //   elle est remplacée par Lutte.
 // - Initiative : celui qui l'a voit la dernière action de l'adversaire avant la séquence et
 //   peut changer sa propre dernière action. Une initiative gagnée pendant une séquence sert
-//   pour la séquence suivante.
+//   pour la séquence suivante. Si les deux lutteurs l'ont gagnée, elles s'annulent.
 
 import { ACTIONS, REGLES, coutAction } from './config';
 import { actionsJouables, coutSpeciale, jouerTour, peutJouerSpeciale, souffleDispo } from './combat';
@@ -144,6 +144,12 @@ export function jouerSequence(
   }
   if (!e.termine) {
     e = e === depart ? structuredClone(e) : e;
+    // Les deux lutteurs ont gagné l'initiative pendant la séquence : elles s'annulent.
+    if (initiative[0] && initiative[1]) {
+      initiative[0] = initiative[1] = false;
+      e.journal.push('Les deux lutteurs ont pris l\'initiative : elles s\'annulent.');
+      duels[duels.length - 1].lignes = e.journal.slice(duels[duels.length - 1].avant.journal.length);
+    }
     for (const j of [0, 1] as Joueur[]) e.joueurs[j].initiative = initiative[j];
   }
   return { etat: e, duels, rupture };

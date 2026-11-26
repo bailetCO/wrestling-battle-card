@@ -1372,3 +1372,4 @@ b.moi { color: #ff8a95; }
 @media (prefers-reduced-motion: reduce) { .seq-duel, .case-seq .case-points { animation: none; } }
 /* Case déjà vue : pas de nouvelle animation quand l'écran se redessine. */
 .case.fige, .case.fige * { animation: none !important; }
+.case-rapide input { flex: none; }
