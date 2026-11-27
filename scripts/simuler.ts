@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { CHAMPIONS, LUTTEURS, NATIONS } from '../src/moteur/config';
+import { CARTES_SPECIALES, CHAMPIONS, LUTTEURS, NATIONS } from '../src/moteur/config';
 import { creerCombat, jouerTour } from '../src/moteur/combat';
 import { choixAleatoire, choixFort } from '../src/moteur/ia';
 import { creerHasard } from '../src/moteur/hasard';
@@ -27,7 +27,7 @@ const parFort = nombres[1] ?? 150;
 const fichierSauver = option('--sauver');
 const fichierAvant = option('--avant');
 const choisis = option('--lutteurs')?.split(',').map((x) => x.trim()).filter(Boolean);
-const CARTES = [...LUTTEURS, ...CHAMPIONS];
+const CARTES = [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES];
 if (choisis) for (const id of choisis) if (!CARTES.some((l) => l.id === id)) throw new Error(`Lutteur inconnu : ${id}`);
 
 // Fourchettes : leur moyenne (pondérée par 4 communes, 3 rares, 2 épiques, 1 légendaire) fait 50 %.

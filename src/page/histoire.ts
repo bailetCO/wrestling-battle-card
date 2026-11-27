@@ -4,7 +4,7 @@
 // d'une même nation dans Mon Club), 7 (une nation battue dans l'arène) et 11 (arène terminée), validées
 // tout de suite si c'est déjà le cas.
 
-import { LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
+import { DARIUS, ETOILES_DARIUS, ID_DARIUS, LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type IdAction, type Niveau } from '../moteur';
 import { PAR_NATION, areneTerminee } from './arene';
 import { gradeDe, nbExemplaires, niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
 
@@ -169,11 +169,27 @@ function valide(c: Collection, ev: EvenementHistoire): boolean {
   }
 }
 
-// Récompense de l'étape `i` : boosters classiques, plus une légendaire pour la dernière étape.
+// Récompense de l'étape `i` : boosters classiques ; pour la dernière étape, une légendaire et la
+// carte secrète de Darius.
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
   const n = H.boosters[i] ?? 0;
   const boosters = Array.from({ length: n }, () => ouvrirBooster(c, hasard, 'classique'));
-  return i === NB_ETAPES - 1 ? [...boosters, legendaireOfferte(c, hasard)] : boosters;
+  return i === NB_ETAPES - 1 ? [...boosters, legendaireOfferte(c, hasard), carteDarius(c, hasard)] : boosters;
+}
+
+// La carte de Darius, Champion du Monde avec 2 étoiles sur 2 actions différentes tirées au hasard
+// (parmi ses 9 actions). Un seul exemplaire : si le joueur l'a déjà, rien de plus.
+export function carteDarius(c: Collection, hasard: Hasard): Booster {
+  if (nbExemplaires(c, ID_DARIUS) > 0) return { type: 'recompense', cartes: [ID_DARIUS], nouvelles: [] };
+  c.exemplaires[ID_DARIUS] = 1;
+  const actions: IdAction[] = [...new Set([...DARIUS.actions, ...DARIUS.deblocages, ...(DARIUS.actionChampion ? [DARIUS.actionChampion] : [])])];
+  const etoiles: Partial<Record<IdAction, number>> = {};
+  for (let k = 0; k < ETOILES_DARIUS; k++) {
+    const restantes = actions.filter((a) => !etoiles[a]);
+    etoiles[restantes[Math.floor(hasard() * restantes.length)]] = 1;
+  }
+  c.etoiles[ID_DARIUS] = etoiles;
+  return { type: 'recompense', cartes: [ID_DARIUS], nouvelles: [ID_DARIUS] };
 }
 
 // Une carte légendaire que le joueur n'a pas encore (s'il les a toutes : une au hasard, un double).

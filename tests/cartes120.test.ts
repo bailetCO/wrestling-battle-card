@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHAMPIONS, LUTTEURS, NATIONS, REGLES } from '../src/moteur/config';
+import { CARTES_SPECIALES, CHAMPIONS, LUTTEURS, NATIONS, REGLES } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import {
   POOL_DEPART, cartesDeDepart, debloquerLegendaire, depuisSauvegarde, enFragment, legendaireDe, nouvelleCollection, ouvrirBooster,
@@ -70,6 +70,6 @@ test('fragments : un double devient un fragment ; 10 fragments débloquent la l�
 });
 
 test('toutes les cartes ont un nom différent, Champions du Monde compris', () => {
-  const noms = [...LUTTEURS, ...CHAMPIONS].map((l) => l.nom);
+  const noms = [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES].map((l) => l.nom);
   assert.equal(new Set(noms).size, noms.length);
 });

@@ -5,7 +5,7 @@
 // Il ne modifie rien : il affiche seulement les différences.
 
 import { readFileSync } from 'node:fs';
-import { ACTIONS, CHAMPIONS, LUTTEURS } from '../src/moteur/config';
+import { ACTIONS, CARTES_SPECIALES, CHAMPIONS, LUTTEURS } from '../src/moteur/config';
 
 const RARETES: Record<string, string> = { commune: 'commune', rare: 'rare', épique: 'epique', légendaire: 'legendaire', 'champion du monde': 'champion' };
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -44,7 +44,7 @@ for (const l of LUTTEURS) if (!vus.has(l.id)) differences.push(`« ${l.nom} » (
 
 // Noms en double parmi toutes les cartes (lutteurs et Champions du Monde).
 const parNom = new Map<string, string[]>();
-for (const l of [...LUTTEURS, ...CHAMPIONS]) parNom.set(l.nom, [...(parNom.get(l.nom) ?? []), l.id]);
+for (const l of [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES]) parNom.set(l.nom, [...(parNom.get(l.nom) ?? []), l.id]);
 for (const [nom, ids] of parNom) if (ids.length > 1) differences.push(`le nom « ${nom} » est porté par plusieurs cartes : ${ids.join(', ')}`);
 
 console.log(`${vus.size} lutteurs du cahier comparés au jeu.\n`);

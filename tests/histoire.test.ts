@@ -166,8 +166,9 @@ test('étapes 16 à 18 : battre Cocoach, puis Légendaire, puis Champion du Mond
   const legendaires = LUTTEURS.filter((l) => l.rarete === 'legendaire');
   for (const l of legendaires.slice(1)) c.exemplaires[l.id] = 1;
   const r = noter(c, { type: 'rival', grade: 4, auto: false });
-  assert.equal(r[0].boosters.length, 4);
+  assert.equal(r[0].boosters.length, 5);
   assert.deepEqual(r[0].boosters[3].cartes, [legendaires[0].id]);
+  assert.deepEqual(r[0].boosters[4].cartes, ['darius']); // la carte secrète de Darius (27/11/2026)
   assert.ok(histoireFinie(c));
 });
 

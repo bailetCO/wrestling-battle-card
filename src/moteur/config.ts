@@ -258,6 +258,22 @@ export const CHAMPIONS: DefLutteur[] = LIGNES_CHAMPIONS.map(([id, nom, origine, 
 });
 export const estChampion = (id: string) => id.startsWith('champion-');
 
+// Carte secrète : Darius Westrell, le mentor du mode histoire (ancien champion du monde poids lourd).
+// Champion du Monde de naissance, gagnée seulement en terminant le mode histoire, avec 2 étoiles
+// tirées au hasard ce jour-là. Jamais dans les boosters, l'arène, la boutique ni les fins de saison.
+// Style de la légendaire des USA (lutteur de pression), plus d'endurance et de force.
+export const ID_DARIUS = 'darius';
+export const DARIUS: DefLutteur = (() => {
+  const l = LUTTEURS.find((x) => x.id === 'usa')!;
+  return {
+    ...l, id: ID_DARIUS, nom: 'Darius Westrell', origine: 'USA', enduranceMax: 70, force: 165, rarete: 'champion', depart: false,
+    actions: [...l.actions], actionsPossibles: [...l.actions], deblocages: [...l.deblocages], actionChampion: 'tour_hanche',
+  };
+})();
+export const ETOILES_DARIUS = 2; // étoiles offertes avec la carte, sur 2 actions différentes
+// Cartes à part : jouables partout, mais jamais distribuées au hasard.
+export const CARTES_SPECIALES: DefLutteur[] = [DARIUS];
+
 // Lutteur spécial pour les tests : Cocoach, déjà Champion du Monde, avec les meilleures statistiques
 // du jeu (le maximum des 132 cartes pour chacune). Hors collection, boosters et arène ; choisissable
 // seulement contre l'ordinateur, jamais en ligne.
@@ -718,7 +734,7 @@ export const COCOACH_RIVAL: DefLutteur = {
 
 export function trouverLutteur(id: string): DefLutteur {
   if (id === ID_RIVAL) return COCOACH_RIVAL;
-  const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id) ?? CHAMPIONS.find((l) => l.id === id);
+  const lutteur = id === ID_LUTTEUR_TEST ? LUTTEUR_TEST : LUTTEURS.find((l) => l.id === id) ?? CHAMPIONS.find((l) => l.id === id) ?? CARTES_SPECIALES.find((l) => l.id === id);
   if (!lutteur) throw new Error(`Lutteur inconnu : ${id}`);
   return lutteur;
 }

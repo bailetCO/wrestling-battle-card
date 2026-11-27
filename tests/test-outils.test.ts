@@ -35,7 +35,7 @@ test('passer l\'étape (test) : tout le mode histoire puis toute la saison, avec
     boosters += r.reduce((n, x) => n + x.boosters.length, 0);
   }
   assert.equal(c.histoire.etape, 18);
-  assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 2 + 3 + 3 + 1);
+  assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 2 + 3 + 3 + 1 + 1); // dernière étape : la légendaire, puis la carte de Darius
   assert.deepEqual(passerEtape(c, h), []);
   assert.equal(passerPalier(c, h), null); // saison fermée : Mon Club pas au niveau 10
   c.medailles = 55;
