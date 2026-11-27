@@ -1,3 +1,4 @@
+import { demarrerClassement } from './ecrans/classement';
 // La page du jeu : point d'entrée. Les écrans sont dans le dossier « ecrans » ; ici, la navigation.
 
 import './style.css';
@@ -13,7 +14,8 @@ import { demarrerCompte } from './ecrans/compte';
 demarrerBeta(); // code d'invitation, nouveautés, installation
 demarrerAvis(); // avis en attente d'envoi, rapport si la page plante
 demarrerStats(); // statistiques anonymes en attente d'envoi
-demarrerCompte(); // compte joueur : sauvegarde en ligne automatique
+demarrerCompte();
+void demarrerClassement(); // compte joueur : sauvegarde en ligne automatique
 S.tournoi = chargerTournoi();
 window.addEventListener('hashchange', route);
 route();

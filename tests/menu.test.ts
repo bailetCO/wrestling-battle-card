@@ -11,24 +11,26 @@ test('au départ : Combat et Collection seulement, sans « Nouveau »', () => {
   assert.equal(tuileNouvelle(c, 'combat'), false);
 });
 
-test('les tuiles arrivent avec les étapes : Tournois (2), Mon Club et Saison (3), Social (4), Fusion (8)', () => {
+test('les tuiles arrivent avec les étapes : Tournois (2), Mon Club et Saison (3), Social (4), Classement (5), Fusion (8)', () => {
   const c = nouvelleCollection();
   const vues = (etape: number) => { c.histoire.etape = etape; return tuilesVisibles(c); };
   assert.deepEqual(vues(1), ['combat', 'tournois', 'collection', 'recompenses']);
   assert.deepEqual(vues(2), ['combat', 'tournois', 'saison', 'collection', 'club', 'recompenses']);
   assert.deepEqual(vues(3), ['combat', 'tournois', 'saison', 'collection', 'club', 'social', 'recompenses']);
-  assert.deepEqual(vues(7), ['combat', 'tournois', 'saison', 'collection', 'fusion', 'club', 'social', 'recompenses']);
+  assert.deepEqual(vues(4), ['combat', 'tournois', 'saison', 'collection', 'club', 'social', 'classement', 'recompenses']);
+  assert.deepEqual(vues(7), ['combat', 'tournois', 'saison', 'collection', 'fusion', 'club', 'social', 'classement', 'recompenses']);
   assert.equal(tuileNouvelle(c, 'fusion'), true);
   assert.equal(noterVisite(c, '#fusion'), true);
   assert.equal(noterVisite(c, '#fusion'), false);
   assert.equal(tuileNouvelle(c, 'fusion'), false);
 });
 
-test('ancienne sauvegarde : rien de « Nouveau »', () => {
+test('ancienne sauvegarde : rien de « Nouveau », sauf le Classement (ajouté le 27/11/2026)', () => {
   const c = nouvelleCollection();
   c.histoire.etape = 10;
   const brut = JSON.parse(JSON.stringify(c));
   delete brut.menusVus;
   const d = depuisSauvegarde(brut);
-  assert.ok(tuilesVisibles(d).every((t) => !tuileNouvelle(d, t)));
+  assert.ok(tuilesVisibles(d).every((t) => !tuileNouvelle(d, t) || t === 'classement'));
+  assert.ok(tuileNouvelle(d, 'classement'));
 });

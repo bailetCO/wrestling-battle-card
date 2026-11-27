@@ -1,5 +1,7 @@
 // Fin du combat et ouverture des boosters.
 
+import { gagnerPoints } from '../classement';
+import { tuileVisible } from '../menu';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, trouverLutteur, niveauCarte, REGLES as R_ } from '../../moteur';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
 import { gagnerMedailles, joindreGains, consoler, sauver, type Booster } from '../collection';
@@ -244,6 +246,14 @@ function momentFin(): Moment | null {
   return x ? { ...x, def: h.def, coach: moiNom(), texte: `${x.texte} Viens jouer à Wrestling Battle Card :` } : null;
 }
 
+// « +4 points de classement » sous le verdict, quand la tuile Classement est ouverte.
+export function lignePointsFin(): string {
+  if (S.pointsFin === null || !tuileVisible(S.collection, 'classement')) return '';
+  return S.pointsFin > 0
+    ? `<a class="points-fin" href="#classement">🏆 +${S.pointsFin} point${S.pointsFin > 1 ? 's' : ''} de classement</a>`
+    : `<a class="points-fin" href="#classement">🏆 Plafond du jour atteint (${REGLES.classement.plafondJour} points) : reviens demain !</a>`;
+}
+
 export function ecranFin() {
   if (!S.partie) return;
   noterFinCombat(S.partie); // pour un signalement de bug, et l'invitation à donner son avis
@@ -271,6 +281,7 @@ export function ecranFin() {
     if (S.bonusCeCombat) S.collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     S.bonusCeCombat = false;
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto });
+    S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? gagnerPoints(S.collection, { niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
     let championBattu = gagne && S.areneCtx?.type === 'boss'; // champion d'une nation battu en Carrière
     if (e.rapide) {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.
@@ -335,6 +346,7 @@ export function ecranFin() {
         ${idOrdi === ID_RIVAL && S.rivalFin ? `<p class="rival-fin">${S.rivalFin.monte
           ? `Cocoach passe au niveau <b>${NOM_RARETE[niveauCarte(COCOACH_RIVAL, S.rivalFin.grade)]}</b> ! Il sera plus fort au prochain combat. Tu gagnes ${R_.rival.boostersRaresParMontee} booster rare.`
           : S.rivalFin.etoile ? `Cocoach gagne une étoile sur ${echap(ACTIONS[S.rivalFin.etoile].nom)}.` : 'Cocoach est à son maximum.'}</p>` : ''}
+        ${lignePointsFin()}
       </section>
       ${booster}
       <div class="fin-boutons">

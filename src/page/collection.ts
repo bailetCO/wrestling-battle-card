@@ -43,8 +43,20 @@ export interface Collection {
   menusVus: string[]; // tuiles du menu déjà visitées (les autres portent « Nouveau »)
   battusMain: string[]; // lutteurs adverses battus au moins une fois en jouant soi-même (le combat auto n'est permis que contre eux)
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
+  classement: Classement; // classement mensuel : points du mois, plafond du jour, badge, fins de mois à récompenser
+  pays: string; // pays choisi par le joueur (code à 2 lettres, '' = pas choisi), pour le classement par pays
   quetes: { jour: string; liste: { id: string; param: string; progres: number; faite: boolean }[]; change: boolean; bonus: boolean; uniques: string[] }; // quêtes journalières
 }
+
+export interface Classement {
+  mois: string; // « 2026-11 » (heure universelle)
+  points: number; // points du mois
+  jour: number; // jour (n° depuis 1970, heure universelle) des points du jour
+  pointsJour: number; // points gagnés ce jour-là (plafond)
+  badge: { palier: string | null; top: boolean; mois: string } | null; // résultat du dernier mois terminé
+  enAttente: { mois: string; points: number }[]; // mois terminés pas encore récompensés (Top 10 à vérifier en ligne)
+}
+export const classementVide = (): Classement => ({ mois: '', points: 0, jour: 0, pointsJour: 0, badge: null, enAttente: [] });
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
 
@@ -60,7 +72,7 @@ export type TypeBooster = 'classique' | 'rare';
 // Un booster : des cartes, et parfois les médailles et les $ de la récompense.
 // Type « recompense » : sans cartes, seulement médailles et $.
 // Une récompense de la boîte : étape, palier de saison, quête, niveau de Mon Club.
-export type SourceRecompense = 'histoire' | 'saison' | 'quetes' | 'club';
+export type SourceRecompense = 'histoire' | 'saison' | 'quetes' | 'club' | 'classement';
 export interface RecompenseAOuvrir { titre: string; source: SourceRecompense; boosters: Booster[] }
 
 export interface Booster {
@@ -102,6 +114,7 @@ export function nouvelleCollection(): Collection {
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
     combosVus: [],
+    classement: classementVide(), pays: '',
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
@@ -162,10 +175,24 @@ export function ouvrirBooster(c: Collection, hasard: Hasard, impose?: TypeBooste
 }
 
 // Contrôle d'une récompense lue dans une sauvegarde.
+function lireClassement(x: unknown): Classement {
+  const v = classementVide();
+  if (!x || typeof x !== 'object') return v;
+  const o = x as Record<string, unknown>;
+  const n = (k: string) => (typeof o[k] === 'number' && Number.isFinite(o[k]) && (o[k] as number) >= 0 ? Math.floor(o[k] as number) : 0);
+  const mois = (m: unknown) => typeof m === 'string' && /^\d{4}-\d{2}$/.test(m);
+  if (mois(o.mois)) v.mois = o.mois as string;
+  v.points = n('points'); v.jour = n('jour'); v.pointsJour = n('pointsJour');
+  const b = o.badge as Classement['badge'];
+  if (b && typeof b === 'object' && mois(b.mois) && typeof b.top === 'boolean') v.badge = { palier: typeof b.palier === 'string' ? b.palier : null, top: b.top, mois: b.mois };
+  if (Array.isArray(o.enAttente)) v.enAttente = (o.enAttente as { mois: unknown; points: unknown }[]).filter((e) => e && mois(e.mois) && typeof e.points === 'number').slice(-3) as Classement['enAttente'];
+  return v;
+}
+
 function recompenseValide(r: unknown): r is RecompenseAOuvrir {
   const x = r as RecompenseAOuvrir;
   const ids = (l: unknown) => Array.isArray(l) && l.every((id) => typeof id === 'string' && trouverLutteurOuNull(id));
-  return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club'].includes(x.source)
+  return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club', 'classement'].includes(x.source)
     && Array.isArray(x.boosters) && x.boosters.length > 0 && x.boosters.length <= 10
     && x.boosters.every((b) => b && ['classique', 'rare', 'recompense'].includes(b.type) && ids(b.cartes) && ids(b.nouvelles));
 }
@@ -498,6 +525,8 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (['rarete', 'nation', 'fusions', 'niveau'].includes(b.tri as string)) c.tri = b.tri as TriCollection;
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
+  c.classement = lireClassement(b.classement);
+  if (typeof b.pays === 'string' && /^[A-Z]{2}$/.test(b.pays)) c.pays = b.pays;
   if (Array.isArray(b.aOuvrir)) c.aOuvrir = b.aOuvrir.filter(recompenseValide).slice(0, 60);
   if (Array.isArray(b.recompensesEnLigne)) c.recompensesEnLigne = (b.recompensesEnLigne as string[]).slice(-50);
   if (b.amis && typeof b.amis === 'object') c.amis = { ...(b.amis as Record<string, Ami>) };

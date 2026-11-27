@@ -28,7 +28,7 @@ import { noterParcours } from './stats';
 // une seule boîte, gardée dans la sauvegarde. Les cartes sont déjà dans la collection : la boîte
 // sert à les découvrir.
 
-export const NOM_SOURCE: Record<SourceRecompense, string> = { histoire: 'Mode histoire', saison: 'Saison sportive', quetes: 'Quêtes du jour', club: 'Mon Club' };
+export const NOM_SOURCE: Record<SourceRecompense, string> = { histoire: 'Mode histoire', saison: 'Saison sportive', quetes: 'Quêtes du jour', club: 'Mon Club', classement: 'Classement' };
 
 export function mettreEnBoite(titre: string, source: SourceRecompense, boosters: Booster[]) {
   if (boosters.length) S.collection.aOuvrir.push({ titre, source, boosters });

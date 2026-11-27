@@ -950,6 +950,7 @@ export function lancer(idHumain: string, idOrdi: string, graine: number, rapide 
   S.enAttente = false;
   S.endurancesAvant = null;
   S.recompenseDonnee = false;
+  S.pointsFin = null;
   S.paquetSolo = null;
   S.messageSolo = '';
   S.tuto = false;

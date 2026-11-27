@@ -15,6 +15,10 @@ après chaque modification.
   Corentin les lit dans la console (Firestore Database, onglet Données).
   Comptes joueurs (`comptes/<joueur>`) : la sauvegarde de la collection ; seul son propriétaire,
   connecté avec Google ou un e-mail (pas en anonyme), la lit et l'écrit.
+  Classement mensuel (`classements/<mois>/joueurs/<joueur>`) : lisible par tous les joueurs connectés ;
+  chacun n'écrit que sa ligne, avec un vrai compte. Les règles vérifient le plafond de 80 points par
+  jour (jour du serveur, heure universelle) : les points ne montent que de ce que les jours écoulés
+  permettent, et ne baissent jamais.
 
 ## Comptes joueurs : réglages à faire une fois dans la console Firebase
 

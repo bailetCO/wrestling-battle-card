@@ -1,3 +1,4 @@
+import { ecranClassement } from './classement';
 // Navigation entre les écrans (adresse après le #).
 
 import { sauver } from '../collection';
@@ -33,6 +34,7 @@ export function route() {
   if (h === '#quetes') return ecranQuetes();
   if (h === '#recompenses') return ecranRecompenses();
   if (h === '#tournois') return ecranTournois();
+  if (h === '#classement') return ecranClassement();
   if (h === '#rapide') return ecranArene(true);
   quitterEchange();
   if (h === '#combat') return ecranCombatMenu();
