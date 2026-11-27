@@ -21,13 +21,19 @@ dans la conversation, peut changer ça.
    Si c'est vide, le dire et s'arrêter.
 2. **Tout doit être propre** : pas de modification non enregistrée (`git status`). Sinon, suivre
    d'abord la skill `/fin-etape`.
-3. **Vérifications** : `npm run verifier-types`, `npm test`, `npm run build`.
+3. **Numéro de version et « Quoi de neuf ? »** (chaque publication, depuis le 27/11/2026) : monter la
+   version dans `package.json`, `package-lock.json` (2 endroits) et `VERSION` de `src/page/nouveautes.ts`
+   (0.7.0 → 0.7.1 pour des corrections, 0.8.0 pour une grosse nouveauté), et ajouter EN HAUT de
+   `NOUVEAUTES` 2 à 5 lignes en français simple, du point de vue du joueur. Les joueurs les voient
+   après le rechargement automatique du jeu. Les montrer à l'utilisateur dans la demande de fusion.
+   Si plusieurs demandes de fusion partent le même jour avant d'être fusionnées, une seule version suffit.
+4. **Vérifications** : `npm run verifier-types`, `npm test`, `npm run build`.
    Si quelque chose échoue : ne pas publier, expliquer, proposer une correction.
-4. **Être à jour avec `main`** : si `main` a avancé (`git log HEAD..origin/main`),
+5. **Être à jour avec `main`** : si `main` a avancé (`git log HEAD..origin/main`),
    `git merge --no-edit origin/main`, relancer les tests, puis pousser.
    En cas de conflit : s'arrêter et expliquer à l'utilisateur.
-5. **Pousser la branche** : `git push -u origin <branche>`.
-6. **Créer la demande de fusion** avec l'outil GitHub `create_pull_request`
+6. **Pousser la branche** : `git push -u origin <branche>`.
+7. **Créer la demande de fusion** avec l'outil GitHub `create_pull_request`
    (charger les outils `mcp__github__*` avec ToolSearch si besoin) :
    - dépôt `bailetCO/wrestling-battle-card`, `base: main`, `head:` la branche de travail ;
    - s'il existe déjà une demande ouverte pour cette branche (`list_pull_requests`), la réutiliser :
@@ -41,13 +47,13 @@ dans la conversation, peut changer ça.
    - Si les outils GitHub ne répondent pas : donner à l'utilisateur ce lien, à ouvrir pour créer
      la demande lui-même :
      `https://github.com/bailetCO/wrestling-battle-card/compare/main...<branche>?expand=1`
-7. **Vérification automatique** : GitHub relance les tests sur la demande de fusion
+8. **Vérification automatique** : GitHub relance les tests sur la demande de fusion
    (`.github/workflows/pages.yml`, sans rien publier). Proposer de surveiller la demande
    (`subscribe_pr_activity`) pour prévenir l'utilisateur quand la coche est verte, ou si un test échoue.
-8. **Expliquer à l'utilisateur comment valider**, en français simple :
+9. **Expliquer à l'utilisateur comment valider**, en français simple :
    ouvrir le lien de la demande, attendre la coche verte ✅ en bas, cliquer sur
    **« Merge pull request »** puis **« Confirm merge »**. Le site est à jour 1 à 2 minutes après.
-9. **Après la fusion** (si l'utilisateur le signale, ou par la surveillance) :
+10. **Après la fusion** (si l'utilisateur le signale, ou par la surveillance) :
    - vérifier que la publication a réussi : outil `actions_list` (`list_workflow_runs`), dernier passage
      « Publier le jeu » sur `main`, `conclusion: success` ;
    - si elle a échoué, lire le journal (`get_job_logs`), expliquer et proposer une correction ;

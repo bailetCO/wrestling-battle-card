@@ -1,5 +1,6 @@
 // Vite construit la page du jeu. Le module « singlefile » met tout dans un seul
 // fichier HTML (dist/index.html), facile à publier et à ouvrir depuis un lien.
+import { readFileSync } from 'node:fs';
 import { defineConfig, type Plugin } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
@@ -21,7 +22,23 @@ function remplacerCaractereInvalide(): Plugin {
   };
 }
 
+// Mises à jour (27/11/2026) : chaque construction reçoit un numéro (« build »), écrit dans le jeu et
+// dans un petit fichier version.json publié à côté. Le jeu compare les deux pour savoir qu'une
+// nouvelle version est en ligne, et se recharge (voir src/page/mise-a-jour.ts).
+const BUILD = (process.env.GITHUB_SHA ?? '').slice(0, 12) || `local-${Date.now()}`;
+const VERSION = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version;
+
+function fichierVersion(): Plugin {
+  return {
+    name: 'fichier-version',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version: VERSION, build: BUILD }) });
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [viteSingleFile(), remplacerCaractereInvalide()],
+  define: { __BUILD__: JSON.stringify(BUILD) },
+  plugins: [viteSingleFile(), remplacerCaractereInvalide(), fichierVersion()],
 });

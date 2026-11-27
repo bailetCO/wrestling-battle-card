@@ -47,3 +47,7 @@ Court, en français simple, avec ces quatre parties :
 - **Comment le tester toi-même** : quoi ouvrir, où cliquer, ce qu'on doit voir.
   Rappeler que le lien public du jeu ne change qu'après `/publier`.
 - **La suite** : proposer la prochaine étape ou demander s'il veut publier.
+
+## Version du jeu (27/11/2026)
+
+Si l'étape part en publication, monter le numéro de version et écrire les lignes « Quoi de neuf ? » (voir la skill `publier`, étape 3) : sans nouveau numéro, les joueurs ne voient pas les nouveautés après le rechargement automatique.

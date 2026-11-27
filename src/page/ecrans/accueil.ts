@@ -1,3 +1,4 @@
+import { verifierMiseAJour } from '../mise-a-jour';
 import { majPeriode, nomMois, programmerPublication } from '../classement';
 import { pastilleMonBadge } from './classement';
 // Écran d'accueil (pseudo) et menu principal.
@@ -110,6 +111,7 @@ export function ecranAccueil(message = '') {
 
 export function ecranMenu() {
   S.partie = null;
+  void verifierMiseAJour(() => (S.mode === 'ligne' ? 'enLigne' : 'libre'));
   majPeriode(S.collection);
   recompenseClub();
   histoire({ type: 'etat' });
