@@ -15,6 +15,7 @@ import { route } from './navigation';
 import { histoire, lancerInterclub, quete, queteCombat, saison } from './progression';
 import { lancerEssai } from './tutos-courts';
 import { noterFinCombat } from './avis';
+import { noterParcours, noterStatsCombat } from './stats';
 
 // ---------- Écran 3 : fin du combat ----------
 
@@ -117,6 +118,7 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
   document.querySelector('.revelation')?.remove();
   const nb = p.boosters.filter((b) => b.cartes.length).length;
   if (!p.ouvert && nb) setTimeout(() => quete({ type: 'booster', n: nb }), 0);
+  if (!p.ouvert && nb) noterParcours('premier_booster', '', true);
   const cartes = cartesDuPaquet(p);
   type Etape = { type: 'paquet'; b: number } | { type: 'carte'; k: number } | { type: 'gain'; b: number; quoi: 'medailles' | 'dollars' } | { type: 'recap' };
   const etapes: Etape[] = [];
@@ -215,6 +217,11 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
 export function ecranFin() {
   if (!S.partie) return;
   noterFinCombat(S.partie); // pour un signalement de bug, et l'invitation à donner son avis
+  if (!S.tuto && !S.essaiSolo) {
+    const mode = S.enTournoi !== null ? 'tournoi' : S.interclubEnCours ? 'interclub' : S.areneCtx ? 'carriere' : 'entrainement';
+    noterStatsCombat(S.partie, { etat: S.partie.etat, moi: S.HUMAIN, tours: S.tours, mode, niveau: S.partie.niveau, auto: S.combatEnAuto, dureeMs: Date.now() - S.partie.debut });
+    noterParcours('premier_combat', '', true);
+  }
   const e = S.partie.etat;
   const gagne = e.vainqueur === S.HUMAIN;
   const h = e.joueurs[S.HUMAIN];

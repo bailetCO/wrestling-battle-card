@@ -10,6 +10,7 @@ import { tuileNouvelle, tuileVisible, type IdTuile } from '../menu';
 import { connecter, oublierSession, sessionLigne } from './amis';
 import { brancherPiedMenu, montrerNouveautes, piedMenu } from './beta';
 import { bandeauAvis, brancherAvis } from './avis';
+import { demanderAccord } from './stats';
 import { CARTES } from './collection';
 import { S, app, echap, pastilleNiveau, pastilleSaisons } from './commun';
 import { bandeauHistoire, blocQuetes, histoire, quete, recompenseClub, scenesAuto } from './progression';
@@ -157,6 +158,8 @@ export function ecranMenu() {
   window.scrollTo(0, 0);
   // Après une mise à jour, les nouveautés passent avant la scène de dialogue (montrée au retour au menu).
   if (montrerNouveautes()) return;
+  // Une fois : l'accord pour les statistiques anonymes.
+  if (demanderAccord()) return;
   // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
   scenesAuto();
 }

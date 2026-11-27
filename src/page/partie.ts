@@ -63,6 +63,7 @@ export class Partie {
   etat: EtatCombat;
   readonly hasard: HasardRejouable;
   toursJoues = 0;
+  readonly debut = Date.now(); // pour la durée du combat (statistiques)
   private readonly depart: Omit<RapportCombat, 'tours' | 'sequences'>;
   private readonly rejeu: Pick<RapportCombat, 'tours' | 'sequences'> = { tours: [], sequences: [] };
 

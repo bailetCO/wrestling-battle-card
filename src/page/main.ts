@@ -6,10 +6,12 @@ import { route } from './ecrans/navigation';
 import { chargerTournoi } from './ecrans/tournois';
 import { demarrerBeta } from './ecrans/beta';
 import { demarrerAvis } from './ecrans/avis';
+import { demarrerStats } from './ecrans/stats';
 
 // Démarrage : tournoi en cours relu, puis premier écran.
 demarrerBeta(); // code d'invitation, nouveautés, installation
 demarrerAvis(); // avis en attente d'envoi, rapport si la page plante
+demarrerStats(); // statistiques anonymes en attente d'envoi
 S.tournoi = chargerTournoi();
 window.addEventListener('hashchange', route);
 route();

@@ -129,12 +129,18 @@ export function salleFirebase(code: string): Salle {
 
   const adresse = (s: Session, chemin = '') => `${FIREBASE.base}/salles/${code}${chemin}.json?auth=${encodeURIComponent(s.jeton)}`;
 
-  const ecrire = async (corps: object) => {
-    if (fini) return;
-    try {
-      const s = await connexion();
-      await fetch(adresse(s, `/${s.uid}`), { method: 'PATCH', body: JSON.stringify(corps) });
-    } catch { /* réseau absent : le battement réessaiera */ }
+  // Les écritures partent une par une, dans l'ordre : deux envois lancés en même temps pourraient
+  // arriver dans le désordre, et l'ami verrait alors un état plus ancien que le dernier publié.
+  let chaine: Promise<void> = Promise.resolve();
+  const ecrire = (corps: object) => {
+    chaine = chaine.then(async () => {
+      if (fini) return;
+      try {
+        const s = await connexion();
+        await fetch(adresse(s, `/${s.uid}`), { method: 'PATCH', body: JSON.stringify(corps) });
+      } catch { /* réseau absent : le battement réessaiera */ }
+    });
+    return chaine;
   };
   const envoyer = () => mien !== null && ecrire({ p: mien, t: { '.sv': 'timestamp' } });
 
@@ -282,4 +288,47 @@ export async function deposer(collection: string, donnees: Record<string, Valeur
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${s.jeton}` }, body: JSON.stringify(corps),
   });
   return r.ok;
+}
+
+// Dépose plusieurs documents d'un coup (statistiques), avec la même fiche limites/<joueur>.
+export async function deposerLot(collection: string, docs: Record<string, Valeur | null | undefined>[], champLimite: string): Promise<boolean> {
+  const s = await connexion();
+  const writes = docs.map((d) => ({
+    update: { name: `${DOCS}/${collection}/${identifiant()}`, fields: versFirestore({ ...d, uid: s.uid }) },
+    currentDocument: { exists: false },
+    updateTransforms: [{ fieldPath: 'envoye', setToServerValue: 'REQUEST_TIME' }],
+  }));
+  writes.push({
+    update: { name: `${DOCS}/limites/${s.uid}`, fields: {} },
+    updateMask: { fieldPaths: [champLimite] },
+    updateTransforms: [{ fieldPath: champLimite, setToServerValue: 'REQUEST_TIME' }],
+  } as unknown as (typeof writes)[number]);
+  const r = await fetch(`https://firestore.googleapis.com/v1/${DOCS}:commit`, {
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${s.jeton}` }, body: JSON.stringify({ writes }),
+  });
+  return r.ok;
+}
+
+// « Supprimer mes données » : efface tout ce que ce téléphone a envoyé (avis, statistiques, limites).
+// Rend le nombre de documents effacés.
+export async function supprimerMesDonnees(): Promise<number> {
+  const s = await connexion();
+  const entete = { 'content-type': 'application/json', authorization: `Bearer ${s.jeton}` };
+  const noms: string[] = [];
+  for (const collection of ['avis', 'stats']) {
+    const r = await fetch(`https://firestore.googleapis.com/v1/${DOCS}:runQuery`, {
+      method: 'POST', headers: entete,
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: { field: { fieldPath: 'uid' }, op: 'EQUAL', value: { stringValue: s.uid } } }, select: { fields: [] } } }),
+    });
+    if (!r.ok) throw new Error(`Lecture refusée (${r.status})`);
+    for (const x of (await r.json()) as { document?: { name: string } }[]) if (x.document) noms.push(x.document.name);
+  }
+  noms.push(`${DOCS}/limites/${s.uid}`);
+  for (let i = 0; i < noms.length; i += 400) {
+    const r = await fetch(`https://firestore.googleapis.com/v1/${DOCS}:commit`, {
+      method: 'POST', headers: entete, body: JSON.stringify({ writes: noms.slice(i, i + 400).map((n) => ({ delete: n })) }),
+    });
+    if (!r.ok) throw new Error(`Suppression refusée (${r.status})`);
+  }
+  return noms.length - 1;
 }

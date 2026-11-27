@@ -60,6 +60,7 @@ export function reglesHTML(): string {
         <li><b>Feinte</b> (coût ${ACTIONS.feinte.cout}) : bat la défense et le contre. Contre une défense, l'adversaire perd ${pct(R.feinteSurDefense.perteEndurance)} d'endurance, et tu peux prendre l'<b>initiative</b>. Ta prochaine attaque ou ton prochain contre réussi vaut +${R.bonusFeinte}, pendant ${R.toursBonusFeinte} tours.</li>
         <li><b>Contre</b> (coût ${ACTIONS.contre.cout}) : bat la défense. Face à une attaque, il la prend et renvoie ses points : seule la précision compte (un contre raté laisse passer l'attaque).</li>
         <li>Deux actions de la même famille s'annulent, sauf si l'un a au moins le double d'endurance de l'autre.</li>
+        <li>Exception : l'action qui termine un combo, ou une attaque spéciale, n'est pas bloquée par la même famille (elle peut quand même rater). Si les deux en ont une, la meilleure chance de réussite l'emporte, puis le plus fort.</li>
       </ul>
     </section>
     <section class="regle">
