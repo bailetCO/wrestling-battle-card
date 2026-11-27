@@ -129,12 +129,18 @@ export function salleFirebase(code: string): Salle {
 
   const adresse = (s: Session, chemin = '') => `${FIREBASE.base}/salles/${code}${chemin}.json?auth=${encodeURIComponent(s.jeton)}`;
 
-  const ecrire = async (corps: object) => {
-    if (fini) return;
-    try {
-      const s = await connexion();
-      await fetch(adresse(s, `/${s.uid}`), { method: 'PATCH', body: JSON.stringify(corps) });
-    } catch { /* réseau absent : le battement réessaiera */ }
+  // Les écritures partent une par une, dans l'ordre : deux envois lancés en même temps pourraient
+  // arriver dans le désordre, et l'ami verrait alors un état plus ancien que le dernier publié.
+  let chaine: Promise<void> = Promise.resolve();
+  const ecrire = (corps: object) => {
+    chaine = chaine.then(async () => {
+      if (fini) return;
+      try {
+        const s = await connexion();
+        await fetch(adresse(s, `/${s.uid}`), { method: 'PATCH', body: JSON.stringify(corps) });
+      } catch { /* réseau absent : le battement réessaiera */ }
+    });
+    return chaine;
   };
   const envoyer = () => mien !== null && ecrire({ p: mien, t: { '.sv': 'timestamp' } });
 

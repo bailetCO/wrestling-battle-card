@@ -382,6 +382,7 @@ export function ecranFinLigne() {
     gagne = e.vainqueur === S.HUMAIN;
     comment = e.finPar === 'tombe'
       ? 'par tombé'
+      : e.rapide ? `${Math.max(h.score, o.score)} à ${Math.min(h.score, o.score)}${e.mortSubite ? ' en mort subite' : ''}`
       : `${Math.max(h.periodesGagnees, o.periodesGagnees)} périodes à ${Math.min(h.periodesGagnees, o.periodesGagnees)}`;
   }
   const vainqueur = gagne ? h : o;
