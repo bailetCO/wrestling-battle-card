@@ -50,7 +50,7 @@ export const APPARENCE: Record<string, Apparence> = {
   // changer, remplacer les fichiers, même nom). Le rival prend l'illustration de son niveau ; la carte
   // secrète, celle du Champion. Les cartes portent leur bandeau de rareté en bas (voulu).
   'cocoach-rival': { ...COCOACH_BASE, images: CARTES_COCOACH, cadrage: '50% 22%' },
-  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 22%' },
+  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 4%' },
   'cocoach-test': { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/presentation.webp`, cadrage: '50% 18%' },
   'perso-darius': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/coach.webp` },
   darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp` },
