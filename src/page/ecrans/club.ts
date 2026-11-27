@@ -1,3 +1,4 @@
+import { blocInvitation, brancherInvitation, verifierParrainage } from './parrainage';
 // Mon Club et Social (boutique, transferts, amis).
 
 import { CHAMPIONS, NATIONS, trouverLutteur, REGLES as R_, type DefLutteur, type NiveauCarte } from '../../moteur';
@@ -165,6 +166,7 @@ export function ecranSocial(message = '') {
       ${enTete('Social', 'Boutique de boosters, transferts de lutteurs et tes amis.')}
       ${porteMonnaie()}
       ${message}
+      ${S.collection.coach ? blocInvitation() : ''}
       <section class="bloc boutique">
         <h2>Boutique</h2>
         <p>Achète des boosters avec tes $. Tu gagnes 10 $ toutes les 5 médailles.</p>
@@ -212,6 +214,16 @@ export function ecranSocial(message = '') {
         ${listeA}
       </section>
     </main>`;
+  brancherInvitation(app);
+  // Amis arrivés par mon lien depuis la dernière visite : récompenses, puis compteur à jour.
+  if (S.collection.parrainage.partage) {
+    void verifierParrainage().then(() => {
+      const bloc = app.querySelector('.invitation');
+      if (location.hash !== '#social' || !bloc) return;
+      bloc.outerHTML = blocInvitation();
+      brancherInvitation(app);
+    });
+  }
   app.querySelectorAll<HTMLButtonElement>('[data-offre]').forEach((b) =>
     b.addEventListener('click', () => {
       const i = Number(b.dataset.offre);

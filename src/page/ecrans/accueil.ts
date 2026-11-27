@@ -1,3 +1,4 @@
+import { accueilFilleul } from './parrainage';
 import { verifierMiseAJour } from '../mise-a-jour';
 import { majPeriode, nomMois, programmerPublication } from '../classement';
 import { pastilleMonBadge } from './classement';
@@ -79,6 +80,7 @@ export function ecranAccueil(message = '') {
         <h1 class="logo">Wrestling<br>Battle Card</h1>
         <span class="badge-beta">Bêta</span>
         <p>Bienvenue sur le tapis. Avant ton premier combat, choisis ton nom de coach : c'est sous ce nom que tu diriges tes lutteurs et que tes amis te verront.</p>
+        ${accueilFilleul()}
         <form class="form-pseudo">
           <label for="pseudo">Ton pseudo de coach</label>
           <input id="pseudo" name="pseudo" maxlength="16" autocomplete="nickname" placeholder="Coach…" value="${echap(S.collection.coach ?? '')}">

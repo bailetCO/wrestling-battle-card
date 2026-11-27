@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.7.0';
+export const VERSION = '0.8.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.8.0',
+    date: '2026-11-27',
+    lignes: [
+      'Nouveau : invite tes amis ! Bouton « Inviter un ami » dans Social, dans le Classement (onglet Amis) et sous « Plus ».',
+      'Ton ami reçoit un booster rare de bienvenue, et toi un booster rare dès qu\'il crée son compte. Au 3e ami : une carte légendaire en bonus !',
+      'Vous devenez amis automatiquement : mesure-toi à eux dans le classement Amis.',
+    ],
+  },
   {
     version: '0.7.0',
     date: '2026-11-27',

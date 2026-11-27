@@ -1,3 +1,4 @@
+import { verifierParrainage } from './parrainage';
 import { programmerPublication } from '../classement';
 import { brancherPays, choixPays } from './classement';
 // Écrans du compte joueur (27/11/2026) : se connecter (Google ou e-mail), choisir la sauvegarde à
@@ -160,6 +161,7 @@ async function apresConnexion(message: string) {
   if (document.querySelector('.voile')) return; // le joueur choisit sa sauvegarde
   route(); // le menu affiche maintenant « Sauvegardé »
   programmerPublication(S.collection, 500); // les points du mois entrent dans le classement
+  void verifierParrainage(); // filleul : le parrain reçoit son cadeau
   fenetreCompte(message.trim() || 'Connecté !');
 }
 
@@ -180,6 +182,7 @@ async function retrouverCollection() {
   if (document.querySelector('.voile')) return; // deux sauvegardes : le joueur choisit
   route();
   programmerPublication(S.collection, 500);
+  void verifierParrainage();
   if (S.collection.coach) annoncer(`Bon retour, Coach ${S.collection.coach} !`, '#', 'Ta collection est de retour sur cet appareil.');
 }
 

@@ -19,6 +19,9 @@ après chaque modification.
   chacun n'écrit que sa ligne, avec un vrai compte. Les règles vérifient le plafond de 80 points par
   jour (jour du serveur, heure universelle) : les points ne montent que de ce que les jours écoulés
   permettent, et ne baissent jamais.
+  Parrainage (`parrainages/<filleul>`) : un nouveau joueur avec un vrai compte désigne son parrain,
+  une seule fois. Amitiés (`amities/<joueur>_<ami>`) : un joueur existant qui ouvre le lien d'un ami
+  le prévient. Lisibles par les joueurs connectés, jamais modifiées ni effacées.
 
 ## Comptes joueurs : réglages à faire une fois dans la console Firebase
 

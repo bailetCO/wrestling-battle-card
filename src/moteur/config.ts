@@ -426,6 +426,12 @@ export const REGLES = {
     taille: { monde: 50, pays: 500, amis: 29 }, // nombre de lignes lues (amis : 29 + soi, limite de Firebase)
   },
 
+  // Parrainage (27/11/2026) : chaque joueur a son lien perso (il fait aussi entrer dans la bêta).
+  // Le nouveau joueur arrivé par ce lien reçoit un booster rare de bienvenue ; le parrain reçoit
+  // 1 booster rare quand son ami crée un vrai compte (Google ou e-mail), plus une carte légendaire
+  // au hasard au 3e ami. Au plus 10 parrainages récompensés par joueur. Les deux deviennent amis.
+  parrainage: { recompensesMax: 10, bonusLegendaireAu: 3 },
+
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
   // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.
   club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 10, placesParNiveau: 1, niveauTournoiEquipe: 5,

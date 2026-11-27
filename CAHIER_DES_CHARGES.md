@@ -308,6 +308,16 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Sans serveur, ces transferts reposent sur la confiance entre amis ; Firebase les sécurisera.
 - Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
 
+### Inviter un ami : parrainage (27/11/2026)
+
+- Bouton « 📨 Inviter un ami » : en haut de Social, dans le Classement (onglet Amis) et sous « Plus » en bas du menu. Il ouvre le menu de partage du téléphone (sinon, le lien est copié) avec un texte et le lien perso du joueur : `…/?parrain=<identifiant de coach>&de=<pseudo>`.
+- Le lien perso fait entrer dans la bêta fermée sans code d'invitation.
+- Nouveau joueur arrivé par ce lien : « Coach X t'invite ! » sur l'écran du pseudo, 1 booster rare de bienvenue dans la boîte à récompenses, et le parrain devient son ami. Un seul parrain par joueur.
+- Le parrain est récompensé quand son ami crée un vrai compte (Google ou e-mail) : 1 booster rare par ami, plus une carte légendaire au hasard au 3e ami ; au plus 10 parrainages récompensés (les suivants deviennent quand même amis). Il le découvre au lancement suivant ou en ouvrant Social (bulle « Coach Y a rejoint le jeu grâce à toi ! »).
+- Joueur qui jouait déjà et ouvre le lien d'un ami : pas de parrainage, mais les deux deviennent amis (chacun dans la liste d'amis de l'autre, donc dans le classement Amis).
+- En ligne : Firestore `parrainages/<filleul>` (créé une seule fois, avec un vrai compte) et `amities/<joueur>_<ami>`. Le parrain ne cherche ces fiches que s'il a déjà partagé son lien.
+- Chiffres dans `REGLES.parrainage`.
+
 ### Médailles et $
 
 - Deux monnaies : les médailles mesurent la progression (jamais dépensées) ; les $ se dépensent (boosters, inscriptions aux tournois).

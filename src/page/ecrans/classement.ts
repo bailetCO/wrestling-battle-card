@@ -1,3 +1,4 @@
+import { blocInvitation, brancherInvitation } from './parrainage';
 // Écran « Classement » (27/11/2026) : points du mois, palier, et trois classements (tous les joueurs,
 // mes amis, mon pays). Sans compte : explication et bouton pour créer son compte (les points du mois
 // comptent déjà). Fin du mois : récompense du palier et du Top 10 dans la boîte à récompenses.
@@ -100,7 +101,7 @@ export function brancherPays(racine: ParentNode, apres: () => void) {
 function lignesHTML(r: Resultat): string {
   if (!r.lignes.length) {
     return vue === 'amis'
-      ? '<p class="note">Aucun ami classé ce mois-ci. Tes amis apparaissent ici quand ils ont un compte et des points : affronte-les en ligne (Combat → Entre amis) !</p>'
+      ? '<p class="note">Aucun ami classé ce mois-ci. Invite tes amis pour te mesurer à eux : ils apparaissent ici quand ils ont un compte et des points.</p>'
       : '<p class="note">Personne n\'a encore de points ce mois-ci : sois le premier !</p>';
   }
   const lignes = r.lignes.map((l, i) => `
@@ -127,7 +128,8 @@ async function chargerListe() {
   try {
     const r = await lireClassement(S.collection, v);
     if (v !== vue || !zone.isConnected) return;
-    zone.innerHTML = `${v === 'pays' ? `<p class="note">${drapeau(S.collection.pays)} ${echap(PAYS.find(([c]) => c === S.collection.pays)?.[1] ?? '')} · <button class="lien" data-changer-pays>changer</button></p>` : ''}${lignesHTML(r)}`;
+    zone.innerHTML = `${v === 'pays' ? `<p class="note">${drapeau(S.collection.pays)} ${echap(PAYS.find(([c]) => c === S.collection.pays)?.[1] ?? '')} · <button class="lien" data-changer-pays>changer</button></p>` : ''}${lignesHTML(r)}${v === 'amis' ? `<div class="invitation-classement">${blocInvitation()}</div>` : ''}`;
+    brancherInvitation(zone);
     zone.querySelector('[data-changer-pays]')?.addEventListener('click', () => { zone.innerHTML = choixPays(); brancherPays(zone, () => void chargerListe()); });
   } catch {
     if (v === vue && zone.isConnected) zone.innerHTML = '<p class="note">Classement indisponible pour le moment. Vérifie ta connexion internet et réessaie.</p>';
