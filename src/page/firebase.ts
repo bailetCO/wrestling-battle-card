@@ -238,3 +238,48 @@ export function salleEnLigne(code: string, secours: () => Salle, delais = { conn
     },
   };
 }
+
+// ---------- Firestore : déposer un avis, un signalement ou une statistique ----------
+
+type Valeur = string | number | boolean | string[];
+
+// Traduit un objet simple dans le format de Firestore (les champs vides sont omis).
+export function versFirestore(o: Record<string, Valeur | null | undefined>): Record<string, unknown> {
+  const champs: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (v === null || v === undefined || v === '') continue;
+    if (typeof v === 'string') champs[k] = { stringValue: v };
+    else if (typeof v === 'boolean') champs[k] = { booleanValue: v };
+    else if (typeof v === 'number') champs[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+    else champs[k] = { arrayValue: { values: v.map((x) => ({ stringValue: x })) } };
+  }
+  return champs;
+}
+
+const DOCS = `projects/${FIREBASE.projectId}/databases/(default)/documents`;
+const identifiant = () => Array.from(crypto.getRandomValues(new Uint8Array(15)), (x) => 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'[x % 62]).join('');
+
+// Dépose un document dans une collection (« avis », « combats »…). En même temps, la fiche
+// limites/<joueur> note l'heure de l'envoi : les règles Firebase refusent les envois trop rapprochés
+// (anti-spam). L'heure de l'envoi est toujours celle du serveur. Rend vrai si Firebase a accepté.
+export async function deposer(collection: string, donnees: Record<string, Valeur | null | undefined>, champLimite: string): Promise<boolean> {
+  const s = await connexion();
+  const corps = {
+    writes: [
+      {
+        update: { name: `${DOCS}/${collection}/${identifiant()}`, fields: versFirestore({ ...donnees, uid: s.uid }) },
+        currentDocument: { exists: false },
+        updateTransforms: [{ fieldPath: 'envoye', setToServerValue: 'REQUEST_TIME' }],
+      },
+      {
+        update: { name: `${DOCS}/limites/${s.uid}`, fields: {} },
+        updateMask: { fieldPaths: [champLimite] },
+        updateTransforms: [{ fieldPath: champLimite, setToServerValue: 'REQUEST_TIME' }],
+      },
+    ],
+  };
+  const r = await fetch(`https://firestore.googleapis.com/v1/${DOCS}:commit`, {
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${s.jeton}` }, body: JSON.stringify(corps),
+  });
+  return r.ok;
+}

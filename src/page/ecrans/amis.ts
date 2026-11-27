@@ -2,6 +2,7 @@
 
 import { LUTTEURS, trouverLutteur, TAILLE_SEQUENCE, niveauCarte, REGLES as R_, type Face } from '../../moteur';
 import { salleEnLigne } from '../firebase';
+import { noterFinCombat } from './avis';
 import { ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais, type ModeSalle, type Presence, type Role, type Salle, type Vue } from '../enligne';
 import { ICONE } from '../textes';
 import { NOM_RARETE, activerReflets } from '../carte';
@@ -366,6 +367,7 @@ export function ecranFinLigne() {
   const v = S.vueLigne;
   const e = v?.etat;
   if (!v || !e) return;
+  noterFinCombat(null, e); // compte le combat (invitation à donner son avis)
   const h = e.joueurs[S.HUMAIN];
   const o = e.joueurs[S.ORDI];
   let gagne: boolean;

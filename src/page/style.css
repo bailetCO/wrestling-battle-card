@@ -1466,3 +1466,31 @@ b.moi { color: #ff8a95; }
 .sv-fichier { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .sv-choisir:focus-within { outline: 3px solid var(--orange); outline-offset: 2px; }
 .sv-import .erreur { color: #ff8a8a; }
+
+/* ---------- Avis et signalements ---------- */
+.av-form { text-align: left; }
+.av-form fieldset { border: 0; padding: 0; margin: 12px 0; }
+.av-form legend { font-weight: 700; margin-bottom: 6px; }
+.av-cases { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-case {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; min-height: 40px; box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, .2); border-radius: 10px; font-size: 14px; cursor: pointer;
+}
+.av-case:has(input:checked) { border-color: var(--orange); background: rgba(240, 124, 42, .14); }
+.av-etoiles { display: flex; gap: 6px; }
+.av-etoiles label { cursor: pointer; }
+.av-etoiles input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.av-etoiles span { font-size: 38px; line-height: 1; color: rgba(255, 255, 255, .25); }
+.av-etoiles label.allume span { color: #ffd76a; }
+.av-etoiles input:focus-visible + span { outline: 3px solid var(--orange); border-radius: 6px; }
+.av-libre { display: block; margin: 10px 0; font-size: 14px; }
+.av-form input[type="email"], .av-form input[name="difficileTexte"], .av-form textarea, .av-form select {
+  display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px; border-radius: 8px;
+  background: #0b1530; color: #fff; border: 1px solid rgba(255, 255, 255, .25); font: inherit;
+}
+.av-sens { display: flex; gap: 6px; margin-top: 6px; }
+.av-contact { margin: 12px 0; }
+.av-email { display: block; margin: 8px 0; font-size: 14px; }
+.av-email[hidden] { display: none; }
+.av-etat .erreur { color: #ff8a8a; }
+.av-invitation { border: 2px solid var(--orange); }

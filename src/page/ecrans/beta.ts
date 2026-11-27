@@ -84,6 +84,8 @@ export const piedMenu = () => `
     <button class="lien" data-nouveautes>Nouveautés</button>
     <button class="lien" data-sauvegarde>Ma sauvegarde</button>
     <button class="lien" data-installer>Installer le jeu</button>
+    <button class="lien" data-donner-avis>Donner mon avis</button>
+    <button class="lien" data-signaler>Signaler un bug</button>
   </footer>`;
 
 export function brancherPiedMenu() {

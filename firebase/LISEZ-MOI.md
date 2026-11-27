@@ -10,7 +10,9 @@ après chaque modification.
   donnée par le serveur. On ne peut lire une salle qu'en connaissant son code ; la liste des
   salles n'est lisible par personne.
 - `firestore.rules` → Firestore Database, onglet **Règles** : remplacer tout le texte, puis **Publier**.
-  Tout fermé pour l'instant (avis et statistiques : lots C et D).
+  Avis et signalements de bug (`avis`) : dépôt seulement, champs et tailles contrôlés, un envoi
+  par minute et par joueur (fiche `limites/<joueur>`, heure du serveur). Personne ne lit depuis le jeu :
+  Corentin les lit dans la console (Firestore Database, onglet Données).
 
 Les vieilles salles ne sont pas effacées automatiquement (il faudrait l'offre payante) : chaque
 joueur efface sa place en quittant, et un état sans signe de vie depuis 90 secondes est ignoré.
