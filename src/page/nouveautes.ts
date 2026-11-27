@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.8.0';
+export const VERSION = '0.9.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.9.0',
+    date: '2026-11-27',
+    lignes: [
+      'Le jeu a maintenant du son : prises, points, tombé, victoire, ouverture de booster et cartes rares !',
+      'Sur Android, le téléphone vibre aussi quand tu marques, quand tu encaisses, au tombé et pour les cartes rares.',
+      'Coupe le son d\'un geste avec le bouton 🔊 en combat, ou règle son, volume et vibrations dans « Plus » → « Son et vibrations ».',
+    ],
+  },
   {
     version: '0.8.0',
     date: '2026-11-27',

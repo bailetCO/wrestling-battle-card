@@ -11,6 +11,7 @@ import { demarrerStats } from './ecrans/stats';
 import { demarrerCompte } from './ecrans/compte';
 import { demarrerClassement } from './ecrans/classement';
 import { demarrerMisesAJour } from './mise-a-jour';
+import { brancherClics } from './son';
 
 // Démarrage : tournoi en cours relu, puis premier écran.
 demarrerBeta(); // code d'invitation, nouveautés, installation
@@ -22,5 +23,6 @@ void demarrerClassement(); // classement : nouveau mois, récompenses de fin de 
 S.tournoi = chargerTournoi();
 window.addEventListener('hashchange', route);
 route();
+brancherClics(); // petit clic sur les boutons (sons et vibrations : src/page/son.ts)
 // Nouvelle version en ligne : rechargement (un combat contre l'ordinateur est annulé, pas un combat en ligne).
 demarrerMisesAJour(() => (S.mode === 'ligne' ? 'enLigne' : (S.partie && !S.partie.etat.termine) || S.tuto ? 'combat' : 'libre'));

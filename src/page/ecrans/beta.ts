@@ -1,3 +1,4 @@
+import { fenetreReglagesSon } from './reglages-son';
 import { fenetreInvitation } from './parrainage';
 // Écrans de la bêta : code d'invitation, pied du menu (version, nouveautés, sauvegarde, installation).
 
@@ -99,6 +100,7 @@ export const piedMenu = () => `
       <div class="pied-liens">
         <button class="lien" data-compte>Mon compte</button>
         <button class="lien" data-inviter-ami>Inviter un ami</button>
+        <button class="lien" data-reglages-son>Son et vibrations</button>
         <button class="lien" data-nouveautes>Nouveautés</button>
         <button class="lien" data-sauvegarde>Ma sauvegarde</button>
         <button class="lien" data-installer>Installer le jeu</button>
@@ -114,6 +116,7 @@ export function brancherPiedMenu() {
   app.querySelector('[data-sauvegarde]')?.addEventListener('click', () => fenetreSauvegarde());
   app.querySelector('[data-compte]')?.addEventListener('click', () => fenetreCompte());
   app.querySelector('[data-inviter-ami]')?.addEventListener('click', () => fenetreInvitation());
+  app.querySelector('[data-reglages-son]')?.addEventListener('click', () => fenetreReglagesSon());
   app.querySelector('[data-installer]')?.addEventListener('click', () => fenetreInstaller());
   app.querySelector('[data-confidentialite]')?.addEventListener('click', () => fenetreConfidentialite());
 }
