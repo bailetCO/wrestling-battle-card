@@ -524,10 +524,15 @@ export function charger(): Collection {
   }
 }
 
+// Après chaque sauvegarde dans le navigateur (par exemple : l'enregistrement en ligne du compte).
+let apresSauvegarde: ((c: Collection) => void) | null = null;
+export function surSauvegarde(f: ((c: Collection) => void) | null) { apresSauvegarde = f; }
+
 export function sauver(c: Collection) {
   try {
     localStorage.setItem(CLE, JSON.stringify(c));
   } catch {
     // Pas de sauvegarde possible (navigation privée, etc.) : la partie continue sans.
   }
+  apresSauvegarde?.(c);
 }

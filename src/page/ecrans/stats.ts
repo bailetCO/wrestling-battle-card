@@ -87,8 +87,9 @@ export function fenetreConfidentialite(depuisAccord = false) {
         <li><b>Statistiques anonymes</b> (si tu as dit oui et que tu as 15 ans ou plus) : pour chaque combat, le mode, les lutteurs et leur rareté, le résultat, le score, le nombre de tours, la durée et les actions jouées ; et quelques étapes de ton parcours (tutoriel terminé, étape d'histoire validée, premier booster). Elles servent à équilibrer le jeu.</li>
         <li><b>Tes avis et signalements de bug</b>, seulement quand tu les envoies : tes réponses, ton pseudo de coach et ton adresse e-mail (15 ans et plus) pour qu'on puisse te répondre. Un signalement joint aussi le type de téléphone et ton dernier combat contre l'ordinateur.</li>
         <li><b>Les combats entre amis</b> : les choix de chaque tour passent par le serveur, le temps du combat.</li>
+        <li><b>Ton compte</b> (seulement si tu en crées un) : ton adresse e-mail (ou ton compte Google) pour te connecter, et la sauvegarde de ta collection, pour la retrouver sur tes appareils. Ton e-mail n'est jamais montré aux autres joueurs. Pour supprimer ton compte, écris-nous à l'adresse ci-dessous.</li>
       </ul>
-      <p>Tu n'es connu que par un identifiant tiré au hasard : ni nom, ni position, ni publicité, ni pisteur.</p>
+      <p>Sans compte, tu n'es connu que par un identifiant tiré au hasard. Dans tous les cas : ni position, ni publicité, ni pisteur.</p>
       <p><b>Où</b> : chez Firebase (Google), sur des serveurs en Europe (Belgique). <b>Qui les lit</b> : seulement l'équipe du jeu.</p>
       <p><b>Combien de temps</b> : jusqu'à 12 mois après la fin de la bêta, puis effacées.</p>
       <p><b>Responsable</b> : Corentin Bailet (Wrestling Battle Card). Pour toute question, ou pour faire effacer tes données : <a href="mailto:${CONTACT}">${CONTACT}</a>.</p>
