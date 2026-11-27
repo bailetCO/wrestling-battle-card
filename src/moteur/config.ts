@@ -397,7 +397,9 @@ export const REGLES = {
   // Menu principal ouvert pas à pas : étape du mode histoire (0 = étape 1) où chaque tuile apparaît.
   // Tournois à l'étape 2, Mon Club et la saison sportive à la 3, Social à la 4, Fusion à la 8.
   // Grand tutoriel : un combat express de 2 minutes (4 tours guidés, puis libre jusqu'au 6e tour).
-  tutoriel: { toursCombat: 6 },
+  // enduranceEssai : lutteur d'essai et adversaire des tutoriels courts (assez pour ne rien rater pendant les
+  // tours guidés) ; une partie d'essai gagnée rapporte un booster classique, une fois par tutoriel.
+  tutoriel: { toursCombat: 6, enduranceEssai: 70 },
 
   menu: { etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7, recompenses: 0 } },
 

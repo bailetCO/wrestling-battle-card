@@ -280,6 +280,14 @@ export function ecranFin() {
     queteCombat(e, e.rapide ? 'rapide' : 'arene', S.partie.niveau, championBattu);
     sauver(S.collection);
   }
+  // Partie d'essai d'un tutoriel court gagnée : un booster classique, une seule fois par tutoriel.
+  if (S.essaiSolo && gagne && !S.paquetSolo) {
+    if (!S.collection.essaisGagnes.includes(S.essaiSolo)) {
+      S.collection.essaisGagnes.push(S.essaiSolo);
+      S.paquetSolo = { titre: 'Partie d\'essai gagnée', boosters: [ouvrirBooster(S.collection, Math.random, 'classique')], ouvert: false };
+      sauver(S.collection);
+    } else S.messageSolo = 'Partie d\'essai gagnée ! Le booster de ce tutoriel a déjà été reçu.';
+  }
   const booster = sectionPaquet(S.paquetSolo, S.messageSolo);
   app.innerHTML = `
     <main class="fin">

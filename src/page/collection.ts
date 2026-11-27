@@ -39,6 +39,7 @@ export interface Collection {
   scenesVues: string[]; // scènes de dialogue déjà montrées
   combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
   tutosVus: string[]; // tutoriels courts déjà vus (ouverts tout seuls à la première visite d'un mode)
+  essaisGagnes: string[]; // tutoriels courts dont la partie d'essai a été gagnée (booster déjà donné)
   menusVus: string[]; // tuiles du menu déjà visitées (les autres portent « Nouveau »)
   battusMain: string[]; // lutteurs adverses battus au moins une fois en jouant soi-même (le combat auto n'est permis que contre eux)
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
@@ -96,7 +97,7 @@ export function nouvelleCollection(): Collection {
     exemplaires: Object.fromEntries(cartesDeDepart().map((id) => [id, 1])), grades: {}, etoiles: {},
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [], aOuvrir: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
-    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], menusVus: ['combat', 'collection', 'recompenses'], fragments: {}, departComplet: true, arene: 0,
+    styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], essaisGagnes: [], menusVus: ['combat', 'collection', 'recompenses'], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
@@ -467,6 +468,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
   c.menusVus = Array.isArray(b.menusVus) ? b.menusVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combat', 'collection', 'tournois', 'club', 'saison', 'social', 'fusion', 'recompenses'];
   if (!c.menusVus.includes('recompenses')) c.menusVus.push('recompenses'); // boîte ajoutée après le menu pas à pas
   // Ancienne sauvegarde : le joueur connaît déjà les modes, les tutoriels courts ne s'ouvrent pas tout seuls.
+  c.essaisGagnes = Array.isArray(b.essaisGagnes) ? b.essaisGagnes.filter((x): x is string => typeof x === 'string').slice(0, 20) : [];
   c.tutosVus = Array.isArray(b.tutosVus) ? b.tutosVus.filter((x): x is string => typeof x === 'string').slice(0, 20) : ['combos', 'enchainement', 'infini', 'arene', 'individuel', 'equipe', 'amis'];
   if (Array.isArray(b.battusMain)) c.battusMain = [...new Set(b.battusMain.filter((x): x is string => typeof x === 'string'))].slice(0, 500);
   if (Array.isArray(b.combosVus)) c.combosVus = [...new Set(b.combosVus.filter((x): x is string => typeof x === 'string'))].slice(0, 10);
