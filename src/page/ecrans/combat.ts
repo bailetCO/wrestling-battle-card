@@ -1,3 +1,5 @@
+import { boutonSon, brancherBoutonSon } from './reglages-son';
+import { jouer, vibrer } from '../son';
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
 import { PRESENTATION_COCOACH } from '../portrait';
@@ -668,10 +670,32 @@ export function tableau(e: EtatCombat): string {
     </header>`;
 }
 
+// Sons et vibrations d'un tour (ou des duels d'une séquence) : points marqués ou encaissés, tombé,
+// fin de période, endurance qui passe sous le seuil où les actions peuvent rater.
+function reagirAuTour(premier: TourJoue, dernier: TourJoue, e: EtatCombat) {
+  const av = premier.avant;
+  const moi = e.joueurs[S.HUMAIN], lui = e.joueurs[S.ORDI];
+  const a = av.joueurs[S.HUMAIN], b = av.joueurs[S.ORDI];
+  const nouvellePeriode = e.periode !== av.periode;
+  const pour = nouvellePeriode ? 0 : moi.score - a.score;
+  const contre = nouvellePeriode ? 0 : lui.score - b.score;
+  const o = onomatopee(dernier, e);
+  if (o?.texte === 'TOMBÉ !') { jouer('tombe'); vibrer('tombe'); return; }
+  if (contre > 0 && contre >= pour) { jouer('encaisse'); vibrer('encaisse'); }
+  else if (pour > 0) { jouer('marque'); vibrer('marque'); }
+  else if (o?.texte === 'RATÉ !' || o?.texte === 'DANS LE VENT…') jouer('rate');
+  else jouer('bloque');
+  if (nouvellePeriode && !e.termine) jouer('periode', 0.35);
+  const seuil = R_.precision.seuilPlein;
+  if (a.endurance >= seuil && moi.endurance < seuil && !e.termine) jouer('alerte', 0.5);
+}
+
 export function ecranCombat() {
   const e = etatEnCours();
   if (!e) return;
   const animer = S.tours.length !== S.toursAnimes;
+  const premierNouveau = S.tours[Math.max(0, S.toursAnimes)]; // début du combat : aucun tour joué
+  if (animer && premierNouveau && S.tours.length > S.toursAnimes) reagirAuTour(premierNouveau, S.tours[S.tours.length - 1], e);
   S.toursAnimes = S.tours.length;
   if (S.tuto && (e.termine || e.periode > 1 || (S.partie?.toursJoues ?? 0) >= R_.tutoriel.toursCombat)) return ecranFinTutoriel();
   if (S.enTournoi !== null && e.termine) return finCombatTournoi(false);
@@ -702,12 +726,13 @@ export function ecranCombat() {
         ${bulleCoach()}${bulleConseil(e)}
 
         <div class="actions-zone">${e.enchainement ? paveSequence(e) : boutonsActions(e, 'tour')}</div>
-        <p class="graine">${S.mode === 'ligne' ? `Salle ${S.codeSalle.toUpperCase()} · combat n° ${S.vueLigne?.graine ?? ''}` : S.tuto ? 'Combat guidé' : `Combat n° ${S.partie!.hasard.graine}`} · <button class="lien" data-quitter>${S.tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button></p>
+        <p class="graine">${S.mode === 'ligne' ? `Salle ${S.codeSalle.toUpperCase()} · combat n° ${S.vueLigne?.graine ?? ''}` : S.tuto ? 'Combat guidé' : `Combat n° ${S.partie!.hasard.graine}`} · <button class="lien" data-quitter>${S.tuto ? 'Quitter le tutoriel' : 'Abandonner'}</button> · ${boutonSon()}</p>
         ${S.mode !== 'ligne' && !S.tuto && outilsTestVisibles(S.collection.coach) ? '<button class="secondaire bouton-test" data-passer-combat>⏩ Passer le combat et gagner (test)</button>' : ''}
       </footer>
       ${panneauChat(e)}
     </main>`;
   brancherChat();
+  brancherBoutonSon(app);
 
   // Les barres partent de l'endurance d'avant le tour et glissent vers la nouvelle valeur.
   requestAnimationFrame(() =>

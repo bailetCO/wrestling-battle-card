@@ -1,3 +1,6 @@
+import { jouer, sonCarte, sonFin } from '../son';
+import { niveauCompte } from '../collection';
+import { palierDe } from '../classement';
 // Fin du combat et ouverture des boosters.
 
 import { gagnerPoints } from '../classement';
@@ -182,15 +185,18 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
     let aide: string;
     const derniere = etapes[i + 1]?.type === 'recap';
     if (e.type === 'paquet') {
+      jouer('booster');
       scene = `<div class="rev-paquet">${visuelPaquet(p.boosters[b])}</div>`;
       aide = 'Touche l\'écran pour ouvrir le booster';
     } else if (e.type === 'gain') {
       const bo = p.boosters[b];
+      jouer('gain');
       scene = `<div class="rev-carte rev-gain"><div class="rev-eclat" aria-hidden="true"></div>${jetonGain(e.quoi, (e.quoi === 'medailles' ? bo.medailles : bo.dollars) ?? 0)}</div>`;
       aide = derniere ? (p.sansRecap ? 'Touche l\'écran pour terminer' : 'Touche l\'écran pour voir le récapitulatif') : 'Touche l\'écran pour la suite';
     } else {
       const c = cartes[e.k];
       const def = trouverLutteur(c.id);
+      sonCarte(def.rarete);
       scene = `
         <div class="rev-carte r-${def.rarete}">
           <div class="rev-eclat" aria-hidden="true"></div>
@@ -267,6 +273,7 @@ export function ecranFin() {
   const h = e.joueurs[S.HUMAIN];
   const o = e.joueurs[S.ORDI];
   const vainqueur = gagne ? h : o;
+  sonFin(`solo-${S.partie.debut}`, gagne, e.finPar === 'tombe');
   const comment = e.finPar === 'tombe'
     ? 'par tombé'
     : e.rapide ? `${Math.max(h.score, o.score)} à ${Math.min(h.score, o.score)}${e.mortSubite ? ' en mort subite' : ''}`
@@ -281,7 +288,11 @@ export function ecranFin() {
     if (S.bonusCeCombat) S.collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     S.bonusCeCombat = false;
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto });
+    const niveauAvant = niveauCompte(S.collection);
     S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? gagnerPoints(S.collection, { niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
+    const pts = S.collection.classement.points;
+    if (S.pointsFin && palierDe(pts)?.id !== palierDe(pts - S.pointsFin)?.id) jouer('palier', 1.4);
+    queueMicrotask(() => { if (niveauCompte(S.collection) > niveauAvant) jouer('niveau', 1.2); });
     let championBattu = gagne && S.areneCtx?.type === 'boss'; // champion d'une nation battu en Carrière
     if (e.rapide) {
       // Combat rapide : +1 médaille par victoire, sans booster ni consolation.

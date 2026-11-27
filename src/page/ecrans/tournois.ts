@@ -1,3 +1,4 @@
+import { sonFin } from '../son';
 // Tournois (individuel, par équipe, compétitions de la saison).
 
 import { gagnerPoints } from '../classement';
@@ -387,6 +388,7 @@ export function finCombatTournoi(abandon: boolean) {
   if (!S.partie || !S.tournoi || cle === null) return ecranTournois();
   const e = S.partie.etat;
   const gagne = !abandon && e.vainqueur === S.HUMAIN;
+  if (!abandon) sonFin(`tournoi-${S.partie.debut}`, gagne, e.finPar === 'tombe');
   const essaiT = 'essai' in S.tournoi && !!S.tournoi.essai;
   if (!abandon && !essaiT) queteCombat(e, S.tournoi.type === 'equipe' ? 'equipe' : 'tournoi', S.partie.niveau);
   const detail = abandon ? 'par abandon' : e.finPar === 'tombe' ? 'par tombé'

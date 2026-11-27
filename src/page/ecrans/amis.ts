@@ -1,3 +1,4 @@
+import { sonFin } from '../son';
 // Combat entre amis (en ligne).
 
 import { gagnerPoints } from '../classement';
@@ -404,6 +405,7 @@ export function ecranFinLigne() {
     }
   }
   const booster = S.paquetLigne?.cle === cle ? sectionPaquet(S.paquetLigne.paquet) : '';
+  sonFin(`ligne-${cle}`, gagne, e.finPar === 'tombe');
   // Quêtes : le combat compte une fois.
   if (!v.abandon && !quetesLigneComptees.has(cle)) {
     quetesLigneComptees.add(cle);
