@@ -1,7 +1,7 @@
 // La carte d'un lutteur : portrait, stats, actions et cadre selon la rareté.
 
 import { ACTIONS, NIVEAUX, REGLES, coutAction, niveauCarte, nomLocal, type DefLutteur, type IdAction, type NiveauCarte, type Rarete } from '../moteur';
-import { COULEURS_NATION, portraitSVG } from './portrait';
+import { APPARENCE, COULEURS_NATION, portraitSVG } from './portrait';
 import { EFFET_SPECIALE, ICONE, NOM_FAMILLE, effetAction } from './textes';
 
 export const NOM_RARETE: Record<NiveauCarte, string> = {
@@ -109,15 +109,18 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
     return `<li class="${spe}"><span class="ico f-${f}">${ICONE[f]}</span><span>${echap(nomLocal(def.nation, a))}${etoiles}<small class="cl-effet">${effetAction(a)}</small></span><b>${coutAction(def, a)}</b></li>`;
   }).join('');
   const gemmes = '◆'.repeat(GEMMES[niveau]);
+  // Cartes secrètes : « pleine illustration », l'image couvre toute la carte et les textes passent dessus.
+  const pleine = APPARENCE[def.id]?.pleine;
   return `
-    <article class="carte-l" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+    <article class="carte-l${pleine ? ' pleine' : ''}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
       <div class="cl-interieur">
+        ${pleine ? `<img class="cl-fond" src="${pleine}" alt="" aria-hidden="true">` : ''}
         <header class="cl-tete">
           <span class="cl-nom">${echap(def.nom)}</span>
           <span class="cl-rarete" title="${NOM_RARETE[niveau]}">${gemmes}</span>
         </header>
         <div class="cl-portrait">
-          ${portraitSVG(def, uid, { niveau, scene: true })}
+          ${pleine ? '' : portraitSVG(def, uid, { niveau, scene: true })}
           <span class="cl-nation">${echap(def.origine)}</span>
           <span class="cl-niveau">${NOM_RARETE[niveau]}</span>
         </div>
