@@ -9,6 +9,7 @@ import { ecranMonClub, ecranSocial, quitterEchange } from './club';
 import { ecranCollection, ecranFusion } from './collection';
 import { fermerFenetre } from './combat';
 import { S } from './commun';
+import { ecranInvitation, invitationOk } from './beta';
 import { ecranHistoire, ecranQuetes, ecranRecompenses, ecranSaison } from './progression';
 import { ecranTournois } from './tournois';
 import { ecranRegles, ecranTutoriel } from './tutoriel';
@@ -18,6 +19,7 @@ import { ecranRegles, ecranTutoriel } from './tutoriel';
 export function route() {
   fermerFenetre();
   const h = location.hash;
+  if (!invitationOk()) return ecranInvitation(); // bêta fermée
   if (!S.collection.coach || h === '#pseudo') return ecranAccueil();
   if (noterVisite(S.collection, h)) sauver(S.collection); // la tuile ne porte plus « Nouveau »
   if (h === '#amis') return ecranAmis();

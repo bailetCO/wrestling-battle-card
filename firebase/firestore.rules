@@ -1,0 +1,54 @@
+rules_version = '2';
+// Firestore : avis et signalements de bug de la bêta (lot C de l'étape 6).
+// Les joueurs (connexion anonyme) peuvent seulement déposer, jamais lire. Corentin lit tout
+// depuis la console Firebase. Chaque envoi met à jour limites/<joueur> à l'heure du serveur :
+// un nouvel avis n'est accepté qu'une minute après le précédent (anti-spam).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function connecte() { return request.auth != null; }
+    function texte(champ, max) {
+      return !(champ in request.resource.data) || (request.resource.data[champ] is string && request.resource.data[champ].size() <= max);
+    }
+    function liste(champ, max) {
+      return !(champ in request.resource.data) || (request.resource.data[champ] is list && request.resource.data[champ].size() <= max);
+    }
+    function limite(champ) {
+      return getAfter(/databases/$(database)/documents/limites/$(request.auth.uid)).data[champ] == request.time;
+    }
+
+    match /avis/{id} {
+      allow create: if connecte()
+        && request.resource.data.keys().hasAll(['type', 'version', 'uid', 'envoye', 'pseudo'])
+        && request.resource.data.keys().hasOnly(['type', 'version', 'uid', 'envoye', 'pseudo', 'email', 'age15',
+             'note', 'prefere', 'difficile', 'difficileTexte', 'lutteur', 'sens', 'pratique', 'texte',
+             'ecranJeu', 'appareil', 'ecran', 'combat'])
+        && request.resource.data.type in ['avis', 'bug']
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.envoye == request.time
+        && limite('avis')
+        && texte('version', 20) && texte('pseudo', 16) && texte('email', 120)
+        && (!('age15' in request.resource.data) || request.resource.data.age15 is bool)
+        && (!('note' in request.resource.data) || (request.resource.data.note is int && request.resource.data.note >= 1 && request.resource.data.note <= 5))
+        && liste('prefere', 8) && liste('difficile', 10) && texte('difficileTexte', 300)
+        && texte('lutteur', 40) && texte('sens', 10) && texte('pratique', 20) && texte('texte', 1000)
+        && texte('ecranJeu', 40) && texte('appareil', 300) && texte('ecran', 20) && texte('combat', 20000);
+    }
+
+    match /limites/{joueur} {
+      allow create: if connecte() && request.auth.uid == joueur
+        && request.resource.data.keys().hasOnly(['avis', 'combats'])
+        && request.resource.data.values().hasOnly([request.time]);
+      // Un avis par minute au plus.
+      allow update: if connecte() && request.auth.uid == joueur
+        && request.resource.data.keys().hasOnly(['avis', 'combats'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avis'])
+        && request.resource.data.avis == request.time
+        && (!('avis' in resource.data) || request.time > resource.data.avis + duration.value(60, 's'));
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

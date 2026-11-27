@@ -1,0 +1,18 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "salles": {
+      "$code": {
+        ".read": "auth != null && $code.matches(/^x?[a-z]{4}$/)",
+        "$joueur": {
+          ".write": "auth != null && auth.uid === $joueur && $code.matches(/^x?[a-z]{4}$/)",
+          ".validate": "newData.hasChildren(['t'])",
+          "p": { ".validate": "newData.isString() && newData.val().length <= 30000" },
+          "t": { ".validate": "newData.isNumber() && newData.val() === now" },
+          "$autre": { ".validate": false }
+        }
+      }
+    }
+  }
+}

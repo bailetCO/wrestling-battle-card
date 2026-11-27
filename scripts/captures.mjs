@@ -62,6 +62,8 @@ await mkdir(DOSSIER, { recursive: true });
 const navigateur = await chromium.launch();
 const contexte = await navigateur.newContext({ ...devices['iPhone 13'] });
 const page = await contexte.newPage();
+// Bêta fermée : le photographe a déjà son invitation (le code n'est pas écrit dans le dépôt public).
+await page.addInitScript(() => localStorage.setItem('wbc-invitation', '1'));
 const erreurs = [];
 page.on('pageerror', (e) => erreurs.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') erreurs.push(m.text()); });

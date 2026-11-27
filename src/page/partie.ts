@@ -47,10 +47,24 @@ export interface TourJoue {
 // Une séquence jouée (mode Enchaînement) : ses duels, et l'éventuelle rupture de chaîne.
 export interface SequenceJouee { tours: TourJoue[]; rupture: ResultatSequence['rupture']; ordiAChange: boolean }
 
+// De quoi rejouer un combat contre l'ordinateur coup par coup (signalement de bug) : les lutteurs,
+// le numéro de hasard, et pour chaque tour (ou séquence) les choix et le nombre de tirages du hasard
+// déjà faits à ce moment-là. Tout le hasard passe par une seule fonction : c'est suffisant.
+export interface RapportCombat {
+  v: 1;
+  idHumain: string; idOrdi: string; graine: number; niveau: Niveau;
+  defHumain: DefLutteur; defOrdi: DefLutteur;
+  options: { rapide: boolean; enchainement: boolean; infini: boolean; epuisement?: number };
+  tours: { m: number; h: Choix; o: Choix; f?: Face }[];
+  sequences: { m: number; h: Sequence; o: Sequence; f: Face[] }[];
+}
+
 export class Partie {
   etat: EtatCombat;
   readonly hasard: HasardRejouable;
   toursJoues = 0;
+  private readonly depart: Omit<RapportCombat, 'tours' | 'sequences'>;
+  private readonly rejeu: Pick<RapportCombat, 'tours' | 'sequences'> = { tours: [], sequences: [] };
 
   // `script` : choix imposés à l'ordinateur pour les premiers tours (tutoriel).
   constructor(
@@ -60,6 +74,30 @@ export class Partie {
   ) {
     this.etat = creerCombat(defHumain ?? trouverLutteur(idHumain), defOrdi ?? idOrdi, { rapide, enchainement, infini, epuisement });
     this.hasard = new HasardRejouable(graine);
+    this.depart = {
+      v: 1, idHumain, idOrdi, graine, niveau, defHumain: this.etat.joueurs[HUMAIN].def, defOrdi: this.etat.joueurs[ORDI].def,
+      options: { rapide, enchainement, infini, ...(epuisement !== undefined ? { epuisement } : {}) },
+    };
+  }
+
+  // Le combat tel qu'il a été joué jusqu'ici, pour le rejouer à l'identique.
+  rapport(): RapportCombat {
+    return structuredClone({ ...this.depart, ...this.rejeu });
+  }
+
+  // Rejoue un combat à partir de son rapport et rend l'état final.
+  static rejouer(r: RapportCombat): EtatCombat {
+    const o = r.options;
+    const p = new Partie(r.idHumain, r.idOrdi, r.graine, r.niveau, r.defHumain, [], o.rapide, r.defOrdi, o.enchainement, o.infini, o.epuisement);
+    for (const t of r.tours) {
+      p.hasard.revenirA(t.m);
+      if (p.resoudre(t.h, t.o, false, t.f) === 'pileOuFace') throw new Error('Rapport incomplet : annonce de pile ou face manquante.');
+    }
+    for (const s of r.sequences) {
+      p.hasard.revenirA(s.m);
+      if (p.resoudreSequence(s.h, s.o, false, s.f) === 'pileOuFace') throw new Error('Rapport incomplet : annonce de pile ou face manquante.');
+    }
+    return p.etat;
   }
 
   // Le tour en cours suit-il le script ?
@@ -112,6 +150,7 @@ export class Partie {
         },
       });
       this.etat = r.etat;
+      this.rejeu.sequences.push({ m: marque, h: seqHumain, o: seqOrdi, f: faces.slice(0, n) });
       this.toursJoues += r.duels.length;
       const num = ++this.sequencesJouees;
       const tours = r.duels.map((d, k): TourJoue => ({
@@ -143,6 +182,7 @@ export class Partie {
         },
       });
       this.etat = apres;
+      this.rejeu.tours.push({ m: marque, h: choixHumain, o: choixOrdi, ...(face ? { f: face } : {}) });
       this.toursJoues++;
       return { avant, choixHumain, choixOrdi, ordiAChange, lignes: apres.journal.slice(avant.journal.length) };
     } catch (err) {

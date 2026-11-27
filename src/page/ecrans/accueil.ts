@@ -8,6 +8,8 @@ import { PALIERS, saisonFinie, saisonOuverte } from '../saison';
 import { DEV } from '../dev';
 import { tuileNouvelle, tuileVisible, type IdTuile } from '../menu';
 import { connecter, oublierSession, sessionLigne } from './amis';
+import { brancherPiedMenu, montrerNouveautes, piedMenu } from './beta';
+import { bandeauAvis, brancherAvis } from './avis';
 import { CARTES } from './collection';
 import { S, app, echap, pastilleNiveau, pastilleSaisons } from './commun';
 import { bandeauHistoire, blocQuetes, histoire, quete, recompenseClub, scenesAuto } from './progression';
@@ -68,6 +70,7 @@ export function ecranAccueil(message = '') {
       <div class="rayons" aria-hidden="true"></div>
       <section class="accueil-centre">
         <h1 class="logo">Wrestling<br>Battle Card</h1>
+        <span class="badge-beta">Bêta</span>
         <p>Bienvenue sur le tapis. Avant ton premier combat, choisis ton nom de coach : c'est sous ce nom que tu diriges tes lutteurs et que tes amis te verront.</p>
         <form class="form-pseudo">
           <label for="pseudo">Ton pseudo de coach</label>
@@ -128,6 +131,7 @@ export function ecranMenu() {
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
       ${bandeauHistoire()}
       ${blocQuetes()}
+      ${bandeauAvis()}
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Carrière et entraînement contre l\'ordinateur, ou en ligne contre un ami', '#combat')}
         ${tuile('tournois', 'Tournois', 'Individuel et par équipe', '#tournois', tournoiActif ? 'En cours' : '')}
@@ -138,6 +142,7 @@ export function ecranMenu() {
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
         ${tuile('recompenses', 'Récompenses', S.collection.aOuvrir.length ? `${S.collection.aOuvrir.length} à ouvrir` : 'Rien à ouvrir pour l\'instant', '#recompenses', S.collection.aOuvrir.length ? `🎁 ${S.collection.aOuvrir.length}` : '')}
       </nav>
+      ${piedMenu()}
     </main>`;
   app.querySelector('[data-reprendre]')?.addEventListener('click', () => {
     const x = sessionLigne();
@@ -147,6 +152,11 @@ export function ecranMenu() {
     oublierSession();
     ecranMenu();
   });
-  window.scrollTo(0, 0);  // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
+  brancherPiedMenu();
+  brancherAvis();
+  window.scrollTo(0, 0);
+  // Après une mise à jour, les nouveautés passent avant la scène de dialogue (montrée au retour au menu).
+  if (montrerNouveautes()) return;
+  // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
   scenesAuto();
 }

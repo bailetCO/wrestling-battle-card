@@ -4,3 +4,4 @@ dist/
 .tmp-sim/
 .captures/
 .equilibrage/
+dist-test/

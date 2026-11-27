@@ -1,6 +1,8 @@
 // Combat entre amis (en ligne).
 
 import { LUTTEURS, trouverLutteur, TAILLE_SEQUENCE, niveauCarte, REGLES as R_, type Face } from '../../moteur';
+import { salleEnLigne } from '../firebase';
+import { noterFinCombat } from './avis';
 import { ADRESSE_PUBLIQUE, Duel, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais, type ModeSalle, type Presence, type Role, type Salle, type Vue } from '../enligne';
 import { ICONE } from '../textes';
 import { NOM_RARETE, activerReflets } from '../carte';
@@ -121,7 +123,8 @@ export async function connecter(code: string, role: Role, modeSalle?: ModeSalle,
   const a = acces();
   if (a === 'ailleurs') return ecranAmis();
   const perso = relaisPerso();
-  const salle: Salle = a === 'local' ? salleLocale(code) : salleRelais(code, perso ? [perso] : RELAIS);
+  // Firebase d'abord, relais publics en secours (un relais personnel, pour les tests, remplace tout).
+  const salle: Salle = a === 'local' ? salleLocale(code) : perso ? salleRelais(code, [perso]) : salleEnLigne(code, () => salleRelais(code, RELAIS));
   S.salleActive = salle;
   let depart: Presence | null = null;
   try {
@@ -291,7 +294,7 @@ export function ecranSalle(v: Vue) {
         <h1>Salle ${echap(S.codeSalle.toUpperCase())}</h1>
         <p class="code-grand" aria-label="Code de la salle">${echap(S.codeSalle.toUpperCase())}</p>
         <p class="note">${modeTexte}</p>
-        <p>${!S.salleActive?.connecte() ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami')} ${pastilleNiveau(v.amiNiveau)} est dans la salle.</b>` : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
+        <p>${!S.salleActive?.connecte() ? 'Connexion…' : v.amiPresent ? `<b class="ok">${echap(v.amiCoach ? `Coach ${v.amiCoach}` : 'Ton ami')} ${pastilleNiveau(v.amiNiveau)} est dans la salle.</b>` : 'Envoie ce code à ton ami. Il ouvre ce même lien, touche « Combat entre amis » et tape le code.'}</p>
         <p>${v.monLutteur ? `Tu as choisi <b>${echap(trouverLutteur(v.monLutteur).nom)}</b>.` : 'Choisis ton lutteur ci-dessous.'}
            ${ami ? ` Ton ami a choisi <b>${echap(ami.nom)}</b>.` : v.amiPresent ? ' Ton ami choisit son lutteur…' : ''}
            ${v.attente ? echap(v.attente) : ''}</p>
@@ -364,6 +367,7 @@ export function ecranFinLigne() {
   const v = S.vueLigne;
   const e = v?.etat;
   if (!v || !e) return;
+  noterFinCombat(null, e); // compte le combat (invitation à donner son avis)
   const h = e.joueurs[S.HUMAIN];
   const o = e.joueurs[S.ORDI];
   let gagne: boolean;
