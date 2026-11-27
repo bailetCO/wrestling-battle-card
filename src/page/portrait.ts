@@ -46,12 +46,14 @@ export const APPARENCE: Record<string, Apparence> = {
   // Personnages des modes histoire : Philippe (le mentor, ancien champion) et Cocoach (le rival).
   // Darius (le mentor) et sa carte secrète : illustrations provisoires tirées du pack ChatGPT
   // (public/darius/ ; pour les changer, remplacer les fichiers, même nom).
-  // Cocoach : illustrations provisoires tirées des planches ChatGPT (public/cocoach/ ; pour les
-  // changer, remplacer les fichiers, même nom). Le rival prend l'illustration de son niveau ; la carte
-  // secrète, celle du Champion. Les cartes portent leur bandeau de rareté en bas (voulu).
-  'cocoach-rival': { ...COCOACH_BASE, images: CARTES_COCOACH, cadrage: '50% 22%' },
-  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 22%' },
-  'cocoach-test': { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/presentation.webp`, cadrage: '50% 18%' },
+  // Cocoach : illustrations définitives (public/cocoach/ ; pour les changer, remplacer les fichiers,
+  // même nom, mêmes proportions ; fiche et planche de contrôle dans direction-artistique/cocoach/).
+  // Le rival prend l'illustration de son niveau ; la carte secrète, celle du Champion. Les images
+  // portent leur bandeau de rareté tout en bas : le cadrage (haut de l'image) le laisse hors du cadre,
+  // pour ne pas doubler la rareté déjà écrite par le jeu.
+  'cocoach-rival': { ...COCOACH_BASE, images: CARTES_COCOACH, cadrage: '50% 10%' },
+  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 10%' },
+  'cocoach-test': { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/presentation.webp`, cadrage: '50% 10%' },
   'perso-darius': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/coach.webp` },
   darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp` },
   'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}cocoach/expressions/neutre.webp` },
