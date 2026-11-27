@@ -490,7 +490,7 @@ Chaque action appartient à une famille : attaque, défense, contre ou feinte.
 | Feinte contre contre | La feinte l'emporte |
 | Feinte contre défense | La feinte l'emporte : le défenseur perd 10 % de son endurance totale et le feinteur a 2 chances sur 3 de gagner l'initiative |
 | Contre contre attaque | Depuis le 25/11/2026 (soir) : seule la précision compte. Un contre qui passe son tirage de précision prend l'attaque, renvoie ses points et l'attaquant subit un déséquilibre ; un contre raté laisse passer l'attaque. (Avant : il fallait plus d'endurance ou plus de force que l'attaquant.) Exceptions : actions spéciales (voir Action spéciale), Changement de niveau (attaque incontrable), Sortie de zone (prise 1 fois sur 2), Relance (moitié des points) |
-| Même famille | Le lutteur qui a au moins le double d'endurance gagne, sinon personne ne marque |
+| Même famille | Le lutteur qui a au moins le double d'endurance gagne, sinon personne ne marque. Depuis le 26/11/2026 : l'action qui termine un combo (Passage dans le dos, Contre-temps, Enchaînement aux jambes, Esquive et contre) et l'attaque spéciale sont prioritaires et ne sont pas bloquées par la même famille (elles gardent leur tirage de précision). Si les deux lutteurs ont une priorité, celui qui a la meilleure chance de réussite du tour l'emporte, puis le plus fort ; à égalité, la règle habituelle |
 
 ### Format du match
 

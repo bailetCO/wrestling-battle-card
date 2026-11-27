@@ -260,7 +260,8 @@ describe('Action spéciale', () => {
     for (let i = 0; i < 3; i++) e = tour(e, c('defense'), c('defense'));
     // Tour 5 (impair) : pas de récupération régulière qui fausserait le calcul.
     const avant = e.joueurs[0].endurance;
-    e = tour(e, c('attaque_base', true), c('attaque_base'), toujours(0.99)); // ratée
+    // Ratée : bloquée par une défense (depuis le 26/11/2026, une autre attaque ne la bloque plus).
+    e = tour(e, c('attaque_base', true), c('defense'), toujours(0.99));
     assert.equal(avant - e.joueurs[0].endurance, ACTIONS.attaque_base.cout * (2 - 0.5));
     assert.equal(e.joueurs[0].reductionSpeciale, false);
   });

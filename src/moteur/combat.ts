@@ -278,12 +278,18 @@ function valider(e: EtatCombat, j: Joueur, c: Choix, sequence = false): Choix {
 // Situations du tour qui changent le duel « contre contre attaque ».
 export interface OptionsDuel {
   incontrable?: [boolean, boolean]; // Changement de niveau au tour précédent : l'attaque ne peut pas être contrée
+  // Même famille (26/11/2026) : un combo ou une attaque spéciale n'est pas bloqué par l'égalité de famille.
+  priorite?: [boolean, boolean];
+  chances?: [number, number]; // chance de réussite du tour (départage de deux priorités)
 }
 
+// Pourquoi un duel de même famille a été gagné (pour le journal).
+export type RaisonMemeFamille = 'priorite' | 'precision' | 'force' | 'endurance';
+
 function duel(
-  _e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
+  e: EtatCombat, f: [Famille, Famille], endDebut: [number, number], speciale: [boolean, boolean],
   opts: OptionsDuel = {},
-): { res: [Resultat, Resultat] } {
+): { res: [Resultat, Resultat]; raison?: RaisonMemeFamille } {
   const [f0, f1] = f;
   // Contre spécial : bat toujours une attaque ou une feinte.
   for (const c of LES_DEUX) {
@@ -295,8 +301,20 @@ function duel(
     }
   }
   if (f0 === f1) {
-    if (endDebut[0] >= 2 * endDebut[1]) return { res: ['gagne', 'perd'] };
-    if (endDebut[1] >= 2 * endDebut[0]) return { res: ['perd', 'gagne'] };
+    const gagne = (j: Joueur, raison: RaisonMemeFamille): { res: [Resultat, Resultat]; raison: RaisonMemeFamille } =>
+      ({ res: j === 0 ? ['gagne', 'perd'] : ['perd', 'gagne'], raison });
+    // Combo ou attaque spéciale : prioritaire. Deux priorités : la meilleure chance de réussite du
+    // tour, puis la plus grande force ; sinon, la règle habituelle.
+    const [p0, p1] = opts.priorite ?? [false, false];
+    if (p0 !== p1) return gagne(p0 ? 0 : 1, 'priorite');
+    if (p0 && p1) {
+      const [c0, c1] = opts.chances ?? [0, 0];
+      if (c0 !== c1) return gagne(c0 > c1 ? 0 : 1, 'precision');
+      const [F0, F1] = [e.joueurs[0].def.force, e.joueurs[1].def.force];
+      if (F0 !== F1) return gagne(F0 > F1 ? 0 : 1, 'force');
+    }
+    if (endDebut[0] >= 2 * endDebut[1]) return gagne(0, 'endurance');
+    if (endDebut[1] >= 2 * endDebut[0]) return gagne(1, 'endurance');
     return { res: ['neutre', 'neutre'] };
   }
   for (const c of LES_DEUX) {
@@ -322,6 +340,7 @@ const maj = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 // Phrase qui explique pourquoi un duel a été gagné (pour le journal).
 function expliquerDuel(
   e: EtatCombat, f: [Famille, Famille], res: [Resultat, Resultat], spe: [boolean, boolean], opts: OptionsDuel = {},
+  raison?: RaisonMemeFamille,
 ): string {
   const g: Joueur = res[0] === 'gagne' ? 0 : 1;
   const p = autre(g);
@@ -330,7 +349,13 @@ function expliquerDuel(
   if (spe[g] && f[g] === 'contre' && (f[p] === 'attaque' || f[p] === 'feinte')) {
     return `Le contre spécial de ${nomG} prend ${LIBELLE[f[p]]} de ${nomP} à contretemps.`;
   }
-  if (f[g] === f[p]) return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
+  if (f[g] === f[p]) {
+    const quoi = spe[g] && f[g] === 'attaque' ? 'son attaque spéciale' : 'son combo';
+    if (raison === 'priorite') return `Même famille, mais ${nomG} enchaîne ${quoi} : pas de blocage, ${LIBELLE[f[g]]} l'emporte.`;
+    if (raison === 'precision') return `Priorité des deux côtés : ${nomG} a la meilleure chance de réussite, ${LIBELLE[f[g]]} l'emporte.`;
+    if (raison === 'force') return `Priorité des deux côtés et même chance de réussite : ${nomG} est plus fort, ${LIBELLE[f[g]]} l'emporte.`;
+    return `${nomG} a au moins le double d'endurance : ${LIBELLE[f[g]]} l'emporte.`;
+  }
   if (f[g] === 'contre' && f[p] === 'attaque') return `Le contre de ${nomG} prend l'attaque de ${nomP} et la renvoie.`;
   if (f[g] === 'attaque' && f[p] === 'contre' && opts.incontrable?.[g]) {
     return `${nomG} a changé de niveau : son attaque ne peut pas être contrée.`;
@@ -518,6 +543,7 @@ export function jouerTour(
 
   // 2. Tirage de précision, avant de comparer les familles.
   const passe: [boolean, boolean] = [false, false];
+  const chances: [number, number] = [0, 0]; // chance de réussite du tour (départage des priorités)
   for (const j of LES_DEUX) {
     const id = choix[j].action;
     if (options.annulee === j) {
@@ -529,18 +555,21 @@ export function jouerTour(
     // Tour de hanche avec plus de force que l'adversaire.
     if (fam[j] === 'attaque' && J[j].derniereReussie === REGLES.combos.contreTemps.avant) {
       passe[j] = true;
+      chances[j] = 1;
       log(e, `Combo « Contre-temps » : après son sprawl, ${J[j].def.nom} attaque sans pouvoir rater.`);
       continue;
     }
     if (id === 'tour_hanche' && J[j].def.force > J[autre(j)].def.force) {
       passe[j] = true;
+      chances[j] = 1;
       log(e, `${J[j].def.nom} est plus fort : son tour de hanche ne peut pas rater.`);
       continue;
     }
     const sansMalus = id === 'simple_jambe' && REGLES.simpleJambeSansMalus;
     const malus = fam[j] === 'attaque' && J[j].malusPrecisionTours > 0 && !sansMalus ? REGLES.matraquage.malusPrecision : 0;
     const p = precisionDe(endDebut[j]) - malus;
-    passe[j] = reussit(hasard, chanceReussite(p));
+    chances[j] = chanceReussite(p);
+    passe[j] = reussit(hasard, chances[j]);
     if (!passe[j]) log(e, `${J[j].def.nom} rate son action (précision ${p.toFixed(2).replace('.', ',')}) : action dans le vent.`);
   }
   for (const l of J) if (l.malusPrecisionTours > 0) l.malusPrecisionTours--;
@@ -553,11 +582,19 @@ export function jouerTour(
     res[percee] = 'gagne';
     res[autre(percee)] = 'perd';
   } else if (passe[0] && passe[1]) {
-    const opts: OptionsDuel = { incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable] };
+    // Priorité en cas de même famille : l'action qui termine un combo, ou une attaque spéciale.
+    const prioritaire = (j: Joueur) => {
+      const id = choix[j].action;
+      if (id === 'lutte' || id === 'souffle') return false;
+      return comboPossible(e, j, id) !== null || (spe[j] && fam[j] === 'attaque');
+    };
+    const opts: OptionsDuel = {
+      incontrable: [J[0].attaqueIncontrable, J[1].attaqueIncontrable], priorite: [prioritaire(0), prioritaire(1)], chances,
+    };
     const d = duel(e, [fam[0]!, fam[1]!], endDebut, spe, opts);
     res = d.res;
     if (res[0] === 'neutre') log(e, 'Même famille et pas le double d\'endurance : personne ne marque.');
-    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, spe, opts));
+    else log(e, expliquerDuel(e, [fam[0]!, fam[1]!], res, spe, opts, d.raison));
     // Sortie de zone : un contre normal ne la prend qu'une fois sur 2.
     for (const c of LES_DEUX) {
       const a = autre(c);
