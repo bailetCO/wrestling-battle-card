@@ -405,8 +405,25 @@ export const REGLES = {
   // histoire qui les présente (0 = étape 1) : ordinateur fort (étape 9), combat entre amis (10),
   // tutoriel des combos (13), format Enchaînement (14), durée infinie (15). Tutoriels et quêtes suivent.
   menu: {
-    etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7, recompenses: 0 },
+    etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, classement: 4, fusion: 7, recompenses: 0 },
     etapeFonction: { fort: 8, amis: 9, combos: 12, enchainement: 13, infini: 14, equipe: 3 },
+  },
+
+  // Classement mensuel (27/11/2026) : points de combat gagnés dans le mois (remis à zéro le 1er, heure
+  // universelle). Victoire contre l'ordinateur selon son niveau (facile 1, normal 2, fort 4), +1 par
+  // tombé ; victoire en ligne 6 ; tournoi gagné +10. Défaite : 0. Plafond par jour : 80 points (vérifié
+  // aussi par les règles de Firebase). Fin du mois : récompense du palier atteint (Bronze, Argent, Or)
+  // et bonus pour le Top 10 ; le badge s'affiche à côté du pseudo le mois suivant.
+  classement: {
+    points: { facile: 1, normal: 2, fort: 4, tombe: 1, enLigne: 6, tournoiGagne: 10 },
+    plafondJour: 80,
+    paliers: [
+      { id: 'bronze', nom: 'Bronze', min: 30, classiques: 1, rares: 0 },
+      { id: 'argent', nom: 'Argent', min: 120, classiques: 0, rares: 1 },
+      { id: 'or', nom: 'Or', min: 300, classiques: 0, rares: 2 },
+    ],
+    top: { places: 10, rares: 1 },
+    taille: { monde: 50, pays: 500, amis: 29 }, // nombre de lignes lues (amis : 29 + soi, limite de Firebase)
   },
 
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.

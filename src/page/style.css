@@ -1575,3 +1575,32 @@ b.moi { color: #ff8a95; }
 .menu-coach .bouton-compte span { font-weight: 600; color: #ffd08a; }
 .menu-coach .bouton-compte.connecte { border-color: #6fd08a; background: rgba(111,208,138,.14); }
 .menu-coach .bouton-compte .etat-cloud { display: inline; margin: 0; color: #9be3a6; }
+/* Classement (27/11/2026) */
+.t-classement { --t: #ffb86b; }
+.points-fin { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: rgba(255,215,106,.15); color: #ffd76a; font: 700 15px var(--police); text-decoration: none; }
+.mon-classement .mc-mois { margin: 0; color: var(--doux); font-size: 14px; }
+.mon-classement .mc-mois::first-letter { text-transform: uppercase; }
+.mon-classement .mc-points { margin: 4px 0 8px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.mon-classement .mc-points b { font: 900 44px/1 var(--police); color: var(--orange); }
+.mc-palier { padding: 2px 10px; border-radius: 999px; font: 700 14px var(--police); background: rgba(255,255,255,.1); }
+.mc-jauge { height: 10px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+.mc-jauge i { display: block; height: 100%; background: linear-gradient(90deg, #f2a33a, #ffd76a); border-radius: 999px; }
+.onglets-classement, .zone-classement { margin-left: 16px; margin-right: 16px; }
+.onglets-classement { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 14px 16px 10px; }
+.onglets-classement button { padding: 9px 4px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.2); background: transparent; color: var(--texte); font: 700 15px var(--police); cursor: pointer; }
+.onglets-classement button.actif { border-color: var(--orange); background: rgba(242,163,58,.18); }
+.liste-classement { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.liste-classement li { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.05); }
+.liste-classement li.moi { background: rgba(242,163,58,.2); box-shadow: inset 0 0 0 1.5px var(--orange); }
+.liste-classement .cl-rang { font: 900 18px var(--police); color: var(--doux); text-align: center; }
+.liste-classement .podium-1 .cl-rang { color: #ffd76a; } .liste-classement .podium-2 .cl-rang { color: #dfe6ef; } .liste-classement .podium-3 .cl-rang { color: #e3a56b; }
+.liste-classement .cl-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.liste-classement .cl-points { font: 800 18px var(--police); color: var(--orange); }
+.ma-place { margin: 10px 0 0; text-align: center; }
+.badge-classement { font-size: .8em; margin-left: 4px; vertical-align: 2px; }
+.menu-coach b .badge-classement { font-size: 20px; }
+.regles-classement summary { cursor: pointer; font-weight: 700; }
+.regles-classement ul { padding-left: 18px; margin: 8px 0; }
+.choix-pays { display: grid; gap: 4px; margin: 10px 0; font-weight: 700; }
+.choix-pays select { padding: 9px; border-radius: 10px; background: var(--nuit, #0b1a36); color: var(--texte); border: 1.5px solid rgba(255,255,255,.25); font: inherit; }
+.classement-compte .principal { margin-top: 8px; }

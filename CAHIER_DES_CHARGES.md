@@ -317,6 +317,17 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les récompenses en boosters restent (arène, en ligne, consolation, bonus du tutoriel).
 - Médailles et $ s'affichent en haut du menu et de Social. Au départ : 0 médaille, 0 $.
 
+### Classement (27/11/2026)
+
+- Tuile « Classement » du menu, à partir de l'étape 5 du mode histoire. On n'y entre qu'avec un compte (sinon : explication et bouton « Créer mon compte ») ; les points du mois comptent quand même et sont publiés dès la création du compte.
+- Points de combat du mois : victoire contre l'ordinateur facile 1, normal 2, fort 4 ; +1 par tombé ; victoire en ligne contre un ami 6 (+1 par tombé) ; tournoi gagné +10 (en plus des combats du tournoi). Défaite : 0. Les tutoriels et parties d'essai ne comptent pas. Au plus 80 points par jour (« Plafond du jour atteint » en fin de combat). Remise à zéro le 1er du mois ; jours et mois en heure universelle (celle du serveur).
+- Fin de combat gagné : « 🏆 +4 points de classement » sous le verdict (lien vers le classement).
+- Écran : le mois et les jours restants, mes points, mon palier et une jauge jusqu'au palier suivant, mes points du jour ; trois onglets : 🌍 Tous (50 premiers, et « Ta place : 154e » si on est plus loin), 🤝 Amis (ma liste d'amis : coachs affrontés en ligne ou avec qui j'ai fait un transfert, s'ils ont un compte), Pays (joueurs de mon pays). Chaque ligne : rang, drapeau, pseudo, badge, points. « Comment gagner des points ? » résume le barème et les récompenses.
+- Pays : choisi par le joueur (liste de pays avec drapeaux) dans « Mon compte » ou dans l'onglet Pays.
+- Paliers et récompenses de fin de mois (boîte à récompenses, au premier lancement du mois suivant) : 🥉 Bronze 30 points : 1 booster classique ; 🥈 Argent 120 : 1 booster rare ; 🥇 Or 300 : 2 boosters rares ; 🏆 Top 10 du classement général : +1 booster rare (vérifié en ligne ; hors ligne, la récompense attend). Le badge du mois terminé s'affiche à côté du pseudo (menu et classements) tout le mois suivant.
+- En ligne : Firestore `classements/<mois>/joueurs/<identifiant>` (pseudo, pays, badge, points, points du jour). Les règles de sécurité vérifient le plafond de 80 points par jour, que les points ne baissent jamais, et que chacun n'écrit que sa ligne. Limite connue : le combat est calculé sur le téléphone, un tricheur décidé pourrait envoyer de faux combats sous ce plafond.
+- Tous les chiffres sont dans `REGLES.classement` (fichier de configuration).
+
 ### Mon Club
 
 - Tuile du menu, verrouillée jusqu'à 10 médailles. Ensuite, un niveau de plus toutes les 5 médailles : niveau 1 à 10, 2 à 15, 3 à 20, 4 à 25, 5 à 30… jusqu'au niveau 10 à 55 médailles (maximum ; jusqu'au 26/11/2026, le maximum était le niveau 5). Les médailles ne sont jamais dépensées.

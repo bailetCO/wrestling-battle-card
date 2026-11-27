@@ -35,6 +35,7 @@ export const S = {
   idPortrait: (0) as number,
   collection: (charger()) as Collection,
   recompenseDonnee: (false) as boolean, // une seule récompense par combat
+  pointsFin: (null) as number | null, // points de classement gagnés au dernier combat (null : défaite ou sans objet)
   tuto: (false) as boolean, // combat guidé du tutoriel en cours
   areneCtx: (null) as { type: 'progression' } | { type: 'boss'; nation: string } | null,
   bossChoisi: (null) as string | null, // nation dont on va réaffronter le boss (choix du lutteur)

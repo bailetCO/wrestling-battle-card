@@ -1,3 +1,5 @@
+import { majPeriode, nomMois, programmerPublication } from '../classement';
+import { pastilleMonBadge } from './classement';
 // Écran d'accueil (pseudo) et menu principal.
 
 import { LUTTEURS, trouverLutteur, niveauCarte, avecDeck, REGLES as R_, type DefLutteur } from '../../moteur';
@@ -63,6 +65,7 @@ export const ICONES_MENU: Record<string, string> = {
   social: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="7" fill="currentColor"/><circle cx="33" cy="19" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 40c1-9 7-13 13-13s12 4 13 13M28 39c1-7 4-10 9-10s8 3 9 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
   recompenses: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="20" width="32" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="6" y="14" width="36" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 14v26M24 14c-4-8-12-6-10-1s10 1 10 1c4-8 12-6 10-1s-10 1-10 1" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>',
   saison: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="36" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="18" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="30" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 40h28" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  classement: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="26" width="12" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><rect x="18" y="14" width="12" height="28" rx="2" fill="currentColor"/><rect x="32" y="22" width="12" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 4l2 4 4 .5-3 3 .8 4.5-3.8-2-3.8 2 .8-4.5-3-3 4-.5z" fill="currentColor"/></svg>',
   fusion: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8v10c0 6 6 8 14 12M38 8v10c0 6-6 8-14 12v12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M17 36l7 8 7-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
@@ -93,6 +96,7 @@ export function ecranAccueil(message = '') {
     S.collection.coach = v;
     const bonus = bonusDeTest(S.collection, v);
     sauver(S.collection);
+    programmerPublication(S.collection); // nouveau pseudo dans le classement
     if (location.hash) history.replaceState(null, '', location.pathname);
     ecranMenu();
     if (bonus) afficherBandeauTest(bonus);
@@ -106,6 +110,7 @@ export function ecranAccueil(message = '') {
 
 export function ecranMenu() {
   S.partie = null;
+  majPeriode(S.collection);
   recompenseClub();
   histoire({ type: 'etat' });
   quete({ type: 'etat' });
@@ -126,7 +131,7 @@ export function ecranMenu() {
     <main class="menu">
       <header class="menu-tete">
         <span class="avatar" aria-hidden="true">${echap((S.collection.coach ?? '?').slice(0, 1).toUpperCase())}</span>
-        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(S.collection.coach ?? '')} ${pastilleNiveau(niveauCompte(S.collection))}${pastilleSaisons(S.collection.saison.terminees)}</b>${indicateurCompte()}</span>
+        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(S.collection.coach ?? '')} ${pastilleNiveau(niveauCompte(S.collection))}${pastilleSaisons(S.collection.saison.terminees)}${pastilleMonBadge()}</b>${indicateurCompte()}</span>
         <a class="lien petit" href="#pseudo">Modifier</a>
       </header>
       ${porteMonnaie()}
@@ -145,6 +150,7 @@ export function ecranMenu() {
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${S.collection.club.length}/${placesClub(S.collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
+        ${tuile('classement', 'Classement', `${nomMois(S.collection.classement.mois)} · ${S.collection.classement.points} point${S.collection.classement.points > 1 ? 's' : ''}`, '#classement', '', compteActuel() ? '' : 'Compte')}
         ${tuile('recompenses', 'Récompenses', S.collection.aOuvrir.length ? `${S.collection.aOuvrir.length} à ouvrir` : 'Rien à ouvrir pour l\'instant', '#recompenses', S.collection.aOuvrir.length ? `🎁 ${S.collection.aOuvrir.length}` : '')}
       </nav>
       ${piedMenu()}

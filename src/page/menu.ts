@@ -8,9 +8,9 @@
 import { REGLES } from '../moteur';
 import type { Collection } from './collection';
 
-export type IdTuile = 'combat' | 'collection' | 'tournois' | 'club' | 'saison' | 'social' | 'fusion' | 'recompenses';
+export type IdTuile = 'combat' | 'collection' | 'tournois' | 'club' | 'saison' | 'social' | 'classement' | 'fusion' | 'recompenses';
 
-export const TUILES: IdTuile[] = ['combat', 'tournois', 'saison', 'collection', 'fusion', 'club', 'social', 'recompenses'];
+export const TUILES: IdTuile[] = ['combat', 'tournois', 'saison', 'collection', 'fusion', 'club', 'social', 'classement', 'recompenses'];
 
 // Étape du mode histoire (0 = étape 1) à partir de laquelle chaque tuile apparaît.
 const ETAPE_TUILE: Record<IdTuile, number> = REGLES.menu.etapeTuile;
@@ -20,7 +20,7 @@ export const tuilesVisibles = (c: Collection) => TUILES.filter((t) => tuileVisib
 export const tuileNouvelle = (c: Collection, t: IdTuile) => tuileVisible(c, t) && !c.menusVus.includes(t);
 
 // Adresse de l'écran de chaque tuile, pour noter la première visite.
-const ADRESSES: Record<string, IdTuile> = { '#combat': 'combat', '#collection': 'collection', '#tournois': 'tournois', '#club': 'club', '#saison': 'saison', '#social': 'social', '#fusion': 'fusion', '#recompenses': 'recompenses' };
+const ADRESSES: Record<string, IdTuile> = { '#combat': 'combat', '#collection': 'collection', '#tournois': 'tournois', '#club': 'club', '#saison': 'saison', '#social': 'social', '#classement': 'classement', '#fusion': 'fusion', '#recompenses': 'recompenses' };
 
 // Note la visite de l'écran d'une tuile ; vrai si c'était la première.
 export function noterVisite(c: Collection, adresse: string): boolean {

@@ -1,3 +1,5 @@
+import { programmerPublication } from '../classement';
+import { brancherPays, choixPays } from './classement';
 // Écrans du compte joueur (27/11/2026) : se connecter (Google ou e-mail), choisir la sauvegarde à
 // garder si le téléphone et le compte en ont deux différentes, proposition après quelques victoires,
 // indicateur « Sauvegardé ».
@@ -88,8 +90,10 @@ export function fenetreCompte(message = '', retour = false) {
       <p>Connecté avec ${compte.fournisseur === 'google.com' ? 'Google' : 'ton e-mail'} : <b>${echap(compte.email)}</b></p>
       <p class="etat-cloud">☁ Ta collection est sauvegardée en ligne automatiquement.</p>
       <p class="note">Sur un autre téléphone ou un ordinateur, connecte-toi avec le même compte pour retrouver ta collection.</p>
+      ${choixPays()}
       <button class="secondaire" data-deconnexion>Se déconnecter</button>
       <button class="lien" data-fermer>Fermer</button>`, true);
+    brancherPays(f, () => {});
     f.querySelector('[data-deconnexion]')!.addEventListener('click', () => {
       deconnexion();
       fenetreCompte('');
@@ -155,6 +159,7 @@ async function apresConnexion(message: string) {
   await synchroniser(true);
   if (document.querySelector('.voile')) return; // le joueur choisit sa sauvegarde
   route(); // le menu affiche maintenant « Sauvegardé »
+  programmerPublication(S.collection, 500); // les points du mois entrent dans le classement
   fenetreCompte(message.trim() || 'Connecté !');
 }
 
@@ -174,6 +179,7 @@ async function retrouverCollection() {
   await synchroniser(true, enLigne);
   if (document.querySelector('.voile')) return; // deux sauvegardes : le joueur choisit
   route();
+  programmerPublication(S.collection, 500);
   if (S.collection.coach) annoncer(`Bon retour, Coach ${S.collection.coach} !`, '#', 'Ta collection est de retour sur cet appareil.');
 }
 

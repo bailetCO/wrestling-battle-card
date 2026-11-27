@@ -1,6 +1,6 @@
 rules_version = '2';
 // Firestore : avis, signalements de bug et statistiques anonymes de la bêta (étape 6, lots C et D),
-// et sauvegarde en ligne des comptes joueurs (comptes/<joueur>).
+// sauvegarde en ligne des comptes joueurs (comptes/<joueur>) et classement mensuel (classements/<mois>/joueurs/<joueur>).
 // Les joueurs (connexion anonyme) déposent ; ils ne peuvent lire et effacer que leurs propres
 // envois (bouton « Supprimer mes données »). Corentin lit tout depuis la console Firebase.
 // Chaque envoi met à jour limites/<joueur> à l'heure du serveur (anti-spam) :
@@ -94,6 +94,38 @@ service cloud.firestore {
         && texte('coach', 40) && entier('cartes', 0, 1000) && entier('medailles', 0, 100000000)
         && entier('victoires', 0, 100000000) && entier('etape', 0, 1000)
         && request.resource.data.maj == request.time;
+    }
+
+    // Classement mensuel (27/11/2026) : classements/<mois>/joueurs/<identifiant>.
+    // Lecture : tout joueur connecté. Écriture : seulement sa propre ligne, avec un vrai compte.
+    // Plafond de 80 points par jour vérifié ici : `jour` est le jour du serveur (heure universelle),
+    // `pointsJour` les points de ce jour. Les points ne peuvent monter que de ce que les jours écoulés
+    // permettent (80 par jour), et jamais baisser. Pas d'effacement.
+    match /classements/{mois}/joueurs/{joueur} {
+      function vraiCompte() {
+        return connecte() && request.auth.uid == joueur && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      }
+      function nouveau() { return request.resource.data; }
+      function ligneValide() {
+        return mois.matches('^[0-9]{4}-[0-9]{2}$')
+          && nouveau().keys().hasOnly(['idCoach', 'pseudo', 'pays', 'badge', 'points', 'jour', 'pointsJour', 'maj'])
+          && nouveau().keys().hasAll(['idCoach', 'pseudo', 'points', 'jour', 'pointsJour', 'maj'])
+          && texte('idCoach', 40) && texte('pseudo', 16) && texte('pays', 2) && texte('badge', 10)
+          && nouveau().points is int && nouveau().pointsJour is int
+          && nouveau().pointsJour >= 0 && nouveau().pointsJour <= 80
+          && nouveau().jour == math.floor(request.time.toMillis() / 86400000)
+          && nouveau().maj == request.time;
+      }
+      allow read: if connecte();
+      allow create: if vraiCompte() && ligneValide()
+        && nouveau().points >= nouveau().pointsJour
+        && nouveau().points <= 80 * request.time.day();
+      allow update: if vraiCompte() && ligneValide()
+        && nouveau().jour >= resource.data.jour
+        && nouveau().points >= resource.data.points
+        && (nouveau().jour > resource.data.jour || nouveau().pointsJour >= resource.data.pointsJour)
+        && nouveau().points - resource.data.points
+           <= nouveau().pointsJour + 80 * (nouveau().jour - resource.data.jour) - resource.data.pointsJour;
     }
 
     match /{document=**} {
