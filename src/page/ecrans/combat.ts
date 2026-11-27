@@ -1,7 +1,7 @@
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
 import { PRESENTATION_COCOACH } from '../portrait';
-import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
+import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type Sequence, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
@@ -16,7 +16,7 @@ import { ecranFin } from './fin';
 import { gagnerTout, outilsTestVisibles } from '../test';
 import { finCombatTournoi } from './tournois';
 import { bulleCoach, ecranFinTutoriel, etapeGuidee, guiderBoutons } from './tutoriel';
-import { bulleConseil } from './tutos-courts';
+import { bulleConseil, tourGuideEssai } from './tutos-courts';
 
 // ---------- Combat automatique ----------
 
@@ -770,6 +770,7 @@ export function lireChoix(b: HTMLButtonElement): Choix {
 export function demanderSpeciale(b: HTMLButtonElement, suite: (c: Choix) => void) {
   const c = lireChoix(b);
   if (b.dataset.spe !== '1' || c.action === 'lutte' || c.action === 'souffle') return suite(c);
+  if (S.mode === 'solo' && tourGuideEssai()) return suite({ action: c.action, speciale: false }); // tour guidé d'un essai : action normale
   const e = S.partie?.etat ?? S.vueLigne?.etat;
   if (!e) return suite(c);
   const l = e.joueurs[S.HUMAIN];
@@ -917,7 +918,7 @@ export function lancerArene(idHumain: string, auto = false) {
 
 // `essai` : partie d'essai d'un tutoriel court (format, durée et lutteur imposés ; pas de récompense).
 export function lancer(idHumain: string, idOrdi: string, graine: number, rapide = false, niveau: Niveau = S.collection.niveau, auto = false, ctx: typeof S.areneCtx = null, interclub = false,
-  essai: { id: IdTuto; enchainement: boolean; infini: boolean; def: DefLutteur } | null = null) {
+  essai: { id: IdTuto; enchainement: boolean; infini: boolean; def: DefLutteur; defOrdi?: DefLutteur; script?: Choix[]; scriptSeq?: Sequence[] } | null = null) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   S.mode = 'solo';
   S.HUMAIN = 0;
@@ -931,9 +932,11 @@ export function lancer(idHumain: string, idOrdi: string, graine: number, rapide 
   const rival = inf;
   if (rival) {
     idOrdi = ID_RIVAL;
-    niveau = niveauOrdiRival(S.collection);
+    niveau = essai ? 'normal' : niveauOrdiRival(S.collection); // partie d'essai : Cocoach Rare, ordinateur normal
   }
-  S.partie = new Partie(idHumain, idOrdi, graine, niveau, essai?.def ?? avecDeck(defPossede(S.collection, idHumain), deckDe(S.collection, idHumain)), [], rapide, rival ? defRival(S.collection) : undefined, ench, inf);
+  // Partie d'essai guidée : actions (ou séquences) imposées à l'ordinateur sur les premiers tours.
+  S.partie = new Partie(idHumain, idOrdi, graine, niveau, essai?.def ?? avecDeck(defPossede(S.collection, idHumain), deckDe(S.collection, idHumain)), essai?.script ?? [], rapide, essai?.defOrdi ?? (rival ? defRival(S.collection) : undefined), ench, inf);
+  if (essai?.scriptSeq) S.partie.scriptSequences = essai.scriptSeq;
   S.sequenceHumain = [];
   S.areneCtx = ctx;
   S.interclubEnCours = interclub;
@@ -949,8 +952,8 @@ export function lancer(idHumain: string, idOrdi: string, graine: number, rapide 
   S.bonusEnCours = null;
   S.bonusCeCombat = rapide || essai ? false : S.collection.bonusTutoriel;
   if (essai) {
-    S.recompenseDonnee = true; // partie d'essai : ni récompense, ni progression, ni quête
-    S.messageSolo = 'Partie d\'essai : pas de récompense ni de progression. À toi de jouer pour de vrai !';
+    S.recompenseDonnee = true; // partie d'essai : ni progression, ni quête ; un booster si elle est gagnée (voir ecranFin)
+    S.messageSolo = '';
   }
   demarrer(auto);
 }

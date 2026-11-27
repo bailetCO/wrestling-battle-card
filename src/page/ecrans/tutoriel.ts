@@ -10,6 +10,7 @@ import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTuto
 import { niveauDe } from './accueil';
 import { CARTES } from './collection';
 import { ecranCombat, lancerArene } from './combat';
+import { tourGuideEssai } from './tutos-courts';
 import { S, app, echap, enTete } from './commun';
 import { quete } from './progression';
 import { noterParcours } from './stats';
@@ -91,12 +92,15 @@ export function bulleCoach(): string {
   return `<div class="bulle-coach" role="status"><span class="bc-qui">Coach</span><p>${texte}</p></div>`;
 }
 
-// Pendant les tours guidés : seule l'action conseillée reste jouable.
+// Pendant les tours guidés (grand tutoriel, ou parties d'essai des tutoriels courts) : seule l'action
+// conseillée reste jouable. En format Enchaînement : l'action suivante de la séquence guidée.
 export function guiderBoutons(racine: ParentNode) {
   const g = etapeGuidee();
-  if (!g) return;
+  const ge = tourGuideEssai();
+  if (!g && !ge) return;
+  const attendue = g ? g.conseil.action : S.partie?.etat.enchainement ? ge!.joueur[S.sequenceHumain.length] ?? null : ge!.joueur[0];
   racine.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((b) => {
-    const bon = b.dataset.action === g.conseil.action; // spéciale ou non : demandé ensuite
+    const bon = b.dataset.action === attendue; // spéciale ou non : demandé ensuite
     b.disabled = !bon;
     b.classList.toggle('conseille', bon);
   });

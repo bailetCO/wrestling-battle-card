@@ -1,27 +1,43 @@
 // Tutoriels courts, un par style de jeu (en plus du grand tutoriel du menu Combat).
-// Chacun : 2 ou 3 écrans d'explication, puis une partie d'essai du mode (sans récompense ni
-// progression), avec des conseils du coach sur les premiers tours, sans imposer d'action.
+// Chacun : 2 ou 3 écrans d'explication, puis une partie d'essai du mode. Depuis le 27/11/2026,
+// la partie d'essai commence par des tours guidés, comme le grand tutoriel : seule l'action conseillée
+// est jouable, et l'ordinateur joue en face l'action qui la fait réussir (sans que le coach la
+// dévoile). Ensuite, la suite du combat se joue librement, avec des conseils ; une victoire rapporte
+// un booster (une fois par tutoriel), sans autre récompense ni progression.
 // Un tutoriel n'est proposé que si le joueur a déjà accès au style de jeu.
 
-import { ACTIONS, REGLES, type IdAction } from '../moteur';
+import { ACTIONS, REGLES, trouverLutteur, type DefLutteur, type IdAction } from '../moteur';
 import { niveauClub, type Collection } from './collection';
 
 export type IdTuto = 'combos' | 'enchainement' | 'infini' | 'arene' | 'individuel' | 'equipe' | 'amis';
 
 // Ce que lance la partie d'essai.
 export type Essai =
-  | { type: 'rapide'; enchainement: boolean; infini: boolean; deck: IdAction[] }
+  | { type: 'rapide'; enchainement: boolean; infini: boolean; deck: IdAction[]; periodes?: boolean } // periodes : 3 périodes (au lieu d'une)
   | { type: 'arene'; deck: IdAction[] }
   | { type: 'individuel' }
   | { type: 'equipe' }
   | null; // pas de partie (explication seulement)
+
+// Un tour guidé : l'action imposée au joueur, celle que joue l'ordinateur pour qu'elle réussisse, et
+// le texte du coach (il dit quoi jouer et pourquoi, sans dévoiler l'action adverse).
+// pause : tour « de respiration » où personne ne marque (il coupe la série de réussites qui
+// déclencherait une tentative de tombé et finirait l'essai trop tôt).
+export interface TourGuide { joueur: IdAction; ordi: IdAction; texte: string; pause?: boolean }
+// En format Enchaînement : une séquence entière de chaque côté.
+export interface SequenceGuidee { joueur: IdAction[]; ordi: IdAction[]; texte: string }
 
 export interface MiniTuto {
   id: IdTuto;
   titre: string;
   ecrans: { titre: string; html: string }[];
   essai: Essai;
-  conseils: string[]; // un conseil par tour (ou par séquence) au début de la partie d'essai
+  guide?: TourGuide[]; // tours guidés au début de la partie d'essai
+  guideSeq?: SequenceGuidee[]; // séquences guidées (format Enchaînement)
+  // Deck de l'adversaire pendant la partie d'essai guidée (il doit contenir ses actions imposées).
+  // Absent : l'adversaire garde son deck (Cocoach en durée infinie).
+  deckAdversaire?: IdAction[];
+  conseils: string[]; // conseils du coach pour les tours libres qui suivent les tours guidés
   // null si le style de jeu est accessible, sinon la raison.
   verrou: (c: Collection) => string | null;
 }
@@ -40,14 +56,20 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
         <li><b>Enchaînement aux jambes</b> : ${nomA('simple_jambe')} puis ${nomA('double_jambe')}, +${R.combos.enchainementJambes.points} point et ${R.combos.enchainementJambes.reductionCout} d'endurance en moins.</li>
         <li><b>Esquive et contre</b> : ${nomA('esquive')} puis un contre qui prend l'attaque, +${R.combos.esquiveContre.points} points.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Le Matraquage use l'adversaire et prépare la Ceinture arrière. Le Contre-temps est précieux quand ton endurance baisse : ton attaque ne peut plus rater. Et 3 actions réussies d'affilée, dont 2 attaques, donnent une tentative de <b>tombé</b>.</p>
-        <p>Partie d'essai : entraînement avec ${nomA('matraquage')}, ${nomA('ceinture_arriere')}, ${nomA('sprawl')} et ${nomA('simple_jambe')}. Pas de récompense.</p>` },
+        <p>Partie d'essai : entraînement avec ${nomA('matraquage')}, ${nomA('ceinture_arriere')}, ${nomA('sprawl')} et ${nomA('simple_jambe')}. Le coach te guide sur les premiers tours, puis tu joues seul. Un booster si tu gagnes (une fois).</p>` },
     ],
-    essai: { type: 'rapide', enchainement: false, infini: false, deck: ['matraquage', 'ceinture_arriere', 'sprawl', 'simple_jambe'] },
+    essai: { type: 'rapide', enchainement: false, infini: false, deck: ['matraquage', 'ceinture_arriere', 'sprawl', 'simple_jambe'], periodes: true },
+    guide: [
+      { joueur: 'sprawl', ordi: 'attaque_base', texte: 'Premier combo : le <b>Contre-temps</b>. Commence par un <b>Sprawl</b> : s\'il bloque une attaque, ton attaque suivante ne pourra pas rater.' },
+      { joueur: 'simple_jambe', ordi: 'feinte', texte: 'Ton Sprawl a bloqué : la <b>Simple jambe</b> s\'allume en vert. Joue-la : c\'est le Contre-temps, elle ne peut pas rater.' },
+      { joueur: 'sprawl', ordi: 'defense', pause: true, texte: 'Contre-temps réussi ! Un tour pour souffler avant le deuxième combo : joue encore un <b>Sprawl</b>.' },
+      { joueur: 'matraquage', ordi: 'defense', texte: 'Deuxième combo : le <b>Passage dans le dos</b>. Il commence par un <b>Matraquage</b>.' },
+      { joueur: 'ceinture_arriere', ordi: 'feinte', texte: 'Matraquage réussi : la <b>Ceinture arrière</b> est en vert. Joue-la pour le Passage dans le dos, +2 points !' },
+    ],
+    deckAdversaire: ['attaque_base', 'defense', 'feinte', 'double_jambe'],
     conseils: [
-      'Commence par un Matraquage : s\'il réussit, la Ceinture arrière s\'allumera en vert.',
-      'Ceinture arrière en vert ? Joue-la : c\'est le Passage dans le dos, +2 points.',
-      'Essaie le Sprawl : s\'il bloque une attaque, ton attaque suivante ne pourra pas rater (Contre-temps).',
-      'À toi de jouer ! Guette les boutons verts à chaque tour.',
+      'À toi de jouer seul ! Guette les boutons verts : ils annoncent un combo.',
+      'Le Matraquage use l\'adversaire et prépare la Ceinture arrière.',
     ],
     verrou: () => null,
   },
@@ -60,13 +82,17 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
         <li>Un <b>Matraquage réussi en 2e action</b> annule la dernière action adverse (2 fois sur 3).</li>
         <li>Avec l'<b>initiative</b>, tu vois la dernière action adverse et tu peux changer la tienne.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Contre un adversaire qui attaque d'entrée, ouvre par un contre. Glisse un combo dans ta séquence (Matraquage puis Ceinture arrière). Garde de l'endurance : une séquence doit pouvoir être payée en entier.</p>
-        <p>Partie d'essai : entraînement en format Enchaînement. Pas de récompense.</p>` },
+        <p>Partie d'essai : entraînement en format Enchaînement. Le coach te guide sur les 2 premières séquences, puis tu joues seul. Un booster si tu gagnes (une fois).</p>` },
     ],
     essai: { type: 'rapide', enchainement: true, infini: false, deck: ['matraquage', 'ceinture_arriere', 'contre', 'parade'] },
+    guideSeq: [
+      { joueur: ['matraquage', 'ceinture_arriere', 'parade'], ordi: ['defense', 'feinte', 'attaque_base'], texte: 'Compose ta première séquence, dans l\'ordre : <b>Matraquage</b>, <b>Ceinture arrière</b> (un combo !), puis <b>Parade</b>. Valide-la.' },
+      { joueur: ['contre', 'parade', 'matraquage'], ordi: ['defense', 'feinte', 'attaque_base'], texte: 'Maintenant, ouvre par un <b>Contre</b> : réussi en 1re action, il <b>brise toute la séquence adverse</b>. Puis Parade et Matraquage.' },
+    ],
+    deckAdversaire: ['attaque_base', 'defense', 'feinte', 'simple_jambe'],
     conseils: [
-      'Première séquence : essaie Parade, Matraquage, Ceinture arrière (un combo !).',
-      'Un contre en 1re action, s\'il prend, brise toute la séquence adverse.',
-      'Le Matraquage en 2e action peut annuler la 3e action adverse.',
+      'À toi de composer tes séquences. Le Matraquage en 2e action peut annuler la 3e action adverse.',
+      'Garde de l\'endurance : une séquence doit pouvoir être payée en entier.',
     ],
     verrou: () => null,
   },
@@ -79,12 +105,17 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
         <li>Dès le tour ${R.infini.debutSurcout}, chaque action coûte +1, puis +1 de plus tous les ${R.infini.palier} tours.</li>
         <li>Ne plus pouvoir payer aucune action pendant ${R.toursSansEnduranceAvantTombe} tours (à partir du tour ${R.infini.debutEpuisement}), c'est le tombé.</li></ul>` },
       { titre: 'Stratégie', html: `<p>Ne dépense pas tout au début : les défenses réussies rendent de l'endurance. Garde ton <b>second souffle</b> (+${R.souffle.gain} d'endurance, une fois, sous ${R.souffle.seuil}) pour la fin. Les combos et l'action spéciale d'attaque peuvent faire tomber l'adversaire.</p>
-        <p>Partie d'essai contre Cocoach : elle ne le fait pas progresser et ne rapporte rien.</p>` },
+        <p>Partie d'essai contre Cocoach : le coach te guide sur les premiers tours, puis tu joues seul. Elle ne fait pas progresser Cocoach ; un booster si tu gagnes (une fois).</p>` },
     ],
     essai: { type: 'rapide', enchainement: false, infini: true, deck: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'] },
+    deckAdversaire: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], // Cocoach au niveau Rare, toujours
+    guide: [
+      { joueur: 'parade', ordi: 'simple_jambe', texte: 'Pas de chrono : garde tes forces. Commence par une <b>Parade</b> : réussie, elle fatigue Cocoach et te rend de l\'endurance.' },
+      { joueur: 'simple_jambe', ordi: 'feinte', texte: 'Bien bloqué ! Cocoach adore les feintes, et l\'<b>attaque bat la feinte</b>. Joue la <b>Simple jambe</b>.' },
+      { joueur: 'feinte', ordi: 'parade', texte: 'Des points ! S\'il se met en défense, la <b>feinte bat la défense</b> : il perd de l\'endurance et tu prends l\'initiative. Joue la <b>Feinte</b>.' },
+    ],
     conseils: [
-      'Pas de chrono : garde tes forces. Une Parade réussie fatigue Cocoach et te rend de l\'endurance.',
-      'Varie tes actions : Cocoach adore les feintes. Une attaque bat la feinte.',
+      'À toi de jouer seul ! Varie tes actions : Cocoach apprend vite.',
       'Sous 25 d\'endurance, le bouton Souffler te rend 15 d\'endurance, une seule fois.',
       'Dès le tour 20, l\'étiquette Fatigue apparaît : tu récupères moins souvent.',
     ],
@@ -95,12 +126,18 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     ecrans: [
       { titre: 'Une nation après l\'autre', html: `<p>En Carrière, tu affrontes les nations une à une : ${R.arene.niveaux.length} lutteurs chacune, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur.</p>` },
       { titre: 'Les récompenses', html: `<p>Chaque victoire rapporte un booster et une médaille. Une nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion.</p>
-        <p>Partie d'essai : un combat contre un premier adversaire, ordinateur facile. Pas de récompense ni de progression.</p>` },
+        <p>Partie d'essai : un combat contre un premier adversaire, ordinateur facile. Le coach te guide sur les premiers tours. Pas de progression ; un booster si tu gagnes (une fois).</p>` },
     ],
     essai: { type: 'arene', deck: ['attaque_base', 'defense', 'feinte', 'contre'] },
+    guide: [
+      { joueur: 'defense', ordi: 'double_jambe', texte: 'Les 4 règles de base, une par tour. D\'abord : la <b>Défense bat l\'Attaque</b>. Joue la <b>Défense</b>.' },
+      { joueur: 'feinte', ordi: 'defense', texte: 'Bloqué, et tu récupères de l\'endurance ! Ensuite : la <b>Feinte bat la Défense</b>. Joue la <b>Feinte</b>.' },
+      { joueur: 'attaque_base', ordi: 'feinte', texte: 'Feinte réussie : ta prochaine attaque vaut +2. L\'<b>Attaque bat la Feinte</b> : joue l\'<b>Attaque</b>.' },
+      { joueur: 'contre', ordi: 'simple_jambe', texte: 'Des points ! Dernière règle : le <b>Contre</b> prend l\'attaque adverse et renvoie ses points. Joue le <b>Contre</b>.' },
+    ],
+    deckAdversaire: ['double_jambe', 'defense', 'feinte', 'simple_jambe'],
     conseils: [
-      'La Carrière se joue en 3 périodes de 10 tours : gagne-en 2.',
-      'Attaque bat feinte, défense bat attaque, contre bat défense et attaque, feinte bat contre et défense.',
+      'À toi de jouer seul ! La Carrière se joue en 3 périodes de 10 tours : gagne-en 2.',
       'Sous 50 d\'endurance, tes actions peuvent rater : alterne attaques et défenses.',
     ],
     verrou: () => null,
@@ -139,3 +176,16 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     verrou: () => null,
   },
 };
+
+// Le lutteur des parties d'essai : un lutteur équilibré, avec le deck qui montre le style de jeu.
+// Endurance confortable (voir REGLES.tutoriel.enduranceEssai) : ses actions ne ratent pas pendant les tours guidés.
+export function defEssai(deck: IdAction[]): DefLutteur {
+  const base = trouverLutteur('europe');
+  return { ...base, nom: 'Lutteur d\'essai', enduranceMax: REGLES.tutoriel.enduranceEssai, actions: [...deck], actionsPossibles: Object.keys(ACTIONS) as IdAction[] };
+}
+
+// L'adversaire d'une partie d'essai guidée : un lutteur commun, avec le deck qui contient ses actions
+// imposées, et la même endurance que le lutteur d'essai (il ne rate pas les tours guidés).
+export function defAdversaireEssai(id: string, deck: IdAction[]): DefLutteur {
+  return { ...trouverLutteur(id), enduranceMax: REGLES.tutoriel.enduranceEssai, actions: [...deck], actionsPossibles: [...deck] };
+}

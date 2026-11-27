@@ -127,13 +127,21 @@ export class Partie {
   // ---------- Mode Enchaînement ----------
   sequencesJouees = 0;
 
+  // Séquences imposées à l'ordinateur pour les premières séquences (tutoriel du format Enchaînement).
+  scriptSequences: Sequence[] = [];
+  get sequenceScriptee(): boolean {
+    return this.sequencesJouees < this.scriptSequences.length;
+  }
+
   // L'ordinateur compose sa séquence en secret.
   sequenceOrdi(): Sequence {
+    if (this.sequenceScriptee) return this.scriptSequences[this.sequencesJouees];
     return sequenceOrdinateur(this.etat, ORDI, this.hasard.fn, this.niveau);
   }
 
   // Avec l'initiative, l'ordinateur voit la dernière action du joueur et peut changer la sienne.
   reactionSequenceOrdi(seqHumain: Sequence, seqOrdi: Sequence): Sequence {
+    if (this.sequenceScriptee) return seqOrdi;
     return reactionSequence(this.etat, ORDI, seqOrdi, seqHumain, this.hasard.fn, this.niveau);
   }
 
