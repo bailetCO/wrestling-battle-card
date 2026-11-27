@@ -15,7 +15,7 @@ export const FIREBASE = {
   base: 'https://wrestling-battle-card-default-rtdb.europe-west1.firebasedatabase.app',
   // Identifiant client web Google (console Firebase → Authentication → Google → Configuration du SDK Web).
   // Vide : le bouton « Continuer avec Google » n'est pas affiché (connexion par e-mail seulement).
-  googleClientId: '',
+  googleClientId: '626474743975-dsh3og0ahbj7h0tjch901vf9jkusrt01.apps.googleusercontent.com',
 };
 
 // ---------- Connexion anonyme ----------
