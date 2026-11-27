@@ -378,8 +378,20 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 ### Scènes de dialogue (modes histoire)
 
 - À chaque étape du mode histoire et à chaque palier de la saison, une petite scène façon BD (2 à 4 bulles) présente l'objectif. Elle s'affiche une fois, au menu ou dans l'écran du mode, et peut être revue (« Revoir la scène »).
-- Personnages : **Philippe**, le mentor (ancien champion devenu directeur technique), et **Cocoach**, le coach rival qu'on recroise jusqu'aux Jeux Olympiques.
-- Scènes : une par étape (12), une à la fin du mode histoire (ouverture de la saison), une par palier de la saison (6) et une finale (champion olympique).
+- Personnages : **Darius** (Darius Westrell), le mentor, ancien champion du monde poids lourd américain devenu directeur technique, et **Cocoach**, le coach rival qu'on recroise jusqu'aux Jeux Olympiques. Darius remplace Philippe depuis le 27/11/2026 (même histoire, nouveau personnage).
+- Ton de Darius : bienveillant et motivant ; chaque scène donne un objectif clair (« Objectif : … ») ; il raconte parfois une anecdote de sa carrière quand le dialogue s'y prête.
+- Portrait de Darius : provisoire, découpé dans les illustrations ChatGPT de sa carte (`public/darius/coach.webp`) ; à remplacer par des portraits de coach faits exprès (buste, tenue de coach, quelques expressions), au même nom de fichier.
+- Scènes : une par étape (18), une quand le mode histoire est terminé (Darius offre sa carte), une à l'ouverture de la saison, une par palier de la saison (6) et une finale (champion olympique).
+
+### Carte secrète de Darius (27/11/2026)
+
+- Easter egg : la carte **Darius Westrell**, Champion du Monde de naissance (style « Lutteur de pression, très physique », actions de la légendaire des USA, action de Champion : Tour de hanche ; endurance 70, force 165).
+- Gagnée **uniquement** en terminant le mode histoire (étape 18), en plus de la légendaire offerte. Jamais dans les boosters, l'arène, la boutique, les fins de saison ni les quêtes. Un seul exemplaire.
+- Elle arrive avec **2 étoiles**, posées au hasard sur 2 de ses actions différentes (−1 au coût de chacune), tirées une fois pour toutes le jour où on la gagne.
+- Jouable partout (carrière, entraînement, tournois, Mon Club, combat entre amis). Elle n'apparaît dans la collection (groupe Champions du Monde) qu'une fois gagnée.
+- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 64,9 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %).
+- Illustration provisoire : `public/darius/carte.webp`, recadrée dans son illustration Champion du Monde.
+- À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : la carte épique `usa-7` y porte le nom « Darius Westrell » et utilise ses images. Il faudra lui donner un autre nom et d'autres images, pour qu'il n'y ait qu'un seul Darius.
 
 ### Outils de test (à retirer avant le lancement public)
 

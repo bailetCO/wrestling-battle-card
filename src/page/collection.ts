@@ -2,7 +2,7 @@
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
 import {
-  CHAMPIONS, ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
+  CARTES_SPECIALES, CHAMPIONS, ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte,
 } from '../moteur';
 
@@ -75,7 +75,7 @@ export interface Booster {
 // Les 20 cartes de départ : tirées au hasard parmi celles débloquées dès le départ
 // (4 communes et 1 rare par nation).
 // Carte connue du jeu : un des 120 lutteurs ou une des 12 cartes Champion du Monde.
-export const carteConnue = (id: string) => LUTTEURS.some((l) => l.id === id) || CHAMPIONS.some((l) => l.id === id);
+export const carteConnue = (id: string) => LUTTEURS.some((l) => l.id === id) || CHAMPIONS.some((l) => l.id === id) || CARTES_SPECIALES.some((l) => l.id === id);
 
 export const POOL_DEPART = () => LUTTEURS.filter((l) => l.depart).map((l) => l.id);
 export function cartesDeDepart(hasard: Hasard = Math.random, deja: string[] = []): string[] {
@@ -351,7 +351,7 @@ export const styleDe = (c: Collection, id: string) => Math.min(nbStyles(c, id), 
 // (Champion du Monde, puis toutes les étoiles). Renvoie le nombre de doubles ajoutés.
 export function doublesPourMaximum(c: Collection): number {
   let ajout = 0;
-  for (const l of [...LUTTEURS, ...CHAMPIONS]) {
+  for (const l of [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES]) {
     if (nbExemplaires(c, l.id) === 0) continue;
     const g = gradeDe(c, l.id);
     let besoin = 1; // l'original

@@ -95,12 +95,13 @@ test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins
   for (const r of Object.values(SCENES).flat()) assert.ok(r.texte.length <= 160, r.texte);
   assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, false), ['h3']);
   assert.deepEqual(scenesEnCours(15, 18, 0, false, true, true, false), ['h15']);
-  assert.deepEqual(scenesEnCours(18, 18, 0, false, true, true, false), []);
+  assert.ok(SCENES.hdarius?.length); // mode histoire terminé : Darius offre sa carte
+  assert.deepEqual(scenesEnCours(18, 18, 0, false, true, true, false), ['hdarius']);
   // Saison ouverte (club niveau 10) : ses scènes, plus l'étape d'histoire en cours.
   assert.deepEqual(scenesEnCours(3, 18, 0, false, true, true, true), ['hfin', 's0', 'h3']);
   assert.deepEqual(scenesEnCours(16, 18, 4, false, true, true, true), ['s4', 'h16']);
-  assert.deepEqual(scenesEnCours(18, 18, 4, false, true, true, true), ['s4']);
-  assert.deepEqual(scenesEnCours(18, 18, 6, true, true, true, true), ['s6']);
+  assert.deepEqual(scenesEnCours(18, 18, 4, false, true, true, true), ['hdarius', 's4']);
+  assert.deepEqual(scenesEnCours(18, 18, 6, true, true, true, true), ['hdarius', 's6']);
 });
 
 test('saisons suivantes : fin aux Mondiaux, JO toutes les 4 saisons, cartes Champion du Monde', async () => {

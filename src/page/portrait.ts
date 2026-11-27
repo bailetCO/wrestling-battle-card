@@ -21,9 +21,15 @@ export interface Apparence {
 const PEAU = { claire: '#f2cfae', mate: '#dcaa82', doree: '#c98f62', brune: '#91603f', foncee: '#64402a' };
 const CHEVEUX = { noir: '#1d1715', brun: '#4a2f22', chatain: '#7a4f2e', blond: '#d8b46a', roux: '#a8492a' };
 
+// Dossier des images (public/), relatif à la page du jeu.
+const IMAGES = import.meta.env?.BASE_URL ?? './';
+
 export const APPARENCE: Record<string, Apparence> = {
   // Personnages des modes histoire : Philippe (le mentor, ancien champion) et Cocoach (le rival).
-  'perso-philippe': { peau: PEAU.mate, cheveux: CHEVEUX.chatain, coiffure: 'chauve', pilosite: 'moustache', casque: false, oreille: true, cicatrice: true },
+  // Darius (le mentor) et sa carte secrète : illustrations provisoires tirées du pack ChatGPT
+  // (public/darius/ ; pour les changer, remplacer les fichiers, même nom).
+  'perso-darius': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/coach.webp` },
+  darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp` },
   'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false },
   usa: { peau: PEAU.claire, cheveux: CHEVEUX.blond, coiffure: 'ras', pilosite: 'aucune', casque: false, oreille: true, cicatrice: false },
   'usa-explosif': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'crete', pilosite: 'aucune', casque: true, oreille: false, cicatrice: false },

@@ -1,6 +1,6 @@
 // Choix du deck, collection et fusion.
 
-import { ACTIONS, CHAMPIONS, LUTTEURS, NATIONS, nomLocal, trouverLutteur, NIVEAUX, etoilesPossibles, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_, type DefLutteur, type IdAction } from '../../moteur';
+import { ACTIONS, CARTES_SPECIALES, CHAMPIONS, LUTTEURS, NATIONS, nomLocal, trouverLutteur, NIVEAUX, etoilesPossibles, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_, type DefLutteur, type IdAction } from '../../moteur';
 import { ICONE, NOM_FAMILLE, effetAction } from '../textes';
 import { NOM_RARETE, ORDRE_RARETE, STYLES_CARTE, activerReflets } from '../carte';
 import { enFragment, debloquerLegendaire, legendaireDe, niveauCompte, gagnerMedailles, choisirDeck, deckDe, defPossede, etoilesDe, fusionPrete, fusionner, gradeDe, nbEtoiles, nbExemplaires, nouvelleCollection, possede, prochaineFusion, sauver, nbFusions, nbStyles, styleDe, doublesPourMaximum, type TriCollection } from '../collection';
@@ -94,8 +94,9 @@ export const TRIS: { id: TriCollection; nom: string }[] = [
   { id: 'fusions', nom: 'Fusions' }, { id: 'niveau', nom: 'Rareté actuelle' },
 ];
 
-// Toutes les cartes qu'un joueur peut posséder : les 120 lutteurs et les 12 Champions du Monde.
-export const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS];
+// Toutes les cartes qu'un joueur peut posséder : les 120 lutteurs, les 12 Champions du Monde et la
+// carte secrète de Darius.
+export const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES];
 
 // Les groupes de cartes de la collection, selon le tri choisi.
 // Sans aucun Champion du Monde, leur groupe est tout en bas ; dès le premier, il remonte en haut (tris
@@ -104,7 +105,8 @@ export const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS];
 export const groupesDeplies = new Set<string>();
 export function groupesCollection(): { titre: string; liste: DefLutteur[]; replie: boolean }[] {
   const aucun = !CHAMPIONS.some((l) => possede(S.collection, l.id));
-  const champions = { titre: 'Champions du Monde', liste: CHAMPIONS };
+  // La carte secrète de Darius n'apparaît qu'une fois gagnée (surprise de fin du mode histoire).
+  const champions = { titre: 'Champions du Monde', liste: [...CARTES_SPECIALES.filter((l) => possede(S.collection, l.id)), ...CHAMPIONS] };
   // En haut seulement dans les tris par rareté (de base ou actuelle) ; ailleurs, tout en bas.
   const enHaut = !aucun && (S.collection.tri === 'rarete' || S.collection.tri === 'niveau');
   const groupes = enHaut ? [champions, ...groupesBase()] : [...groupesBase(), champions];
