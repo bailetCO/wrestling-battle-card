@@ -1,5 +1,6 @@
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
+import { PRESENTATION_COCOACH } from '../portrait';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
@@ -381,7 +382,7 @@ export function encartRival(): string {
   const niv = NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade)];
   const et = etoilesRival(S.collection);
   return `<div class="encart-rival si-infini" ${S.infiniChoisi ? '' : 'hidden'}>
-    <span class="vignette">${portrait(defRival(S.collection))}</span>
+    <span class="vignette"><img class="portrait-img" src="${PRESENTATION_COCOACH}" alt="Cocoach" style="object-position: 50% 12%"></span>
     <span><b>Adversaire : Cocoach, ton rival</b><small>${niv}${et ? ` · ${et} étoile${et > 1 ? 's' : ''}` : ''} · ordinateur ${niveauOrdiRival(S.collection)} · battu ${r.victoires} fois${r.bonus ? ` · +${Math.round(r.bonus * 100)} % (saisons)` : ''}</small>
     <small>À chaque victoire, il monte de niveau${r.grade < 4 ? ` (prochain : ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, r.grade + 1)]}, 1 booster rare)` : ' (étoiles)'}.</small></span></div>`;
 }

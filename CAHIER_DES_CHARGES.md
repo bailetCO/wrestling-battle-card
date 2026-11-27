@@ -383,6 +383,25 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Portrait de Darius : provisoire, découpé dans les illustrations ChatGPT de sa carte (`public/darius/coach.webp`) ; à remplacer par des portraits de coach faits exprès (buste, tenue de coach, quelques expressions), au même nom de fichier.
 - Scènes : une par étape (18), une quand le mode histoire est terminé (Darius offre sa carte), une à l'ouverture de la saison, une par palier de la saison (6) et une finale (champion olympique).
 
+### Cocoach : expressions, rival puis ami (27/11/2026)
+
+- Caractère : compétiteur, taquin, stratège ; il défie le joueur et le pousse à se dépasser.
+- Dialogues : chaque réplique de Cocoach a une expression (Neutre, Content, Malin, Vaincu, Vainqueur, Arrogant, Méfiant), montrée par son portrait (`public/cocoach/expressions/`). Sans expression : Neutre.
+- Rival jusqu'à la première médaille d'or aux Jeux Olympiques : ton moqueur, cercle du portrait rouge.
+- Le jour de cette médaille, une scène à part (montrée une fois) : vaincu, il reconnaît le joueur, lui offre sa carte et devient un **ami qui le challenge**. Ensuite, les scènes de la saison ont une version « ami » (complice mais toujours compétitif) et son cercle devient doré.
+- Le rival de la durée infinie prend l'illustration de son niveau (Rare, Épique, Légendaire, Champion du Monde) ; l'encart du rival à l'Entraînement montre son illustration de présentation (bras croisés).
+- Illustrations de carte : elles gardent leur bandeau de rareté en bas (voulu). Provisoires, découpées dans les planches ChatGPT (`public/cocoach/cartes/`) ; les versions grand format (1024 × 1536) les remplaceront au même nom de fichier.
+- Le lutteur de test du mode développeur s'appelle désormais « Cocoach (test) ».
+- À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : elle contient d'anciennes images de Cocoach, à remplacer par celles-ci ; les cartes verticales ne doivent pas dessiner leur propre étiquette de rareté par-dessus le bandeau de Cocoach.
+
+### Carte secrète de Cocoach (27/11/2026)
+
+- Easter egg : la carte **Cocoach**, Champion du Monde de naissance (style du rival : technicien des feintes et des ceintures, Europe ; endurance 60, force 175, récupération 44 % ; action de Champion : Changement de niveau). Différente du rival de la durée infinie et du lutteur de test.
+- **Première médaille d'or aux JO** : la carte, avec **4 étoiles** posées au hasard sur 4 actions différentes (−1 au coût de chacune), tirées une fois pour toutes.
+- **Chaque médaille d'or aux JO suivants** : un exemplaire de plus, qui sert de double pour la fusion (étoiles et styles de carte, règles habituelles : 5 doubles par étoile, 3 étoiles au plus par action).
+- Jamais dans les boosters, l'arène, la boutique, les fins de saison ni les quêtes. Jouable partout ; visible dans la collection (groupe Champions du Monde) une fois gagnée.
+- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 65,8 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %).
+
 ### Carte secrète de Darius (27/11/2026)
 
 - Easter egg : la carte **Darius Westrell**, Champion du Monde de naissance (style « Lutteur de pression, très physique », actions de la légendaire des USA, action de Champion : Tour de hanche ; endurance 70, force 165).
@@ -396,7 +415,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 ### Outils de test (à retirer avant le lancement public)
 
 - Mode histoire et saison : un bouton « ⏭ Passer à l'étape suivante (test) » / « Passer au palier suivant (test) » valide l'étape ou le palier en cours comme s'il était réussi, avec sa récompense et sa scène de dialogue, pour parcourir toute l'histoire.
-- Lutteur de test **Cocoach** : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
+- Lutteur de test **Cocoach (test)** (nommé « Cocoach » avant le 27/11/2026) : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
 - Collection, réglages de test : « +10 médailles », « +50 $ », mode test (toutes les cartes), ouvrir un booster.
 - Bonus du pseudo « Coco » (1000 $) et bouton « Passer le combat et gagner » : réservés au mode développeur (`?dev`) depuis la bêta (26/11/2026), car n'importe quel testeur pourrait choisir ce pseudo.
 

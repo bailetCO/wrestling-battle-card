@@ -16,6 +16,8 @@ export interface Apparence {
   oreille: boolean; // oreille en chou-fleur, signe des vieux lutteurs
   cicatrice: boolean;
   image?: string;
+  images?: Partial<Record<NiveauCarte, string>>; // une illustration par niveau de carte (passe devant `image`)
+  cadrage?: string; // partie de l'image à garder quand elle est recadrée (object-position CSS)
 }
 
 const PEAU = { claire: '#f2cfae', mate: '#dcaa82', doree: '#c98f62', brune: '#91603f', foncee: '#64402a' };
@@ -24,13 +26,35 @@ const CHEVEUX = { noir: '#1d1715', brun: '#4a2f22', chatain: '#7a4f2e', blond: '
 // Dossier des images (public/), relatif à la page du jeu.
 const IMAGES = import.meta.env?.BASE_URL ?? './';
 
+const COCOACH_BASE: Apparence = { peau: '#dcaa82', cheveux: '#4a2f22', coiffure: 'meche', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false };
+const CARTES_COCOACH: Partial<Record<NiveauCarte, string>> = Object.fromEntries(
+  (['commune', 'rare', 'epique', 'legendaire', 'champion'] as NiveauCarte[]).map((n) => [n, `${IMAGES}cocoach/cartes/${n}.webp`]),
+);
+
+// Expressions des personnages des dialogues (Cocoach). Sans expression : « neutre ».
+type Humeur = 'neutre' | 'content' | 'malin' | 'vaincu' | 'vainqueur' | 'arrogant' | 'mefiant';
+export const PRESENTATION_COCOACH = `${IMAGES}cocoach/cartes/presentation.webp`;
+
+// Portrait d'un personnage des dialogues : Cocoach selon son expression ; Darius (une seule image
+// pour l'instant : ses expressions viendront avec les prochaines illustrations).
+export function portraitPersonnage(qui: 'darius' | 'cocoach', humeur: Humeur = 'neutre'): string {
+  const src = qui === 'cocoach' ? `${IMAGES}cocoach/expressions/${humeur}.webp` : `${IMAGES}darius/coach.webp`;
+  return `<img class="portrait-img" src="${src}" alt="${qui === 'cocoach' ? 'Cocoach' : 'Darius'}">`;
+}
+
 export const APPARENCE: Record<string, Apparence> = {
   // Personnages des modes histoire : Philippe (le mentor, ancien champion) et Cocoach (le rival).
   // Darius (le mentor) et sa carte secrète : illustrations provisoires tirées du pack ChatGPT
   // (public/darius/ ; pour les changer, remplacer les fichiers, même nom).
+  // Cocoach : illustrations provisoires tirées des planches ChatGPT (public/cocoach/ ; pour les
+  // changer, remplacer les fichiers, même nom). Le rival prend l'illustration de son niveau ; la carte
+  // secrète, celle du Champion. Les cartes portent leur bandeau de rareté en bas (voulu).
+  'cocoach-rival': { ...COCOACH_BASE, images: CARTES_COCOACH, cadrage: '50% 22%' },
+  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 22%' },
+  'cocoach-test': { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/presentation.webp`, cadrage: '50% 18%' },
   'perso-darius': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/coach.webp` },
   darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp` },
-  'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false },
+  'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}cocoach/expressions/neutre.webp` },
   usa: { peau: PEAU.claire, cheveux: CHEVEUX.blond, coiffure: 'ras', pilosite: 'aucune', casque: false, oreille: true, cicatrice: false },
   'usa-explosif': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'crete', pilosite: 'aucune', casque: true, oreille: false, cicatrice: false },
   'usa-defenseur': { peau: PEAU.claire, cheveux: CHEVEUX.roux, coiffure: 'pics', pilosite: 'barbe', casque: false, oreille: true, cicatrice: true },
@@ -523,8 +547,9 @@ function decorBuste(def: DefLutteur, niveau: NiveauCarte, uid: string): string {
 // sinon, le buste sur le décor du niveau (petits portraits, vignettes).
 export function portraitSVG(def: DefLutteur, uid: string, opts: { niveau?: NiveauCarte; scene?: boolean } = {}): string {
   const a = apparenceDe(def);
-  if (a?.image) {
-    return `<img class="portrait-img" src="${a.image}" alt="Portrait de ${def.nom}">`;
+  const src = a?.images?.[opts.niveau ?? def.niveau ?? def.rarete] ?? a?.image;
+  if (src) {
+    return `<img class="portrait-img" src="${src}" alt="Portrait de ${def.nom}"${a?.cadrage ? ` style="object-position: ${a.cadrage}"` : ''}>`;
   }
   if (!a) return '';
   const niveau = opts.niveau ?? def.niveau ?? def.rarete;

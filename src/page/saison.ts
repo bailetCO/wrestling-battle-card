@@ -4,8 +4,8 @@
 // grandes : régional, national, international, championnats du monde, et Jeux Olympiques une saison
 // sur 4 (la 1re, puis la 5e, la 9e…). Une saison finie, on peut en commencer une nouvelle.
 
-import { CHAMPIONS, REGLES, type Hasard } from '../moteur';
-import { niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
+import { CHAMPIONS, COCOACH, ETOILES_COCOACH, ID_COCOACH, REGLES, type Hasard, type IdAction } from '../moteur';
+import { nbExemplaires, niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
 import { legendaireOfferte } from './histoire';
 import { rivalNouvelleSaison } from './rival';
 import { creerIndividuel, type Individuel } from './tournoi';
@@ -70,12 +70,33 @@ export function nouvelleSaison(c: Collection): boolean {
   return true;
 }
 
+// Carte secrète de Cocoach, à chaque médaille d'or aux Jeux Olympiques : la 1re fois, la carte avec
+// 4 étoiles sur 4 actions différentes tirées au hasard ; les fois suivantes, un exemplaire de plus
+// (un double pour la fusion).
+export function carteCocoach(c: Collection, hasard: Hasard): Booster {
+  const nouvelle = nbExemplaires(c, ID_COCOACH) === 0;
+  c.exemplaires[ID_COCOACH] = nbExemplaires(c, ID_COCOACH) + 1;
+  if (nouvelle) {
+    const actions: IdAction[] = [...new Set([...COCOACH.actions, ...COCOACH.deblocages, ...(COCOACH.actionChampion ? [COCOACH.actionChampion] : [])])];
+    const etoiles: Partial<Record<IdAction, number>> = {};
+    for (let k = 0; k < ETOILES_COCOACH; k++) {
+      const restantes = actions.filter((a) => !etoiles[a]);
+      etoiles[restantes[Math.floor(hasard() * restantes.length)]] = 1;
+    }
+    c.etoiles[ID_COCOACH] = etoiles;
+  }
+  return { type: 'recompense', cartes: [ID_COCOACH], nouvelles: nouvelle ? [ID_COCOACH] : [] };
+}
+
+const estJO = (i: number) => PALIERS[i]?.nom === 'Jeux Olympiques';
+
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
   const p = PALIERS[i];
   const out: Booster[] = [];
   if (p.legendaire) out.push(legendaireOfferte(c, hasard));
   for (let k = 0; k < p.boosters; k++) out.push(ouvrirBooster(c, hasard, 'classique'));
   for (let k = 0; k < p.boostersRares; k++) out.push(ouvrirBooster(c, hasard, 'rare'));
+  if (estJO(i)) out.push(carteCocoach(c, hasard)); // médaille d'or (seule la 1re place valide les JO)
   return out;
 }
 

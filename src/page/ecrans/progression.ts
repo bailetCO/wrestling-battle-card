@@ -1,15 +1,15 @@
 // Mode histoire, boîte à récompenses, quêtes du jour, scènes de dialogue et saison sportive.
 
-import { ACTIONS, LUTTEURS, LUTTEUR_TEST, REGLES, ID_RIVAL, trouverLutteur, REGLES as R_, type DefLutteur, type EtatCombat, type Niveau } from '../../moteur';
+import { ACTIONS, LUTTEURS, LUTTEUR_TEST, REGLES, ID_COCOACH, ID_RIVAL, trouverLutteur, REGLES as R_, type DefLutteur, type EtatCombat, type Niveau } from '../../moteur';
 import { NOM_RARETE, activerReflets } from '../carte';
-import { recompensesClub, noterBattuMain, adversaireAuto, niveauClub, possede, sauver, type Booster, type RecompenseAOuvrir, type SourceRecompense } from '../collection';
-import { portraitSVG } from '../portrait';
+import { recompensesClub, noterBattuMain, adversaireAuto, nbExemplaires, niveauClub, possede, sauver, type Booster, type RecompenseAOuvrir, type SourceRecompense } from '../collection';
+import { portraitPersonnage } from '../portrait';
 import { jourDe } from '../club';
 import { payerInscription } from '../tournoi';
 import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from '../quetes';
 import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from '../histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from '../saison';
-import { PERSONNAGES, SCENES, scenesEnCours, type Personnage } from '../dialogues';
+import { PERSONNAGES, SCENES, scenesEnCours, varianteScene, type Personnage } from '../dialogues';
 import { DEV } from '../dev';
 import { niveauDe } from './accueil';
 import { miniCarteLutteur } from './club';
@@ -251,14 +251,16 @@ export const defPersonnage = (qui: Personnage): DefLutteur => ({ ...trouverLutte
 // Montre les scènes de l'avancement en cours que le joueur n'a pas encore vues.
 export function scenesAuto() {
   if (document.querySelector('.voile, .scene-dialogue, .revelation')) return;
-  const cles = scenesEnCours(S.collection.histoire.etape, NB_ETAPES, S.collection.saison.palier, saisonFinie(S.collection), saisonOlympique(S.collection.saison.numero), S.collection.saison.numero === 1, saisonOuverte(S.collection))
+  const cles = scenesEnCours(S.collection.histoire.etape, NB_ETAPES, S.collection.saison.palier, saisonFinie(S.collection), saisonOlympique(S.collection.saison.numero), S.collection.saison.numero === 1, saisonOuverte(S.collection), nbExemplaires(S.collection, ID_COCOACH) > 0)
     .filter((k) => !S.collection.scenesVues.includes(k));
   if (cles.length) montrerScene(cles);
 }
 
 // Une scène façon BD : les bulles apparaissent une à une (« Suite »), « Passer » ferme tout.
 export function montrerScene(cles: string[]) {
-  const repliques = cles.flatMap((k) => SCENES[k] ?? []);
+  // Cocoach devenu ami (il a donné sa carte) : version « ami » des scènes, cercle doré.
+  const ami = S.collection.scenesVues.includes('hcocoach');
+  const repliques = cles.flatMap((k) => SCENES[varianteScene(k, ami)] ?? []);
   if (!repliques.length) return;
   document.querySelector('.scene-dialogue')?.remove();
   const voile = document.createElement('div');
@@ -276,8 +278,8 @@ export function montrerScene(cles: string[]) {
   const rendre = () => {
     voile.innerHTML = `<div class="scene-cadre">
       <div class="scene-bulles">${repliques.slice(0, n).map((r, i) => `
-        <div class="replique r-${r.qui} ${i === n - 1 ? 'nouvelle' : ''}">
-          <div class="replique-portrait">${portraitSVG(defPersonnage(r.qui), `sc${i}`)}</div>
+        <div class="replique r-${r.qui} ${r.qui === 'cocoach' && (ami || r.ami) ? 'ami' : ''} ${i === n - 1 ? 'nouvelle' : ''}">
+          <div class="replique-portrait">${portraitPersonnage(r.qui, r.humeur)}</div>
           <div class="replique-bulle"><b>${PERSONNAGES[r.qui].nom}</b><p>${echap(r.texte)}</p></div>
         </div>`).join('')}</div>
       <div class="scene-boutons">

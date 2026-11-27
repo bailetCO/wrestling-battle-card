@@ -271,15 +271,13 @@ export const DARIUS: DefLutteur = (() => {
   };
 })();
 export const ETOILES_DARIUS = 2; // étoiles offertes avec la carte, sur 2 actions différentes
-// Cartes à part : jouables partout, mais jamais distribuées au hasard.
-export const CARTES_SPECIALES: DefLutteur[] = [DARIUS];
 
 // Lutteur spécial pour les tests : Cocoach, déjà Champion du Monde, avec les meilleures statistiques
 // du jeu (le maximum des 132 cartes pour chacune). Hors collection, boosters et arène ; choisissable
 // seulement contre l'ordinateur, jamais en ligne.
 export const ID_LUTTEUR_TEST = 'cocoach-test';
 export const LUTTEUR_TEST: DefLutteur = {
-  id: ID_LUTTEUR_TEST, nom: 'Cocoach', origine: 'France', nation: 'europe', style: 'Champion du Monde, lutteur de test',
+  id: ID_LUTTEUR_TEST, nom: 'Cocoach (test)', origine: 'France', nation: 'europe', style: 'Champion du Monde, lutteur de test',
   enduranceMax: Math.max(...LUTTEURS.map((l) => l.enduranceMax), ...CHAMPIONS.map((l) => l.enduranceMax)),
   force: Math.max(...LUTTEURS.map((l) => l.force), ...CHAMPIONS.map((l) => l.force)),
   recuperation: Math.max(...LUTTEURS.map((l) => l.recuperation), ...CHAMPIONS.map((l) => l.recuperation)),
@@ -731,6 +729,22 @@ export const COCOACH_RIVAL: DefLutteur = {
   actions: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'], actionsPossibles: ['simple_jambe', 'ceinture_arriere', 'parade', 'feinte'],
   deblocages: ['contre', 'matraquage', 'esquive', 'bras_roule'], actionChampion: 'changement_niveau',
 };
+
+// Carte secrète : Cocoach, le rival devenu ami. Champion du Monde de naissance, avec le style, les
+// actions et la récupération du rival. Gagnée à la 1re médaille d'or aux JO avec 4 étoiles tirées au
+// hasard sur 4 actions différentes ; chaque nouvelle médaille d'or aux JO en donne un exemplaire de plus
+// (un double pour la fusion : étoiles et styles de carte, comme les autres Champions du Monde).
+// Différente du rival de la durée infinie (ID_RIVAL) et du lutteur de test (« Cocoach (test) »).
+export const ID_COCOACH = 'cocoach';
+export const COCOACH: DefLutteur = {
+  ...COCOACH_RIVAL, id: ID_COCOACH, nom: 'Cocoach', style: 'Technicien des feintes et des ceintures', rarete: 'champion',
+  enduranceMax: 60, force: 175, depart: false,
+  actions: [...COCOACH_RIVAL.actions], actionsPossibles: [...COCOACH_RIVAL.actions], deblocages: [...COCOACH_RIVAL.deblocages],
+};
+export const ETOILES_COCOACH = 4; // étoiles offertes avec la carte, sur 4 actions différentes
+
+// Cartes à part : jouables partout, mais jamais distribuées au hasard.
+export const CARTES_SPECIALES: DefLutteur[] = [DARIUS, COCOACH];
 
 export function trouverLutteur(id: string): DefLutteur {
   if (id === ID_RIVAL) return COCOACH_RIVAL;
