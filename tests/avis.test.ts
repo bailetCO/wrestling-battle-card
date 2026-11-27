@@ -147,7 +147,9 @@ test('signalement de bug : le dernier combat se rejoue exactement à l\'identiqu
 test('règles Firestore : dépôt seulement, champs contrôlés, un avis par minute', () => {
   const r = readFileSync(new URL('../firebase/firestore.rules', import.meta.url), 'utf8');
   assert.match(r, /match \/avis\/\{id\} \{\s+allow create:/);
-  assert.doesNotMatch(r.slice(r.indexOf('match /avis/'), r.indexOf('match /limites/')), /allow (read|update|delete|write)/);
+  const avis = r.slice(r.indexOf('match /avis/'), r.indexOf('match /stats/'));
+  assert.doesNotMatch(avis, /allow (update|write)/, 'un avis ne se modifie pas');
+  assert.match(avis, /allow read, delete: if aMoi\(\);/, 'chacun ne lit et n\'efface que ses propres envois');
   assert.match(r, /duration\.value\(60, 's'\)/);
   assert.match(r, /hasOnly\(\['type', 'version', 'uid', 'envoye', 'pseudo', 'email'/);
   assert.match(r, /allow read, write: if false;/);

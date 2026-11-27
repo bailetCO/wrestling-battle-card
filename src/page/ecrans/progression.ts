@@ -18,6 +18,7 @@ import { autoDispo, lancer } from './combat';
 import { S, app, echap, enTete, nouvelleGraine } from './commun';
 import { revelerPaquet, sectionPaquet } from './fin';
 import { ecranTournoiEnCours, sauverTournoi } from './tournois';
+import { noterParcours } from './stats';
 
 // ---------- Modes histoire (histoire et saison) ----------
 
@@ -75,6 +76,7 @@ export function etapesValidees(r: ReturnType<typeof noterHistoire>) {
     mettreEnBoite(`Étape ${x.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, 'histoire', x.boosters);
   }
   sauver(S.collection);
+  for (const x of r) noterParcours('histoire', `etape ${x.etape + 1}`);
   const der = r[r.length - 1].etape;
   annoncer(`Étape ${der + 1} validée : ${ETAPES[der].titre} !`);
 }

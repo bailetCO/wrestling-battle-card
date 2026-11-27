@@ -1494,3 +1494,8 @@ b.moi { color: #ff8a95; }
 .av-email[hidden] { display: none; }
 .av-etat .erreur { color: #ff8a8a; }
 .av-invitation { border: 2px solid var(--orange); }
+.conf-texte { text-align: left; font-size: 14px; }
+.conf-texte p { margin: 6px 0; }
+.conf-texte a { color: var(--orange); }
+.conf-resultat .erreur { color: #ff8a8a; }
+.fenetre .principal:disabled { opacity: .45; cursor: not-allowed; }
