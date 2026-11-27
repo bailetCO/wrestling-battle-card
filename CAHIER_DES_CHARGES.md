@@ -392,7 +392,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Rival jusqu'à la première médaille d'or aux Jeux Olympiques : ton moqueur, cercle du portrait rouge.
 - Le jour de cette médaille, une scène à part (montrée une fois) : vaincu, il reconnaît le joueur, lui offre sa carte et devient un **ami qui le challenge**. Ensuite, les scènes de la saison ont une version « ami » (complice mais toujours compétitif) et son cercle devient doré.
 - Le rival de la durée infinie prend l'illustration de son niveau (Rare, Épique, Légendaire, Champion du Monde) ; l'encart du rival à l'Entraînement montre son illustration de présentation (bras croisés).
-- Illustrations de carte : elles gardent leur bandeau de rareté en bas (voulu). Provisoires, découpées dans les planches ChatGPT (`public/cocoach/cartes/`) ; les versions grand format (1024 × 1536) les remplaceront au même nom de fichier.
+- Illustrations de carte : définitives depuis le 27 novembre 2026, grand format (1024 × 1536, `public/cocoach/cartes/`). Leur bandeau de rareté imprimé en bas reste hors du cadre de la carte (cadrage sur le haut de l'image), pour ne pas doubler la rareté écrite par le jeu. Expressions : 512 × 512. Fiche personnage, planche de contrôle et anciennes images : `direction-artistique/cocoach/` (jamais affichées dans le jeu).
 - Le lutteur de test du mode développeur s'appelle désormais « Cocoach (test) ».
 - À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : elle contient d'anciennes images de Cocoach, à remplacer par celles-ci ; les cartes verticales ne doivent pas dessiner leur propre étiquette de rareté par-dessus le bandeau de Cocoach.
 
