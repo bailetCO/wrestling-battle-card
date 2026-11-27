@@ -67,6 +67,39 @@ const memeNation = (c: Collection, n: number) => {
   return Math.max(0, ...compte.values()) >= n;
 };
 
+// Destinations du bouton « Aller à la quête » : l'écran (adresse après le #), le texte du bouton, et
+// un réglage déjà choisi en arrivant sur l'Entraînement (ordinateur fort, Enchaînement, durée infinie).
+export type IdDestination = 'carriere' | 'entrainement' | 'fort' | 'enchainement' | 'infini' | 'boutique' | 'collection' | 'fusion' | 'tournois' | 'club' | 'amis' | 'tutoriel';
+export const DESTINATIONS: Record<IdDestination, { lien: string; bouton: string; reglage?: 'fort' | 'enchainement' | 'infini' }> = {
+  carriere: { lien: '#arene', bouton: 'Aller à la Carrière' },
+  entrainement: { lien: '#rapide', bouton: 'Aller à l\'Entraînement' },
+  fort: { lien: '#rapide', bouton: 'Entraînement contre l\'ordinateur fort', reglage: 'fort' },
+  enchainement: { lien: '#rapide', bouton: 'Entraînement en Enchaînement', reglage: 'enchainement' },
+  infini: { lien: '#rapide', bouton: 'Entraînement en durée infinie', reglage: 'infini' },
+  boutique: { lien: '#social', bouton: 'Aller à la boutique' },
+  collection: { lien: '#collection', bouton: 'Aller à la Collection' },
+  fusion: { lien: '#fusion', bouton: 'Aller à la Fusion' },
+  tournois: { lien: '#tournois', bouton: 'Aller aux Tournois' },
+  club: { lien: '#club', bouton: 'Aller à Mon Club' },
+  amis: { lien: '#amis', bouton: 'Combat entre amis' },
+  tutoriel: { lien: '#tutoriel', bouton: 'Aller au tutoriel' },
+};
+
+// Destination de chaque quête (le test vérifie qu'aucune n'est oubliée).
+const ALLER: Record<string, IdDestination> = {
+  'arene-lancer': 'carriere', 'gagner-1': 'entrainement', 'rapide-jouer': 'entrainement', booster: 'boutique', feintes: 'entrainement',
+  contres: 'entrainement', 'ench-jouer': 'enchainement', deck: 'collection', 'gagner-3': 'entrainement', nation: 'entrainement',
+  'points-20': 'entrainement', tombe: 'entrainement', 'rapide-10': 'entrainement', 'combos-3': 'entrainement', 'chaine-2': 'enchainement',
+  'souffle-gagne': 'entrainement', 'rival-1': 'infini', 'tenir-30': 'infini', 'auto-2': 'carriere', fusion: 'fusion', 'arene-2': 'carriere',
+  fort: 'fort', commune: 'entrainement', podium: 'tournois', tournoi: 'tournois', equipe: 'tournois', champion: 'carriere', 'en-ligne': 'amis',
+  infini: 'infini', 'ench-3': 'enchainement', 'infini-40': 'infini', 'serie-fort': 'fort',
+  'u-tutoriel': 'tutoriel', 'u-30-cartes': 'boutique', 'u-etoile': 'fusion', 'u-club': 'club', 'u-action-champion': 'fusion',
+  'u-4-combos': 'entrainement', 'u-rival-champion': 'infini', 'u-auto': 'carriere', 'u-ami': 'amis', 'u-club-plein': 'club',
+  'u-nation-10': 'club', 'u-nations': 'boutique', 'u-fragments': 'fusion', 'u-60-cartes': 'boutique', 'u-champion': 'boutique',
+  'u-style': 'fusion', 'u-120-cartes': 'boutique',
+};
+export const destinationQuete = (id: string) => (ALLER[id] ? DESTINATIONS[ALLER[id]] : null);
+
 export const QUETES: DefQuete[] = [
   // ----- Faciles -----
   { id: 'arene-lancer', difficulte: 'facile', niveauMin: 1, but: 1, texte: () => 'Lancer un combat en Carrière', avance: (ev) => (combat(ev)?.mode === 'arene' ? 1 : 0) },

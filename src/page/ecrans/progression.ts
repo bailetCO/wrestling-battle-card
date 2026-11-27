@@ -6,7 +6,7 @@ import { recompensesClub, noterBattuMain, adversaireAuto, nbExemplaires, niveauC
 import { portraitPersonnage } from '../portrait';
 import { jourDe } from '../club';
 import { payerInscription } from '../tournoi';
-import { changerQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from '../quetes';
+import { changerQuete, destinationQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from '../quetes';
 import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from '../histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from '../saison';
 import { PERSONNAGES, SCENES, scenesEnCours, varianteScene, type Personnage } from '../dialogues';
@@ -221,6 +221,7 @@ export function ecranQuetes(message = '') {
       <div><small class="q-diff">${NOM_DIFFICULTE[d.difficulte]}</small><b>${echap(d.texte(q.param))}</b>
         ${d.but > 1 ? `<p class="progres">${jauge([q.progres, d.but])} ${q.progres}/${d.but}</p>` : ''}
         <small class="gain">🎁 ${texteRecompense(d)}</small>
+        ${!q.faite && destinationQuete(q.id) ? `<button class="principal bouton-aller" data-aller-quete="${q.id}">${echap(destinationQuete(q.id)!.bouton)} →</button>` : ''}
         ${peutChanger ? `<button class="secondaire bouton-changer" data-changer="${i}" ${S.collection.dollars >= P ? '' : 'disabled'}>Changer cette quête (${P} $)</button>` : ''}
       </div></li>`;
   }).join('');
@@ -235,6 +236,17 @@ export function ecranQuetes(message = '') {
         Les quêtes uniques (★) ne reviennent jamais une fois réussies.</p></section>
     </main>`;
   activerReflets(app);
+  // « Aller à la quête » : l'écran où la faire, avec le bon réglage déjà choisi à l'Entraînement.
+  app.querySelectorAll<HTMLButtonElement>('[data-aller-quete]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const d = destinationQuete(b.dataset.allerQuete!);
+      if (!d) return;
+      if (d.reglage === 'fort') { S.collection.niveau = 'fort'; S.infiniChoisi = false; S.enchainementChoisi = false; sauver(S.collection); }
+      if (d.reglage === 'enchainement') { S.enchainementChoisi = true; S.infiniChoisi = false; }
+      if (d.reglage === 'infini') { S.infiniChoisi = true; S.enchainementChoisi = false; }
+      location.hash = d.lien;
+    }),
+  );
   app.querySelectorAll<HTMLButtonElement>('[data-changer]').forEach((b) =>
     b.addEventListener('click', () => {
       const erreur = changerQuete(S.collection, jour, Number(b.dataset.changer));

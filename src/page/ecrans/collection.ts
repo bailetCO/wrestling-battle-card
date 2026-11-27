@@ -137,14 +137,18 @@ export function groupesBase(): { titre: string; liste: DefLutteur[] }[] {
 export function ecranCollection() {
   S.partie = null;
   const groupes = groupesCollection().map(({ titre, liste, replie }) => {
-    const n = liste.filter((l) => possede(S.collection, l.id)).length;
+    // Les cartes secrètes (Darius, Cocoach) ne comptent pas dans le total : « 2/12 + 2 cartes secrètes ».
+    const speciales = liste.filter((l) => CARTES_SPECIALES.includes(l)).length;
+    const n = liste.filter((l) => possede(S.collection, l.id)).length - speciales;
+    const total = liste.length - speciales;
+    const secretes = speciales ? ` · ${speciales} secrète${speciales > 1 ? 's' : ''}` : '';
     // Les cartes possédées d'abord, celles à gagner ensuite (l'ordre du tri est gardé dans chaque partie).
     const aGagner = liste.filter((l) => !possede(S.collection, l.id));
     const triees = [...liste.filter((l) => possede(S.collection, l.id)), ...(replie ? [] : aGagner)];
     const cartes = triees.map((l) => miniCarteCollection(l)).join('');
     const bouton = !aGagner.length || titre === 'À gagner' ? ''
       : `<button class="lien voir-plus" data-voir="${titre}">${replie ? `Voir plus (${aGagner.length} à gagner)` : 'Voir moins'}</button>`;
-    return `<section class="groupe"><h2>${titre} <small>${n}/${liste.length}</small></h2><div class="grille-mini miniatures">${cartes}</div>${bouton}</section>`;
+    return `<section class="groupe"><h2>${titre} <small>${n}/${total}${secretes}</small></h2><div class="grille-mini miniatures">${cartes}</div>${bouton}</section>`;
   }).join('');
   const tris = TRIS.map((t) => `<button class="puce ${S.collection.tri === t.id ? 'actif' : ''}" data-tri="${t.id}" aria-pressed="${S.collection.tri === t.id}">${t.nom}</button>`).join('');
   app.innerHTML = `

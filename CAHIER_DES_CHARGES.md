@@ -355,6 +355,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Chaque jour (à minuit, heure du téléphone), 3 quêtes tirées parmi celles du niveau de compte : une facile, une moyenne, une difficile. Tant qu'il reste des quêtes uniques à faire pour son niveau, l'une d'elles remplace la quête facile. Une quête non finie disparaît à minuit.
 - Récompenses : facile 5 $ ; moyenne 10 $ + 1 médaille ; difficile 1 booster + 2 médailles ; les 3 quêtes du jour réussies : 1 booster rare en bonus. Les quêtes uniques ont leur propre récompense.
+- Bouton « Aller à la quête » (27/11/2026) : sous chaque quête pas encore faite, un bouton mène à l'écran où la faire (Carrière, Entraînement, boutique de Social, Collection, Fusion, Tournois, Mon Club, Combat entre amis, tutoriel). Pour les quêtes contre l'ordinateur fort, en format Enchaînement ou en durée infinie, l'Entraînement s'ouvre avec ce réglage déjà choisi. Le bloc « Quêtes du jour » du menu reste compact et ouvre l'écran des quêtes.
 - Changer une quête : une seule fois par jour, 5 $, contre une autre quête de même difficulté. Les quêtes uniques ne peuvent pas être changées.
 - Affichage : encart « Quêtes du jour » dans le menu (progression), écran « Quêtes du jour » (récompenses, changement, boosters à ouvrir), bulle quand une quête est réussie.
 - Quêtes répétables (niveau minimum) :
@@ -394,6 +395,12 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Illustrations de carte : définitives depuis le 27 novembre 2026, grand format (1024 × 1536, `public/cocoach/cartes/`). Leur bandeau de rareté imprimé en bas reste hors du cadre de la carte (cadrage sur le haut de l'image), pour ne pas doubler la rareté écrite par le jeu. Expressions : 512 × 512. Fiche personnage, planche de contrôle et anciennes images : `direction-artistique/cocoach/` (jamais affichées dans le jeu).
 - Le lutteur de test du mode développeur s'appelle désormais « Cocoach (test) ».
 - À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : elle contient d'anciennes images de Cocoach, à remplacer par celles-ci ; les cartes verticales ne doivent pas dessiner leur propre étiquette de rareté par-dessus le bandeau de Cocoach.
+
+### Cartes secrètes : présentation (27/11/2026)
+
+- Cartes « pleine illustration » (style des cartes « full art ») : sur les cartes de Darius et de Cocoach, l'illustration couvre toute la carte ; le nom, les statistiques, les actions et les déblocages passent par-dessus, sur des pavés sombres translucides pour rester lisibles. Images : `public/darius/carte-pleine.webp` et `public/cocoach/cartes/champion-pleine.webp` (sans le bandeau de rareté, qui passait sous les boutons).
+- Collection : le groupe Champions du Monde compte les 12 Champions à part et ajoute les cartes secrètes gagnées (« 2/12 · 2 secrètes ») ; une carte secrète non gagnée n'apparaît pas.
+- Emblème du style « Ceinture » (et des autres styles) des cartes Champion du Monde : plus transparent, pour ne plus cacher les chiffres.
 
 ### Carte secrète de Cocoach (27/11/2026)
 

@@ -18,6 +18,7 @@ export interface Apparence {
   image?: string;
   images?: Partial<Record<NiveauCarte, string>>; // une illustration par niveau de carte (passe devant `image`)
   cadrage?: string; // partie de l'image à garder quand elle est recadrée (object-position CSS)
+  pleine?: string; // carte « pleine illustration » (cartes secrètes) : l'image couvre toute la carte
 }
 
 const PEAU = { claire: '#f2cfae', mate: '#dcaa82', doree: '#c98f62', brune: '#91603f', foncee: '#64402a' };
@@ -48,14 +49,15 @@ export const APPARENCE: Record<string, Apparence> = {
   // (public/darius/ ; pour les changer, remplacer les fichiers, même nom).
   // Cocoach : illustrations définitives (public/cocoach/ ; pour les changer, remplacer les fichiers,
   // même nom, mêmes proportions ; fiche et planche de contrôle dans direction-artistique/cocoach/).
-  // Le rival prend l'illustration de son niveau ; la carte secrète, celle du Champion. Les images
+  // Le rival prend l'illustration de son niveau ; la carte secrète, celle du Champion en pleine
+  // illustration (champion-pleine : la même image, sans le bandeau imprimé du bas). Les images
   // portent leur bandeau de rareté tout en bas : le cadrage (haut de l'image) le laisse hors du cadre,
   // pour ne pas doubler la rareté déjà écrite par le jeu.
   'cocoach-rival': { ...COCOACH_BASE, images: CARTES_COCOACH, cadrage: '50% 10%' },
-  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 10%' },
+  cocoach: { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/champion.webp`, cadrage: '50% 10%', pleine: `${IMAGES}cocoach/cartes/champion-pleine.webp` },
   'cocoach-test': { ...COCOACH_BASE, image: `${IMAGES}cocoach/cartes/presentation.webp`, cadrage: '50% 10%' },
   'perso-darius': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/coach.webp` },
-  darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp` },
+  darius: { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'chauve', pilosite: 'barbe', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}darius/carte.webp`, pleine: `${IMAGES}darius/carte-pleine.webp` },
   'perso-cocoach': { peau: PEAU.claire, cheveux: CHEVEUX.brun, coiffure: 'crete', pilosite: 'bouc', casque: false, oreille: true, cicatrice: false, image: `${IMAGES}cocoach/expressions/neutre.webp` },
   usa: { peau: PEAU.claire, cheveux: CHEVEUX.blond, coiffure: 'ras', pilosite: 'aucune', casque: false, oreille: true, cicatrice: false },
   'usa-explosif': { peau: PEAU.brune, cheveux: CHEVEUX.noir, coiffure: 'crete', pilosite: 'aucune', casque: true, oreille: false, cicatrice: false },
