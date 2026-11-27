@@ -12,8 +12,8 @@ export const NOUVEAUTES: Nouveautes[] = [
     date: '2026-11-26',
     lignes: [
       'Bienvenue dans la bêta de Wrestling Battle Card ! Merci de tester le jeu.',
-      'Installe le jeu sur ton téléphone : bouton « Installer le jeu » en bas du menu.',
-      'Sauvegarde ta collection : bouton « Ma sauvegarde » en bas du menu, pour la retrouver si tu changes de téléphone.',
+      'Installe le jeu sur ton téléphone : bouton « Installer le jeu », sous « Plus » en bas du menu.',
+      'Sauvegarde ta collection : bouton « Ma sauvegarde », sous « Plus » en bas du menu, pour la retrouver si tu changes de téléphone.',
       'Les cartes sont encore dessinées provisoirement : les illustrations arrivent bientôt.',
     ],
   },
