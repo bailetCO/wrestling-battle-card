@@ -142,6 +142,13 @@ export function resume(e: EtatCombat): string {
   return [e.tourGlobal, a.score, b.score, Math.round(a.endurance * 10), Math.round(b.endurance * 10), a.periodesGagnees, b.periodesGagnees].join('.');
 }
 
+// Contrôle publié après n tours : « n|résumé ». Le nombre de tours permet de ne comparer que des
+// contrôles du même moment (l'ami publie son tour avant son contrôle : entre les deux, son contrôle
+// est encore celui du tour d'avant, ce qui n'est pas un désaccord).
+export const controle = (n: number, e: EtatCombat) => `${n}|${resume(e)}`;
+export const desaccordControle = (ckAmi: string | null | undefined, n: number, e: EtatCombat) =>
+  !!ckAmi && ckAmi.startsWith(`${n}|`) && ckAmi !== controle(n, e);
+
 // Hasard à part pour l'aperçu d'initiative : calculé par un seul téléphone,
 // il ne doit pas décaler le hasard commun du combat.
 const hasardApercu = (graine: number, t: number) => creerHasard((graine * 31 + t * 7919 + 1) >>> 0);
@@ -359,7 +366,16 @@ export class Duel {
     };
   }
 
+  // Un désaccord (triche, ou téléphones qui ne calculent pas pareil) reste affiché jusqu'à la fin
+  // de ce combat : sinon il disparaîtrait dès le tour suivant, avant même d'avoir été vu.
+  private desaccordDe: number | null = null;
+  private noterDesaccord(v: Vue) {
+    v.desaccord = true;
+    if (v.graine !== null) this.desaccordDe = v.graine;
+  }
+
   private emettre(v: Vue) {
+    if (v.graine !== null && v.graine === this.desaccordDe) v.desaccord = true;
     this.vue = v;
     for (const f of this.ecouteurs) f(v);
   }
@@ -514,11 +530,11 @@ export class Duel {
         n++;
       }
     } catch {
-      v.desaccord = true; // un historique incohérent : on s'arrête là
+      this.noterDesaccord(v); // un historique incohérent : on s'arrête là
     }
     v.etat = etat;
     v.tours = tours;
-    if (ami.ck && moi.ck && ami.h.length === moi.h.length && ami.ck !== moi.ck) v.desaccord = true;
+    if (ami.h.length === n && desaccordControle(ami.ck, n, etat)) this.noterDesaccord(v);
 
     // Abandon
     if (moi.ab || ami.ab) {
@@ -528,7 +544,7 @@ export class Duel {
     }
     if (etat.termine) {
       v.phase = 'fin';
-      if (moi.ck !== resume(etat) && moi.h.length === n) this.maj({ ck: resume(etat) });
+      if (moi.ck !== controle(n, etat) && moi.h.length === n) this.maj({ ck: controle(n, etat) });
       return this.emettre(v);
     }
     v.phase = 'combat';
@@ -541,7 +557,7 @@ export class Duel {
       return this.emettre(v);
     }
     if (moi.t !== t) {
-      this.maj({ t, eng: null, rev: null, ap: null, ck: n > 0 ? resume(etat) : null });
+      this.maj({ t, eng: null, rev: null, ap: null, ck: n > 0 ? controle(n, etat) : null });
       return;
     }
     const secret = this.secret && this.secret.t === t && this.secret.m === moi.m ? this.secret : null;
@@ -626,7 +642,7 @@ export class Duel {
         });
         return;
       }
-      if (!this.empreinteOk) v.desaccord = true;
+      if (!this.empreinteOk) this.noterDesaccord(v);
     }
     this.resoudre(etat, hasard, t, moi, amiRev.c, v, jouerT);
   }
@@ -651,7 +667,7 @@ export class Duel {
         return this.emettre(v);
       }
       // Choix impossible (action que la carte n'a pas, par exemple) : on s'arrête là, sans planter.
-      v.desaccord = true;
+      this.noterDesaccord(v);
       return this.emettre(v);
     }
     // Tour joué : je l'enregistre dans mon historique.

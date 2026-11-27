@@ -9,7 +9,7 @@ import { passerEtape } from '../src/page/histoire';
 import { NB_PALIERS, passerPalier } from '../src/page/saison';
 
 test('Cocoach (test) : meilleures statistiques, Champion du Monde, hors des 120 cartes', () => {
-  assert.equal(LUTTEUR_TEST.nom, 'Cocoach');
+  assert.equal(LUTTEUR_TEST.nom, 'Cocoach (test)'); // renommé le 27/11/2026 : la carte secrète s'appelle Cocoach
   assert.ok(!LUTTEURS.some((l) => l.id === ID_LUTTEUR_TEST));
   assert.equal(trouverLutteur(ID_LUTTEUR_TEST), LUTTEUR_TEST);
   for (const l of LUTTEURS) {

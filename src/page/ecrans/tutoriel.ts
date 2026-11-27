@@ -12,6 +12,7 @@ import { CARTES } from './collection';
 import { ecranCombat, lancerArene } from './combat';
 import { S, app, echap, enTete } from './commun';
 import { quete } from './progression';
+import { noterParcours } from './stats';
 
 // ---------- Règles et tutoriel ----------
 
@@ -113,6 +114,7 @@ export function ecranFinTutoriel() {
   S.collection.bonusTutoriel = true;
   sauver(S.collection);
   quete({ type: 'tutoriel' });
+  noterParcours('tutoriel_fini', '', true);
   // Premier vrai combat : le meilleur lutteur du joueur contre le premier adversaire de la Carrière.
   const adv = etapeArene(S.collection).adversaire;
   const premier = adv ? [...CARTES].filter((l) => possede(S.collection, l.id)).sort((x, y) => NIVEAUX.indexOf(niveauDe(y.id)) - NIVEAUX.indexOf(niveauDe(x.id)))[0] ?? null : null;

@@ -48,7 +48,8 @@ test('saison : interclub = 3 victoires, puis compétitions dans l\'ordre', () =>
   // JO : seulement l'or ; légendaire + 3 boosters rares.
   assert.equal(noterSaison(c, { type: 'competition', palier: 5, place: 2 }, h), null);
   const jo = noterSaison(c, { type: 'competition', palier: 5, place: 1 }, h)!;
-  assert.equal(jo.boosters.length, 6); // légendaire + 3 rares + 2 fois les cartes de fin de saison
+  assert.equal(jo.boosters.length, 7); // légendaire + 3 rares + carte de Cocoach + 2 fois les cartes de fin de saison
+  assert.deepEqual(jo.boosters[4].cartes, ['cocoach']); // 1re médaille d'or : la carte secrète de Cocoach
   assert.equal(jo.boosters[0].type, 'recompense');
   assert.equal(LUTTEURS.find((l) => l.id === jo.boosters[0].cartes[0])!.rarete, 'legendaire');
   assert.deepEqual(jo.boosters.slice(1, 4).map((b) => b.type), ['rare', 'rare', 'rare']);

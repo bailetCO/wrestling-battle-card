@@ -6,6 +6,7 @@ import {
   type ContexteBug, type Donnees, type Pratique,
 } from '../avis';
 import { deposer } from '../firebase';
+import { garderPratique } from '../stats';
 import type { Partie, RapportCombat } from '../partie';
 import { ouvrirFenetre } from './combat';
 import { S, app, echap } from './commun';
@@ -120,6 +121,7 @@ export function fenetreAvis() {
       prefere: coches('prefere'), difficile: coches('difficile'), difficileTexte: champ('difficileTexte'),
       lutteur: champ('lutteur'), sens: val('sens') as '' | 'fort' | 'faible', pratique: val('pratique') as Pratique | '', texte: champ('texte'),
     });
+    if (typeof d !== 'string') garderPratique(val('pratique')); // jointe aux statistiques anonymes
     envoyerEtConclure(f, d, 'Ton avis est bien arrivé. Il nous aide à rendre le jeu meilleur.', avisEnvoye);
   });
 }

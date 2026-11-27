@@ -6,6 +6,7 @@ import { DEV } from '../dev';
 import { NOUVEAUTES, VERSION, type Nouveautes } from '../nouveautes';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap } from './commun';
+import { fenetreConfidentialite } from './stats';
 
 const CLE_INVITATION = 'wbc-invitation';
 const CLE_VERSION = 'wbc-version-vue';
@@ -86,12 +87,14 @@ export const piedMenu = () => `
     <button class="lien" data-installer>Installer le jeu</button>
     <button class="lien" data-donner-avis>Donner mon avis</button>
     <button class="lien" data-signaler>Signaler un bug</button>
+    <button class="lien" data-confidentialite>Confidentialité</button>
   </footer>`;
 
 export function brancherPiedMenu() {
   app.querySelector('[data-nouveautes]')?.addEventListener('click', () => fenetreNouveautes(NOUVEAUTES.slice(0, 3), 'Les dernières nouveautés'));
   app.querySelector('[data-sauvegarde]')?.addEventListener('click', () => fenetreSauvegarde());
   app.querySelector('[data-installer]')?.addEventListener('click', () => fenetreInstaller());
+  app.querySelector('[data-confidentialite]')?.addEventListener('click', () => fenetreConfidentialite());
 }
 
 // Une fois après une mise à jour. Rend vrai si la fenêtre s'est ouverte.

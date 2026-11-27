@@ -34,13 +34,14 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/polices/` : la police des titres (Roboto Condensed, licence libre OFL), intégrée au jeu : rien n'est téléchargé chez Google.
 - `src/page/quetes.ts` : les quêtes journalières (tirage du jour, progression, récompenses, quêtes uniques), sans affichage.
 - `src/page/saison.ts` : la saison sportive (mode histoire 2 : interclub, régional, national, international, Mondiaux, JO), sans affichage.
-- `src/page/dialogues.ts` : les scènes de dialogue des modes histoire (Darius et Cocoach). Darius, le mentor, a aussi sa carte secrète, gagnée à la fin du mode histoire ; ses images sont dans `public/darius/`.
+- `src/page/dialogues.ts` : les scènes de dialogue des modes histoire (Darius et Cocoach). Darius, le mentor, a aussi sa carte secrète, gagnée à la fin du mode histoire ; ses images sont dans `public/darius/`. Cocoach (rival puis ami) a ses expressions et ses illustrations dans `public/cocoach/`, et sa carte secrète, gagnée avec la première médaille d'or aux JO.
 - `src/page/histoire.ts` : le mode histoire (18 étapes, validation dans l'ordre, récompenses), sans affichage.
 - `src/page/tournoi.ts` : les tournois (individuel à double tableau de 6 à 15 lutteurs, tournoi par équipe avec bonus de nation, ancienne compétition à 6, inscriptions et gains), sans affichage.
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.
 - `src/page/nouveautes.ts` : le numéro de version et le texte des nouveautés (à compléter à chaque mise à jour).
 - `src/page/beta.ts` et `src/page/ecrans/beta.ts` : la bêta (code d'invitation, nouveautés, export et import de la sauvegarde, installation sur le téléphone).
 - `src/page/firebase.ts` : la connexion anonyme à Firebase et les salles des combats entre amis (relais publics en secours).
+- `scripts/fusion.ts` (`npm run fusion`) : cartes de base contre cartes plus faibles montées au même niveau par fusion, avec un deck optimisé pour chaque carte.
 - `firebase/` : les règles de sécurité de Firebase, à coller dans la console (mode d'emploi dans `firebase/LISEZ-MOI.md`).
 - `public/` : icônes, vignette de partage, manifeste et copie hors ligne (`sw.js`) pour installer le jeu sur le téléphone.
 - Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `tournois`, `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.
