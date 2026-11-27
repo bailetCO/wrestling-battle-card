@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.9.0';
+export const VERSION = '0.10.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.10.0',
+    date: '2026-11-27',
+    lignes: [
+      'Nouveau : la Récompense du jour ! Reviens chaque jour pour remplir ton calendrier de 7 jours : des $, des boosters, et un booster rare le 7e jour.',
+      'Un jour manqué ne fait rien perdre : tu reprends où tu en étais.',
+      'Absent depuis une semaine ? Darius t\'attend avec un booster rare pour ton retour.',
+    ],
+  },
   {
     version: '0.9.0',
     date: '2026-11-27',

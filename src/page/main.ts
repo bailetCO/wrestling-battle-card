@@ -6,6 +6,7 @@ import { route } from './ecrans/navigation';
 import { chargerTournoi } from './ecrans/tournois';
 import { demarrerBeta } from './ecrans/beta';
 import { demarrerParrainage } from './ecrans/parrainage';
+import { demarrerQuotidien } from './ecrans/quotidien';
 import { demarrerAvis } from './ecrans/avis';
 import { demarrerStats } from './ecrans/stats';
 import { demarrerCompte } from './ecrans/compte';
@@ -15,6 +16,7 @@ import { brancherClics } from './son';
 
 // Démarrage : tournoi en cours relu, puis premier écran.
 demarrerBeta(); // code d'invitation, nouveautés, installation
+demarrerQuotidien(); // visite du jour, cadeau de retour après une longue absence
 demarrerParrainage(); // lien de parrainage (fait entrer dans la bêta), récompenses du parrain
 demarrerAvis(); // avis en attente d'envoi, rapport si la page plante
 demarrerStats(); // statistiques anonymes en attente d'envoi

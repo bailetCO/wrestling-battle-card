@@ -1,3 +1,4 @@
+import { bandeauQuotidien, brancherQuotidien, montrerRetour } from './quotidien';
 import { accueilFilleul } from './parrainage';
 import { verifierMiseAJour } from '../mise-a-jour';
 import { majPeriode, nomMois, programmerPublication } from '../classement';
@@ -142,6 +143,7 @@ export function ecranMenu() {
       <p class="compteur menu-stats">${compteur()}</p>
       ${DEV ? '<p class="note mode-dev">🛠 Mode développeur (retirer : ajouter ?nodev à l\'adresse)</p>' : ''}
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
+      ${bandeauQuotidien()}
       ${bandeauHistoire()}
       ${blocQuetes()}
       ${bandeauCompte()}
@@ -170,10 +172,12 @@ export function ecranMenu() {
   brancherPiedMenu();
   brancherAvis();
   brancherBandeauCompte(app);
+  brancherQuotidien(app);
   app.querySelector('[data-mon-compte]')?.addEventListener('click', () => fenetreCompte());
   window.scrollTo(0, 0);
   // Après une mise à jour, les nouveautés passent avant la scène de dialogue (montrée au retour au menu).
   if (montrerNouveautes()) return;
+  if (montrerRetour()) return;
   // Une fois : l'accord pour les statistiques anonymes.
   if (demanderAccord()) return;
   // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
