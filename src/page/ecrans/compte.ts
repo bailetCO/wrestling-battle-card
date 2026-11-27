@@ -232,4 +232,8 @@ export function brancherCompteExistant(racine: ParentNode) {
   racine.querySelector('[data-compte-existant]')?.addEventListener('click', () => fenetreCompte('', true));
 }
 
-export const indicateurCompte = () => (compteActuel() ? '<button class="lien petit etat-cloud" data-mon-compte>☁ Sauvegardé ✓</button>' : '');
+// Bouton « Mon compte » sous le pseudo, dans le menu (27/11/2026) : toujours visible. Connecté, il
+// montre l'état de la sauvegarde en ligne ; sinon il invite à protéger sa collection.
+export const indicateurCompte = () => (compteActuel()
+  ? '<button class="bouton-compte connecte" data-mon-compte>👤 Mon compte · <span class="etat-cloud">☁ Sauvegardé ✓</span></button>'
+  : '<button class="bouton-compte" data-mon-compte>👤 Mon compte · <span>non sauvegardé</span></button>');
