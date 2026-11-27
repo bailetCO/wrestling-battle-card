@@ -1570,3 +1570,8 @@ b.moi { color: #ff8a95; }
 .carte-choix:hover, .carte-choix:focus-visible { border-color: var(--orange); }
 .compte-existant { margin-top: 18px; font-size: .9rem; opacity: .9; text-align: center; }
 .compte-existant .lien { display: inline; font-weight: 700; }
+/* Bouton « Mon compte » sous le pseudo */
+.menu-coach .bouton-compte { justify-self: start; display: inline-block; margin-top: 6px; padding: 5px 12px; border: 1.5px solid #f2a33a; border-radius: 999px; background: rgba(242,163,58,.14); color: #fff; font: 800 13px/1.3 var(--police); cursor: pointer; white-space: nowrap; }
+.menu-coach .bouton-compte span { font-weight: 600; color: #ffd08a; }
+.menu-coach .bouton-compte.connecte { border-color: #6fd08a; background: rgba(111,208,138,.14); }
+.menu-coach .bouton-compte .etat-cloud { display: inline; margin: 0; color: #9be3a6; }

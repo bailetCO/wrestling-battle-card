@@ -126,10 +126,9 @@ export function ecranMenu() {
     <main class="menu">
       <header class="menu-tete">
         <span class="avatar" aria-hidden="true">${echap((S.collection.coach ?? '?').slice(0, 1).toUpperCase())}</span>
-        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(S.collection.coach ?? '')} ${pastilleNiveau(niveauCompte(S.collection))}${pastilleSaisons(S.collection.saison.terminees)}</b></span>
+        <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(S.collection.coach ?? '')} ${pastilleNiveau(niveauCompte(S.collection))}${pastilleSaisons(S.collection.saison.terminees)}</b>${indicateurCompte()}</span>
         <a class="lien petit" href="#pseudo">Modifier</a>
       </header>
-      ${indicateurCompte()}
       ${porteMonnaie()}
       <p class="compteur menu-stats">${compteur()}</p>
       ${DEV ? '<p class="note mode-dev">🛠 Mode développeur (retirer : ajouter ?nodev à l\'adresse)</p>' : ''}
