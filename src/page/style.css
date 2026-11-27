@@ -1071,6 +1071,7 @@ b.moi { color: #ff8a95; }
 }
 .menu-coach b .niv-compte { font-size: 13px; }
 .niveau.trois { grid-template-columns: repeat(3, 1fr); }
+.niveau.deux { grid-template-columns: repeat(2, 1fr); }
 .mort-subite { color: #ff5a3c; animation: faiblesse 1s ease-in-out infinite; }
 .case-rapide { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 6px 0; }
 .case-rapide input { width: 22px; height: 22px; accent-color: var(--orange); }
@@ -1523,3 +1524,14 @@ b.moi { color: #ff8a95; }
 .carte-l.pleine .cl-style, .carte-l.pleine .cl-stat-lib, .carte-l.pleine .cl-spe { color: #e3e9f7; }
 .carte-l.pleine .cl-actions li { background: rgba(16, 32, 70, .86); }
 .carte-l.pleine .cl-deblocages span { background: rgba(8, 14, 34, .8); }
+
+/* Pied du menu : liens regroupés derrière « Plus ». */
+.pied-plus { flex-basis: 100%; text-align: center; }
+.pied-plus summary {
+  list-style: none; cursor: pointer; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border: 2px solid var(--tapis-ligne); border-radius: 999px; font: 700 14px var(--police); color: var(--texte);
+}
+.pied-plus summary::-webkit-details-marker { display: none; }
+.pied-plus summary::after { content: '▾'; }
+.pied-plus[open] summary::after { content: '▴'; }
+.pied-liens { margin-top: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; }

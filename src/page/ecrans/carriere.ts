@@ -10,6 +10,7 @@ import { DEV } from '../dev';
 import { carteJoueur } from './accueil';
 import { CARTES, fenetreDeck } from './collection';
 import { boutonAuto, brancherStyle, encartRival, lancer, lancerArene, reglagesStyle } from './combat';
+import { fonctionVisible } from '../menu';
 import { S, app, choixNiveau, echap, enTete, niveauOrdi, nouvelleGraine, portrait } from './commun';
 import { NOM_NIVEAU, boutonTuto, brancherTutos, tutoAuto } from './tutos-courts';
 
@@ -33,14 +34,14 @@ export function ecranCombatMenu() {
         <p>Une seule période : victoire à 10 points d'écart, par tombé, ou aux points. Égalité à la fin : mort subite, le premier qui marque gagne. +1 médaille par victoire, sans booster.</p>
         <a class="principal lien-bouton" href="#rapide">S'entraîner contre l'ordinateur</a>
       </section>
-      <section class="bloc">
+      ${fonctionVisible(S.collection, 'amis') ? `<section class="bloc">
         <h2>En ligne</h2>
         <p>Affronte un ami sur son téléphone. Chaque victoire rapporte 2 médailles, et 2 boosters avec ta collection.</p>
         <a class="principal lien-bouton" href="#amis">Combat entre amis</a>
-      </section>
+      </section>` : ''}
       <section class="bloc tutos-courts">
         <h2>Tutoriels courts</h2>
-        <p class="note">Quelques écrans, puis une partie d'essai sans récompense, pour découvrir un style de jeu.</p>
+        <p class="note">Quelques écrans, puis une partie d'essai guidée, pour découvrir un style de jeu. D'autres tutoriels apparaissent au fil du mode histoire.</p>
         ${(Object.keys(TUTOS) as IdTuto[]).map((id) => boutonTuto(id)).join('')}
       </section>
     </main>`;
@@ -99,6 +100,9 @@ export function blocArene(): string {
 
 export function ecranArene(rapide = false) {
   S.partie = null;
+  // Format et durée pas encore ouverts par le mode histoire : on revient au réglage simple.
+  if (!fonctionVisible(S.collection, 'enchainement')) S.enchainementChoisi = false;
+  if (!fonctionVisible(S.collection, 'infini')) S.infiniChoisi = false;
   const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   // Adversaire du combat auto : connu en Carrière et contre Cocoach ; au hasard (parmi les battus à la main) sinon.
   const advListe: string | null = rapide ? (S.infiniChoisi ? ID_RIVAL : null) : S.bossChoisi ? adversairesDe(S.bossChoisi)[PAR_NATION - 1] : etapeArene(S.collection).adversaire ?? '';
@@ -115,7 +119,7 @@ export function ecranArene(rapide = false) {
     <main class="choix">
       ${rapide
         ? `${enTete('Entraînement', `Ordinateur ${niveauOrdi(S.collection.niveau)} · l'adversaire est tiré au hasard parmi les ${LUTTEURS.length} lutteurs.`, '#combat')}
-           <div class="marge">${choixNiveau(S.collection.niveau)}
+           <div class="marge">${choixNiveau(S.collection.niveau, fonctionVisible(S.collection, 'fort'))}
              ${reglagesStyle('solo', S.enchainementChoisi ? 'enchainement' : 'normal', S.infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé contre Cocoach']])}
              ${encartRival()}
              <div class="tutos-ligne">${boutonTuto('combos')}${boutonTuto('enchainement')}${boutonTuto('infini')}</div></div>`

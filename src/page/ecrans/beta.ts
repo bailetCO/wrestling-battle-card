@@ -79,15 +79,21 @@ export function ecranInvitation(message = '') {
 
 // ---------- Pied du menu ----------
 
+// Les liens sont regroupés derrière « Plus » (27/11/2026) : le menu reste simple pour un débutant.
 export const piedMenu = () => `
   <footer class="pied-menu">
     <span class="badge-beta">Bêta ${VERSION}</span>
-    <button class="lien" data-nouveautes>Nouveautés</button>
-    <button class="lien" data-sauvegarde>Ma sauvegarde</button>
-    <button class="lien" data-installer>Installer le jeu</button>
-    <button class="lien" data-donner-avis>Donner mon avis</button>
-    <button class="lien" data-signaler>Signaler un bug</button>
-    <button class="lien" data-confidentialite>Confidentialité</button>
+    <details class="pied-plus">
+      <summary>Plus</summary>
+      <div class="pied-liens">
+        <button class="lien" data-nouveautes>Nouveautés</button>
+        <button class="lien" data-sauvegarde>Ma sauvegarde</button>
+        <button class="lien" data-installer>Installer le jeu</button>
+        <button class="lien" data-donner-avis>Donner mon avis</button>
+        <button class="lien" data-signaler>Signaler un bug</button>
+        <button class="lien" data-confidentialite>Confidentialité</button>
+      </div>
+    </details>
   </footer>`;
 
 export function brancherPiedMenu() {

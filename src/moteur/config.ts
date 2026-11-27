@@ -401,7 +401,13 @@ export const REGLES = {
   // tours guidés) ; une partie d'essai gagnée rapporte un booster classique, une fois par tutoriel.
   tutoriel: { toursCombat: 6, enduranceEssai: 70 },
 
-  menu: { etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7, recompenses: 0 } },
+  // etapeFonction (27/11/2026) : les réglages et modes avancés apparaissent aussi à l'étape du mode
+  // histoire qui les présente (0 = étape 1) : ordinateur fort (étape 9), combat entre amis (10),
+  // tutoriel des combos (13), format Enchaînement (14), durée infinie (15). Tutoriels et quêtes suivent.
+  menu: {
+    etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, fusion: 7, recompenses: 0 },
+    etapeFonction: { fort: 8, amis: 9, combos: 12, enchainement: 13, infini: 14, equipe: 3 },
+  },
 
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
   // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.

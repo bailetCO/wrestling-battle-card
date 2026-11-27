@@ -127,10 +127,12 @@ export function enTete(titre: string, sous = '', retour = '#') {
 
 
 // Les 3 niveaux de l'ordinateur.
-export function choixNiveau(niv: Niveau): string {
+// avecFort : le niveau Fort n'apparaît qu'à l'étape du mode histoire qui le présente (sauf s'il est déjà choisi).
+export function choixNiveau(niv: Niveau, avecFort = true): string {
   const b = (n: Niveau, nom: string, sous: string) =>
     `<button class="${niv === n ? 'actif' : ''}" data-niveau="${n}" aria-pressed="${niv === n}">${nom}<small>${sous}</small></button>`;
-  return `<div class="niveau trois" role="group" aria-label="Niveau de l'ordinateur">
-    ${b('facile', 'Facile', 'Pour débuter')}${b('normal', 'Normal', 'Pour s\'entraîner')}${b('fort', 'Fort', 'Il lit ton jeu')}
+  const fort = avecFort || niv === 'fort';
+  return `<div class="niveau ${fort ? 'trois' : 'deux'}" role="group" aria-label="Niveau de l'ordinateur">
+    ${b('facile', 'Facile', 'Pour débuter')}${b('normal', 'Normal', 'Pour s\'entraîner')}${fort ? b('fort', 'Fort', 'Il lit ton jeu') : ''}
   </div>`;
 }

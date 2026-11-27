@@ -2,6 +2,7 @@
 
 import { ID_RIVAL, LUTTEURS, REGLES as R_, type EtatCombat, type IdAction, type Niveau } from '../../moteur';
 import { possede, sauver } from '../collection';
+import { tutoVisible } from '../menu';
 import { creerTournoiEquipe, creerIndividuel } from '../tournoi';
 import { TUTOS, defAdversaireEssai, defEssai, type IdTuto } from '../tutos';
 import { CARTES } from './collection';
@@ -12,7 +13,9 @@ import { ecranTournoiEnCours, ecranTournois, sauverTournoi } from './tournois';
 // ---------- Tutoriels courts (un par style de jeu) ----------
 
 // Bouton d'un tutoriel court ; grisé, avec la raison, si le style de jeu n'est pas encore accessible.
+// Caché tant que le mode histoire n'a pas ouvert le mode qu'il présente (27/11/2026).
 export function boutonTuto(id: IdTuto, note = true): string {
+  if (!tutoVisible(S.collection, id)) return '';
   const t = TUTOS[id];
   const verrou = t.verrou(S.collection);
   return `<button class="secondaire bouton-tuto" data-tuto="${id}" ${verrou ? 'disabled' : ''}>📘 Tutoriel : ${echap(t.titre)}</button>${verrou && note ? `<p class="note">🔒 ${echap(verrou)}</p>` : ''}`;
@@ -24,7 +27,7 @@ export function brancherTutos(racine: ParentNode = app) {
 
 // Ouvre un tutoriel court tout seul à la première visite d'un mode (une seule fois).
 export function tutoAuto(id: IdTuto) {
-  if (S.collection.tutosVus.includes(id) || TUTOS[id].verrou(S.collection) || S.tuto || S.essaiSolo) return;
+  if (S.collection.tutosVus.includes(id) || TUTOS[id].verrou(S.collection) || !tutoVisible(S.collection, id) || S.tuto || S.essaiSolo) return;
   if (document.querySelector('.voile, .scene-dialogue, .revelation')) return; // une scène est déjà ouverte : à la prochaine visite
   ouvrirTuto(id);
 }

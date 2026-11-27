@@ -1,6 +1,7 @@
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
 import { PRESENTATION_COCOACH } from '../portrait';
+import { fonctionVisible } from '../menu';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type Sequence, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
@@ -388,18 +389,22 @@ export function encartRival(): string {
 }
 
 // Réglages « Style de combat » : le format (normal ou Enchaînement) et la durée.
+// Le format Enchaînement et la durée infinie n'apparaissent qu'à l'étape du mode histoire qui les
+// présente (27/11/2026) ; un groupe réduit à un seul choix n'est pas affiché.
 export function reglagesStyle(nom: string, format: 'normal' | 'enchainement', duree: string, durees: [string, string, string][]): string {
   const choix = (groupe: string, valeur: string, actuel: string, titre: string, sous: string) => `
     <label class="choix-style"><input type="radio" name="${nom}-${groupe}" value="${valeur}" ${valeur === actuel ? 'checked' : ''}>
       <span><b>${titre}</b><small>${sous}</small></span></label>`;
+  const avecEnchainement = fonctionVisible(S.collection, 'enchainement');
+  const dureesOuvertes = durees.filter(([v]) => v !== 'infinie' || fonctionVisible(S.collection, 'infini'));
   return `
-    <fieldset class="style-combat"><legend>Format</legend>
+    ${avecEnchainement ? `<fieldset class="style-combat"><legend>Format</legend>
       ${choix('format', 'normal', format, 'Normal', 'Une action par tour')}
       ${choix('format', 'enchainement', format, 'Enchaînement', `Séquences de ${TAILLE_SEQUENCE} actions`)}
-    </fieldset>
-    <fieldset class="style-combat"><legend>Durée</legend>
-      ${durees.map(([v, t, sous]) => choix('duree', v, duree, t, sous)).join('')}
-    </fieldset>`;
+    </fieldset>` : ''}
+    ${dureesOuvertes.length > 1 ? `<fieldset class="style-combat"><legend>Durée</legend>
+      ${dureesOuvertes.map(([v, t, sous]) => choix('duree', v, duree, t, sous)).join('')}
+    </fieldset>` : ''}`;
 }
 
 export function brancherStyle(nom: string, changer: (cle: 'format' | 'duree', valeur: string) => void) {

@@ -64,7 +64,7 @@ function fenetreAccord() {
     <button class="principal" data-oui ${a.age15 ? '' : 'disabled'}>Oui, j'aide</button>
     <button class="secondaire" data-non>Non merci</button>
     <button class="lien" data-confidentialite>En savoir plus</button>
-    <p class="note">Tu peux changer d'avis à tout moment : « Confidentialité » en bas du menu.</p>`);
+    <p class="note">Tu peux changer d'avis à tout moment : « Confidentialité », sous « Plus » en bas du menu.</p>`);
   const age = f.querySelector<HTMLInputElement>('[data-age]')!;
   const oui = f.querySelector<HTMLButtonElement>('[data-oui]')!;
   age.addEventListener('change', () => { oui.disabled = !age.checked; });

@@ -4,6 +4,7 @@
 // Une quête non finie disparaît à minuit.
 
 import { CHAMPIONS, LUTTEURS, NATIONS, REGLES, creerHasard, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
+import { fonctionVisible, type IdFonction } from './menu';
 import {
   cartesPossedees, gagnerMedailles, gradeDe, nbExemplaires, nbStyles, niveauClub, niveauCompte, ouvrirBooster, placesClub,
   type Booster, type Collection,
@@ -189,8 +190,16 @@ function hasardDuJour(c: Collection, jour: string, sel = 0): Hasard {
   return creerHasard(x);
 }
 
+// Quêtes qui demandent un mode pas encore ouvert par le mode histoire : jamais tirées avant (27/11/2026).
+const FONCTION_QUETE: Record<string, IdFonction> = {
+  'ench-jouer': 'enchainement', 'chaine-2': 'enchainement', 'ench-3': 'enchainement',
+  'rival-1': 'infini', 'tenir-30': 'infini', infini: 'infini', 'infini-40': 'infini', 'u-rival-champion': 'infini',
+  fort: 'fort', 'serie-fort': 'fort', 'en-ligne': 'amis', 'u-ami': 'amis', equipe: 'equipe',
+};
+export const queteOuverte = (c: Collection, id: string) => !FONCTION_QUETE[id] || fonctionVisible(c, FONCTION_QUETE[id]);
+
 const disponibles = (c: Collection, d: Difficulte, exclus: string[]) =>
-  QUETES.filter((q) => q.difficulte === d && q.niveauMin <= niveauCompte(c) && !exclus.includes(q.id) && (d !== 'unique' || !c.quetes.uniques.includes(q.id)));
+  QUETES.filter((q) => q.difficulte === d && q.niveauMin <= niveauCompte(c) && !exclus.includes(q.id) && (d !== 'unique' || !c.quetes.uniques.includes(q.id)) && queteOuverte(c, q.id));
 
 function tirer(c: Collection, d: Difficulte, exclus: string[], h: Hasard): QueteDuJour | null {
   const pool = disponibles(c, d, exclus);
