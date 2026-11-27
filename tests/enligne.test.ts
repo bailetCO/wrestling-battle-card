@@ -268,12 +268,22 @@ for (const cas of ['une autre action de sa carte', 'une action que sa carte n\'a
     const vraie = salle('b');
     const deck = trouverLutteur('japon').actions.map((x) => coder({ action: x }));
     const absente = coder({ action: 'german_suplex' });
-    // Salle truquée : le choix dévoilé n'est pas celui qui a été envoyé en secret.
+    // Salle truquée : le choix dévoilé au 1er tour n'est pas celui qui a été envoyé en secret. Le
+    // tricheur ment partout : dans son dévoilement ET dans son historique de tours. (S'il ne mentait
+    // que dans le dévoilement, l'ami qui lit son historique, quand le tricheur a déjà joué le tour,
+    // jouerait la vraie action : rien à détecter, et le test échouait au hasard, 1 fois sur 6.)
+    // Selon l'ordre d'arrivée des messages, la triche est vue par l'empreinte (dévoilement) ou par le
+    // contrôle de l'état du combat (historique) : dans les deux cas, elle doit être détectée.
+    let fausse: number | null = null;
     const truquee: Salle = {
       ...vraie,
       publier(p) {
         const q = JSON.parse(JSON.stringify(p));
-        if (q.rev && q.t === 0) q.rev.c = cas === 'une autre action de sa carte' ? deck.find((x) => x !== q.rev.c) : absente;
+        if (q.rev && q.t === 0) {
+          fausse ??= cas === 'une autre action de sa carte' ? deck.find((x) => x !== q.rev.c)! : absente;
+          q.rev.c = fausse;
+        }
+        if (fausse !== null && Array.isArray(q.h) && q.h.length > 0) q.h[0] = fausse;
         vraie.publier(q);
       },
     };
