@@ -1,0 +1,10 @@
+rules_version = '2';
+// Firestore : avis et statistiques de la bêta (lots C et D de l'étape 6).
+// Pour l'instant tout est fermé ; les règles d'envoi arriveront avec les avis et les statistiques.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

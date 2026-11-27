@@ -16,6 +16,7 @@ const BONUS_PSEUDO: BonusPseudo[] = [
 // Appelé quand le joueur enregistre son pseudo. Majuscules et minuscules ne comptent pas.
 // Rend le texte à afficher si un bonus a été donné, sinon null.
 export function bonusDeTest(c: Collection, pseudo: string): string | null {
+  if (!DEV) return null; // bêta : réservé au mode développeur (?dev)
   const b = BONUS_PSEUDO.find((x) => x.pseudo.toLowerCase() === pseudo.trim().toLowerCase());
   if (!b) return null;
   c.medailles += b.medailles;
@@ -38,9 +39,9 @@ export function afficherBandeauTest(texte: string) {
   setTimeout(() => d.remove(), 4000);
 }
 
-// Outils de test visibles seulement pour le pseudo Coco (ou en mode développeur, ?dev).
-export const outilsTestVisibles = (pseudo: string | null) =>
-  DEV || (pseudo ?? '').trim().toLowerCase() === 'coco';
+// Outils de test visibles seulement en mode développeur (?dev) ; depuis la bêta, le pseudo Coco
+// ne suffit plus (n'importe quel testeur pourrait le choisir).
+export const outilsTestVisibles = (_pseudo: string | null) => DEV;
 
 // « Passer le combat et gagner » : le combat se termine tout de suite par une victoire par tombé.
 // L'écran de fin donne ensuite les récompenses habituelles d'une victoire.

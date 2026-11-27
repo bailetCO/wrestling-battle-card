@@ -1,6 +1,7 @@
 // Mon Club et Social (boutique, transferts, amis).
 
 import { CHAMPIONS, NATIONS, trouverLutteur, REGLES as R_, type DefLutteur, type NiveauCarte } from '../../moteur';
+import { salleEnLigne } from '../firebase';
 import { ADRESSE_PUBLIQUE, RELAIS, codeValide, nouveauCode, salleLocale, salleRelais } from '../enligne';
 import { NOM_RARETE, activerReflets } from '../carte';
 import { acheterBooster, acheterChampion, libererPlace, medaillesNiveauSuivant, niveauClub, placesClub, recruter, nbExemplaires, possede, sauver } from '../collection';
@@ -256,7 +257,7 @@ export function ecranSocial(message = '') {
 export function ouvrirEchange(code: string) {
   quitterEchange();
   const perso = relaisPerso();
-  const salle = acces() === 'local' && !perso ? salleLocale(`x${code}`) : salleRelais(`x${code}`, perso ? [perso] : RELAIS);
+  const salle = acces() === 'local' && !perso ? salleLocale(`x${code}`) : perso ? salleRelais(`x${code}`, [perso]) : salleEnLigne(`x${code}`, () => salleRelais(`x${code}`, RELAIS));
   S.codeEchange = code;
   S.echange = new Echange(salle, code, S.collection, () => sauver(S.collection));
   let signature = '';
@@ -292,7 +293,7 @@ export function ecranEchange(v: VueEchange, connecte: boolean) {
     <main class="sous-menu">
       ${enTete(`Transfert ${echap(S.codeEchange.toUpperCase())}`, '', '#social')}
       <p class="code-grand marge" aria-label="Code de la salle d'échange">${echap(S.codeEchange.toUpperCase())}</p>
-      <p class="marge">${!connecte ? 'Connexion au relais…' : v.amiPresent ? `<b class="ok">${echap(ami)} est dans la salle.</b>` : 'Envoie ce code à ton ami : dans Social, il touche « Rejoindre » et tape le code.'}</p>
+      <p class="marge">${!connecte ? 'Connexion…' : v.amiPresent ? `<b class="ok">${echap(ami)} est dans la salle.</b>` : 'Envoie ce code à ton ami : dans Social, il touche « Rejoindre » et tape le code.'}</p>
       ${dernier}
       <section class="bloc">
         <h2>${echap(ami)} propose</h2>

@@ -386,6 +386,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Mode histoire et saison : un bouton « ⏭ Passer à l'étape suivante (test) » / « Passer au palier suivant (test) » valide l'étape ou le palier en cours comme s'il était réussi, avec sa récompense et sa scène de dialogue, pour parcourir toute l'histoire.
 - Lutteur de test **Cocoach** : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
 - Collection, réglages de test : « +10 médailles », « +50 $ », mode test (toutes les cartes), ouvrir un booster.
+- Bonus du pseudo « Coco » (1000 $) et bouton « Passer le combat et gagner » : réservés au mode développeur (`?dev`) depuis la bêta (26/11/2026), car n'importe quel testeur pourrait choisir ce pseudo.
 
 ### Salle en ligne : retour d'un joueur
 
@@ -679,7 +680,9 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 
 - Le combat entre amis se joue sur la version ouverte à tous : https://bailetco.github.io/wrestling-battle-card/ (GitHub Pages, publiée automatiquement à chaque modification). Pas besoin de compte : il suffit du lien. La page sur claude.ai renvoie vers cette version.
 - Un joueur crée une salle et reçoit un code de 4 lettres ; son ami ouvre le même lien, touche « Combat entre amis » et tape le code.
-- Connexion : relais publics gratuits et sans compte (MQTT), deux à la fois pour plus de fiabilité. Solution provisoire, à remplacer par Firebase (au plus tard pour les comptes joueurs, étape 7). Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
+- Connexion (depuis le 26/11/2026, étape 6) : Firebase (Realtime Database, projet `wrestling-battle-card`, en Europe). Chaque téléphone se connecte de façon anonyme (identifiant tiré au hasard, sans nom ni e-mail) et écrit son état dans `salles/<code>/<identifiant>` ; il reçoit en direct l'état de l'ami. Les règles de sécurité (`firebase/database.rules.json`) : chacun n'écrit que sa place, avec l'heure du serveur, 30 000 caractères au plus ; une salle ne se lit qu'en connaissant son code ; la liste des salles est fermée. En quittant, chacun efface sa place ; un état sans signe de vie depuis 90 secondes est ignoré.
+- Secours : si Firebase ne répond pas en 8 secondes, ou si l'ami n'apparaît pas sur Firebase en 20 secondes, le jeu ouvre aussi les anciens relais publics gratuits (MQTT) et publie des deux côtés. Les relais publics ne sont pas privés : n'importe qui connaissant le code peut lire les échanges d'une salle (pas de donnée personnelle échangée).
+- Les échanges de lutteurs entre amis (Social) passent par les mêmes salles.
 - En créant la salle, l'hôte choisit le mode : « Cartes de base » (toutes les cartes, sans fusion, sans booster) ou « Avec nos collections » (chacun ses cartes et leurs niveaux, 2 boosters par victoire). Chacun utilise son deck personnalisé s'il en a un. Le pseudo de coach de chacun s'affiche chez l'autre.
 - Chaque tour : chacun choisit en secret et n'envoie d'abord qu'une empreinte de son choix ; les choix sont dévoilés quand les deux ont joué, ce qui empêche de changer d'avis après avoir vu l'action de l'autre.
 - Initiative : le téléphone du joueur qui ne l'a pas montre 2 actions possibles (dont la vraie) ; celui qui a l'initiative garde ou change son action. Pile ou face : le lutteur menacé annonce sur son téléphone.
