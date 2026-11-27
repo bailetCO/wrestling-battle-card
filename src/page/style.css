@@ -944,11 +944,11 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 /* Emblème du style, au premier plan : halo lumineux et transparence pour voir la carte dessous. */
 .cl-filigrane {
   position: absolute; left: 50%; top: 53%; width: 58%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  z-index: 3; pointer-events: none; opacity: .55;
+  z-index: 3; pointer-events: none; opacity: .3; /* discret : ne cache plus les chiffres (27/11/2026) */
   filter: drop-shadow(0 0 2px rgba(255, 255, 255, .9)) drop-shadow(0 0 14px rgba(255, 215, 106, .75)) drop-shadow(0 6px 10px rgba(0, 0, 0, .5));
   animation: embleme 4s ease-in-out infinite;
 }
-@keyframes embleme { 50% { opacity: .66; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 22px rgba(255, 215, 106, .95)) drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); } }
+@keyframes embleme { 50% { opacity: .4; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 22px rgba(255, 215, 106, .95)) drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); } }
 .carte-l[data-style="2"] .cl-filigrane { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 16px rgba(170, 160, 255, .8)) drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); }
 @media (prefers-reduced-motion: reduce) { .cl-filigrane { animation: none; } }
 
@@ -1503,3 +1503,22 @@ b.moi { color: #ff8a95; }
 .conf-texte a { color: var(--orange); }
 .conf-resultat .erreur { color: #ff8a8a; }
 .fenetre .principal:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---------- Carte « pleine illustration » (cartes secrètes : Darius, Cocoach) ----------
+   L'illustration couvre toute la carte ; les textes passent dessus, sur des pavés sombres
+   translucides pour rester lisibles (comme les cartes « full art »). */
+.carte-l.pleine .cl-interieur { overflow: hidden; background: #0b1530; }
+.carte-l.pleine .cl-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; z-index: 0; }
+.carte-l.pleine .cl-interieur::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 14, 34, .55) 0%, rgba(8, 14, 34, 0) 14%, rgba(8, 14, 34, 0) 42%, rgba(8, 14, 34, .78) 62%, rgba(8, 14, 34, .9) 100%);
+}
+.carte-l.pleine .cl-interieur > *:not(.cl-fond) { position: relative; z-index: 1; }
+.carte-l.pleine .cl-portrait { border: 0; background: transparent; aspect-ratio: 16 / 13; }
+.carte-l.pleine .cl-nom { text-shadow: 0 2px 6px rgba(0, 0, 0, .9), 0 0 2px #000; }
+.carte-l.pleine .cl-style, .carte-l.pleine .cl-stats, .carte-l.pleine .cl-spe {
+  background: rgba(8, 14, 34, .72); border-radius: 8px; padding: 4px 8px; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+}
+.carte-l.pleine .cl-style, .carte-l.pleine .cl-stat-lib, .carte-l.pleine .cl-spe { color: #e3e9f7; }
+.carte-l.pleine .cl-actions li { background: rgba(16, 32, 70, .86); }
+.carte-l.pleine .cl-deblocages span { background: rgba(8, 14, 34, .8); }

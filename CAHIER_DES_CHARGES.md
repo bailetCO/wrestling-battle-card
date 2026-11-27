@@ -395,6 +395,12 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Le lutteur de test du mode développeur s'appelle désormais « Cocoach (test) ».
 - À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : elle contient d'anciennes images de Cocoach, à remplacer par celles-ci ; les cartes verticales ne doivent pas dessiner leur propre étiquette de rareté par-dessus le bandeau de Cocoach.
 
+### Cartes secrètes : présentation (27/11/2026)
+
+- Cartes « pleine illustration » (style des cartes « full art ») : sur les cartes de Darius et de Cocoach, l'illustration couvre toute la carte ; le nom, les statistiques, les actions et les déblocages passent par-dessus, sur des pavés sombres translucides pour rester lisibles. Images : `public/darius/carte-pleine.webp` et `public/cocoach/cartes/champion-pleine.webp` (sans le bandeau de rareté, qui passait sous les boutons).
+- Collection : le groupe Champions du Monde compte les 12 Champions à part et ajoute les cartes secrètes gagnées (« 2/12 · 2 secrètes ») ; une carte secrète non gagnée n'apparaît pas.
+- Emblème du style « Ceinture » (et des autres styles) des cartes Champion du Monde : plus transparent, pour ne plus cacher les chiffres.
+
 ### Carte secrète de Cocoach (27/11/2026)
 
 - Easter egg : la carte **Cocoach**, Champion du Monde de naissance (style du rival : technicien des feintes et des ceintures, Europe ; endurance 60, force 175, récupération 44 % ; action de Champion : Changement de niveau). Différente du rival de la durée infinie et du lutteur de test.
