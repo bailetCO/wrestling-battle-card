@@ -393,6 +393,13 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Portrait de Darius : provisoire, découpé dans les illustrations ChatGPT de sa carte (`public/darius/coach.webp`) ; à remplacer par des portraits de coach faits exprès (buste, tenue de coach, quelques expressions), au même nom de fichier.
 - Scènes : une par étape (18), une quand le mode histoire est terminé (Darius offre sa carte), une à l'ouverture de la saison, une par palier de la saison (6) et une finale (champion olympique).
 
+### Moments à partager (27/11/2026)
+
+- À certains moments, un bouton « 📸 Partager » crée une **affiche façon manga** (format story, 1080 × 1920) : grand titre penché (« TOMBÉ ! », « LÉGENDAIRE ! »…), la carte du lutteur dans le cadre de sa rareté, une phrase sur l'exploit, « Coach <pseudo> », le nom et le lien du jeu.
+- Moments : victoire par **tombé** contre l'ordinateur ; **exploits** (nation battue en Carrière, Cocoach battu à un nouveau niveau, podium ou titre en tournoi individuel et dans la saison sportive, médaille d'or olympique) ; **carte légendaire** obtenue pour la première fois ; **carte secrète** (Darius, Cocoach) débloquée. Jamais pendant un tutoriel ou une partie d'essai.
+- Le bouton ouvre le menu de partage du téléphone (WhatsApp, Instagram, Messenger, SMS…) avec l'image et un texte prêt, suivi du **lien simple** du jeu (sans code d'invitation). Sans menu de partage (ordinateur), l'image est téléchargée.
+- Pas encore : le combat entre amis (son écran de fin est à part).
+
 ### Cocoach : expressions, rival puis ami (27/11/2026)
 
 - Caractère : compétiteur, taquin, stratège ; il défie le joueur et le pousse à se dépasser.

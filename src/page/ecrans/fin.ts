@@ -16,6 +16,8 @@ import { histoire, lancerInterclub, quete, queteCombat, saison } from './progres
 import { lancerEssai } from './tutos-courts';
 import { noterFinCombat } from './avis';
 import { noterParcours, noterStatsCombat } from './stats';
+import { boutonPartage, brancherPartage, type Moment } from '../partage';
+import { CARTES_SPECIALES } from '../../moteur';
 
 // ---------- Écran 3 : fin du combat ----------
 
@@ -27,6 +29,18 @@ export interface Paquet {
   boosters: Booster[];
   ouvert: boolean;
   sansRecap?: boolean; // pas de récapitulatif des cartes à la fin (récompenses des modes histoire)
+}
+
+// Moment à partager à l'ouverture d'un booster : une carte légendaire, ou une carte secrète
+// (Darius, Cocoach), obtenue pour la première fois.
+function momentCarte(id: string, nouvelle: boolean): Moment | null {
+  if (!nouvelle) return null;
+  const def = trouverLutteur(id);
+  const secrete = CARTES_SPECIALES.some((l) => l.id === id);
+  if (!secrete && def.rarete !== 'legendaire') return null;
+  return secrete
+    ? { titre: 'CARTE SECRÈTE !', sousTitre: `${def.nom} rejoint ma collection : la carte la plus rare du jeu`, def, coach: moiNom(), texte: `J'ai débloqué la carte secrète de ${def.nom} ! Viens jouer à Wrestling Battle Card :` }
+    : { titre: 'LÉGENDAIRE !', sousTitre: `${def.nom} (${def.origine}) rejoint ma collection`, def, coach: moiNom(), texte: `J'ai obtenu ${def.nom}, carte légendaire ! Viens jouer à Wrestling Battle Card :` };
 }
 
 export interface CarteTiree { id: string; nouvelle: boolean; booster: number }
@@ -180,6 +194,7 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
           <div class="rev-eclat" aria-hidden="true"></div>
           <span class="pastille ${c.nouvelle ? 'nouvelle' : 'nombre'}">${c.nouvelle ? 'Nouvelle !' : 'Double'}</span>
           ${carteHTML(def)}
+          ${momentCarte(c.id, c.nouvelle) ? boutonPartage() : ''}
         </div>`;
       aide = derniere ? (p.sansRecap ? 'Touche l\'écran pour terminer' : 'Touche l\'écran pour voir le récapitulatif') : 'Touche l\'écran pour la carte suivante';
     }
@@ -193,6 +208,7 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
       afficher();
     });
     activerReflets(el);
+    if (e.type === 'carte') brancherPartage(el, () => momentCarte(cartes[e.k].id, cartes[e.k].nouvelle));
     el.focus();
   };
   const suivant = () => {
@@ -212,6 +228,20 @@ export function revelerPaquet(p: Paquet, fin: () => void) {
     }
   });
   afficher();
+}
+
+// Moment à partager après un combat contre l'ordinateur : un exploit (nation battue, Cocoach battu à
+// un nouveau niveau), sinon une victoire par tombé. Jamais pendant un tutoriel ou une partie d'essai.
+function momentFin(): Moment | null {
+  if (!S.partie || S.tuto || S.essaiSolo) return null;
+  const e = S.partie.etat;
+  const h = e.joueurs[S.HUMAIN];
+  const o = e.joueurs[S.ORDI];
+  if (e.vainqueur !== S.HUMAIN) return null;
+  const x = S.exploitFin ?? (e.finPar === 'tombe'
+    ? { titre: 'TOMBÉ !', sousTitre: `${h.def.nom} fait tomber ${o.def.nom}`, texte: `J'ai fait tomber ${o.def.nom} avec ${h.def.nom} !` }
+    : null);
+  return x ? { ...x, def: h.def, coach: moiNom(), texte: `${x.texte} Viens jouer à Wrestling Battle Card :` } : null;
 }
 
 export function ecranFin() {
@@ -236,6 +266,7 @@ export function ecranFin() {
   const enArene = !e.rapide && S.areneCtx !== null;
   if (!S.recompenseDonnee) {
     S.recompenseDonnee = true;
+    S.exploitFin = null;
     const x = S.bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
     if (S.bonusCeCombat) S.collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     S.bonusCeCombat = false;
@@ -254,6 +285,7 @@ export function ecranFin() {
           const gradeAvant = S.collection.rival.grade;
           const m = rivalBattu(S.collection);
           S.rivalFin = { ...m, gradeAvant };
+          if (m.monte) S.exploitFin = { titre: 'COCOACH BATTU !', sousTitre: `Cocoach, mon rival, monte au niveau ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, m.grade)]}`, texte: `J'ai battu Cocoach, mon rival : il passe au niveau ${NOM_RARETE[niveauCarte(COCOACH_RIVAL, m.grade)]} !` };
           histoire({ type: 'rival', grade: gradeAvant, auto: S.combatEnAuto });
           if (m.monte) for (let k = 0; k < R_.rival.boostersRaresParMontee; k++) boostersRival.push(ouvrirBooster(S.collection, Math.random, 'rare'));
         }
@@ -270,6 +302,7 @@ export function ecranFin() {
       if (r.nationBattue) histoire({ type: 'nationArene' });
       quete({ type: 'arene' });
       if (r.nationBattue) championBattu = true;
+      if (r.nationBattue) S.exploitFin = { titre: 'NATION BATTUE !', sousTitre: `${r.nationBattue.nom} battue en Carrière, champion compris`, texte: `J'ai battu toute la nation ${r.nationBattue.nom} en Carrière !` };
       const titre = r.nationBattue ? `${r.nationBattue.nom} battue${r.carteBoss ? ' et carte du boss gagnée' : ''}` : bonus ? 'Victoire · bonus du tutoriel' : 'Victoire';
       S.paquetSolo = { titre, boosters: r.boosters, ouvert: false };
     } else {
@@ -305,6 +338,7 @@ export function ecranFin() {
       </section>
       ${booster}
       <div class="fin-boutons">
+        ${momentFin() ? boutonPartage('Partager ce moment') : ''}
         ${enArene && gagne && S.areneCtx?.type === 'progression'
           ? `${etapeArene(S.collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>${boutonAuto('data-suivant-arene-auto', '', etapeArene(S.collection).adversaire ?? '')}` : ''}`
           : `<button class="principal" data-revanche>${S.interclubEnCours ? 'Combat interclub suivant' : enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto', '', S.interclubEnCours ? null : idOrdi)}`}
@@ -314,6 +348,7 @@ export function ecranFin() {
       <section class="journal"><h2>Le combat tour par tour</h2>${anciens}</section>
     </main>`;
   activerReflets(app);
+  brancherPartage(app, momentFin);
   const ctx = S.areneCtx;
   const revanche = (auto: boolean) => {
     if (S.essaiSolo) return lancerEssai(S.essaiSolo);

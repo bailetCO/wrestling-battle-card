@@ -42,6 +42,7 @@ export const S = {
   bonusEnCours: (null) as { moi: number; lui: number } | null, // bonus de nation du combat (tournoi par équipe) // combat du joueur dans un tournoi (clé du combat ou n° du duel)
   bonusCeCombat: (false) as boolean, // combat d'arène qui suit le tutoriel : boosters doublés
   paquetSolo: (null) as Paquet | null,
+  exploitFin: (null) as { titre: string; sousTitre: string; texte: string } | null, // exploit du dernier combat, à partager
   messageSolo: ('') as string,
   paquetBoite: (null) as Paquet | null, // récompense en cours d'ouverture (la première de la boîte)
   essaiSolo: (null) as IdTuto | null, // partie d'essai d'un tutoriel court en cours

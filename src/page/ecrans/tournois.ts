@@ -14,6 +14,8 @@ import { S, app, echap, enTete, nouvelleGraine, portrait } from './commun';
 import { revelerPaquet, sectionPaquet } from './fin';
 import { histoire, quete, queteCombat, saison } from './progression';
 import { boutonTuto, brancherTutos, tutoAuto } from './tutos-courts';
+import { boutonPartage, brancherPartage, type Moment } from '../partage';
+import { PALIERS } from '../saison';
 
 // ---------- Tournois ----------
 
@@ -192,6 +194,21 @@ export function sectionFinTournoi(t: Tournoi, titre: string): string {
 
 export const textePlace = (pl: number) => (pl === 1 ? '🥇' : pl === 2 ? '🥈' : pl === 3 ? '🥉' : `${pl}e`);
 
+// Moment à partager en fin de tournoi individuel (ou de compétition de la saison) : un podium, un
+// titre, et la médaille d'or olympique. Pas pour un tournoi d'essai.
+function momentTournoi(t: Individuel, place: number | undefined): Moment | null {
+  if (!place || place > 3 || ('essai' in t && t.essai)) return null;
+  const nom = t.nom ?? 'Tournoi individuel';
+  const jo = t.saison !== undefined && PALIERS[t.saison]?.nom === 'Jeux Olympiques';
+  const titre = jo && place === 1 ? 'OR OLYMPIQUE !' : place === 1 ? 'CHAMPION !' : 'PODIUM !';
+  const rang = place === 1 ? '1er' : `${place}e`;
+  const def = defJoueur(trouverLutteur(t.lutteurs[0]));
+  return {
+    titre, sousTitre: `${rang} : ${nom}`, def, coach: S.collection.coach || 'Toi',
+    texte: `${jo && place === 1 ? 'Médaille d\'or aux Jeux Olympiques' : `${rang} au ${nom}`} avec ${def.nom} ! Viens jouer à Wrestling Battle Card :`,
+  };
+}
+
 export function ecranIndividuel(t: Individuel) {
   const prochain = avancerI(t, (i) => defTournoi(t.lutteurs[i], i === 0), S.collection.niveau);
   sauverTournoi();
@@ -220,6 +237,7 @@ export function ecranIndividuel(t: Individuel) {
       ${enTete(t.nom ?? 'Tournoi individuel', fin ? `Terminé : tu finis ${maPlace === 1 ? '1er' : `${maPlace}e`}` : `${t.lutteurs.length} lutteurs · ton lutteur : ${echap(trouverLutteur(t.lutteurs[0]).nom)}`, '#tournois')}
       ${m ? `<section class="bloc prochain-combat"><h2>${echap(nomMatch(m))}</h2><p>${nom(0)} contre ${nom(adversaire)}</p><button class="principal" data-combattre>Combattre</button>${boutonAuto('data-combattre-auto', '', t.lutteurs[adversaire!])}</section>` : ''}
       ${fin ? sectionFinTournoi(t, maPlace === 1 ? 'Tournoi individuel gagné' : 'Tournoi individuel') : ''}
+      ${fin && momentTournoi(t, maPlace) ? `<div class="marge">${boutonPartage('Partager ce moment')}</div>` : ''}
       ${classement}
       <section class="bloc tableau-tournoi"><h2>Tableau principal</h2>
         ${ex.length ? `<p class="note">Exempté${ex.length > 1 ? 's' : ''} du premier tour : ${ex.map(nom).join(', ')}</p>` : ''}
@@ -231,6 +249,7 @@ export function ecranIndividuel(t: Individuel) {
       ${fin ? '<button class="principal marge" data-terminer>Terminer</button>' : '<button class="lien marge" data-abandonner-tournoi>Abandonner le tournoi</button>'}
     </main>`;
   activerReflets(app);
+  brancherPartage(app, () => momentTournoi(t, maPlace));
   app.querySelector('[data-combattre]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.lutteurs[0], t.lutteurs[adversaire!]));
   app.querySelector('[data-combattre-auto]')?.addEventListener('click', () => lancerCombatTournoi(prochain!, t.lutteurs[0], t.lutteurs[adversaire!], true));
   brancherFinTournoi();

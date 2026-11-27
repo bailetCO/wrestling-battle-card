@@ -37,6 +37,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/dialogues.ts` : les scènes de dialogue des modes histoire (Darius et Cocoach). Darius, le mentor, a aussi sa carte secrète, gagnée à la fin du mode histoire ; ses images sont dans `public/darius/`. Cocoach (rival puis ami) a ses expressions et ses illustrations dans `public/cocoach/` (fiche, planche de contrôle et anciennes images : `direction-artistique/cocoach/`), et sa carte secrète, gagnée avec la première médaille d'or aux JO.
 - `src/page/histoire.ts` : le mode histoire (18 étapes, validation dans l'ordre, récompenses), sans affichage.
 - `src/page/tournoi.ts` : les tournois (individuel à double tableau de 6 à 15 lutteurs, tournoi par équipe avec bonus de nation, ancienne compétition à 6, inscriptions et gains), sans affichage.
+- `src/page/partage.ts` : les moments à partager (affiche façon manga dessinée à la volée, menu de partage du téléphone).
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.
 - `src/page/nouveautes.ts` : le numéro de version et le texte des nouveautés (à compléter à chaque mise à jour).
 - `src/page/beta.ts` et `src/page/ecrans/beta.ts` : la bêta (code d'invitation, nouveautés, export et import de la sauvegarde, installation sur le téléphone).
