@@ -4,10 +4,12 @@
 
 import { collectionEnLigne, compteActuel, connexionEmail, connexionGoogle, creerCompteEmail, decision, deconnexion, ecrireEnLigne, lireEnLigne, messageErreur, motDePasseOublie, programmerEnregistrement, resumeDe, surEtatSauvegarde, type Resume, type SauvegardeEnLigne } from '../compte';
 import { exporterSauvegarde } from '../beta';
+import { accorderInvitation, invitationOk } from './beta';
 import { sauver, surSauvegarde } from '../collection';
 import { FIREBASE } from '../firebase';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, echap } from './commun';
+import { annoncer } from './progression';
 import { route } from './navigation';
 
 const CLE_SYNCHRO = 'wbc-compte-synchro'; // code de la dernière sauvegarde envoyée ou reprise
@@ -29,9 +31,10 @@ export function demarrerCompte() {
 }
 
 // Compare la sauvegarde du téléphone et celle du compte. `connexion` : juste après s'être connecté.
-async function synchroniser(connexion: boolean) {
+async function synchroniser(connexion: boolean, dejaLu?: SauvegardeEnLigne | null) {
   let enLigne: SauvegardeEnLigne | null;
-  try { enLigne = await lireEnLigne(); } catch { return; } // hors ligne : on réessaiera au prochain lancement
+  if (dejaLu !== undefined) enLigne = dejaLu;
+  else try { enLigne = await lireEnLigne(); } catch { return; } // hors ligne : on réessaiera au prochain lancement
   const local = await exporterSauvegarde(S.collection);
   const d = await decision(S.collection, enLigne);
   if (d === 'identiques') return noterSynchro(local);
@@ -72,11 +75,15 @@ function fenetreChoix(enLigne: SauvegardeEnLigne) {
 
 // ---------- Fenêtre « Mon compte » ----------
 
-export function fenetreCompte(message = '') {
+// `retour` : le joueur ouvre le jeu sur un nouvel appareil et a déjà un compte (écran du code
+// d'invitation ou du pseudo) : seulement « se connecter », pas de création de compte.
+let modeRetour = false;
+export function fenetreCompte(message = '', retour = false) {
+  modeRetour = retour;
   const compte = compteActuel();
   if (compte) {
     const f = ouvrirFenetre(`
-      <h2>Mon compte</h2>
+      <h2>${retour ? 'Retrouver mon compte' : 'Mon compte'}</h2>
       ${message ? `<p class="succes">${echap(message)}</p>` : ''}
       <p>Connecté avec ${compte.fournisseur === 'google.com' ? 'Google' : 'ton e-mail'} : <b>${echap(compte.email)}</b></p>
       <p class="etat-cloud">☁ Ta collection est sauvegardée en ligne automatiquement.</p>
@@ -90,24 +97,24 @@ export function fenetreCompte(message = '') {
     return;
   }
   const f = ouvrirFenetre(`
-    <h2>Mon compte</h2>
+    <h2>${retour ? 'Retrouver mon compte' : 'Mon compte'}</h2>
     ${message ? `<p class="erreur">${echap(message)}</p>` : ''}
-    <p>Crée un compte gratuit pour <b>ne jamais perdre ta collection</b> et la retrouver sur tous tes appareils. Elle sera sauvegardée en ligne automatiquement.</p>
+    ${retour ? '<p>Connecte-toi avec ton compte pour <b>retrouver ta collection</b>, ton pseudo et ta progression.</p>' : '<p>Crée un compte gratuit pour <b>ne jamais perdre ta collection</b> et la retrouver sur tous tes appareils. Elle sera sauvegardée en ligne automatiquement.</p>'}
     ${FIREBASE.googleClientId ? '<div class="bouton-google" aria-label="Continuer avec Google"></div><p class="separateur"><span>ou</span></p>' : ''}
     <form class="form-compte" novalidate>
-      <div class="onglets-compte" role="tablist">
+      ${retour ? '' : `<div class="onglets-compte" role="tablist">
         <button type="button" class="actif" data-mode="creer" role="tab" aria-selected="true">Créer un compte</button>
         <button type="button" data-mode="connexion" role="tab" aria-selected="false">J'ai déjà un compte</button>
-      </div>
+      </div>`}
       <label>E-mail<input type="email" name="email" autocomplete="email" required></label>
-      <label>Mot de passe<input type="password" name="mdp" autocomplete="new-password" minlength="6" required><small>6 caractères au moins</small></label>
-      <button class="principal" type="submit" data-valider>Créer mon compte</button>
-      <button class="lien" type="button" data-oubli hidden>Mot de passe oublié ?</button>
+      <label>Mot de passe<input type="password" name="mdp" autocomplete="${retour ? 'current' : 'new'}-password" minlength="6" required>${retour ? '' : '<small>6 caractères au moins</small>'}</label>
+      <button class="principal" type="submit" data-valider>${retour ? 'Me connecter' : 'Créer mon compte'}</button>
+      <button class="lien" type="button" data-oubli${retour ? '' : ' hidden'}>Mot de passe oublié ?</button>
       <p class="etat-compte" role="status"></p>
     </form>
     <p class="note">Ton e-mail sert seulement à te connecter. Il n'est jamais montré aux autres joueurs.</p>
     <button class="lien" data-fermer>Fermer</button>`, true);
-  let mode: 'creer' | 'connexion' = 'creer';
+  let mode: 'creer' | 'connexion' = retour ? 'connexion' : 'creer';
   const form = f.querySelector<HTMLFormElement>('.form-compte')!;
   const etat = (t: string, erreur = false) => { const p = f.querySelector('.etat-compte')!; p.textContent = t; p.className = `etat-compte ${erreur ? 'erreur' : ''}`; };
   f.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => b.addEventListener('click', () => {
@@ -143,11 +150,31 @@ export function fenetreCompte(message = '') {
 }
 
 async function apresConnexion(message: string) {
+  if (modeRetour) return retrouverCollection();
   fermerFenetre();
   await synchroniser(true);
   if (document.querySelector('.voile')) return; // le joueur choisit sa sauvegarde
   route(); // le menu affiche maintenant « Sauvegardé »
   fenetreCompte(message.trim() || 'Connecté !');
+}
+
+// Connexion depuis un nouvel appareil : on reprend la collection du compte. Un compte qui a une
+// sauvegarde prouve que le joueur a déjà été invité : plus besoin du code d'invitation.
+async function retrouverCollection() {
+  let enLigne: SauvegardeEnLigne | null;
+  try { enLigne = await lireEnLigne(); } catch { return fenetreCompte('Connexion impossible pour le moment. Vérifie ta connexion internet et réessaie.', true); }
+  if (!enLigne?.code) {
+    // Compte sans sauvegarde : on n'y envoie rien de ce téléphone vide.
+    const suite = invitationOk() ? 'Choisis ton pseudo pour commencer : ta collection y sera sauvegardée.' : 'Entre ton code d\'invitation pour commencer.';
+    fermerFenetre();
+    return fenetreCompte(`Ce compte n'a pas encore de collection. ${suite}`);
+  }
+  fermerFenetre();
+  accorderInvitation();
+  await synchroniser(true, enLigne);
+  if (document.querySelector('.voile')) return; // deux sauvegardes : le joueur choisit
+  route();
+  if (S.collection.coach) annoncer(`Bon retour, Coach ${S.collection.coach} !`, '#', 'Ta collection est de retour sur cet appareil.');
 }
 
 // ---------- Bouton « Continuer avec Google » (Google Identity Services) ----------
@@ -199,4 +226,10 @@ export function brancherBandeauCompte(racine: ParentNode) {
 }
 
 // Petit indicateur dans l'en-tête du menu.
+// « J'ai déjà un compte » sur les premiers écrans (code d'invitation, pseudo) d'un nouvel appareil.
+export const lienCompteExistant = () => '<p class="compte-existant">Déjà joué sur un autre téléphone ou navigateur ? <button class="lien" type="button" data-compte-existant>J\'ai déjà un compte</button></p>';
+export function brancherCompteExistant(racine: ParentNode) {
+  racine.querySelector('[data-compte-existant]')?.addEventListener('click', () => fenetreCompte('', true));
+}
+
 export const indicateurCompte = () => (compteActuel() ? '<button class="lien petit etat-cloud" data-mon-compte>☁ Sauvegardé ✓</button>' : '');

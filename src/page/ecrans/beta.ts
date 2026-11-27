@@ -7,7 +7,7 @@ import { NOUVEAUTES, VERSION, type Nouveautes } from '../nouveautes';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap } from './commun';
 import { fenetreConfidentialite } from './stats';
-import { fenetreCompte } from './compte';
+import { brancherCompteExistant, fenetreCompte, lienCompteExistant } from './compte';
 import { compteActuel } from '../compte';
 
 const CLE_INVITATION = 'wbc-invitation';
@@ -47,6 +47,11 @@ export function demarrerBeta() {
 }
 
 export const invitationOk = () => invitationAccordee;
+// Un joueur qui retrouve son compte (avec une collection) a déjà été invité.
+export function accorderInvitation() {
+  ecrire(CLE_INVITATION, '1');
+  invitationAccordee = true;
+}
 
 // ---------- Code d'invitation ----------
 
@@ -65,8 +70,10 @@ export function ecranInvitation(message = '') {
           <button class="principal" type="submit">Entrer</button>
         </form>
         <p class="note">Pas encore de code ? Le jeu ouvrira bientôt à tous.</p>
+        ${lienCompteExistant()}
       </section>
     </main>`;
+  brancherCompteExistant(app);
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const v = app.querySelector<HTMLInputElement>('#invitation')!.value;

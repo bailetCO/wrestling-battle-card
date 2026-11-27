@@ -6,7 +6,8 @@ import { afficherBandeauTest, bonusDeTest } from '../test';
 import { cartesPossedees, niveauCompte, niveauClub, placesClub, deckDe, defPossede, etoilesDe, fusionPrete, gradeDe, nbDoubles, nbEtoiles, nbExemplaires, sauver, verifierPseudo, styleDe } from '../collection';
 import { PALIERS, saisonFinie, saisonOuverte } from '../saison';
 import { DEV } from '../dev';
-import { bandeauCompte, brancherBandeauCompte, fenetreCompte, indicateurCompte } from './compte';
+import { bandeauCompte, brancherBandeauCompte, brancherCompteExistant, fenetreCompte, indicateurCompte, lienCompteExistant } from './compte';
+import { compteActuel } from '../compte';
 import { tuileNouvelle, tuileVisible, type IdTuile } from '../menu';
 import { connecter, oublierSession, sessionLigne } from './amis';
 import { brancherPiedMenu, montrerNouveautes, piedMenu } from './beta';
@@ -80,9 +81,10 @@ export function ecranAccueil(message = '') {
           <p class="erreur" role="alert">${echap(message)}</p>
           <button class="principal" type="submit">${S.collection.coach ? 'Enregistrer' : 'Entrer dans le jeu'}</button>
         </form>
-        ${S.collection.coach ? '<a class="lien" href="#">Annuler</a>' : ''}
+        ${S.collection.coach ? '<a class="lien" href="#">Annuler</a>' : compteActuel() ? '' : lienCompteExistant()}
       </section>
     </main>`;
+  brancherCompteExistant(app);
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const v = app.querySelector<HTMLInputElement>('#pseudo')!.value.trim();

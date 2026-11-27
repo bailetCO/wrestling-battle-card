@@ -105,13 +105,13 @@ export function recompenseClub() {
 }
 
 // Bulle d'annonce ; elle mène à la boîte à récompenses.
-export function annoncer(titre: string, lien = '#recompenses') {
+export function annoncer(titre: string, lien = '#recompenses', sousTitre = 'Touche ici pour ta récompense') {
   document.querySelector('.bulle-histoire')?.remove();
   const b = document.createElement('a');
   b.className = 'bulle-histoire';
   b.href = lien;
   b.setAttribute('role', 'status');
-  b.innerHTML = `<b>${echap(titre)}</b><span>Touche ici pour ta récompense</span>`;
+  b.innerHTML = `<b>${echap(titre)}</b><span>${echap(sousTitre)}</span>`;
   document.body.append(b);
   b.addEventListener('click', () => b.remove());
   setTimeout(() => b.remove(), 7000);

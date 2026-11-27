@@ -1568,3 +1568,5 @@ b.moi { color: #ff8a95; }
 .carte-choix b { font: 800 18px var(--police); }
 .carte-choix small { color: var(--doux); }
 .carte-choix:hover, .carte-choix:focus-visible { border-color: var(--orange); }
+.compte-existant { margin-top: 18px; font-size: .9rem; opacity: .9; text-align: center; }
+.compte-existant .lien { display: inline; font-weight: 700; }
