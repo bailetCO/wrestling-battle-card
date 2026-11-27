@@ -401,7 +401,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - **Première médaille d'or aux JO** : la carte, avec **4 étoiles** posées au hasard sur 4 actions différentes (−1 au coût de chacune), tirées une fois pour toutes.
 - **Chaque médaille d'or aux JO suivants** : un exemplaire de plus, qui sert de double pour la fusion (étoiles et styles de carte, règles habituelles : 5 doubles par étoile, 3 étoiles au plus par action).
 - Jamais dans les boosters, l'arène, la boutique, les fins de saison ni les quêtes. Jouable partout ; visible dans la collection (groupe Champions du Monde) une fois gagnée.
-- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 65,8 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %).
+- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 65,8 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %) ; remesuré après la règle de priorité du combo et le rééquilibrage de l'étape 6 : 65,1 %.
 
 ### Carte secrète de Darius (27/11/2026)
 
@@ -409,7 +409,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Gagnée **uniquement** en terminant le mode histoire (étape 18), en plus de la légendaire offerte. Jamais dans les boosters, l'arène, la boutique, les fins de saison ni les quêtes. Un seul exemplaire.
 - Elle arrive avec **2 étoiles**, posées au hasard sur 2 de ses actions différentes (−1 au coût de chacune), tirées une fois pour toutes le jour où on la gagne.
 - Jouable partout (carrière, entraînement, tournois, Mon Club, combat entre amis). Elle n'apparaît dans la collection (groupe Champions du Monde) qu'une fois gagnée.
-- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 64,9 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %).
+- Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 64,9 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %) ; remesuré après la règle de priorité du combo et le rééquilibrage de l'étape 6 : 67,0 % (toujours dans la fourchette, près du haut).
 - Illustration provisoire : `public/darius/carte.webp`, recadrée dans son illustration Champion du Monde.
 - À faire lors de la fusion de la branche graphique (`integration-graphique-v1`) : la carte épique `usa-7` y porte le nom « Darius Westrell » et utilise ses images. Il faudra lui donner un autre nom et d'autres images, pour qu'il n'y ait qu'un seul Darius.
 
