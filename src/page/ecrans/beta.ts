@@ -3,6 +3,7 @@
 import { codeInvitationValide, exporterSauvegarde, importerSauvegarde, nouveautesAMontrer } from '../beta';
 import { cartesPossedees, sauver, type Collection } from '../collection';
 import { DEV } from '../dev';
+import { partieAnnulee } from '../mise-a-jour';
 import { NOUVEAUTES, VERSION, type Nouveautes } from '../nouveautes';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap } from './commun';
@@ -115,23 +116,29 @@ export function brancherPiedMenu() {
 }
 
 // Une fois après une mise à jour. Rend vrai si la fenêtre s'est ouverte.
+let annulee: boolean | null = null; // partie arrêtée par une mise à jour (lu une fois au lancement)
 export function montrerNouveautes(): boolean {
+  annulee ??= partieAnnulee();
   const liste = nouveautesAMontrer(lire(CLE_VERSION) ?? '0.0.0');
   // Une autre fenêtre est déjà ouverte : on les montrera au prochain passage par le menu.
-  if (liste.length && document.querySelector('.voile, .scene-dialogue, .revelation')) return false;
+  if ((liste.length || annulee) && document.querySelector('.voile, .scene-dialogue, .revelation')) return false;
   ecrire(CLE_VERSION, VERSION);
-  if (!liste.length) return false;
-  fenetreNouveautes(liste, 'Quoi de neuf ?');
+  const message = annulee ? 'Le jeu vient d\'être mis à jour : ta partie en cours a été arrêtée (ni gagnée ni perdue). Tu peux la relancer.' : '';
+  annulee = false;
+  if (!liste.length && !message) return false;
+  if (!liste.length) fenetreNouveautes([], 'Mise à jour', message);
+  else fenetreNouveautes(liste, 'Quoi de neuf ?', message);
   return true;
 }
 
 // Typographie française : pas de retour à la ligne avant « ! ? : ; » ni après « .
 const insecables = (t: string) => t.replace(/ ([!?:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
 
-function fenetreNouveautes(liste: Nouveautes[], titre: string) {
+function fenetreNouveautes(liste: Nouveautes[], titre: string, message = '') {
   const date = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   ouvrirFenetre(`
     <h2>${titre}</h2>
+    ${message ? `<p class="maj-annulee">⚠️ ${insecables(echap(message))}</p>` : ''}
     ${liste.map((n) => `<h3 class="nv-version">Version ${echap(n.version)} <small>${date(n.date)}</small></h3>
       <ul class="nv-liste">${n.lignes.map((l) => `<li>${insecables(echap(l))}</li>`).join('')}</ul>`).join('')}
     <button class="principal" data-fermer>C'est parti</button>`, true);

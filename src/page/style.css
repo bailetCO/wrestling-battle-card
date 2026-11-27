@@ -1604,3 +1604,4 @@ b.moi { color: #ff8a95; }
 .choix-pays { display: grid; gap: 4px; margin: 10px 0; font-weight: 700; }
 .choix-pays select { padding: 9px; border-radius: 10px; background: var(--nuit, #0b1a36); color: var(--texte); border: 1.5px solid rgba(255,255,255,.25); font: inherit; }
 .classement-compte .principal { margin-top: 8px; }
+.maj-annulee { padding: 10px 12px; border-radius: 10px; background: rgba(242,163,58,.15); border: 1.5px solid var(--orange); }
