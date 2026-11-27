@@ -1535,3 +1535,11 @@ b.moi { color: #ff8a95; }
 .pied-plus summary::after { content: '▾'; }
 .pied-plus[open] summary::after { content: '▴'; }
 .pied-liens { margin-top: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; }
+
+/* Bouton « Partager » (moments à partager). */
+.bouton-partage { display: block; width: 100%; margin-top: 8px; }
+.rev-carte .bouton-partage {
+  position: fixed; z-index: 30; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  width: auto; margin: 0; padding: 12px 24px; white-space: nowrap;
+  background: var(--orange); color: var(--encre); border-color: var(--encre); box-shadow: 3px 3px 0 var(--encre), 0 0 24px rgba(255, 215, 106, .6);
+}
