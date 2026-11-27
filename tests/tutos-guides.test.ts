@@ -88,7 +88,7 @@ test('les tutoriels de tournoi et du combat entre amis ne sont pas guidés', () 
 test('booster de partie d\'essai : la liste des tutoriels déjà récompensés est gardée par la sauvegarde', async () => {
   const { depuisSauvegarde, nouvelleCollection } = await import('../src/page/collection');
   const c = nouvelleCollection();
-  assert.deepEqual(c.essaisGagnes, []);
+  assert.equal(c.essaisGagnes.length, 0); // (deepEqual avec [] réduirait le type à « jamais »)
   c.essaisGagnes.push('combos');
   assert.deepEqual(depuisSauvegarde(JSON.parse(JSON.stringify(c))).essaisGagnes, ['combos']);
   assert.deepEqual(depuisSauvegarde({ version: 2, coach: 'Ancien' }).essaisGagnes, []); // ancienne sauvegarde
