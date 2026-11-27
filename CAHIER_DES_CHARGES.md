@@ -355,6 +355,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Chaque jour (à minuit, heure du téléphone), 3 quêtes tirées parmi celles du niveau de compte : une facile, une moyenne, une difficile. Tant qu'il reste des quêtes uniques à faire pour son niveau, l'une d'elles remplace la quête facile. Une quête non finie disparaît à minuit.
 - Récompenses : facile 5 $ ; moyenne 10 $ + 1 médaille ; difficile 1 booster + 2 médailles ; les 3 quêtes du jour réussies : 1 booster rare en bonus. Les quêtes uniques ont leur propre récompense.
+- Bouton « Aller à la quête » (27/11/2026) : sous chaque quête pas encore faite, un bouton mène à l'écran où la faire (Carrière, Entraînement, boutique de Social, Collection, Fusion, Tournois, Mon Club, Combat entre amis, tutoriel). Pour les quêtes contre l'ordinateur fort, en format Enchaînement ou en durée infinie, l'Entraînement s'ouvre avec ce réglage déjà choisi. Le bloc « Quêtes du jour » du menu reste compact et ouvre l'écran des quêtes.
 - Changer une quête : une seule fois par jour, 5 $, contre une autre quête de même difficulté. Les quêtes uniques ne peuvent pas être changées.
 - Affichage : encart « Quêtes du jour » dans le menu (progression), écran « Quêtes du jour » (récompenses, changement, boosters à ouvrir), bulle quand une quête est réussie.
 - Quêtes répétables (niveau minimum) :
