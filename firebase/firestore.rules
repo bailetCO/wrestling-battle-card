@@ -1,6 +1,6 @@
 rules_version = '2';
 // Firestore : avis, signalements de bug et statistiques anonymes de la bêta (étape 6, lots C et D),
-// sauvegarde en ligne des comptes joueurs (comptes/<joueur>) et classement mensuel (classements/<mois>/joueurs/<joueur>).
+// sauvegarde en ligne des comptes joueurs (comptes/<joueur>) classement mensuel (classements/<mois>/joueurs/<joueur>) et parrainage (parrainages, amities).
 // Les joueurs (connexion anonyme) déposent ; ils ne peuvent lire et effacer que leurs propres
 // envois (bouton « Supprimer mes données »). Corentin lit tout depuis la console Firebase.
 // Chaque envoi met à jour limites/<joueur> à l'heure du serveur (anti-spam) :
@@ -126,6 +126,28 @@ service cloud.firestore {
         && (nouveau().jour > resource.data.jour || nouveau().pointsJour >= resource.data.pointsJour)
         && nouveau().points - resource.data.points
            <= nouveau().pointsJour + 80 * (nouveau().jour - resource.data.jour) - resource.data.pointsJour;
+    }
+
+    // Parrainage (27/11/2026). parrainages/<filleul> : un nouveau joueur, connecté avec un vrai compte
+    // (Google ou e-mail), désigne son parrain une seule fois, pour toujours (ni modification ni effacement).
+    // amities/<joueur>_<ami> : un joueur qui a ouvert le lien d'un ami le prévient (sans récompense).
+    // Lecture par tout joueur connecté (le parrain cherche les fiches qui le nomment).
+    match /parrainages/{joueur} {
+      allow read: if connecte();
+      allow create: if connecte() && request.auth.uid == joueur
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.data.keys().hasOnly(['parrain', 'idCoach', 'pseudo', 'cree'])
+        && texte('parrain', 40) && texte('idCoach', 40) && texte('pseudo', 16)
+        && request.resource.data.parrain != request.resource.data.idCoach
+        && request.resource.data.cree == request.time;
+    }
+    match /amities/{id} {
+      allow read: if connecte();
+      allow create: if connecte() && id == request.auth.uid + '_' + request.resource.data.vers
+        && request.resource.data.keys().hasOnly(['vers', 'idCoach', 'pseudo', 'cree'])
+        && texte('vers', 40) && texte('idCoach', 40) && texte('pseudo', 16)
+        && request.resource.data.vers != request.resource.data.idCoach
+        && request.resource.data.cree == request.time;
     }
 
     match /{document=**} {

@@ -1605,3 +1605,9 @@ b.moi { color: #ff8a95; }
 .choix-pays select { padding: 9px; border-radius: 10px; background: var(--nuit, #0b1a36); color: var(--texte); border: 1.5px solid rgba(255,255,255,.25); font: inherit; }
 .classement-compte .principal { margin-top: 8px; }
 .maj-annulee { padding: 10px 12px; border-radius: 10px; background: rgba(242,163,58,.15); border: 1.5px solid var(--orange); }
+/* Parrainage (27/11/2026) */
+.accueil-parrain { padding: 10px 12px; border-radius: 12px; background: rgba(255,215,106,.14); border: 1.5px solid #ffd76a; text-align: left; }
+.invitation h2 { margin: 0; }
+.invitation-classement { margin-top: 14px; }
+.invitation-classement .bloc { margin: 0; }
+.fenetre .invitation { margin: 0; }
