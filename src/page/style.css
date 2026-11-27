@@ -1543,3 +1543,30 @@ b.moi { color: #ff8a95; }
   width: auto; margin: 0; padding: 12px 24px; white-space: nowrap;
   background: var(--orange); color: var(--encre); border-color: var(--encre); box-shadow: 3px 3px 0 var(--encre), 0 0 24px rgba(255, 215, 106, .6);
 }
+
+/* ---------- Compte joueur ---------- */
+.bandeau-compte { margin: 0 16px 14px; padding: 12px 14px; border-radius: 14px; border: 2px solid #7fd18b; background: rgba(127, 209, 139, .12); }
+.bandeau-compte p { margin: 0 0 8px; }
+.bc-boutons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.etat-cloud { display: block; margin: -4px 16px 10px; font-size: 13px; color: #9be3a6; text-decoration: none; }
+.fenetre .etat-cloud { margin: 0 0 8px; }
+.form-compte { display: grid; gap: 10px; margin: 8px 0; text-align: left; }
+.form-compte label { display: grid; gap: 4px; font-weight: 700; }
+.form-compte input { font: inherit; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--tapis-ligne); background: #0b1530; color: var(--texte); }
+.form-compte small { font-weight: 400; color: var(--doux); }
+.onglets-compte { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.onglets-compte button { padding: 8px; border-radius: 10px; border: 2px solid var(--tapis-ligne); background: transparent; color: var(--doux); font: 700 14px var(--police); }
+.onglets-compte button.actif { border-color: var(--orange); color: var(--texte); background: rgba(242, 163, 58, .15); }
+.etat-compte { min-height: 1.2em; margin: 0; font-size: 14px; }
+.etat-compte.erreur, .fenetre .erreur { color: #ff8a7a; }
+.fenetre .succes { color: #9be3a6; font-weight: 700; }
+.bouton-google { display: flex; justify-content: center; min-height: 44px; margin: 10px 0; }
+.separateur { display: flex; align-items: center; gap: 10px; color: var(--doux); margin: 6px 0; }
+.separateur::before, .separateur::after { content: ''; flex: 1; border-top: 1px solid var(--tapis-ligne); }
+.choix-sauvegardes { display: grid; gap: 10px; margin-top: 10px; }
+.carte-choix { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--tapis-ligne); background: #13244a; color: var(--texte); }
+.carte-choix b { font: 800 18px var(--police); }
+.carte-choix small { color: var(--doux); }
+.carte-choix:hover, .carte-choix:focus-visible { border-color: var(--orange); }
+.compte-existant { margin-top: 18px; font-size: .9rem; opacity: .9; text-align: center; }
+.compte-existant .lien { display: inline; font-weight: 700; }

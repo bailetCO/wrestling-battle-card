@@ -6,6 +6,8 @@ import { afficherBandeauTest, bonusDeTest } from '../test';
 import { cartesPossedees, niveauCompte, niveauClub, placesClub, deckDe, defPossede, etoilesDe, fusionPrete, gradeDe, nbDoubles, nbEtoiles, nbExemplaires, sauver, verifierPseudo, styleDe } from '../collection';
 import { PALIERS, saisonFinie, saisonOuverte } from '../saison';
 import { DEV } from '../dev';
+import { bandeauCompte, brancherBandeauCompte, brancherCompteExistant, fenetreCompte, indicateurCompte, lienCompteExistant } from './compte';
+import { compteActuel } from '../compte';
 import { tuileNouvelle, tuileVisible, type IdTuile } from '../menu';
 import { connecter, oublierSession, sessionLigne } from './amis';
 import { brancherPiedMenu, montrerNouveautes, piedMenu } from './beta';
@@ -79,9 +81,10 @@ export function ecranAccueil(message = '') {
           <p class="erreur" role="alert">${echap(message)}</p>
           <button class="principal" type="submit">${S.collection.coach ? 'Enregistrer' : 'Entrer dans le jeu'}</button>
         </form>
-        ${S.collection.coach ? '<a class="lien" href="#">Annuler</a>' : ''}
+        ${S.collection.coach ? '<a class="lien" href="#">Annuler</a>' : compteActuel() ? '' : lienCompteExistant()}
       </section>
     </main>`;
+  brancherCompteExistant(app);
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const v = app.querySelector<HTMLInputElement>('#pseudo')!.value.trim();
@@ -126,12 +129,14 @@ export function ecranMenu() {
         <span class="menu-coach"><small>Coach · niveau de compte</small><b>${echap(S.collection.coach ?? '')} ${pastilleNiveau(niveauCompte(S.collection))}${pastilleSaisons(S.collection.saison.terminees)}</b></span>
         <a class="lien petit" href="#pseudo">Modifier</a>
       </header>
+      ${indicateurCompte()}
       ${porteMonnaie()}
       <p class="compteur menu-stats">${compteur()}</p>
       ${DEV ? '<p class="note mode-dev">🛠 Mode développeur (retirer : ajouter ?nodev à l\'adresse)</p>' : ''}
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
       ${bandeauHistoire()}
       ${blocQuetes()}
+      ${bandeauCompte()}
       ${bandeauAvis()}
       <nav class="tuiles" aria-label="Menu principal">
         ${tuile('combat', 'Combat', 'Carrière et entraînement contre l\'ordinateur, ou en ligne contre un ami', '#combat')}
@@ -155,6 +160,8 @@ export function ecranMenu() {
   });
   brancherPiedMenu();
   brancherAvis();
+  brancherBandeauCompte(app);
+  app.querySelector('[data-mon-compte]')?.addEventListener('click', () => fenetreCompte());
   window.scrollTo(0, 0);
   // Après une mise à jour, les nouveautés passent avant la scène de dialogue (montrée au retour au menu).
   if (montrerNouveautes()) return;

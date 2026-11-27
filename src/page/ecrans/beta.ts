@@ -7,6 +7,8 @@ import { NOUVEAUTES, VERSION, type Nouveautes } from '../nouveautes';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap } from './commun';
 import { fenetreConfidentialite } from './stats';
+import { brancherCompteExistant, fenetreCompte, lienCompteExistant } from './compte';
+import { compteActuel } from '../compte';
 
 const CLE_INVITATION = 'wbc-invitation';
 const CLE_VERSION = 'wbc-version-vue';
@@ -45,6 +47,11 @@ export function demarrerBeta() {
 }
 
 export const invitationOk = () => invitationAccordee;
+// Un joueur qui retrouve son compte (avec une collection) a déjà été invité.
+export function accorderInvitation() {
+  ecrire(CLE_INVITATION, '1');
+  invitationAccordee = true;
+}
 
 // ---------- Code d'invitation ----------
 
@@ -63,8 +70,10 @@ export function ecranInvitation(message = '') {
           <button class="principal" type="submit">Entrer</button>
         </form>
         <p class="note">Pas encore de code ? Le jeu ouvrira bientôt à tous.</p>
+        ${lienCompteExistant()}
       </section>
     </main>`;
+  brancherCompteExistant(app);
   app.querySelector('form')!.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const v = app.querySelector<HTMLInputElement>('#invitation')!.value;
@@ -86,6 +95,7 @@ export const piedMenu = () => `
     <details class="pied-plus">
       <summary>Plus</summary>
       <div class="pied-liens">
+        <button class="lien" data-compte>Mon compte</button>
         <button class="lien" data-nouveautes>Nouveautés</button>
         <button class="lien" data-sauvegarde>Ma sauvegarde</button>
         <button class="lien" data-installer>Installer le jeu</button>
@@ -99,6 +109,7 @@ export const piedMenu = () => `
 export function brancherPiedMenu() {
   app.querySelector('[data-nouveautes]')?.addEventListener('click', () => fenetreNouveautes(NOUVEAUTES.slice(0, 3), 'Les dernières nouveautés'));
   app.querySelector('[data-sauvegarde]')?.addEventListener('click', () => fenetreSauvegarde());
+  app.querySelector('[data-compte]')?.addEventListener('click', () => fenetreCompte());
   app.querySelector('[data-installer]')?.addEventListener('click', () => fenetreInstaller());
   app.querySelector('[data-confidentialite]')?.addEventListener('click', () => fenetreConfidentialite());
 }
@@ -133,7 +144,10 @@ const resume = (c: Collection) => `coach ${echap(c.coach ?? 'sans nom')}, ${cart
 function fenetreSauvegarde() {
   const f = ouvrirFenetre(`
     <h2>Ma sauvegarde</h2>
-    <p>Ta collection est gardée dans ce navigateur. Si tu vides l'historique ou changes de téléphone, elle est perdue. Garde un code de sauvegarde en lieu sûr (message à toi-même, notes, e-mail).</p>
+    ${compteActuel() ? '<p class="succes">☁ Tu es connecté à ton compte : ta collection est sauvegardée en ligne automatiquement.</p>' : `<p>Ta collection est gardée dans ce navigateur. Si tu vides l'historique ou changes de téléphone, elle est perdue.</p>
+    <p><b>Le plus simple :</b> crée un compte, elle sera sauvegardée en ligne automatiquement.</p>
+    <button class="principal" data-ouvrir-compte>Créer un compte</button>
+    <p class="note">Sinon, garde un code de sauvegarde en lieu sûr (message à toi-même, notes, e-mail).</p>`}
     <h3>Exporter</h3>
     <button class="principal" data-creer>Créer mon code de sauvegarde</button>
     <div class="sv-export" hidden>
@@ -153,6 +167,7 @@ function fenetreSauvegarde() {
     <div class="sv-import" role="status"></div>
     <button class="lien" data-fermer>Fermer</button>`, true);
   const q = <T extends HTMLElement>(s: string) => f.querySelector<T>(s)!;
+  f.querySelector('[data-ouvrir-compte]')?.addEventListener('click', () => fenetreCompte());
   const etat = (t: string) => { q('.sv-etat').textContent = t; };
   let code = '';
   q('[data-creer]').addEventListener('click', async () => {

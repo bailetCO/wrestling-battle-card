@@ -1,5 +1,6 @@
 rules_version = '2';
-// Firestore : avis, signalements de bug et statistiques anonymes de la bêta (étape 6, lots C et D).
+// Firestore : avis, signalements de bug et statistiques anonymes de la bêta (étape 6, lots C et D),
+// et sauvegarde en ligne des comptes joueurs (comptes/<joueur>).
 // Les joueurs (connexion anonyme) déposent ; ils ne peuvent lire et effacer que leurs propres
 // envois (bouton « Supprimer mes données »). Corentin lit tout depuis la console Firebase.
 // Chaque envoi met à jour limites/<joueur> à l'heure du serveur (anti-spam) :
@@ -78,6 +79,21 @@ service cloud.firestore {
             && (!('stats' in resource.data) || request.time > resource.data.stats + duration.value(30, 's')))
         );
       allow read, delete: if connecte() && request.auth.uid == joueur;
+    }
+
+    // Comptes joueurs (27/11/2026) : la sauvegarde de la collection, comptes/<identifiant>.
+    // Seul le propriétaire, connecté à un vrai compte (Google ou e-mail, pas anonyme), la lit et l'écrit.
+    match /comptes/{joueur} {
+      function proprietaire() {
+        return connecte() && request.auth.uid == joueur && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      }
+      allow read, delete: if proprietaire();
+      allow create, update: if proprietaire()
+        && request.resource.data.keys().hasOnly(['code', 'cartes', 'medailles', 'victoires', 'etape', 'coach', 'maj'])
+        && request.resource.data.code is string && request.resource.data.code.size() <= 400000
+        && texte('coach', 40) && entier('cartes', 0, 1000) && entier('medailles', 0, 100000000)
+        && entier('victoires', 0, 100000000) && entier('etape', 0, 1000)
+        && request.resource.data.maj == request.time;
     }
 
     match /{document=**} {

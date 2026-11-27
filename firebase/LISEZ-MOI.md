@@ -13,6 +13,18 @@ après chaque modification.
   Avis et signalements de bug (`avis`) : dépôt seulement, champs et tailles contrôlés, un envoi
   par minute et par joueur (fiche `limites/<joueur>`, heure du serveur). Personne ne lit depuis le jeu :
   Corentin les lit dans la console (Firestore Database, onglet Données).
+  Comptes joueurs (`comptes/<joueur>`) : la sauvegarde de la collection ; seul son propriétaire,
+  connecté avec Google ou un e-mail (pas en anonyme), la lit et l'écrit.
+
+## Comptes joueurs : réglages à faire une fois dans la console Firebase
+
+1. Authentication → Sign-in method : activer **E-mail/Mot de passe** (pas besoin du « lien par e-mail »).
+2. Authentication → Sign-in method : activer **Google** ; ouvrir « Configuration du SDK Web » et
+   copier l'**ID client Web** dans `googleClientId` (fichier `src/page/firebase.ts`).
+3. Authentication → Settings → Domaines autorisés : vérifier que `bailetco.github.io` est dans la liste.
+4. Google Cloud Console → API et services → Identifiants → l'ID client Web ci-dessus :
+   ajouter `https://bailetco.github.io` dans « Origines JavaScript autorisées ».
+5. Coller les nouvelles règles `firestore.rules` (Firestore Database → Règles → Publier).
 
 Les vieilles salles ne sont pas effacées automatiquement (il faudrait l'offre payante) : chaque
 joueur efface sa place en quittant, et un état sans signe de vie depuis 90 secondes est ignoré.

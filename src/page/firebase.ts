@@ -13,11 +13,15 @@ export const FIREBASE = {
   apiKey: 'AIzaSyC4n2njBnh7ajyXX75veCIQeoszSSj77oY',
   projectId: 'wrestling-battle-card',
   base: 'https://wrestling-battle-card-default-rtdb.europe-west1.firebasedatabase.app',
+  // Identifiant client web Google (console Firebase → Authentication → Google → Configuration du SDK Web).
+  // Vide : le bouton « Continuer avec Google » n'est pas affiché (connexion par e-mail seulement).
+  googleClientId: '626474743975-dsh3og0ahbj7h0tjch901vf9jkusrt01.apps.googleusercontent.com',
 };
 
 // ---------- Connexion anonyme ----------
 
-type Session = { uid: string; jeton: string; renouvellement: string; expire: number };
+// compte : présent quand le joueur s'est connecté à un vrai compte (Google ou e-mail), sinon anonyme.
+export type Session = { uid: string; jeton: string; renouvellement: string; expire: number; compte?: { email: string; fournisseur: string } };
 const CLE = 'wbc-firebase';
 
 let session: Session | null = null;
@@ -51,7 +55,7 @@ export function connexion(): Promise<Session> {
       let s: Session;
       if (session) {
         const d = await appel(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE.apiKey}`, { grant_type: 'refresh_token', refresh_token: session.renouvellement });
-        s = { uid: String(d.user_id), jeton: String(d.id_token), renouvellement: String(d.refresh_token), expire: Date.now() + Number(d.expires_in) * 1000 };
+        s = { ...session, uid: String(d.user_id), jeton: String(d.id_token), renouvellement: String(d.refresh_token), expire: Date.now() + Number(d.expires_in) * 1000 };
       } else {
         const d = await appel(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE.apiKey}`, { returnSecureToken: true });
         s = { uid: String(d.localId), jeton: String(d.idToken), renouvellement: String(d.refreshToken), expire: Date.now() + Number(d.expiresIn) * 1000 };
@@ -65,6 +69,16 @@ export function connexion(): Promise<Session> {
   })();
   return enCours;
 }
+
+// Session actuelle sans réseau (null si jamais connecté), et changement de session (connexion à un
+// compte, ou déconnexion : null = une nouvelle session anonyme sera créée au prochain besoin).
+export const sessionActuelle = (): Session | null => (session ??= lire());
+export function changerSession(s: Session | null) {
+  session = s;
+  if (s) garder(s);
+  else try { localStorage.removeItem(CLE); } catch { /* navigation privée */ }
+}
+export { appel as appelFirebase };
 
 // ---------- Arbre reçu en direct (événements « put » et « patch » de la Realtime Database) ----------
 
