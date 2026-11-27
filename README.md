@@ -41,6 +41,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/nouveautes.ts` : le numéro de version et le texte des nouveautés (à compléter à chaque mise à jour).
 - `src/page/beta.ts` et `src/page/ecrans/beta.ts` : la bêta (code d'invitation, nouveautés, export et import de la sauvegarde, installation sur le téléphone).
 - `src/page/firebase.ts` : la connexion anonyme à Firebase et les salles des combats entre amis (relais publics en secours).
+- `scripts/fusion.ts` (`npm run fusion`) : cartes de base contre cartes plus faibles montées au même niveau par fusion, avec un deck optimisé pour chaque carte.
 - `firebase/` : les règles de sécurité de Firebase, à coller dans la console (mode d'emploi dans `firebase/LISEZ-MOI.md`).
 - `public/` : icônes, vignette de partage, manifeste et copie hors ligne (`sw.js`) pour installer le jeu sur le téléphone.
 - Écrans (adresse après `#`) : `pseudo`, menu, `collection` (tri, styles, boutons de test), `fusion`, `club` (Mon Club), `tournois`, `social`, `combat`, `regles`, `tutoriel`, `arene`, `amis`.

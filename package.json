@@ -13,7 +13,8 @@
     "verifier-types": "tsc --noEmit",
     "niveaux": "tsx scripts/niveaux.ts",
     "captures": "node scripts/captures.mjs",
-    "verifier-cahier": "tsx scripts/verifier-cahier.ts"
+    "verifier-cahier": "tsx scripts/verifier-cahier.ts",
+    "fusion": "tsx scripts/fusion.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
