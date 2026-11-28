@@ -196,6 +196,7 @@ const FONCTION_QUETE: Record<string, IdFonction> = {
   'ench-jouer': 'enchainement', 'chaine-2': 'enchainement', 'ench-3': 'enchainement',
   'rival-1': 'infini', 'tenir-30': 'infini', infini: 'infini', 'infini-40': 'infini', 'u-rival-champion': 'infini',
   fort: 'fort', 'serie-fort': 'fort', 'en-ligne': 'amis', 'u-ami': 'amis', equipe: 'equipe',
+  'combos-3': 'combos', 'u-4-combos': 'combos', // les combos s'ouvrent avec le mode histoire (28/11/2026)
 };
 export const queteOuverte = (c: Collection, id: string) => !FONCTION_QUETE[id] || fonctionVisible(c, FONCTION_QUETE[id]);
 

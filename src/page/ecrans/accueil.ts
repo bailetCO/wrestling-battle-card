@@ -150,8 +150,8 @@ export function ecranMenu() {
       <p class="compteur menu-stats">${compteur()}</p>
       ${DEV ? '<p class="note mode-dev">🛠 Mode développeur (retirer : ajouter ?nodev à l\'adresse)</p>' : ''}
       ${session ? `<div class="reprise"><p>Combat entre amis en cours (salle ${echap(session.code.toUpperCase())}).</p><button class="principal" data-reprendre>Reprendre</button><button class="lien" data-oublier>Quitter ce combat</button></div>` : ''}
-      ${bandeauQuotidien()}
       ${bandeauHistoire()}
+      ${bandeauQuotidien()}
       ${blocQuetes()}
       ${bandeauCompte()}
       ${bandeauAvis()}
@@ -163,7 +163,7 @@ export function ecranMenu() {
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${S.collection.club.length}/${placesClub(S.collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
-        ${tuile('classement', 'Classement', `${ICONE_DIVISION[DIVISIONS[S.collection.classement.division].id]} ${DIVISIONS[S.collection.classement.division].nom} · ${S.collection.classement.points} point${S.collection.classement.points > 1 ? 's' : ''}`, '#classement', '', compteActuel() ? '' : 'Compte')}
+        ${tuile('classement', 'Classement', `${ICONE_DIVISION[DIVISIONS[S.collection.classement.division].id]} ${DIVISIONS[S.collection.classement.division].nom} en ligne · ordinateur fort · saison`, '#classement', '', compteActuel() ? '' : 'Compte')}
         ${tuile('recompenses', 'Récompenses', S.collection.aOuvrir.length ? `${S.collection.aOuvrir.length} à ouvrir` : 'Rien à ouvrir pour l\'instant', '#recompenses', S.collection.aOuvrir.length ? `🎁 ${S.collection.aOuvrir.length}` : '')}
       </nav>
       ${piedMenu()}

@@ -15,7 +15,8 @@ export const TUILES: IdTuile[] = ['combat', 'tournois', 'saison', 'collection', 
 // Étape du mode histoire (0 = étape 1) à partir de laquelle chaque tuile apparaît.
 const ETAPE_TUILE: Record<IdTuile, number> = REGLES.menu.etapeTuile;
 
-export const tuileVisible = (c: Collection, t: IdTuile) => c.histoire.etape >= ETAPE_TUILE[t] || c.ouverts.includes(t);
+export const tuileVisible = (c: Collection, t: IdTuile) =>
+  c.histoire.etape >= ETAPE_TUILE[t] || c.ouverts.includes(t) || (t === 'recompenses' && c.aOuvrir.length > 0);
 export const tuilesVisibles = (c: Collection) => TUILES.filter((t) => tuileVisible(c, t));
 export const tuileNouvelle = (c: Collection, t: IdTuile) => tuileVisible(c, t) && !c.menusVus.includes(t);
 
