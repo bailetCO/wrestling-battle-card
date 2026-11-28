@@ -4,7 +4,7 @@
 // principale (avancer : Carrière, tournois, divisions, Mon Club, Cocoach). Une quête ne se valide qu'une
 // fois en cours ; celles qui portent sur l'état du jeu (nations battues, Mon Club, division, fusions,
 // lien partagé…) sont validées tout de suite si c'est déjà fait. Les quêtes qui demandent un ami
-// peuvent être passées (sans récompense), pour ne jamais bloquer un joueur seul.
+// ou les combats en ligne peuvent être passées : elles restent à réussir, avec leur récompense.
 // Avant le 28/11/2026 : 18 étapes ; les sauvegardes sont converties par migrerEtape.
 
 import { DARIUS, ETOILES_DARIUS, ID_DARIUS, LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type IdAction, type Niveau } from '../moteur';
@@ -22,7 +22,7 @@ export interface DefEtape {
   guide: string; // explication pas à pas
   lien: string; // écran où aller
   bouton: string;
-  passable?: boolean; // quête qui demande un ami : on peut la passer (sans récompense)
+  passable?: boolean; // quête qui demande un ami ou le jeu en ligne : on peut la passer et la réussir plus tard
 }
 
 const P = 'principale', S = 'secondaire';
@@ -58,9 +58,9 @@ export const ETAPES: DefEtape[] = [
   { id: 'achat', type: S, titre: 'La boutique', objectif: 'Acheter un booster dans la boutique',
     guide: 'Dans Social, la boutique vend des boosters contre tes $. Plus le booster est cher, meilleures sont les cartes.',
     lien: '#social', bouton: 'Aller à la boutique' },
-  { id: 'argent', type: P, titre: 'Classé', objectif: 'Atteindre la division Argent',
-    guide: 'Chaque victoire remplit ta barre de division (Classement). Barre pleine : division suivante. Les victoires contre un ordinateur plus fort la remplissent plus vite.',
-    lien: '#classement', bouton: 'Voir le classement' },
+  { id: 'argent', type: P, titre: 'Classé', objectif: 'Atteindre la division Argent en ligne', passable: true,
+    guide: 'Chaque victoire en ligne remplit ta barre de division (+25, une défaite −15). Barre pleine : division suivante. Tu joues seul ? Passe cette quête : tu pourras la réussir plus tard.',
+    lien: '#amis', bouton: 'Combat en ligne' },
   { id: 'invitation', type: S, titre: 'Invite un ami', objectif: 'Envoyer ton lien d\'invitation à un ami', passable: true,
     guide: 'Dans Social, partage ton lien : ton ami reçoit un booster rare de bienvenue, et toi un booster rare quand il crée son compte. Tu joues seul ? Tu peux passer cette quête.',
     lien: '#social', bouton: 'Ouvrir Social' },
@@ -106,9 +106,9 @@ export const ETAPES: DefEtape[] = [
   { id: 'en-ligne', type: S, titre: 'Entre amis', objectif: 'Gagner un combat en ligne contre un ami', passable: true,
     guide: 'Dans Combat, choisis « Contre un ami » et envoie-lui le lien du combat. Tu joues seul ? Tu peux passer cette quête.',
     lien: '#amis', bouton: 'Combat entre amis' },
-  { id: 'or', type: P, titre: 'Division Or', objectif: 'Atteindre la division Or',
-    guide: 'Continue de remplir ta barre de division : la division Or rapporte de belles récompenses en fin de saison.',
-    lien: '#classement', bouton: 'Voir le classement' },
+  { id: 'or', type: P, titre: 'Division Or', objectif: 'Atteindre la division Or en ligne', passable: true,
+    guide: 'Gagne des combats en ligne pour monter jusqu\'à la division Or : elle rapporte de belles récompenses en fin de saison. Tu peux passer cette quête et la réussir plus tard.',
+    lien: '#amis', bouton: 'Combat en ligne' },
   { id: 'champion', type: S, titre: 'Champion du Monde', objectif: 'Obtenir une carte Champion du Monde par fusion',
     guide: 'Fusionne une carte jusqu\'au sommet : Champion du Monde. Elle débloque toutes ses actions, et son action de Champion.',
     lien: '#fusion', bouton: 'Aller à la Fusion' },
@@ -199,9 +199,10 @@ function dejaFait(c: Collection, id: string): boolean {
 // L'événement valide-t-il la quête en cours ?
 function valide(c: Collection, ev: EvenementHistoire): boolean {
   const e = etapeEnCours(c);
-  if (!e) return false;
-  if (dejaFait(c, e.id)) return true;
-  switch (e.id) {
+  return !!e && (dejaFait(c, e.id) || valideId(c, e.id, ev));
+}
+function valideId(_c: Collection, id: string, ev: EvenementHistoire): boolean {
+  switch (id) {
     case 'carriere': return ev.type === 'victoire' && !!ev.carriere;
     case 'deck': return ev.type === 'deck';
     case 'entrainement': return ev.type === 'rapide';
@@ -295,14 +296,22 @@ export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasa
     faites.push({ etape: i, boosters: recompense(c, i, hasard), dollars: recompenseDe(i).dollars ?? 0 });
     e = { type: 'etat' }; // la quête suivante ne profite pas du même événement
   }
+  // Quêtes passées : toujours réussissables, avec leur récompense.
+  for (const id of [...c.histoire.passees]) {
+    if (!dejaFait(c, id) && !valideId(c, id, ev)) continue;
+    c.histoire.passees = c.histoire.passees.filter((x) => x !== id);
+    const i = indexEtape(id);
+    faites.push({ etape: i, boosters: recompense(c, i, hasard), dollars: recompenseDe(i).dollars ?? 0 });
+  }
   return faites;
 }
 
-// Quête qui demande un ami : le joueur la passe, sans récompense. Renvoie les quêtes suivantes
-// validées aussitôt (déjà faites).
+// Quête qui demande un ami (ou les combats en ligne) : le joueur passe à la suivante. La quête passée
+// reste à réussir quand il veut, avec sa récompense. Renvoie les quêtes validées aussitôt (déjà faites).
 export function passerQuete(c: Collection, hasard: Hasard): EtapeValidee[] | null {
   const e = etapeEnCours(c);
   if (!e?.passable) return null;
+  c.histoire.passees = [...c.histoire.passees.filter((x) => x !== e.id), e.id];
   c.histoire.etape++;
   return noterHistoire(c, { type: 'etat' }, hasard);
 }

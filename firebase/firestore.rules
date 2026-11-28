@@ -1,6 +1,6 @@
 rules_version = '2';
 // Firestore : avis, signalements de bug et statistiques anonymes de la bêta (étape 6, lots C et D),
-// sauvegarde en ligne des comptes joueurs (comptes/<joueur>) classement mensuel (classements/<mois>/joueurs/<joueur>) et parrainage (parrainages, amities).
+// sauvegarde en ligne des comptes joueurs (comptes/<joueur>) classements (classements/<mois>/joueurs/<joueur>, palmares/<joueur>) et parrainage (parrainages, amities).
 // Les joueurs (connexion anonyme) déposent ; ils ne peuvent lire et effacer que leurs propres
 // envois (bouton « Supprimer mes données »). Corentin lit tout depuis la console Firebase.
 // Chaque envoi met à jour limites/<joueur> à l'heure du serveur (anti-spam) :
@@ -96,11 +96,12 @@ service cloud.firestore {
         && request.resource.data.maj == request.time;
     }
 
-    // Classement mensuel (27/11/2026) : classements/<mois>/joueurs/<identifiant>.
-    // Lecture : tout joueur connecté. Écriture : seulement sa propre ligne, avec un vrai compte.
-    // Plafond de 80 points par jour vérifié ici : `jour` est le jour du serveur (heure universelle),
-    // `pointsJour` les points de ce jour. Les points ne peuvent monter que de ce que les jours écoulés
-    // permettent (80 par jour), et jamais baisser. Pas d'effacement.
+    // Classements (28/11/2026, 2e version). Lecture : tout joueur connecté. Écriture : seulement sa
+    // propre ligne, avec un vrai compte (Google ou e-mail). Pas d'effacement.
+    // 1. Division en ligne du mois : classements/<mois>/joueurs/<identifiant>. `enLigne` = combats en
+    //    ligne joués ce mois (ne fait que monter) ; `points` = score de la division. À chaque envoi, les
+    //    points montent d'au plus 25 et baissent d'au plus 15 par combat en plus, et il faut au moins
+    //    60 secondes par combat depuis l'envoi précédent. Novembre 2026 : anciens points acceptés.
     match /classements/{mois}/joueurs/{joueur} {
       function vraiCompte() {
         return connecte() && request.auth.uid == joueur && request.auth.token.firebase.sign_in_provider != 'anonymous';
@@ -108,24 +109,47 @@ service cloud.firestore {
       function nouveau() { return request.resource.data; }
       function ligneValide() {
         return mois.matches('^[0-9]{4}-[0-9]{2}$')
-          && nouveau().keys().hasOnly(['idCoach', 'pseudo', 'pays', 'badge', 'points', 'jour', 'pointsJour', 'maj'])
-          && nouveau().keys().hasAll(['idCoach', 'pseudo', 'points', 'jour', 'pointsJour', 'maj'])
+          && nouveau().keys().hasOnly(['idCoach', 'pseudo', 'pays', 'badge', 'points', 'enLigne', 'maj'])
+          && nouveau().keys().hasAll(['idCoach', 'pseudo', 'points', 'enLigne', 'maj'])
           && texte('idCoach', 40) && texte('pseudo', 16) && texte('pays', 2) && texte('badge', 10)
-          && nouveau().points is int && nouveau().pointsJour is int
-          && nouveau().pointsJour >= 0 && nouveau().pointsJour <= 80
-          && nouveau().jour == math.floor(request.time.toMillis() / 86400000)
+          && nouveau().points is int && nouveau().points >= 0
+          && nouveau().enLigne is int && nouveau().enLigne >= 0
+          && nouveau().maj == request.time;
+      }
+      function combats() { return nouveau().enLigne - resource.data.get('enLigne', 0); }
+      allow read: if connecte();
+      allow create: if vraiCompte() && ligneValide()
+        && nouveau().enLigne <= 30 * request.time.day()
+        && (nouveau().points <= 25 * nouveau().enLigne || (mois == '2026-11' && nouveau().points <= 80 * request.time.day()));
+      allow update: if vraiCompte() && ligneValide()
+        && combats() >= 0
+        && nouveau().points - resource.data.points <= 25 * combats()
+        && resource.data.points - nouveau().points <= 15 * combats()
+        && request.time >= resource.data.maj + duration.value(60 * combats(), 's');
+    }
+
+    // 2. Palmarès à vie : palmares/<identifiant>. `fort` = victoires contre l'ordinateur fort (au moins
+    //    20 secondes chacune), `saison` = saisons terminées × 10 + palier (au moins 10 secondes par point).
+    //    Les deux ne font que monter.
+    match /palmares/{joueur} {
+      function vraiCompte() {
+        return connecte() && request.auth.uid == joueur && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      }
+      function nouveau() { return request.resource.data; }
+      function ligneValide() {
+        return nouveau().keys().hasOnly(['idCoach', 'pseudo', 'pays', 'badge', 'fort', 'saison', 'maj'])
+          && nouveau().keys().hasAll(['idCoach', 'pseudo', 'fort', 'saison', 'maj'])
+          && texte('idCoach', 40) && texte('pseudo', 16) && texte('pays', 2) && texte('badge', 10)
+          && nouveau().fort is int && nouveau().fort >= 0
+          && nouveau().saison is int && nouveau().saison >= 0
           && nouveau().maj == request.time;
       }
       allow read: if connecte();
-      allow create: if vraiCompte() && ligneValide()
-        && nouveau().points >= nouveau().pointsJour
-        && nouveau().points <= 80 * request.time.day();
+      allow create: if vraiCompte() && ligneValide() && nouveau().fort <= 200 && nouveau().saison <= 1000;
       allow update: if vraiCompte() && ligneValide()
-        && nouveau().jour >= resource.data.jour
-        && nouveau().points >= resource.data.points
-        && (nouveau().jour > resource.data.jour || nouveau().pointsJour >= resource.data.pointsJour)
-        && nouveau().points - resource.data.points
-           <= nouveau().pointsJour + 80 * (nouveau().jour - resource.data.jour) - resource.data.pointsJour;
+        && nouveau().fort >= resource.data.fort
+        && nouveau().saison >= resource.data.saison
+        && request.time >= resource.data.maj + duration.value(20 * (nouveau().fort - resource.data.fort) + 10 * (nouveau().saison - resource.data.saison), 's');
     }
 
     // Parrainage (27/11/2026). parrainages/<filleul> : un nouveau joueur, connecté avec un vrai compte

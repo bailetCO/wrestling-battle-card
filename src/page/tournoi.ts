@@ -1,4 +1,3 @@
-import { gagnerPoints } from './classement';
 // Tournois contre l'ordinateur, sans affichage : tournoi individuel à double tableau, tournoi par
 // équipe, ancienne compétition à 6, inscriptions et gains.
 // La page joue les combats du joueur ; ceux entre deux ordinateurs sont simulés ici.
@@ -453,7 +452,6 @@ export function recompenserTournoi(c: Collection, t: Tournoi, hasard: Hasard): B
     premier = scoreEquipe(t)[0] >= T.equipe.victoiresPourGagner;
     if (premier) { medailles = T.equipe.medailles; dollars = T.equipe.dollars; }
   }
-  if (premier && !('essai' in t && t.essai)) gagnerPoints(c, { tournoiGagne: true }); // classement : +10
   const g = gagnerMedailles(c, medailles);
   c.dollars += dollars;
   const boosters = premier ? [ouvrirBooster(c, hasard, 'epique')] : []; // tournoi gagné : booster épique (rare avant le 28/11/2026)

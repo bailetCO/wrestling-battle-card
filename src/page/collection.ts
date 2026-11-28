@@ -36,10 +36,11 @@ export interface Collection {
   departComplet: boolean; // a reçu ses 20 cartes de départ (les anciennes sauvegardes sont complétées)
   dollars: number; // $ disponibles (boosters, inscriptions aux tournois)
   tri: TriCollection; // ordre d'affichage de la collection
-  histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
+  histoire: { etape: number; nations: string[]; passees: string[] }; // mode histoire : quête en cours (0 = quête 1) ; quêtes passées, encore à réussir
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
   ouverts: string[]; // tuiles du menu et modes restés ouverts après le passage à 33 quêtes (28/11/2026)
+  palmares: { fort: number; derniereFort: number }; // classement à vie : victoires contre l'ordinateur fort (à la main), heure de la dernière
   combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
   tutosVus: string[]; // tutoriels courts déjà vus (ouverts tout seuls à la première visite d'un mode)
   essaisGagnes: string[]; // tutoriels courts dont la partie d'essai a été gagnée (booster déjà donné)
@@ -58,17 +59,17 @@ export interface Collection {
 
 export interface Classement {
   mois: string; // « 2026-11 » (heure universelle)
-  points: number; // points du mois
-  jour: number; // jour (n° depuis 1970, heure universelle) des points du jour
-  pointsJour: number; // points gagnés ce jour-là (plafond)
+  points: number; // score en ligne du mois (barres des divisions passées + barre en cours) : sert à classer
+  enLigne: number; // combats en ligne joués ce mois (au moins 1 : récompense de fin de saison)
   badge: { palier: string | null; top: boolean; mois: string } | null; // résultat du dernier mois terminé
   enAttente: { mois: string; points: number; division: number }[]; // mois terminés pas encore récompensés (Top 10 à vérifier en ligne)
-  division: number; // division de la saison en cours (0 = Bronze … 5 = Maître)
-  progression: number; // barre de la division (0 à REGLES.classement.parDivision)
+  division: number; // division en ligne de la saison en cours (0 = Bronze … 5 = Maître)
+  progression: number; // barre de la division (0 à REGLES.classement.barres[division] ; sans limite en Maître)
+  derniereEnLigne: number; // heure (ms) du dernier combat en ligne compté (anti-triche, comme Firebase)
   cadres: string[]; // cadres de saison gagnés (« 2026-11:or ») ; posés sur une carte avec cadreCartes
   cadreCartes: Record<string, string>; // carte → cadre posé
 }
-export const classementVide = (): Classement => ({ mois: '', points: 0, jour: 0, pointsJour: 0, badge: null, enAttente: [], division: 0, progression: 0, cadres: [], cadreCartes: {} });
+export const classementVide = (): Classement => ({ mois: '', points: 0, enLigne: 0, badge: null, enAttente: [], division: 0, progression: 0, derniereEnLigne: 0, cadres: [], cadreCartes: {} });
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
 
@@ -122,7 +123,7 @@ export function migrerHistoire33(c: Collection) {
   const restantes = ANCIEN_VERS_NOUVEAU.slice(ancienne).filter((x) => x >= 0);
   const nouvelle = restantes.length ? Math.min(...restantes) : REGLES.histoire.nbEtapes;
   c.ouverts = [...new Set([...c.ouverts, ...Object.keys(ANCIENS_SEUILS).filter((k) => ancienne >= ANCIENS_SEUILS[k])])];
-  c.histoire = { etape: nouvelle, nations: [] };
+  c.histoire = { etape: nouvelle, nations: [], passees: [] };
   // Scènes : celles des quêtes passées sont vues ; celle de la quête en cours sera montrée.
   c.scenesVues = [...c.scenesVues.filter((k) => !/^h\d+$/.test(k)), ...Array.from({ length: nouvelle }, (_, i) => `h${i}`), 'histoire33'];
 }
@@ -138,10 +139,11 @@ export function nouvelleCollection(): Collection {
     decks: {}, niveau: 'normal', toutDebloque: false, victoires: 0, defaitesDeSuite: 0, recompensesEnLigne: [], aOuvrir: [],
     amis: {}, combatsComptes: [], echangesFaits: [], marchand: { jour: '', faits: [] }, bonusTutoriel: false,
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], essaisGagnes: [], menusVus: ['combat', 'collection', 'recompenses'], fragments: {}, departComplet: true, arene: 0,
-    histoire: { etape: 0, nations: [] },
+    histoire: { etape: 0, nations: [], passees: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15', 'histoire33'], // repères : sauvegarde déjà au format des 15 puis des 33 quêtes
     ouverts: [],
+    palmares: { fort: 0, derniereFort: 0 },
     combosVus: [],
     classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' }, createurs: [], createurSoutenu: '',
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
@@ -221,14 +223,18 @@ function lireClassement(x: unknown): Classement {
   const n = (k: string) => (typeof o[k] === 'number' && Number.isFinite(o[k]) && (o[k] as number) >= 0 ? Math.floor(o[k] as number) : 0);
   const mois = (m: unknown) => typeof m === 'string' && /^\d{4}-\d{2}$/.test(m);
   if (mois(o.mois)) v.mois = o.mois as string;
-  v.points = n('points'); v.jour = n('jour'); v.pointsJour = n('pointsJour');
+  v.points = n('points');
+  // Sauvegarde d'avant le 28/11/2026 (points de tous les combats) : le mois en cours garde son ancienne
+  // division et compte comme joué (récompense de fin de saison), puis tout le monde repart en Bronze.
+  v.enLigne = typeof o.enLigne === 'number' ? n('enLigne') : v.points > 0 ? 1 : 0;
+  v.derniereEnLigne = n('derniereEnLigne');
   const b = o.badge as Classement['badge'];
   if (b && typeof b === 'object' && mois(b.mois) && typeof b.top === 'boolean') v.badge = { palier: typeof b.palier === 'string' ? b.palier : null, top: b.top, mois: b.mois };
   if (Array.isArray(o.enAttente)) v.enAttente = (o.enAttente as { mois: unknown; points: unknown; division?: unknown }[]).filter((e) => e && mois(e.mois) && typeof e.points === 'number').slice(-3).map((e) => ({ mois: e.mois as string, points: e.points as number, division: typeof e.division === 'number' ? Math.max(0, Math.min(5, Math.floor(e.division))) : -1 }));
   const NB = REGLES.classement.divisions.length;
   if (typeof o.division === 'number') v.division = Math.max(0, Math.min(NB - 1, Math.floor(o.division)));
   else v.division = v.points >= 300 ? 2 : v.points >= 120 ? 1 : 0; // ancienne sauvegarde : division tirée du palier de points
-  if (typeof o.progression === 'number') v.progression = Math.max(0, Math.min(REGLES.classement.parDivision, Math.floor(o.progression)));
+  if (typeof o.progression === 'number') v.progression = Math.max(0, Math.floor(o.progression));
   if (Array.isArray(o.cadres)) v.cadres = [...new Set((o.cadres as unknown[]).filter((x): x is string => typeof x === 'string' && /^\d{4}-\d{2}:[a-z]+$/.test(x)))].slice(-60);
   if (o.cadreCartes && typeof o.cadreCartes === 'object') for (const [id, cd] of Object.entries(o.cadreCartes as Record<string, unknown>)) if (typeof cd === 'string' && v.cadres.includes(cd)) v.cadreCartes[id] = cd;
   return v;
@@ -564,13 +570,16 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (!c.scenesVues.includes('histoire15')) {
     c.scenesVues = [...c.scenesVues.map((k) => (k === 'h12' ? 'hfin' : k)), 'histoire15'];
   }
-  const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;
+  const hi = b.histoire as { etape?: unknown; nations?: unknown; passees?: unknown } | undefined;
   if (hi && typeof hi === 'object') {
     c.histoire = {
       etape: Math.min(REGLES.histoire.nbEtapes, entier(hi.etape)),
       nations: Array.isArray(hi.nations) ? hi.nations.filter((x): x is string => typeof x === 'string') : [],
+      passees: Array.isArray(hi.passees) ? [...new Set(hi.passees.filter((x): x is string => typeof x === 'string'))].slice(0, 10) : [],
     };
   }
+  const pm = b.palmares as { fort?: unknown; derniereFort?: unknown } | undefined;
+  if (pm && typeof pm === 'object') c.palmares = { fort: entier(pm.fort), derniereFort: entier(pm.derniereFort) };
   if (Array.isArray(b.ouverts)) c.ouverts = [...new Set(b.ouverts.filter((x): x is string => typeof x === 'string'))].slice(0, 30);
   if (!c.scenesVues.includes('histoire33')) migrerHistoire33(c);
   if (b.fragments && typeof b.fragments === 'object') {

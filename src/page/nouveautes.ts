@@ -2,11 +2,21 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.18.0';
+export const VERSION = '0.19.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.19.0',
+    date: '2026-11-28',
+    lignes: [
+      'Trois classements : 🌐 En ligne, 🤖 Ordinateur fort et 🏅 Saison sportive (Tous, Amis ou Pays).',
+      'Ta division ne monte plus qu\'avec les combats en ligne : victoire +25, défaite −15. Chaque mois, tout le monde repart en Bronze.',
+      'Les victoires contre l\'ordinateur fort (en jouant toi-même) et ta saison sportive comptent pour toujours.',
+      'Mode histoire : une quête passée reste à réussir, avec sa récompense.',
+    ],
+  },
   {
     version: '0.18.0',
     date: '2026-11-28',

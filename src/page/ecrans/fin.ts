@@ -1,9 +1,8 @@
 import { jouer, sonCarte, sonFin } from '../son';
 import { niveauCompte } from '../collection';
-import { DIVISIONS, perdreEnLigne, type CombatGagne } from '../classement';
+import { combatEnLigne, victoireFort } from '../classement';
 // Fin du combat et ouverture des boosters.
 
-import { gagnerPoints } from '../classement';
 import { tuileVisible } from '../menu';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, trouverLutteur, niveauCarte, REGLES as R_ } from '../../moteur';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
@@ -252,33 +251,23 @@ function momentFin(): Moment | null {
   return x ? { ...x, def: h.def, coach: moiNom(), texte: `${x.texte} Viens jouer à Wrestling Battle Card :` } : null;
 }
 
-// « +4 points de classement » sous le verdict, quand la tuile Classement est ouverte.
-// Victoire : points de classement et barre de division (28/11/2026). Fanfare si la division monte.
+// Division en ligne (28/11/2026, 2e version) : la barre bouge après chaque combat en ligne.
+// Fanfare si la division monte ; la ligne sous le verdict montre le changement.
 let divisionFin: { gain: number; monte: string | null } | null = null;
-export function victoireClassement(x: CombatGagne): number {
-  const k = S.collection.classement;
-  const d0 = k.division, p0 = k.progression;
-  const n = gagnerPoints(S.collection, x);
-  const monte = k.division > d0 ? DIVISIONS[k.division].nom : null;
-  divisionFin = { gain: (k.division - d0) * REGLES.classement.parDivision + k.progression - p0, monte };
-  if (monte) jouer('palier', 1.4);
-  return n;
-}
-// Défaite en ligne : la barre de division baisse un peu.
-export function defaiteEnLigneClassement() {
-  divisionFin = { gain: -perdreEnLigne(S.collection), monte: null };
-  S.pointsFin = 0;
+export function combatEnLigneClassement(gagne: boolean) {
+  divisionFin = combatEnLigne(S.collection, gagne);
+  S.pointsFin = divisionFin.gain;
+  if (divisionFin.monte) jouer('palier', 1.4);
+  histoire({ type: 'etat' }); // quêtes « division Argent / Or »
 }
 
-// « +4 points de classement · division +15 » sous le verdict, quand la tuile Classement est ouverte.
+// « Division en ligne +25 » sous le verdict d'un combat en ligne, quand la tuile Classement est ouverte.
 export function lignePointsFin(): string {
-  if (S.pointsFin === null || !tuileVisible(S.collection, 'classement')) return '';
   const d = divisionFin;
-  const division = d?.monte ? ` · 🎉 Division ${d.monte} atteinte !` : d && d.gain ? ` · division ${d.gain > 0 ? '+' : '−'}${Math.abs(d.gain)}` : '';
-  if (d && d.gain < 0) return `<a class="points-fin perte" href="#classement">Défaite en ligne : division −${-d.gain}</a>`;
-  return S.pointsFin > 0
-    ? `<a class="points-fin" href="#classement">🏆 +${S.pointsFin} point${S.pointsFin > 1 ? 's' : ''} de classement${division}</a>`
-    : `<a class="points-fin" href="#classement">🏆 Plafond du jour atteint (${REGLES.classement.plafondJour} points) : reviens demain !</a>`;
+  if (S.pointsFin === null || !d || !tuileVisible(S.collection, 'classement')) return '';
+  if (d.monte) return `<a class="points-fin" href="#classement">🎉 Division en ligne ${d.monte} atteinte !</a>`;
+  if (d.gain < 0) return `<a class="points-fin perte" href="#classement">Division en ligne −${-d.gain}</a>`;
+  return d.gain > 0 ? `<a class="points-fin" href="#classement">🏆 Division en ligne +${d.gain}</a>` : '';
 }
 
 export function ecranFin() {
@@ -310,8 +299,10 @@ export function ecranFin() {
     S.bonusCeCombat = false;
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto, carriere: enArene && !S.tuto && !S.essaiSolo });
     const niveauAvant = niveauCompte(S.collection);
-    S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? victoireClassement({ niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
-    if (S.pointsFin) histoire({ type: 'etat' }); // division gagnée : quêtes « division Argent / Or »
+    S.pointsFin = null;
+    divisionFin = null;
+    // Classement « Ordinateur fort » (à vie) : victoire contre l'ordinateur fort, à la main.
+    if (gagne && !S.tuto && !S.essaiSolo && S.partie.niveau === 'fort' && !S.combatEnAuto) victoireFort(S.collection);
     queueMicrotask(() => { if (niveauCompte(S.collection) > niveauAvant) jouer('niveau', 1.2); });
     let championBattu = gagne && S.areneCtx?.type === 'boss'; // champion d'une nation battu en Carrière
     if (e.rapide) {

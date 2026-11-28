@@ -60,8 +60,8 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'darius', texte: 'Sur le podium ! Tes $ servent aussi à acheter des boosters : la boutique est dans Social. Offre-toi un booster.' },
   ],
   h9: [
-    { qui: 'darius', texte: 'Chaque victoire te fait monter au classement. Bronze, Argent, Or… jusqu\'à Maître, et chaque mois, une nouvelle saison classée.' },
-    { qui: 'darius', texte: 'Objectif : atteindre la division Argent. Les victoires contre un ordinateur plus fort font monter ta barre plus vite.' },
+    { qui: 'darius', texte: 'Place au jeu en ligne ! Chaque victoire contre un coach fait monter ta division, de Bronze à Maître. Chaque mois, tout le monde repart en Bronze.' },
+    { qui: 'darius', texte: 'Objectif : atteindre la division Argent en ligne. Tu joues seul ? Passe cette quête : tu pourras la réussir plus tard.' },
     { qui: 'cocoach', humeur: 'malin', texte: 'Tu verras mon nom tout en haut du classement. Essaie de ne pas trop le regarder.' },
   ],
   h10: [
@@ -124,7 +124,7 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'darius', texte: 'Le vrai test, c\'est un adversaire en chair et en os. Invite un ami en ligne et bats-le. Tu joues seul ? Tu peux passer cette quête.' },
   ],
   h25: [
-    { qui: 'darius', texte: 'Ta barre de division se remplit vite. Vise plus haut : la division Or.' },
+    { qui: 'darius', texte: 'En ligne, vise plus haut : la division Or.' },
     { qui: 'darius', texte: 'Objectif : atteindre la division Or. En fin de saison, chaque division rapporte ses récompenses.' },
     { qui: 'cocoach', humeur: 'arrogant', texte: 'L\'Or ? Moi, je suis déjà en Platine. Rattrape-moi si tu peux.' },
   ],

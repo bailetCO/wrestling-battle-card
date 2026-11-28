@@ -46,7 +46,7 @@ function collectionDeTest() {
   c.dollars = 420;
   c.victoires = 12;
   for (let i = 0; i < 6; i++) ouvrirBooster(c, creerHasard(10 + i), 'rare');
-  c.histoire = { etape: 4, nations: ['usa', 'iran'] };
+  c.histoire = { etape: 4, nations: ['usa', 'iran'], passees: [] };
   return depuisSauvegarde(JSON.parse(JSON.stringify(c)));
 }
 
