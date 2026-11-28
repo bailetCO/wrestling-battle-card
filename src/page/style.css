@@ -1627,3 +1627,4 @@ b.moi { color: #ff8a95; }
 .calendrier li.aujourdhui { border-color: var(--orange); background: rgba(242,163,58,.2); }
 .retour-darius { display: grid; justify-items: center; }
 .retour-darius img { width: 120px; height: 120px; object-fit: cover; object-position: 50% 10%; border-radius: 50%; border: 3px solid var(--orange); }
+.jeton-notifs { width: 100%; font: 12px monospace; background: rgba(0,0,0,.3); color: var(--texte); border-radius: 8px; padding: 6px; }

@@ -1,6 +1,6 @@
 {
   "name": "wrestling-battle-card",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "description": "Jeu de cartes de lutte olympique jouable dans le navigateur",
@@ -24,6 +24,7 @@
     "vite-plugin-singlefile": "^2.3.4"
   },
   "dependencies": {
+    "firebase": "13.3.0",
     "mqtt": "^5.16.1"
   }
 }
