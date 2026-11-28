@@ -2,11 +2,19 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.21.0';
+export const VERSION = '0.22.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.22.0',
+    date: '2026-11-28',
+    lignes: [
+      'Après chaque combat, ton prochain objectif s\'affiche, avec un bouton pour y aller.',
+      'Quand tu réussis une quête, la bulle t\'annonce déjà la suivante.',
+    ],
+  },
   {
     version: '0.21.0',
     date: '2026-11-28',

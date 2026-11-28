@@ -16,7 +16,7 @@ import { miniCarteLutteur } from './club';
 import { boutonAuto, htmlTourAncien, lancer, lancerArene, lancerDefi, texteAuto } from './combat';
 import { S, app, echap, moiNom, nouvelleGraine, portrait } from './commun';
 import { route } from './navigation';
-import { histoire, lancerInterclub, quete, queteCombat, saison } from './progression';
+import { blocObjectif, histoire, lancerInterclub, quete, queteCombat, saison } from './progression';
 import { lancerEssai } from './tutos-courts';
 import { noterFinCombat } from './avis';
 import { noterParcours, noterStatsCombat } from './stats';
@@ -381,6 +381,7 @@ export function ecranFin() {
         ${lignePointsFin()}
       </section>
       ${booster}
+      ${S.tuto || S.essaiSolo ? '' : blocObjectif()}
       <div class="fin-boutons">
         ${momentFin() ? boutonPartage('Partager ce moment') : ''}
         ${enArene && gagne && S.areneCtx?.type === 'progression'

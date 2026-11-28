@@ -81,7 +81,9 @@ export function etapesValidees(r: ReturnType<typeof noterHistoire>) {
   for (const x of r) noterParcours('histoire', `etape ${x.etape + 1} ${ETAPES[x.etape].id}`);
   const der = r[r.length - 1].etape;
   const gains = r.reduce((n, x) => n + x.dollars, 0);
-  annoncer(`Quête ${der + 1} réussie : ${ETAPES[der].titre} !`, r.some((x) => x.boosters.length) ? '#recompenses' : '#histoire', r.some((x) => x.boosters.length) ? 'Touche ici pour ta récompense' : `+${gains} $`);
+  const suite = objectifEnCours();
+  annoncer(`Quête ${der + 1} réussie : ${ETAPES[der].titre} !`, r.some((x) => x.boosters.length) ? '#recompenses' : '#histoire', r.some((x) => x.boosters.length) ? 'Touche ici pour ta récompense' : `+${gains} $`,
+    suite ? `Prochain objectif : ${suite.texte}` : '');
 }
 
 // Note un événement de la saison sportive.
@@ -109,16 +111,48 @@ export function recompenseClub() {
 }
 
 // Bulle d'annonce ; elle mène à la boîte à récompenses.
-export function annoncer(titre: string, lien = '#recompenses', sousTitre = 'Touche ici pour ta récompense') {
+export function annoncer(titre: string, lien = '#recompenses', sousTitre = 'Touche ici pour ta récompense', suite = '') {
   document.querySelector('.bulle-histoire')?.remove();
   const b = document.createElement('a');
   b.className = 'bulle-histoire';
   b.href = lien;
   b.setAttribute('role', 'status');
-  b.innerHTML = `<b>${echap(titre)}</b><span>${echap(sousTitre)}</span>`;
+  b.innerHTML = `<b>${echap(titre)}</b><span>${echap(sousTitre)}</span>${suite ? `<small>${echap(suite)}</small>` : ''}`;
   document.body.append(b);
   b.addEventListener('click', () => b.remove());
   setTimeout(() => b.remove(), 7000);
+}
+
+// Point 17 (28/11/2026) : l'objectif en cours, à montrer à tout moment (fin de combat, bulle de quête
+// réussie). Dans l'ordre : la quête du mode histoire ; puis le palier de la saison sportive (ou Mon Club
+// niveau 10 pour l'ouvrir) ; puis une quête du jour pas finie ; puis la division en ligne.
+export interface Objectif { titre: string; texte: string; lien: string; bouton: string; p: [number, number] | null }
+export function objectifEnCours(): Objectif | null {
+  const c = S.collection;
+  if (!histoireFinie(c)) {
+    const e = ETAPES[c.histoire.etape];
+    return { titre: `Mode histoire · quête ${c.histoire.etape + 1}/${NB_ETAPES}`, texte: e.objectif, lien: e.lien, bouton: e.bouton, p: progression(c) };
+  }
+  if (!saisonOuverte(c)) {
+    return { titre: 'Prochain objectif', texte: `Monter Mon Club au niveau ${R_.club.niveauSaison} pour ouvrir la saison sportive`, lien: '#club', bouton: 'Voir Mon Club', p: [niveauClub(c), R_.club.niveauSaison] };
+  }
+  if (!saisonFinie(c)) {
+    const i = c.saison.palier, v = PALIERS[i].victoires;
+    return { titre: `Saison ${c.saison.numero} · palier ${i + 1}/${nbPaliers(c)}`, texte: objectifPalier(i), lien: '#saison', bouton: 'Saison sportive', p: v ? [c.saison.victoires, v] : null };
+  }
+  const q = quetesDuJour(c, jourDe()).find((x) => !x.faite);
+  if (q) {
+    const d = queteDe(q.id);
+    return { titre: 'Quête du jour', texte: d.texte(q.param), lien: '#quetes', bouton: 'Quêtes du jour', p: d.but > 1 ? [q.progres, d.but] : null };
+  }
+  return { titre: 'Prochain objectif', texte: 'Monter ta division en ligne', lien: '#amis', bouton: 'Combat en ligne', p: null };
+}
+
+// Fin de combat : l'objectif en cours, avec sa jauge et un bouton pour y aller.
+export function blocObjectif(): string {
+  const o = objectifEnCours();
+  if (!o) return '';
+  return `<a class="bandeau-histoire objectif-fin" href="${o.lien}"><small>🎯 ${echap(o.titre)}</small><b>${echap(o.texte)}</b>${o.p ? `${jauge(o.p)}<span>${o.p[0]}/${o.p[1]}</span>` : ''}<span class="bouton-objectif">${echap(o.bouton)} ▶</span></a>`;
 }
 
 export const jauge = (p: [number, number]) => `<span class="jauge-histoire" style="--p:${(p[0] / p[1]) * 100}%"><i></i></span>`;
