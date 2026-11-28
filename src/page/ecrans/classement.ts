@@ -1,12 +1,12 @@
 import { blocInvitation, brancherInvitation } from './parrainage';
-// Écran « Classement » (27/11/2026) : points du mois, palier, et trois classements (tous les joueurs,
+// Écran « Classement » (27/11/2026) : division de la saison (28/11/2026), points du mois, et trois classements (tous les joueurs,
 // mes amis, mon pays). Sans compte : explication et bouton pour créer son compte (les points du mois
-// comptent déjà). Fin du mois : récompense du palier et du Top 10 dans la boîte à récompenses.
+// comptent déjà). Fin de saison : récompense de la division, cadre de saison et Top 10.
 
 import { REGLES } from '../../moteur';
 import {
-  PAYS, badgeDe, cloturerMois, dansLeTop, drapeau, joursRestants, lireClassement, majPeriode, nomMois, nomPalier,
-  palierDe, palierSuivant, programmerPublication, type Resultat, type Vue,
+  DIVISIONS, PAYS, badgeDe, cloturerMois, dansLeTop, drapeau, estMaitre, joursRestants, lireClassement, majPeriode, nomDivision, nomMois,
+  numeroSaison, programmerPublication, type Resultat, type Vue,
 } from '../classement';
 import { sauver } from '../collection';
 import { compteActuel } from '../compte';
@@ -16,68 +16,78 @@ import { annoncer, mettreEnBoite } from './progression';
 
 const R = REGLES.classement;
 let vue: Vue = 'monde';
-const ICONE_BADGE: Record<string, string> = { bronze: '🥉', argent: '🥈', or: '🥇', top: '🏆' };
+export const ICONE_DIVISION: Record<string, string> = { bronze: '🥉', argent: '🥈', or: '🥇', platine: '💠', diamant: '💎', maitre: '👑', top: '🏆' };
 
-// Petit badge à côté d'un pseudo : 🏆 Top 10, ou la médaille du palier du mois dernier.
+// Petit badge à côté d'un pseudo : 🏆 Top 10, ou la division de la saison dernière.
 export function pastilleBadge(badge: string): string {
-  if (!ICONE_BADGE[badge]) return '';
-  const titre = badge === 'top' ? 'Top 10 du mois dernier' : `Palier ${nomPalier(badge)} le mois dernier`;
-  return `<span class="badge-classement" title="${titre}" aria-label="${titre}">${ICONE_BADGE[badge]}</span>`;
+  if (!ICONE_DIVISION[badge]) return '';
+  const titre = badge === 'top' ? 'Top 10 de la saison dernière' : `Division ${nomDivision(badge)} la saison dernière`;
+  return `<span class="badge-classement" title="${titre}" aria-label="${titre}">${ICONE_DIVISION[badge]}</span>`;
 }
 export const pastilleMonBadge = () => pastilleBadge(badgeDe(S.collection));
 
-// Au lancement : nouveau mois ? Récompense des mois terminés (Top 10 vérifié en ligne avec un compte).
+// Au lancement : nouvelle saison ? Récompense des saisons terminées (Top 10 vérifié en ligne avec un compte).
 export async function demarrerClassement() {
   majPeriode(S.collection);
-  for (const { mois, points } of [...S.collection.classement.enAttente]) {
+  for (const { mois } of [...S.collection.classement.enAttente]) {
     const top = compteActuel() ? await dansLeTop(mois) : false;
     if (top === null) continue; // hors ligne : on réessaiera au prochain lancement
     const r = cloturerMois(S.collection, mois, top);
     if (r) {
-      mettreEnBoite(r.titre, 'classement', r.boosters);
-      annoncer(`Classement de ${nomMois(mois)} : ${top ? 'Top 10 !' : `palier ${palierDe(points)?.nom ?? ''}`}`);
+      if (r.boosters.length) mettreEnBoite(r.titre, 'classement', r.boosters);
+      annoncer(r.titre, '#recompenses', 'Récompenses et cadre de saison : pose le cadre sur une carte dans ta Collection.');
     }
   }
   sauver(S.collection);
   programmerPublication(S.collection, 1000);
 }
 
+// La division en cours : icône, nom, barre de progression.
+export function blocDivision(compact = false): string {
+  const k = S.collection.classement;
+  const d = DIVISIONS[k.division], suivante = DIVISIONS[k.division + 1];
+  const pct = Math.round((k.progression / R.parDivision) * 100);
+  return `
+    <div class="division d-${d.id} ${compact ? 'compacte' : ''}">
+      <p class="div-nom"><span class="div-ico">${ICONE_DIVISION[d.id]}</span> <b>${d.nom}</b></p>
+      <div class="div-jauge" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+      ${compact ? '' : `<p class="note">${suivante ? `${k.progression}/${R.parDivision} vers ${ICONE_DIVISION[suivante.id]} ${suivante.nom}.` : estMaitre(S.collection) ? 'Division maximale ! Vise le Top 10.' : ''}</p>`}
+    </div>`;
+}
+
 function blocMoi(): string {
   const k = S.collection.classement;
-  const p = palierDe(k.points), suivant = palierSuivant(k.points);
-  const debut = p?.min ?? 0;
-  const jauge = suivant ? Math.round(((k.points - debut) / (suivant.min - debut)) * 100) : 100;
   const jours = joursRestants();
   return `
     <section class="bloc mon-classement">
-      <p class="mc-mois">${nomMois(k.mois)} · encore ${jours} jour${jours > 1 ? 's' : ''}</p>
-      <p class="mc-points"><b>${k.points}</b> point${k.points > 1 ? 's' : ''} ${p ? `<span class="mc-palier p-${p.id}">${ICONE_BADGE[p.id]} ${p.nom}</span>` : ''}</p>
-      <div class="mc-jauge" role="progressbar" aria-valuenow="${jauge}" aria-valuemin="0" aria-valuemax="100"><i style="width:${jauge}%"></i></div>
-      <p class="note">${suivant ? `Encore <b>${suivant.min - k.points}</b> points pour le palier ${ICONE_BADGE[suivant.id]} ${suivant.nom}.` : 'Palier maximum atteint ! Vise le Top 10.'}
-        Aujourd'hui : ${k.pointsJour}/${R.plafondJour} points.</p>
+      <p class="mc-mois">Saison ${numeroSaison(k.mois)} · ${nomMois(k.mois)} · encore ${jours} jour${jours > 1 ? 's' : ''}</p>
+      ${blocDivision()}
+      <p class="mc-points"><b>${k.points}</b> point${k.points > 1 ? 's' : ''} de classement <small>· aujourd'hui ${k.pointsJour}/${R.plafondJour}</small></p>
     </section>`;
 }
 
-const texteRecompense = (p: (typeof R.paliers)[number]) =>
-  [p.classiques ? `${p.classiques} booster classique` : '', p.rares ? `${p.rares} booster${p.rares > 1 ? 's' : ''} rare${p.rares > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ');
+const texteRecompense = (d: (typeof DIVISIONS)[number]) =>
+  [d.classiques ? `${d.classiques} booster classique` : '', d.rares ? `${d.rares} booster${d.rares > 1 ? 's' : ''} rare${d.rares > 1 ? 's' : ''}` : '', d.carte ? `1 carte ${d.carte === 'epique' ? 'épique' : 'légendaire'}` : ''].filter(Boolean).join(' + ');
 
 function blocRegles(): string {
-  const P = R.points;
+  const P = R.points, G = R.gainsDivision;
   return `
     <details class="bloc regles-classement">
-      <summary>Comment gagner des points ?</summary>
+      <summary>Comment ça marche ?</summary>
+      <p><b>Divisions</b> : ${DIVISIONS.map((d) => `${ICONE_DIVISION[d.id]} ${d.nom}`).join(' → ')}.</p>
       <ul>
-        <li>Victoire contre l'ordinateur : facile <b>${P.facile}</b>, normal <b>${P.normal}</b>, fort <b>${P.fort}</b> ; +${P.tombe} par tombé.</li>
-        <li>Victoire en ligne contre un ami : <b>${P.enLigne}</b> (+${P.tombe} par tombé).</li>
-        <li>Tournoi gagné : <b>+${P.tournoiGagne}</b>. Une défaite ne fait rien perdre.</li>
-        <li>Au plus <b>${R.plafondJour}</b> points par jour. Remise à zéro le 1er du mois.</li>
+        <li>Victoire contre l'ordinateur : la barre monte de <b>${G.facile}</b> (facile), <b>${G.normal}</b> (normal), <b>${G.fort}</b> (fort), +${G.tombe} par tombé.</li>
+        <li>Victoire en ligne : <b>+${G.enLigne}</b> ; tournoi gagné : <b>+${G.tournoiGagne}</b>. Barre pleine (${R.parDivision}) : division suivante.</li>
+        <li>Défaite en ligne : <b>−${R.perteEnLigne}</b>, jamais sous le début de ta division. Les défaites contre l'ordinateur ne font rien perdre.</li>
+        <li>Une saison = un mois. Le 1er du mois, tu gardes ta division et ta barre repart de zéro.</li>
       </ul>
-      <p><b>Récompenses de fin de mois</b> (dans la boîte à récompenses) :</p>
+      <p><b>Points de classement</b> (classements Tous, Amis, Pays) : facile ${P.facile}, normal ${P.normal}, fort ${P.fort}, en ligne ${P.enLigne}, +${P.tombe} par tombé, tournoi +${P.tournoiGagne} ; au plus ${R.plafondJour} par jour.</p>
+      <p><b>Fin de saison</b> (si tu as joué) : récompenses dans la boîte, et un <b>cadre de saison</b> à poser sur une carte de ta Collection.</p>
       <ul>
-        ${R.paliers.map((p) => `<li>${ICONE_BADGE[p.id]} ${p.nom} (${p.min} points) : ${texteRecompense(p)}</li>`).join('')}
+        ${DIVISIONS.map((d) => `<li>${ICONE_DIVISION[d.id]} ${d.nom} : ${texteRecompense(d)}</li>`).join('')}
         <li>🏆 Top ${R.top.places} du classement général : +${R.top.rares} booster rare.</li>
       </ul>
-      <p class="note">Ton badge s'affiche à côté de ton pseudo tout le mois suivant.</p>
+      <p class="note">Ton badge s'affiche à côté de ton pseudo toute la saison suivante.</p>
     </details>`;
 }
 

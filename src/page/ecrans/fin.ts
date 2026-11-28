@@ -1,6 +1,6 @@
 import { jouer, sonCarte, sonFin } from '../son';
 import { niveauCompte } from '../collection';
-import { palierDe } from '../classement';
+import { DIVISIONS, perdreEnLigne, type CombatGagne } from '../classement';
 // Fin du combat et ouverture des boosters.
 
 import { gagnerPoints } from '../classement';
@@ -253,10 +253,31 @@ function momentFin(): Moment | null {
 }
 
 // « +4 points de classement » sous le verdict, quand la tuile Classement est ouverte.
+// Victoire : points de classement et barre de division (28/11/2026). Fanfare si la division monte.
+let divisionFin: { gain: number; monte: string | null } | null = null;
+export function victoireClassement(x: CombatGagne): number {
+  const k = S.collection.classement;
+  const d0 = k.division, p0 = k.progression;
+  const n = gagnerPoints(S.collection, x);
+  const monte = k.division > d0 ? DIVISIONS[k.division].nom : null;
+  divisionFin = { gain: (k.division - d0) * REGLES.classement.parDivision + k.progression - p0, monte };
+  if (monte) jouer('palier', 1.4);
+  return n;
+}
+// Défaite en ligne : la barre de division baisse un peu.
+export function defaiteEnLigneClassement() {
+  divisionFin = { gain: -perdreEnLigne(S.collection), monte: null };
+  S.pointsFin = 0;
+}
+
+// « +4 points de classement · division +15 » sous le verdict, quand la tuile Classement est ouverte.
 export function lignePointsFin(): string {
   if (S.pointsFin === null || !tuileVisible(S.collection, 'classement')) return '';
+  const d = divisionFin;
+  const division = d?.monte ? ` · 🎉 Division ${d.monte} atteinte !` : d && d.gain ? ` · division ${d.gain > 0 ? '+' : '−'}${Math.abs(d.gain)}` : '';
+  if (d && d.gain < 0) return `<a class="points-fin perte" href="#classement">Défaite en ligne : division −${-d.gain}</a>`;
   return S.pointsFin > 0
-    ? `<a class="points-fin" href="#classement">🏆 +${S.pointsFin} point${S.pointsFin > 1 ? 's' : ''} de classement</a>`
+    ? `<a class="points-fin" href="#classement">🏆 +${S.pointsFin} point${S.pointsFin > 1 ? 's' : ''} de classement${division}</a>`
     : `<a class="points-fin" href="#classement">🏆 Plafond du jour atteint (${REGLES.classement.plafondJour} points) : reviens demain !</a>`;
 }
 
@@ -289,9 +310,7 @@ export function ecranFin() {
     S.bonusCeCombat = false;
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto });
     const niveauAvant = niveauCompte(S.collection);
-    S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? gagnerPoints(S.collection, { niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
-    const pts = S.collection.classement.points;
-    if (S.pointsFin && palierDe(pts)?.id !== palierDe(pts - S.pointsFin)?.id) jouer('palier', 1.4);
+    S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? victoireClassement({ niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
     queueMicrotask(() => { if (niveauCompte(S.collection) > niveauAvant) jouer('niveau', 1.2); });
     let championBattu = gagne && S.areneCtx?.type === 'boss'; // champion d'une nation battu en Carrière
     if (e.rapide) {

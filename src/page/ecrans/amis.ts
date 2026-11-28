@@ -1,8 +1,7 @@
 import { sonFin } from '../son';
 // Combat entre amis (en ligne).
 
-import { gagnerPoints } from '../classement';
-import { lignePointsFin } from './fin';
+import { defaiteEnLigneClassement, lignePointsFin, victoireClassement } from './fin';
 import { LUTTEURS, trouverLutteur, TAILLE_SEQUENCE, niveauCarte, REGLES as R_, type Face } from '../../moteur';
 import { salleEnLigne } from '../firebase';
 import { noterFinCombat } from './avis';
@@ -367,6 +366,8 @@ export function fenetrePileOuFaceLigne(v: Vue) {
   void v;
 }
 
+let defaiteVue = ''; // dernière défaite en ligne comptée au classement (pour afficher la ligne)
+
 export function ecranFinLigne() {
   const v = S.vueLigne;
   const e = v?.etat;
@@ -400,9 +401,17 @@ export function ecranFinLigne() {
       histoire({ type: 'victoire', nation: o.def.nation, niveau: null });
       histoire({ type: 'enLigne' });
       S.paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(S.collection, 'enLigne', Math.random, 1, v.modeSalle === 'collection' && !v.rapide), ouvert: false } };
-      S.pointsFin = gagnerPoints(S.collection, { enLigne: true, tombe: e.finPar === 'tombe' });
+      S.pointsFin = victoireClassement({ enLigne: true, tombe: e.finPar === 'tombe' });
       sauver(S.collection);
     }
+  }
+  // Défaite en ligne (classement, 28/11/2026) : la barre de division baisse, une seule fois par combat.
+  const clePerte = `perte-${cle}`;
+  if (!gagne && e.vainqueur !== null && !S.collection.recompensesEnLigne.includes(clePerte)) {
+    S.collection.recompensesEnLigne = [...S.collection.recompensesEnLigne, clePerte].slice(-50);
+    defaiteEnLigneClassement();
+    sauver(S.collection);
+    defaiteVue = clePerte;
   }
   const booster = S.paquetLigne?.cle === cle ? sectionPaquet(S.paquetLigne.paquet) : '';
   sonFin(`ligne-${cle}`, gagne, e.finPar === 'tombe');
@@ -430,7 +439,7 @@ export function ecranFinLigne() {
         <p>${echap(vainqueur.def.nom)} gagne ${comment}.</p>
         <p class="hist">${echap(moiNom())} : ${echap(h.def.nom)} · ${echap(adv())} : ${echap(o.def.nom)} · ${e.tourGlobal} tours · salle ${echap(S.codeSalle.toUpperCase())}</p>
         ${v.auto ? '<p class="hist">⚡ Combat joué en automatique : l\'ordinateur a joué pour vous deux, selon vos niveaux de compte.</p>' : ''}
-        ${S.paquetLigne?.cle === cle ? lignePointsFin() : ''}
+        ${S.paquetLigne?.cle === cle || defaiteVue === clePerte ? lignePointsFin() : ''}
       </section>
       ${booster}
       <div class="fin-boutons">

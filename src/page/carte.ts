@@ -88,7 +88,7 @@ const echap = (t: string) =>
 let compteur = 0;
 
 // opts : le grade et les étoiles de la carte du joueur (pour afficher déblocages et étoiles).
-export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; etoiles?: Partial<Record<IdAction, number>>; style?: number } = {}): string {
+export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; etoiles?: Partial<Record<IdAction, number>>; style?: number; cadre?: { texte: string; division: string } | null } = {}): string {
   const grade = opts.grade ?? 1;
   // Rareté affichée : celle atteinte par fusion.
   const niveau = opts.grade ? niveauCarte(def, opts.grade) : def.niveau ?? def.rarete;
@@ -112,7 +112,8 @@ export function carteHTML(def: DefLutteur, bouton = '', opts: { grade?: number; 
   // Cartes secrètes : « pleine illustration », l'image couvre toute la carte et les textes passent dessus.
   const pleine = APPARENCE[def.id]?.pleine;
   return `
-    <article class="carte-l${pleine ? ' pleine' : ''}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+    <article class="carte-l${pleine ? ' pleine' : ''}${opts.cadre ? ` cadre-saison d-${opts.cadre.division}` : ''}" data-rarete="${niveau}" ${niveau === 'champion' && opts.style ? `data-style="${opts.style}"` : ''} style="--n1:${col.fond};--n2:${col.fond2}">
+      ${opts.cadre ? `<span class="ruban-saison">${opts.cadre.texte}</span>` : ''}
       <div class="cl-interieur">
         ${pleine ? `<img class="cl-fond" src="${pleine}" alt="" aria-hidden="true">` : ''}
         <header class="cl-tete">

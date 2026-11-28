@@ -1,4 +1,4 @@
-// Classement mensuel (27/11/2026) : barème, plafond du jour, nouveau mois, paliers, récompenses,
+// Classement mensuel (27/11/2026) : barème, plafond du jour, nouveau mois (divisions : divisions.test.ts),
 // publication et lecture (Firebase simulé).
 
 import { test, beforeEach } from 'node:test';
@@ -7,8 +7,7 @@ import { REGLES } from '../src/moteur';
 import { depuisSauvegarde, nouvelleCollection } from '../src/page/collection';
 import { changerSession } from '../src/page/firebase';
 import {
-  cloturerMois, drapeau, gagnerPoints, joursRestants, lireClassement, majPeriode, moisUTC, nomMois, palierDe, palierSuivant,
-  pointsCombat, publier, recompenseMois,
+  drapeau, gagnerPoints, joursRestants, lireClassement, majPeriode, moisUTC, nomMois, pointsCombat, publier,
 } from '../src/page/classement';
 
 const R = REGLES.classement;
@@ -45,39 +44,13 @@ test('nouveau mois : remise à zéro, le mois terminé attend sa récompense', (
   majPeriode(c, Date.UTC(2026, 11, 1, 0, 5)); // 1er décembre
   assert.equal(c.classement.mois, '2026-12');
   assert.equal(c.classement.points, 0);
-  assert.deepEqual(c.classement.enAttente, [{ mois: '2026-11', points: 4 }]);
+  assert.deepEqual(c.classement.enAttente, [{ mois: '2026-11', points: 4, division: 0 }]);
   majPeriode(c, Date.UTC(2026, 11, 2)); // pas de doublon
   assert.equal(c.classement.enAttente.length, 1);
 });
 
-test('paliers : Bronze 30, Argent 120, Or 300', () => {
-  assert.equal(palierDe(29), null);
-  assert.equal(palierDe(30)?.id, 'bronze');
-  assert.equal(palierDe(299)?.id, 'argent');
-  assert.equal(palierDe(5000)?.id, 'or');
-  assert.equal(palierSuivant(0)?.id, 'bronze');
-  assert.equal(palierSuivant(300), null);
-});
 
-test('récompenses : boosters du palier, plus 1 rare pour le Top 10', () => {
-  const c = nouvelleCollection();
-  const types = (b: { type: string }[]) => b.map((x) => x.type).join(',');
-  assert.equal(recompenseMois(c, 10, false).length, 0);
-  assert.equal(types(recompenseMois(c, 30, false)), 'classique');
-  assert.equal(types(recompenseMois(c, 150, false)), 'rare');
-  assert.equal(types(recompenseMois(c, 300, false)), 'rare,rare');
-  assert.equal(types(recompenseMois(c, 300, true)), 'rare,rare,rare');
-});
 
-test('fin du mois : badge du palier et titre de la récompense', () => {
-  const c = nouvelleCollection();
-  c.classement.enAttente = [{ mois: '2026-11', points: 130 }];
-  const r = cloturerMois(c, '2026-11', false);
-  assert.match(r!.titre, /novembre 2026 : palier Argent \(130 points\)/);
-  assert.deepEqual(c.classement.badge, { palier: 'argent', top: false, mois: '2026-11' });
-  assert.equal(c.classement.enAttente.length, 0);
-  assert.equal(cloturerMois(c, '2026-11', false), null); // une seule fois
-});
 
 test('le classement est gardé dans la sauvegarde', () => {
   const c = nouvelleCollection();
