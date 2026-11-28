@@ -156,3 +156,13 @@ test('quêtes du rival et de la durée infinie', () => {
   c.rival.grade = 4;
   assert.equal(queteDe('u-rival-champion').etat!(c), true);
 });
+
+test('quête « Faire une fusion » : proposée seulement si une fusion est prête ou presque', async () => {
+  const { fusionAPortee } = await import('../src/page/quetes');
+  const { nouvelleCollection } = await import('../src/page/collection');
+  const c = nouvelleCollection();
+  c.exemplaires = { 'europe-7': 3 }; // commune : 5 exemplaires pour passer Rare, il manque 2 doubles
+  assert.equal(fusionAPortee(c), false);
+  c.exemplaires['europe-7'] = 4; // il manque 1 double : presque prête
+  assert.equal(fusionAPortee(c), true);
+});

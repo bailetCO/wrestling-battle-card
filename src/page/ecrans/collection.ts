@@ -382,6 +382,7 @@ export function sectionFragments(): string {
 }
 
 export function ecranFusion(message = '') {
+  const E = R_.fusion.exemplairesParNiveau;
   S.partie = null;
   const miens = cartes().filter((l) => nbExemplaires(S.collection, l.id) > 0)
     .sort((a, b) => {
@@ -410,7 +411,7 @@ export function ecranFusion(message = '') {
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Fusion', 'Chaque fusion fait monter la carte d\'une rareté, jusqu\'à Champion du Monde. Il faut 2 exemplaires pour passer Rare, 3 pour Épique, 4 pour Légendaire, 5 pour Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée ; Champion du Monde, toutes les actions sont ouvertes. Ensuite, 5 doubles pour une étoile (−1 d\'endurance sur l\'action choisie, 3 par action) ; chaque quart des étoiles débloque un style de carte.')}
+      ${enTete('Fusion', `Chaque fusion fait monter la carte d'une rareté, jusqu'à Champion du Monde. Plus la carte est commune, plus il faut d'exemplaires : ${E.commune} pour passer de Commune à Rare, ${E.rare} de Rare à Épique, ${E.epique} d'Épique à Légendaire, ${E.legendaire} de Légendaire à Champion du Monde. Chaque niveau gagné : +5 % sur les stats (+10 % pour le 4e) et une action débloquée ; Champion du Monde, toutes les actions sont ouvertes. Ensuite, ${R_.fusion.doublesParEtoile + 1} exemplaires (${R_.fusion.doublesParEtoile} doubles) pour une étoile (−1 d'endurance sur l'action choisie, 3 par action) ; chaque quart des étoiles débloque un style de carte.`)}
       ${message}
       ${miens.length ? `<ul class="fusion-liste">${lignes}</ul>` : '<p class="note marge">Tu n\'as encore aucune carte.</p>'}
       ${sectionFragments()}
@@ -469,7 +470,7 @@ export function fenetreEtoile(id: string) {
   const et = etoilesDe(S.collection, id);
   const fe = ouvrirFenetre(`
     <h2>Étoile pour ${echap(def.nom)}</h2>
-    <p>5 doubles pour une étoile : choisis l'action dont le coût baisse de 1 (3 étoiles maximum par action, coût minimum ${R_.fusion.coutMinimum}).</p>
+    <p>${R_.fusion.doublesParEtoile} doubles pour une étoile : choisis l'action dont le coût baisse de 1 (3 étoiles maximum par action, coût minimum ${R_.fusion.coutMinimum}).</p>
     <div class="deck-liste">${def.actionsPossibles.map((a) => {
       const fam = ACTIONS[a].famille;
       const ok = f.actions.includes(a);

@@ -549,7 +549,10 @@ export const REGLES = {
   // « grade » = nombre de niveaux gagnés + 1. Le bonus et les actions débloquées suivent le grade.
   fusion: {
     reductionDeblocage: 1, // une action débloquée coûte 1 de moins que le coût de sa famille
-    doublesParEtoile: 5, // une fois Champion du Monde : 5 doubles pour une étoile (−1 au coût d'une action)
+    // Exemplaires identiques (l'original compris) pour monter d'un niveau, selon le niveau actuel de la
+    // carte (28/11/2026) : plus la carte est commune, plus il en faut (avant : 2, 3, 4, 5, à l'inverse).
+    exemplairesParNiveau: { commune: 5, rare: 4, epique: 3, legendaire: 2 },
+    doublesParEtoile: 2, // une fois Champion du Monde : 3 exemplaires (2 doubles) pour une étoile, −1 au coût d'une action (avant : 5 doubles)
     etoilesMaxParAction: 3,
     coutMinimum: 1,
     stylesCarte: 4, // Champion du Monde : un nouveau style de carte par quart des étoiles obtenues
@@ -769,9 +772,12 @@ export function avecBonus(def: DefLutteur, bonus: number): DefLutteur {
   };
 }
 
-// Nombre d'exemplaires identiques pour atteindre ce grade (l'original compris) :
-// le rang du niveau visé (Rare 2, Épique 3, Légendaire 4, Champion du Monde 5).
-export const exemplairesPourGrade = (def: DefLutteur, grade: number) => rangDe(def) + grade;
+// Nombre d'exemplaires identiques pour atteindre ce grade (l'original compris), selon le niveau
+// d'où part la carte : Commune → Rare 5, Rare → Épique 4, Épique → Légendaire 3, Légendaire → Champion du Monde 2.
+export const exemplairesPourGrade = (def: DefLutteur, grade: number) => {
+  const depart = niveauCarte(def, grade - 1);
+  return depart === 'champion' ? 1 : REGLES.fusion.exemplairesParNiveau[depart];
+};
 
 // Cocoach, le rival du mode infini (combat rapide, durée infinie). Il commence en carte rare et
 // monte d'un niveau à chaque défaite (Épique, Légendaire, Champion du Monde), puis gagne des

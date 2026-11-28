@@ -56,7 +56,7 @@ export const ETAPES: DefEtape[] = [
   },
   {
     titre: 'Montée en puissance', objectif: 'Fusionner une carte jusqu\'au niveau épique ou légendaire',
-    guide: 'Dans la Collection, réunis des doubles d\'un même lutteur et fusionne-les : une carte rare devient épique avec 3 exemplaires, une épique devient légendaire avec 4.',
+    guide: `Dans la Collection, réunis des doubles d'un même lutteur et fusionne-les : une carte rare devient épique avec ${REGLES.fusion.exemplairesParNiveau.rare} exemplaires, une épique devient légendaire avec ${REGLES.fusion.exemplairesParNiveau.epique}.`,
     lien: '#collection', bouton: 'Ma collection',
   },
   {
