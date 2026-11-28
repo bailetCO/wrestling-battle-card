@@ -1,6 +1,7 @@
 // La collection du joueur : son pseudo de coach, ses cartes (exemplaires et grades), ses decks.
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
+import type { Rarete } from '../moteur';
 import {
   CARTES_SPECIALES, CHAMPIONS, ID_LUTTEUR_TEST, LUTTEURS, REGLES, avecGrade, etoilesPossibles, exemplairesPourGrade, gradeMaxDe, niveauCarte, stylesDebloques, trouverLutteur, verifierDeck,
   type DefLutteur, type Hasard, type IdAction, type Niveau, type NiveauCarte,
@@ -75,7 +76,7 @@ export interface Ami {
   echanges: number;
 }
 
-export type TypeBooster = 'classique' | 'rare';
+export type TypeBooster = 'classique' | 'rare' | 'epique';
 // Un booster : des cartes, et parfois les médailles et les $ de la récompense.
 // Type « recompense » : sans cartes, seulement médailles et $.
 // Une récompense de la boîte : étape, palier de saison, quête, niveau de Mon Club.
@@ -160,7 +161,11 @@ export function verifierPseudo(p: string): string | null {
 
 // ---------- Boosters ----------
 
-function tirerCarte(hasard: Hasard): string {
+function tirerCarte(hasard: Hasard, rarete?: Rarete): string {
+  if (rarete) {
+    const liste = LUTTEURS.filter((l) => l.rarete === rarete);
+    return liste[Math.floor(hasard() * liste.length)].id;
+  }
   const poids: number[] = LUTTEURS.map((l) => REGLES.collection.poidsRarete[l.rarete]);
   let tirage = hasard() * poids.reduce((a, b) => a + b, 0);
   let k = 0;
@@ -172,7 +177,13 @@ function tirerCarte(hasard: Hasard): string {
 export function ouvrirBooster(c: Collection, hasard: Hasard, impose?: TypeBooster): Booster {
   const B = REGLES.collection.boosters;
   const type: TypeBooster = impose ?? (hasard() < B.chanceRare ? 'rare' : 'classique');
-  const cartes = Array.from({ length: B[type].cartes }, () => tirerCarte(hasard));
+  // Booster épique : les cartes garanties en dernier (la meilleure à la fin de l'ouverture).
+  const garanties: Rarete[] = type === 'epique'
+    ? [...Array<Rarete>(B.epique.garanties.rare).fill('rare'), ...Array<Rarete>(B.epique.garanties.epique).fill('epique')] : [];
+  const cartes = [
+    ...Array.from({ length: B[type].cartes - garanties.length }, () => tirerCarte(hasard)),
+    ...garanties.map((r) => tirerCarte(hasard, r)),
+  ];
   const nouvelles: string[] = [];
   for (const id of cartes) {
     if (nbExemplaires(c, id) === 0) nouvelles.push(id);
@@ -207,7 +218,7 @@ function recompenseValide(r: unknown): r is RecompenseAOuvrir {
   const ids = (l: unknown) => Array.isArray(l) && l.every((id) => typeof id === 'string' && trouverLutteurOuNull(id));
   return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club', 'classement', 'parrainage', 'quotidien'].includes(x.source)
     && Array.isArray(x.boosters) && x.boosters.length > 0 && x.boosters.length <= 10
-    && x.boosters.every((b) => b && ['classique', 'rare', 'recompense'].includes(b.type) && ids(b.cartes) && ids(b.nouvelles));
+    && x.boosters.every((b) => b && ['classique', 'rare', 'epique', 'recompense'].includes(b.type) && ids(b.cartes) && ids(b.nouvelles));
 }
 function trouverLutteurOuNull(id: string) {
   try { return trouverLutteur(id); } catch { return null; }

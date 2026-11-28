@@ -64,7 +64,7 @@ export function cartesDuPaquet(p: Paquet): CarteTiree[] {
 }
 
 export const nomBooster = (b: Booster) =>
-  b.type === 'recompense' ? 'Récompense' : b.type === 'rare' ? 'Booster rare · 5 cartes' : 'Booster classique · 3 cartes';
+  b.type === 'recompense' ? 'Récompense' : b.type === 'epique' ? 'Booster épique · 8 cartes' : b.type === 'rare' ? 'Booster rare · 5 cartes' : 'Booster classique · 3 cartes';
 
 // Ce que contient le booster en plus des cartes : médailles et $.
 export function texteGains(g: { medailles?: number; dollars?: number }): string {
@@ -81,7 +81,7 @@ export function visuelPaquet(b: Booster, extra = ''): string {
   return `
     <span class="paquet p-${b.type}">
       <span class="paquet-logo">Wrestling<br>Battle Card</span>
-      <span class="paquet-type">${b.type === 'recompense' ? 'Récompense' : b.type === 'rare' ? 'Rare' : 'Classique'}</span>
+      <span class="paquet-type">${b.type === 'recompense' ? 'Récompense' : b.type === 'epique' ? 'Épique' : b.type === 'rare' ? 'Rare' : 'Classique'}</span>
       <span class="paquet-nb">${contenu}</span>
       ${extra}
     </span>`;

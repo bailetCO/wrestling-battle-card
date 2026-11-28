@@ -171,7 +171,7 @@ export function ecranSocial(message = '') {
         <h2>Boutique</h2>
         <p>Achète des boosters avec tes $. Tu gagnes 10 $ toutes les 5 médailles.</p>
         <div class="boutique-offres">
-          ${(['classique', 'rare'] as const).map((t) => {
+          ${(['classique', 'rare', 'epique'] as const).map((t) => {
             const prix = R_.economie.prixBooster[t];
             const ok = S.collection.dollars >= prix;
             return `<button class="boutique-offre" data-acheter="${t}" ${ok ? '' : 'disabled'} aria-label="Acheter un booster ${t} pour ${prix} dollars">

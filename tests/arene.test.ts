@@ -29,7 +29,7 @@ test('arène : niveaux facile, facile, normal, normal, fort ; une défaite ne fa
   assert.equal(etapeArene(c).rang, 0);
 });
 
-test('arène : +1 médaille par victoire ; nation battue : 2 ou 3 boosters et 3 médailles', () => {
+test('arène : +1 médaille par victoire ; nation battue : 2 ou 3 boosters, 1 épique et 3 médailles', () => {
   const c = nouvelleCollection();
   const h = creerHasard(4);
   for (let i = 0; i < PAR_NATION - 1; i++) {
@@ -41,8 +41,9 @@ test('arène : +1 médaille par victoire ; nation battue : 2 ou 3 boosters et 3 
   assert.equal(c.medailles, 4);
   const r = victoireArene(c, h);
   assert.equal(r.nationBattue?.id, 'afrique');
-  const avecCartes = r.boosters.filter((b) => b.type !== 'recompense');
+  const avecCartes = r.boosters.filter((b) => b.type !== 'recompense' && b.type !== 'epique');
   assert.ok(avecCartes.length === 2 || avecCartes.length === 3);
+  assert.equal(r.boosters.filter((b) => b.type === 'epique').length, 1); // depuis le 28/11/2026
   assert.equal(c.medailles, 4 + 1 + REGLES.arene.medaillesParNation);
   assert.equal(etapeArene(c).nation!.id, nationsArene()[1].id);
 });

@@ -231,7 +231,7 @@ export function ecranQuetes(message = '') {
       ${message}
       ${lienBoite()}
       <ol class="etapes-histoire">${lignes}</ol>
-      <section class="bloc"><p class="note">🎁 Les 3 quêtes réussies : ${S.collection.quetes.bonus ? 'bonus reçu ✓' : '1 booster rare en bonus'}.
+      <section class="bloc"><p class="note">🎁 Les 3 quêtes réussies : ${S.collection.quetes.bonus ? 'bonus reçu ✓' : '1 booster épique en bonus'}.
         ${S.collection.quetes.change ? 'Tu as déjà changé une quête aujourd\'hui.' : `Tu peux changer une quête par jour (${P} $), sauf une quête unique.`}
         Les quêtes uniques (★) ne reviennent jamais une fois réussies.</p></section>
     </main>`;

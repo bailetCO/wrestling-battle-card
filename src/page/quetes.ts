@@ -56,7 +56,7 @@ export interface DefQuete {
   avance?: (ev: EvenementQuete, param: string) => number | 'remise';
   // Quête unique sur l'état de la collection : déjà remplie ?
   etat?: (c: Collection) => boolean;
-  recompense?: { dollars?: number; medailles?: number; boosters?: number; boostersRares?: number; champion?: boolean };
+  recompense?: { dollars?: number; medailles?: number; boosters?: number; boostersRares?: number; boostersEpiques?: number; champion?: boolean };
 }
 
 const combat = (ev: EvenementQuete) => (ev.type === 'combat' ? ev : null);
@@ -178,6 +178,7 @@ export function texteRecompense(q: DefQuete): string {
   const parts: string[] = [];
   if (r.champion) parts.push('1 carte Champion du Monde');
   if (r.boostersRares) parts.push(`${r.boostersRares} booster${r.boostersRares > 1 ? 's' : ''} rare${r.boostersRares > 1 ? 's' : ''}`);
+  if (r.boostersEpiques) parts.push(`${r.boostersEpiques} booster${r.boostersEpiques > 1 ? 's' : ''} épique${r.boostersEpiques > 1 ? 's' : ''}`);
   if (r.boosters) parts.push(`${r.boosters} booster${r.boosters > 1 ? 's' : ''}`);
   if (r.dollars) parts.push(`${r.dollars} $`);
   if (r.medailles) parts.push(`${r.medailles} médaille${r.medailles > 1 ? 's' : ''}`);
@@ -247,6 +248,7 @@ function donner(c: Collection, r: NonNullable<DefQuete['recompense']>, hasard: H
   const boosters: Booster[] = [];
   for (let k = 0; k < (r.boosters ?? 0); k++) boosters.push(ouvrirBooster(c, hasard, 'classique'));
   for (let k = 0; k < (r.boostersRares ?? 0); k++) boosters.push(ouvrirBooster(c, hasard, 'rare'));
+  for (let k = 0; k < (r.boostersEpiques ?? 0); k++) boosters.push(ouvrirBooster(c, hasard, 'epique'));
   if (r.champion) {
     const id = CHAMPIONS[Math.floor(hasard() * CHAMPIONS.length)].id;
     const nouvelle = nbExemplaires(c, id) === 0;

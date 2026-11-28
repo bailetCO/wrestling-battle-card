@@ -71,7 +71,7 @@ test('quêtes : progression, récompenses (5 $ / 10 $ + 1 médaille / booster + 
   const r4 = noterQuete(c, combat({ niveau: 'fort' }), '2026-11-25', h);
   assert.equal(r4.length, 2); // quête difficile + bonus
   assert.equal(r4[0].boosters.length, 1);
-  assert.equal(r4[1].boosters[0].type, 'rare');
+  assert.equal(r4[1].boosters[0].type, 'epique'); // bonus des 3 quêtes : booster épique depuis le 28/11/2026
   assert.equal(c.medailles - m0, 1 + 2);
   assert.ok(c.dollars - d0 >= 15);
   assert.deepEqual(noterQuete(c, combat(), '2026-11-25', h), []); // plus rien à gagner

@@ -369,7 +369,8 @@ export const REGLES = {
   collection: {
     // Boosters : classique (3 cartes, 75 % des boosters) ou rare (5 cartes, 25 %).
     // Les cartes sont tirées parmi les 15, doublons possibles, selon le poids de leur rareté.
-    boosters: { classique: { cartes: 3 }, rare: { cartes: 5 }, chanceRare: 0.25 },
+    // Booster épique (28/11/2026) : 8 cartes, dont au moins 1 épique et 3 rares (les autres au hasard).
+    boosters: { classique: { cartes: 3 }, rare: { cartes: 5 }, epique: { cartes: 8, garanties: { epique: 1, rare: 3 } }, chanceRare: 0.25 },
     boostersParVictoire: { arene: 1, enLigne: 2 },
     // Booster de consolation (arène) : toutes les 2 défaites d'affilée.
     defaitesPourConsolation: 2,
@@ -389,7 +390,7 @@ export const REGLES = {
     medaillesParVictoire: { arene: 1, enLigne: 2 },
     medaillesParPalier: 5, // toutes les 5 médailles gagnées…
     dollarsParPalier: 10, // … +10 $
-    prixBooster: { classique: 10, rare: 25 },
+    prixBooster: { classique: 10, rare: 25, epique: 63 }, // épique : 2,5 × le booster rare (62,5 $, arrondi)
   },
 
   // Mon Club : s'ouvre à 10 médailles, puis +1 niveau toutes les 5 médailles de plus (niveau 5 au
@@ -518,8 +519,8 @@ export const REGLES = {
       facile: { dollars: 5 },
       moyenne: { dollars: 10, medailles: 1 },
       difficile: { boosters: 1, medailles: 2 },
-    } as Record<'facile' | 'moyenne' | 'difficile', { dollars?: number; medailles?: number; boosters?: number; boostersRares?: number; champion?: boolean }>,
-    bonus: { boostersRares: 1 } as { boostersRares: number },
+    } as Record<'facile' | 'moyenne' | 'difficile', { dollars?: number; medailles?: number; boosters?: number; boostersRares?: number; boostersEpiques?: number; champion?: boolean }>,
+    bonus: { boostersEpiques: 1 } as { boostersEpiques: number }, // les 3 quêtes du jour (booster épique depuis le 28/11/2026)
     prixChangement: 5,
   },
 

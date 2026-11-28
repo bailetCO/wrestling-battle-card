@@ -53,7 +53,7 @@ test('compétition : repêchage croisé, un seul 3e, places 1 2 3 4 5 5', () => 
   }
 });
 
-test('compétition : vainqueur = 10 médailles, 15 $ et un booster rare, en plus des médailles de combat', () => {
+test('compétition : vainqueur = 10 médailles, 15 $ et un booster épique, en plus des médailles de combat', () => {
   const col = nouvelleCollection();
   col.dollars = 5;
   assert.equal(payerInscription(col, 'competition'), null);
@@ -64,7 +64,7 @@ test('compétition : vainqueur = 10 médailles, 15 $ et un booster rare, en plus
   for (const _ of combats) gagnerCombatTournoi(col, c);
   assert.equal(places(c).get(0), 1);
   const r = recompenserTournoi(col, c, creerHasard(1));
-  assert.equal(r[0].type, 'rare');
+  assert.equal(r[0].type, 'epique');
   assert.equal(r[0].medailles, T.competition.medailles[1] + combats.length);
   assert.equal(col.medailles, T.competition.medailles[1] + combats.length);
   // 15 $ + 10 $ par palier de 5 médailles franchi.
@@ -93,7 +93,7 @@ test('compétition : 2e = 6 médailles et 9 $, 3e = 3 médailles et 5 $, sans bo
   assert.deepEqual([...vus].sort(), [2, 3]);
 });
 
-test('tournoi par équipe : 5 duels, fini à 3 victoires ; 10 médailles, 30 $ et booster rare au vainqueur', () => {
+test('tournoi par équipe : 5 duels, fini à 3 victoires ; 10 médailles, 30 $ et booster épique au vainqueur', () => {
   const t = creerTournoiEquipe(['usa', 'europe', 'japon', 'russie', 'afrique'], 5);
   assert.equal(t.leurs.length, 5);
   enregistrerDuel(t, 0, true, '');
@@ -105,7 +105,7 @@ test('tournoi par équipe : 5 duels, fini à 3 victoires ; 10 médailles, 30 $ e
   assert.equal(prochainDuel(t), null);
   const col = nouvelleCollection();
   const r = recompenserTournoi(col, t, creerHasard(1));
-  assert.equal(r[0].type, 'rare');
+  assert.equal(r[0].type, 'epique');
   assert.equal(col.medailles, T.equipe.medailles);
   const perdu = creerTournoiEquipe(['usa', 'europe', 'japon', 'russie', 'afrique'], 6);
   for (let i = 0; i < 3; i++) enregistrerDuel(perdu, i, false, '');

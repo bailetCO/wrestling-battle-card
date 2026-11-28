@@ -308,7 +308,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 ### Social
 
-- Boutique : boosters à acheter en $ (classique 10 $, rare 25 $).
+- Boutique : boosters à acheter en $ (classique 10 $, rare 25 $, épique 63 $ depuis le 28/11/2026).
+- Booster épique (28/11/2026) : 8 cartes, dont au moins 1 épique et 3 rares (les 4 autres au hasard, comme d'habitude ; les cartes garanties sont révélées en dernier). Prix : 2,5 fois le booster rare (62,5 $, arrondi à 63 $). Aussi gagné : en bonus des 3 quêtes du jour réussies (à la place du booster rare), pour chaque nation battue en Carrière (en plus des 2 ou 3 boosters), pour un tournoi gagné (à la place du booster rare), et bientôt avec un code créateur. Paquet violet.
 - Transfert de lutteur (anciennement « marchand ») : 3 offres par jour (les mêmes pour tous ce jour-là, renouvelées à minuit, heure du téléphone), chacune utilisable une fois. On reçoit une carte contre un double d'une autre carte de même rareté de départ (jamais le dernier exemplaire).
 - Transfert entre amis (anciennement « échange ») : une salle avec un code de 4 lettres. Chacun voit les doubles de l'autre et propose un de ses doubles ; le transfert se fait quand les deux acceptent les mêmes cartes. Changer d'offre annule l'accord.
 - Liste d'amis : chaque coach affronté en ligne ou avec qui on a fait un transfert y apparaît, avec les victoires, défaites et transferts.
@@ -371,10 +372,10 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   - Finale : les deux vainqueurs des 1/2 finales. Le vainqueur est 1er, le perdant 2e.
   - 3e place : les deux perdants des 1/2 finales ne s'affrontent pas. Chacun joue une qualification pour la 3e place contre le vainqueur du tableau des perdants du côté opposé (perdant de la 1/2 finale du haut contre vainqueur du côté B, et inversement). Les deux gagnants jouent la petite finale : le vainqueur est 3e, le perdant 4e ; les deux perdants des qualifications sont 5es ex aequo. Un vainqueur du tableau des perdants ne peut donc pas faire mieux que 3e. Si un côté du tableau des perdants est vide (exemptions), le perdant de 1/2 finale opposé passe directement en petite finale.
   - Les autres sont classés selon le tour du tableau des perdants où ils sont éliminés (ex aequo dans un même tour).
-- Gains du tournoi individuel : 1er 10 médailles, 15 $ et un booster rare ; 2e 6 médailles et 9 $ ; 3e 3 médailles et 5 $.
+- Gains du tournoi individuel : 1er 10 médailles, 15 $ et un booster épique (rare avant le 28/11/2026) ; 2e 6 médailles et 9 $ ; 3e 3 médailles et 5 $.
 - Création par les administrateurs : l'écran d'aperçu a été retiré du jeu le 26/11/2026 ; ce sera un outil à part (pour toi et les clubs partenaires), avec les comptes en ligne (Firebase).
 - L'ancienne compétition à 6 (deux tableaux de 3, repêchage croisé) est remplacée par le tournoi individuel ; une compétition déjà commencée peut être finie.
-- Tournoi par équipe (inscription 10 $, Mon Club niveau 5 avec 5 lutteurs) : le joueur ordonne ses 5 lutteurs ; ils affrontent dans l'ordre les 5 lutteurs d'un club adverse. La première équipe à 3 victoires gagne : 10 médailles, 30 $ et un booster rare. Défaite : aucun gain de fin.
+- Tournoi par équipe (inscription 10 $, Mon Club niveau 5 avec 5 lutteurs) : le joueur ordonne ses 5 lutteurs ; ils affrontent dans l'ordre les 5 lutteurs d'un club adverse. La première équipe à 3 victoires gagne : 10 médailles, 30 $ et un booster épique (rare avant le 28/11/2026). Défaite : aucun gain de fin.
 - Bonus de nation (tournoi par équipe) : si l'équipe compte 3 lutteurs d'une même nation, toute l'équipe gagne +5 % d'endurance, de force et de récupération ; 4 lutteurs : +7 % ; 5 lutteurs : +10 %. Une fois sur deux, le club adverse est une « Sélection » nationale (3 à 5 lutteurs d'une même nation) qui profite du même bonus. Le bonus de chaque camp s'affiche à l'inscription, dans l'écran du tournoi et pendant le combat.
 - Les combats sans le joueur sont simulés par l'ordinateur (au niveau choisi). Le tournoi en cours est gardé dans le téléphone : on peut le reprendre. Abandonner un combat le perd ; abandonner le tournoi perd l'inscription (les médailles gagnées restent).
 - Les gains de fin sont montrés dans un booster (rare au vainqueur, « Récompense » sinon), avec les médailles gagnées pendant les combats.
@@ -400,7 +401,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 ### Quêtes journalières
 
 - Chaque jour (à minuit, heure du téléphone), 3 quêtes tirées parmi celles du niveau de compte : une facile, une moyenne, une difficile. Tant qu'il reste des quêtes uniques à faire pour son niveau, l'une d'elles remplace la quête facile. Une quête non finie disparaît à minuit.
-- Récompenses : facile 5 $ ; moyenne 10 $ + 1 médaille ; difficile 1 booster + 2 médailles ; les 3 quêtes du jour réussies : 1 booster rare en bonus. Les quêtes uniques ont leur propre récompense.
+- Récompenses : facile 5 $ ; moyenne 10 $ + 1 médaille ; difficile 1 booster + 2 médailles ; les 3 quêtes du jour réussies : 1 booster épique en bonus (rare avant le 28/11/2026). Les quêtes uniques ont leur propre récompense.
 - Bouton « Aller à la quête » (27/11/2026) : sous chaque quête pas encore faite, un bouton mène à l'écran où la faire (Carrière, Entraînement, boutique de Social, Collection, Fusion, Tournois, Mon Club, Combat entre amis, tutoriel). Pour les quêtes contre l'ordinateur fort, en format Enchaînement ou en durée infinie, l'Entraînement s'ouvre avec ce réglage déjà choisi. Le bloc « Quêtes du jour » du menu reste compact et ouvre l'écran des quêtes.
 - Changer une quête : une seule fois par jour, 5 $, contre une autre quête de même difficulté. Les quêtes uniques ne peuvent pas être changées.
 - Affichage : encart « Quêtes du jour » dans le menu (progression), écran « Quêtes du jour » (récompenses, changement, boosters à ouvrir), bulle quand une quête est réussie.
@@ -724,7 +725,7 @@ L'ordinateur se distingue seulement par sa façon de choisir : mêmes cartes que
 - L'ordinateur représente une nation à la fois, dans cet ordre (de la plus abordable à la plus forte) : Afrique, Ouzbékistan, Kirghizistan, Iran, Géorgie, Turquie, Europe, USA, Russie, Azerbaïdjan, Kazakhstan, Japon (champ `ordreArene` de NATIONS).
 - 5 adversaires par nation, de plus en plus forts : la commune la plus faible, la commune la plus forte, la meilleure rare, la meilleure épique, puis la légendaire en boss. Ordinateur facile pour les 2 premiers, normal pour les 3e et 4e, fort pour le boss.
 - Le joueur choisit son lutteur à chaque combat. Après une défaite, il réaffronte le même adversaire, sans recommencer la nation. La progression est sauvegardée.
-- +1 médaille par victoire. Nation battue : 2 ou 3 boosters (au hasard), 3 médailles, et 1 chance sur 3 de gagner la carte du boss. Le booster de consolation (toutes les 2 défaites d'affilée) est gardé.
+- +1 médaille par victoire. Nation battue : 2 ou 3 boosters (au hasard), 1 booster épique (depuis le 28/11/2026), 3 médailles, et 1 chance sur 3 de gagner la carte du boss. Le booster de consolation (toutes les 2 défaites d'affilée) est gardé.
 - Les boss des nations battues peuvent être réaffrontés (ordinateur fort) : +1 médaille et 1 chance sur 3 de gagner leur carte à chaque victoire.
 - Objectif : battre les 12 nations. Le bonus du tutoriel donne 2 boosters en plus à la prochaine victoire dans l'arène.
 

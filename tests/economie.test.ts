@@ -58,3 +58,18 @@ test('sauvegarde : médailles et $ relus, valeurs absurdes remises à zéro', ()
   const x = depuisSauvegarde({ ...JSON.parse(JSON.stringify(c)), medailles: -3, dollars: 'beaucoup' });
   assert.deepEqual([x.medailles, x.dollars], [0, 0]);
 });
+
+test('booster épique : 8 cartes, dont au moins 1 épique et 3 rares ; 63 $ en boutique', async () => {
+  const { ouvrirBooster } = await import('../src/page/collection');
+  const { trouverLutteur } = await import('../src/moteur');
+  for (let g = 1; g <= 30; g++) {
+    const c = nouvelleCollection();
+    let x = g;
+    const b = ouvrirBooster(c, () => ((x = (x * 9301 + 49297) % 233280) / 233280), 'epique');
+    assert.equal(b.cartes.length, 8);
+    const r = b.cartes.map((id) => trouverLutteur(id).rarete);
+    assert.ok(r.filter((x) => x === 'epique').length >= 1);
+    assert.ok(r.filter((x) => x === 'rare').length >= 3);
+  }
+  assert.equal(REGLES.economie.prixBooster.epique, Math.round(REGLES.economie.prixBooster.rare * 2.5));
+});

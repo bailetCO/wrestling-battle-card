@@ -67,7 +67,7 @@ export function ecranTournois(message = '') {
         <h2>Tournoi individuel <small>${C.inscription} $</small></h2>
         <p>Ton lutteur contre ${C.minimum - 1} à ${C.maximum - 1} adversaires, en double tableau : tu avances tant que tu gagnes ; une première défaite avant les 1/2 finales t'envoie dans le tableau des perdants ; une deuxième t'élimine. +${R_.tournoi.medaillesParCombatGagne} médaille par combat gagné.</p>
         <ul class="liste-regles gains">
-          <li>🥇 1er : ${C.medailles[1]} médailles, ${C.dollars[1]} $ et un booster rare</li>
+          <li>🥇 1er : ${C.medailles[1]} médailles, ${C.dollars[1]} $ et un booster épique</li>
           <li>🥈 2e : ${C.medailles[2]} médailles et ${C.dollars[2]} $</li>
           <li>🥉 3e : ${C.medailles[3]} médailles et ${C.dollars[3]} $</li>
         </ul>
@@ -77,7 +77,7 @@ export function ecranTournois(message = '') {
       </section>
       <section class="bloc">
         <h2>Tournoi par équipe <small>${Q.inscription} $</small></h2>
-        <p>Tes 5 lutteurs de Mon Club contre 5 lutteurs d'un club adverse, un duel chacun. La première équipe à ${Q.victoiresPourGagner} victoires gagne : ${Q.medailles} médailles, ${Q.dollars} $ et un booster rare.</p>
+        <p>Tes 5 lutteurs de Mon Club contre 5 lutteurs d'un club adverse, un duel chacun. La première équipe à ${Q.victoiresPourGagner} victoires gagne : ${Q.medailles} médailles, ${Q.dollars} $ et un booster épique.</p>
         ${equipeOk ? '' : `<p class="alerte-douce">🔒 Il faut Mon Club au niveau ${R_.club.niveauTournoiEquipe} avec ${Q.duels} lutteurs (niveau actuel : ${niv || 'fermé'}, ${S.collection.club.length} lutteur${S.collection.club.length > 1 ? 's' : ''}).</p>`}
         <button class="principal" data-equipe ${equipeOk && !enCours ? '' : 'disabled'}>Contre l'ordinateur</button>
         <button class="secondaire" disabled>En ligne · bientôt</button>
