@@ -40,6 +40,6 @@ export function route() {
   if (h === '#combat') return ecranCombatMenu();
   if (h === '#regles') return ecranRegles();
   if (h === '#tutoriel') return ecranTutoriel();
-  if (h === '#arene') return ecranArene();
+  if (h === '#arene') { S.defiChoisi = null; return ecranArene(); }
   if (!S.partie) ecranMenu();
 }

@@ -11,7 +11,7 @@
 // apparaître. Les combats sont calculés sur le téléphone : les règles de Firebase limitent seulement
 // la vitesse de progression (un combat en ligne toutes les 2 minutes, etc.), pas un tricheur décidé.
 
-import { LUTTEURS, REGLES } from '../moteur';
+import { CARTES_SPECIALES, LUTTEURS, REGLES } from '../moteur';
 import { joindreGains, nbExemplaires, ouvrirBooster, type Booster, type Collection } from './collection';
 import { compteActuel } from './compte';
 import { FIREBASE, connexion, type Session } from './firebase';
@@ -100,6 +100,7 @@ export const numeroSaison = (mois: string) => {
 // Cadre de saison : « 2026-11:or » → « Saison 1 · Or ».
 export const texteCadre = (cadre: string) => {
   const [mois, div] = cadre.split(':');
+  if (mois === 'createur') return `Créateur · ${CARTES_SPECIALES.find((l) => l.id === `createur-${div.toLowerCase()}`)?.nom ?? div}`;
   return `Saison ${numeroSaison(mois)} · ${nomDivision(div)}`;
 };
 

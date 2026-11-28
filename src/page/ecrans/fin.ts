@@ -1,19 +1,19 @@
 import { jouer, sonCarte, sonFin } from '../son';
 import { niveauCompte } from '../collection';
-import { combatEnLigne, victoireFort } from '../classement';
+import { combatEnLigne, moisUTC, victoireFort } from '../classement';
 // Fin du combat et ouverture des boosters.
 
 import { tuileVisible } from '../menu';
 import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, trouverLutteur, niveauCarte, REGLES as R_ } from '../../moteur';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
 import { gagnerMedailles, joindreGains, consoler, sauver, type Booster } from '../collection';
-import { ouvrirBooster } from '../collection';
+import { gagnerDefiCreateur, ouvrirBooster } from '../collection';
 import { etapeArene, victoireArene, victoireBossRejoue } from '../arene';
 import { rivalBattu } from '../rival';
 import { ICONE_MEDAILLE, compteur } from './accueil';
 import { ecranArene } from './carriere';
 import { miniCarteLutteur } from './club';
-import { boutonAuto, htmlTourAncien, lancer, lancerArene, texteAuto } from './combat';
+import { boutonAuto, htmlTourAncien, lancer, lancerArene, lancerDefi, texteAuto } from './combat';
 import { S, app, echap, moiNom, nouvelleGraine, portrait } from './commun';
 import { route } from './navigation';
 import { histoire, lancerInterclub, quete, queteCombat, saison } from './progression';
@@ -324,6 +324,16 @@ export function ecranFin() {
         }
         S.paquetSolo = { titre: S.rivalFin?.monte ? 'Victoire contre Cocoach' : 'Victoire', boosters: joindreGains(boostersRival, gagnerMedailles(S.collection, R_.economie.medaillesParVictoire.arene)), ouvert: false };
       }
+    } else if (S.defiCreateur) {
+      // Défi du créateur : une récompense par créateur et par mois. Ni Carrière ni consolation.
+      const code = S.defiCreateur;
+      const nom = S.collection.createurs.find((x) => x.code === code)?.nom ?? code;
+      const r = gagne ? gagnerDefiCreateur(S.collection, code, moisUTC(Date.now()), Math.random) : null;
+      if (r) {
+        S.paquetSolo = { titre: `Défi de ${nom} réussi${r.cadre ? ' · cadre « Créateur » gagné' : ''}`, boosters: r.boosters, ouvert: false };
+        S.exploitFin = { titre: 'DÉFI RÉUSSI !', sousTitre: `J'ai battu la carte de ${nom}`, texte: `J'ai relevé le défi de ${nom} dans Wrestling Battle Card !` };
+      } else if (gagne) S.messageSolo = `Défi de ${nom} déjà réussi ce mois-ci : nouvelle récompense le 1er du mois.`;
+      else S.messageSolo = `La carte de ${nom} t'a battu. Règle tes actions et retente ta chance !`;
     } else if (gagne && S.areneCtx?.type === 'boss') {
       const r = victoireBossRejoue(S.collection, S.areneCtx.nation, Math.random);
       S.paquetSolo = { titre: r.carteBoss ? 'Victoire et carte du boss gagnée' : 'Victoire', boosters: r.boosters, ouvert: false };
@@ -343,7 +353,7 @@ export function ecranFin() {
       if (conso) S.paquetSolo = { titre: 'Booster de consolation', boosters: [conso], ouvert: false };
       else S.messageSolo = 'Encore une défaite d\'affilée et tu reçois un booster de consolation.';
     }
-    queteCombat(e, e.rapide ? 'rapide' : 'arene', S.partie.niveau, championBattu);
+    queteCombat(e, e.rapide || S.defiCreateur ? 'rapide' : 'arene', S.partie.niveau, championBattu);
     sauver(S.collection);
   }
   // Partie d'essai d'un tutoriel court gagnée : un booster classique, une seule fois par tutoriel.
@@ -375,6 +385,7 @@ export function ecranFin() {
         ${momentFin() ? boutonPartage('Partager ce moment') : ''}
         ${enArene && gagne && S.areneCtx?.type === 'progression'
           ? `${etapeArene(S.collection).adversaire ? `<button class="principal" data-suivant-arene>Adversaire suivant avec ${echap(h.def.nom)}</button>${boutonAuto('data-suivant-arene-auto', '', etapeArene(S.collection).adversaire ?? '')}` : ''}`
+          : S.defiCreateur ? `<button class="principal" data-revanche>${gagne ? 'Rejouer le défi' : `Retenter avec ${echap(h.def.nom)}`}</button>`
           : `<button class="principal" data-revanche>${S.interclubEnCours ? 'Combat interclub suivant' : enArene && !gagne ? `Retenter avec ${echap(h.def.nom)}` : 'Revanche'}</button>${boutonAuto('data-revanche-auto', '', S.interclubEnCours ? null : idOrdi)}`}
         <button class="secondaire" data-changer>${enArene ? 'Retour à la Carrière' : 'Changer de lutteur'}</button>
         <button class="lien" data-menu>Retour au menu</button>
@@ -384,8 +395,10 @@ export function ecranFin() {
   activerReflets(app);
   brancherPartage(app, momentFin);
   const ctx = S.areneCtx;
+  const defi = S.defiCreateur;
   const revanche = (auto: boolean) => {
     if (S.essaiSolo) return lancerEssai(S.essaiSolo);
+    if (defi) return lancerDefi(idHumain, defi);
     if (S.interclubEnCours) return lancerInterclub(idHumain, auto);
     if (!enArene) return lancer(idHumain, idOrdi, nouvelleGraine(), e.rapide, S.partie?.niveau ?? S.collection.niveau, auto);
     if (ctx?.type === 'boss') S.bossChoisi = ctx.nation;
@@ -397,6 +410,7 @@ export function ecranFin() {
   app.querySelector('[data-suivant-arene-auto]')?.addEventListener('click', () => { S.bossChoisi = null; lancerArene(idHumain, true); });
   app.querySelector('[data-changer]')!.addEventListener('click', () => {
     if (ctx?.type === 'boss' && !gagne) S.bossChoisi = ctx.nation; else S.bossChoisi = null;
+    S.defiChoisi = defi;
     ecranArene(e.rapide);
   });
   // Retour direct à l'accueil, sans repasser par le choix du lutteur.

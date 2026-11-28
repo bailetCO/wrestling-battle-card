@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.19.0';
+export const VERSION = '0.20.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.20.0',
+    date: '2026-11-28',
+    lignes: [
+      'Nouveau : le défi du créateur ! Dans Social, défie la carte de chaque créateur dont tu as entré le code (ordinateur fort).',
+      'Chaque mois, une victoire te rapporte un exemplaire de sa carte et un booster épique.',
+      'La première fois, tu gagnes aussi son cadre « Créateur », à poser sur la carte de ton choix.',
+    ],
+  },
   {
     version: '0.19.0',
     date: '2026-11-28',

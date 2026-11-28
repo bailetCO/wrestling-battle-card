@@ -259,7 +259,7 @@ export function miniCarteCollection(l: DefLutteur): string {
       </button>`;
   }
   return `
-    <button class="mini-carte${S.collection.classement.cadreCartes[l.id] ? ` cadre-saison d-${S.collection.classement.cadreCartes[l.id].split(':')[1]}` : ''}" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+    <button class="mini-carte${S.collection.classement.cadreCartes[l.id] ? ` cadre-saison d-${S.collection.classement.cadreCartes[l.id].startsWith('createur:') ? 'createur' : S.collection.classement.cadreCartes[l.id].split(':')[1]}` : ''}" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
       <span class="mc-portrait">${portrait(l, niv)}</span>
       ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
       <span class="mc-nom">${echap(l.nom)}</span>

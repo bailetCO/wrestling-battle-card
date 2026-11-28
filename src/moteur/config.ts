@@ -462,6 +462,12 @@ export const REGLES = {
   // au hasard au 3e ami. Au plus 10 parrainages récompensés par joueur. Les deux deviennent amis.
   parrainage: { recompensesMax: 10, bonusLegendaireAu: 3 },
 
+  // Défi du créateur (28/11/2026) : pour chaque créateur dont le joueur a entré le code, un combat contre
+  // la carte du créateur jouée par l'ordinateur fort (en jouant soi-même, sans le mode auto). Une
+  // récompense par créateur et par mois (heure universelle) : des exemplaires de sa carte, des boosters
+  // épiques, et la première fois, le cadre « Créateur » à poser sur une carte.
+  defiCreateur: { exemplaires: 1, boostersEpiques: 1 },
+
   // Mon Club : ouvre à 10 médailles, puis 1 niveau (et 1 place) toutes les 5 médailles, jusqu'au niveau 10.
   // Chaque niveau à partir du 6e donne aussi 1 booster rare. La saison sportive s'ouvre au niveau 10.
   club: { medaillesOuverture: 10, medaillesParNiveau: 5, niveauMax: 10, placesParNiveau: 1, niveauTournoiEquipe: 5,

@@ -49,6 +49,7 @@ export interface Collection {
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
   classement: Classement; // classement mensuel : points du mois, plafond du jour, badge, fins de mois à récompenser
   createurs: Createur[]; // codes créateurs entrés (chacun une fois) : leurs cartes sont connues du jeu
+  defisCreateurs: Record<string, string>; // défi du créateur : code → dernier mois (« 2026-12 ») où il a été récompensé
   createurSoutenu: string; // dernier code créateur entré
   quotidien: { jour: string; rang: number; visite: string; retour: string }; // dernier jour réclamé, prochaine case (0 à 6), dernière visite, dernier bonus de retour (jours AAAA-MM-JJ)
   parrain: { id: string; pseudo: string; declare: boolean } | null; // coach qui m'a invité (nouveau joueur) ; declare : signalé en ligne
@@ -145,7 +146,7 @@ export function nouvelleCollection(): Collection {
     ouverts: [],
     palmares: { fort: 0, derniereFort: 0 },
     combosVus: [],
-    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' }, createurs: [], createurSoutenu: '',
+    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' }, createurs: [], createurSoutenu: '', defisCreateurs: {},
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
@@ -235,7 +236,7 @@ function lireClassement(x: unknown): Classement {
   if (typeof o.division === 'number') v.division = Math.max(0, Math.min(NB - 1, Math.floor(o.division)));
   else v.division = v.points >= 300 ? 2 : v.points >= 120 ? 1 : 0; // ancienne sauvegarde : division tirée du palier de points
   if (typeof o.progression === 'number') v.progression = Math.max(0, Math.floor(o.progression));
-  if (Array.isArray(o.cadres)) v.cadres = [...new Set((o.cadres as unknown[]).filter((x): x is string => typeof x === 'string' && /^\d{4}-\d{2}:[a-z]+$/.test(x)))].slice(-60);
+  if (Array.isArray(o.cadres)) v.cadres = [...new Set((o.cadres as unknown[]).filter((x): x is string => typeof x === 'string' && (/^\d{4}-\d{2}:[a-z]+$/.test(x) || /^createur:[A-Z0-9]{3,20}$/.test(x))))].slice(-60);
   if (o.cadreCartes && typeof o.cadreCartes === 'object') for (const [id, cd] of Object.entries(o.cadreCartes as Record<string, unknown>)) if (typeof cd === 'string' && v.cadres.includes(cd)) v.cadreCartes[id] = cd;
   return v;
 }
@@ -391,6 +392,25 @@ export function recevoirCodeCreateur(c: Collection, cr: Createur, hasard: Hasard
   const nouvelle = nbExemplaires(c, def.id) === 0;
   c.exemplaires[def.id] = nbExemplaires(c, def.id) + 1;
   return [{ type: 'recompense', cartes: [def.id], nouvelles: nouvelle ? [def.id] : [] }, ouvrirBooster(c, hasard, 'epique')];
+}
+
+// Défi du créateur (28/11/2026) : récompense possible ce mois-ci ?
+export const cadreCreateur = (code: string) => `createur:${code}`;
+export const defiDisponible = (c: Collection, code: string, mois: string) => c.createurs.some((x) => x.code === code) && c.defisCreateurs[code] !== mois;
+// Défi réussi : exemplaires de la carte, boosters épiques et (la première fois) le cadre « Créateur ».
+// null : déjà récompensé ce mois-ci, ou code jamais entré.
+export function gagnerDefiCreateur(c: Collection, code: string, mois: string, hasard: Hasard): { boosters: Booster[]; cadre: boolean } | null {
+  const cr = c.createurs.find((x) => x.code === code);
+  if (!cr || !defiDisponible(c, code, mois)) return null;
+  const D = REGLES.defiCreateur;
+  c.defisCreateurs[code] = mois;
+  const def = enregistrerCreateur(cr);
+  c.exemplaires[def.id] = nbExemplaires(c, def.id) + D.exemplaires;
+  const boosters: Booster[] = [{ type: 'recompense', cartes: Array<string>(D.exemplaires).fill(def.id), nouvelles: [] }];
+  for (let k = 0; k < D.boostersEpiques; k++) boosters.push(ouvrirBooster(c, hasard, 'epique'));
+  const cadre = !c.classement.cadres.includes(cadreCreateur(code));
+  if (cadre) c.classement.cadres.push(cadreCreateur(code));
+  return { boosters, cadre };
 }
 
 export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard, multiplicateur = 1, boosters = true): Booster[] {
@@ -580,6 +600,9 @@ export function depuisSauvegarde(brut: unknown): Collection {
   }
   const pm = b.palmares as { fort?: unknown; derniereFort?: unknown } | undefined;
   if (pm && typeof pm === 'object') c.palmares = { fort: entier(pm.fort), derniereFort: entier(pm.derniereFort) };
+  if (b.defisCreateurs && typeof b.defisCreateurs === 'object') {
+    for (const [code, mois] of Object.entries(b.defisCreateurs as Record<string, unknown>)) if (/^[A-Z0-9]{3,20}$/.test(code) && typeof mois === 'string' && /^\d{4}-\d{2}$/.test(mois)) c.defisCreateurs[code] = mois;
+  }
   if (Array.isArray(b.ouverts)) c.ouverts = [...new Set(b.ouverts.filter((x): x is string => typeof x === 'string'))].slice(0, 30);
   if (!c.scenesVues.includes('histoire33')) migrerHistoire33(c);
   if (b.fragments && typeof b.fragments === 'object') {

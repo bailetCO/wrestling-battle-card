@@ -39,6 +39,8 @@ export const S = {
   tuto: (false) as boolean, // combat guidé du tutoriel en cours
   areneCtx: (null) as { type: 'progression' } | { type: 'boss'; nation: string } | null,
   bossChoisi: (null) as string | null, // nation dont on va réaffronter le boss (choix du lutteur)
+  defiChoisi: (null) as string | null, // défi du créateur : code du créateur (choix du lutteur)
+  defiCreateur: (null) as string | null, // défi du créateur en cours de combat : code du créateur
   enTournoi: (null) as CleMatch | number | null,
   bonusEnCours: (null) as { moi: number; lui: number } | null, // bonus de nation du combat (tournoi par équipe) // combat du joueur dans un tournoi (clé du combat ou n° du duel)
   bonusCeCombat: (false) as boolean, // combat d'arène qui suit le tutoriel : boosters doublés
