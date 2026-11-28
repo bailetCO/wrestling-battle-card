@@ -409,7 +409,7 @@ export const REGLES = {
     // Depuis le 28/11/2026 (Histoire en 33 quêtes) : la tuile ou le mode apparaît quand la quête qui
     // s'en sert devient la quête en cours.
     etapeTuile: { combat: 0, collection: 0, tournois: 7, club: 4, saison: 23, social: 8, classement: 9, fusion: 11, recompenses: 0 },
-    etapeFonction: { fort: 20, amis: 24, combos: 12, enchainement: 16, infini: 19, equipe: 17 },
+    etapeFonction: { fort: 20, amis: 9, combos: 12, enchainement: 16, infini: 19, equipe: 17 },
   },
 
   // Classement mensuel (27/11/2026) : points de combat gagnés dans le mois (remis à zéro le 1er, heure
@@ -417,14 +417,14 @@ export const REGLES = {
   // tombé ; victoire en ligne 6 ; tournoi gagné +10. Défaite : 0. Plafond par jour : 80 points (vérifié
   // aussi par les règles de Firebase). Fin du mois : récompense du palier atteint (Bronze, Argent, Or)
   // et bonus pour le Top 10 ; le badge s'affiche à côté du pseudo le mois suivant.
+  // Classements (28/11/2026, 2e version) : trois classements au lieu d'un.
+  // - Division en ligne (saison classée = le mois) : seuls les combats en ligne la font bouger,
+  //   victoire +25, défaite −15 (jamais sous le début de sa division). Barres de plus en plus longues.
+  //   Le 1er du mois, tout le monde repart en Bronze. Récompense de fin de saison selon la division,
+  //   si on a joué au moins un combat en ligne dans le mois, et un cadre « Saison N · Division ».
+  // - Ordinateur fort (à vie) : victoires contre l'ordinateur fort, en jouant soi-même (pas en auto).
+  // - Saison sportive (à vie) : saisons terminées, puis palier en cours.
   classement: {
-    points: { facile: 1, normal: 2, fort: 4, tombe: 1, enLigne: 6, tournoiGagne: 10 },
-    plafondJour: 80,
-    // Divisions (28/11/2026, saison classée = le mois) : elles remplacent les paliers de points. Chaque
-    // division a une barre de `parDivision` ; une victoire la remplit (selon la difficulté), une défaite
-    // en ligne la vide un peu (jamais sous le début de la division). Le 1er du mois, on garde sa
-    // division et la barre repart de zéro. Récompense de fin de saison selon la division (si on a joué)
-    // et un cadre de carte « Saison N · Division », à poser sur une carte de son choix.
     divisions: [
       { id: 'bronze', nom: 'Bronze', classiques: 1, rares: 0, carte: null },
       { id: 'argent', nom: 'Argent', classiques: 0, rares: 1, carte: null },
@@ -433,9 +433,13 @@ export const REGLES = {
       { id: 'diamant', nom: 'Diamant', classiques: 0, rares: 3, carte: 'epique' },
       { id: 'maitre', nom: 'Maître', classiques: 0, rares: 3, carte: 'legendaire' },
     ] as { id: string; nom: string; classiques: number; rares: number; carte: 'epique' | 'legendaire' | null }[],
-    parDivision: 100,
-    gainsDivision: { facile: 10, normal: 15, fort: 25, tombe: 5, enLigne: 40, tournoiGagne: 40 },
-    perteEnLigne: 15,
+    barres: [100, 150, 200, 300, 400], // longueur de la barre de chaque division, de Bronze (vers Argent) à Diamant (vers Maître)
+    victoireEnLigne: 25,
+    defaiteEnLigne: 15,
+    // Anti-triche (vérifié aussi par les règles de Firebase) : temps minimum entre deux combats comptés.
+    // Un combat trop rapproché du précédent n'est pas compté (même règle côté Firebase).
+    secondesParCombatEnLigne: 60,
+    secondesParVictoireFort: 20,
     premiereSaison: '2026-11', // la saison 1 (pour le nom des cadres)
     top: { places: 10, rares: 1 },
     taille: { monde: 50, pays: 500, amis: 29 }, // nombre de lignes lues (amis : 29 + soi, limite de Firebase)

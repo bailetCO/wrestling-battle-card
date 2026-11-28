@@ -1,7 +1,7 @@
 import { sonFin } from '../son';
 // Combat entre amis (en ligne).
 
-import { defaiteEnLigneClassement, lignePointsFin, victoireClassement } from './fin';
+import { combatEnLigneClassement, lignePointsFin } from './fin';
 import { LUTTEURS, trouverLutteur, TAILLE_SEQUENCE, niveauCarte, REGLES as R_, type Face } from '../../moteur';
 import { salleEnLigne } from '../firebase';
 import { noterFinCombat } from './avis';
@@ -401,7 +401,7 @@ export function ecranFinLigne() {
       histoire({ type: 'victoire', nation: o.def.nation, niveau: null });
       histoire({ type: 'enLigne' });
       S.paquetLigne = { cle, paquet: { titre: 'Victoire en ligne', boosters: recompenser(S.collection, 'enLigne', Math.random, 1, v.modeSalle === 'collection' && !v.rapide), ouvert: false } };
-      S.pointsFin = victoireClassement({ enLigne: true, tombe: e.finPar === 'tombe' });
+      combatEnLigneClassement(true);
       sauver(S.collection);
     }
   }
@@ -409,7 +409,7 @@ export function ecranFinLigne() {
   const clePerte = `perte-${cle}`;
   if (!gagne && e.vainqueur !== null && !S.collection.recompensesEnLigne.includes(clePerte)) {
     S.collection.recompensesEnLigne = [...S.collection.recompensesEnLigne, clePerte].slice(-50);
-    defaiteEnLigneClassement();
+    combatEnLigneClassement(false);
     sauver(S.collection);
     defaiteVue = clePerte;
   }

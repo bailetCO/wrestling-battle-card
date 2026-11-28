@@ -1,5 +1,6 @@
 // Mode histoire, boîte à récompenses, quêtes du jour, scènes de dialogue et saison sportive.
 
+import { programmerPublication } from '../classement';
 import { ACTIONS, LUTTEURS, LUTTEUR_TEST, REGLES, ID_COCOACH, ID_RIVAL, trouverLutteur, REGLES as R_, type DefLutteur, type EtatCombat, type Niveau } from '../../moteur';
 import { NOM_RARETE, activerReflets } from '../carte';
 import { recompensesClub, noterBattuMain, adversaireAuto, nbExemplaires, niveauClub, possede, sauver, type Booster, type RecompenseAOuvrir, type SourceRecompense } from '../collection';
@@ -91,6 +92,7 @@ export function saison(ev: EvenementSaison) {
 export function palierValide(r: ReturnType<typeof noterSaison>) {
   sauver(S.collection);
   if (!r) return;
+  programmerPublication(S.collection); // classement « Saison sportive »
   mettreEnBoite(`${PALIERS[r.palier].nom} : réussi${r.finSaison ? ', fin de saison' : ''}`, 'saison', r.boosters);
   sauver(S.collection);
   annoncer(r.finSaison ? `Saison ${S.collection.saison.numero} terminée !` : `${PALIERS[r.palier].nom} : objectif atteint !`);
@@ -318,14 +320,16 @@ export function ecranHistoire() {
   const cours = S.collection.histoire.etape;
   const p = progression(S.collection);
   const lignes = ETAPES.map((e, i) => {
-    const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
+    const passee = S.collection.histoire.passees.includes(e.id);
+    const etat = passee ? 'passee' : i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
     const recompense = texteRecompenseHistoire(i);
     return `<li class="etape-histoire ${etat} q-${e.type}">
-      <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
+      <span class="etape-n">${passee ? '⏭' : i < cours ? '✓' : i + 1}</span>
       <div><span class="type-quete">${e.type === 'principale' ? '★ Quête principale' : 'Quête secondaire'}</span><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
         ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres">${jauge(p)} ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="h${i}">💬 Revoir la scène</button>` : ''}
-        ${i === cours && e.passable ? '<button class="lien" data-passer-quete>Passer cette quête (sans récompense)</button>' : ''}
+        ${passee ? `<p class="guide">⏭ Quête passée : réussis-la quand tu veux, sa récompense t'attend.</p><a class="secondaire lien-bouton" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
+        ${i === cours && e.passable ? '<button class="lien" data-passer-quete>Passer cette quête (tu pourras la réussir plus tard)</button>' : ''}
         ${i === cours && DEV ? '<button class="secondaire bouton-test" data-passer-etape>⏭ Passer à l\'étape suivante (test)</button>' : ''}
         <small class="gain">🎁 ${recompense}</small></div></li>`;
   }).join('');

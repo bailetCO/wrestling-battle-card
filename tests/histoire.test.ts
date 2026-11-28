@@ -25,7 +25,7 @@ test('histoire : 33 quêtes, identifiants uniques, une récompense chacune, 5 pr
   for (let i = 0; i < ETAPES.length; i++) assert.ok(texteRecompense(i).length > 0, ETAPES[i].id);
   // Après les 5 premières : jamais deux quêtes secondaires de suite.
   for (let i = 6; i < ETAPES.length; i++) assert.ok(!(ETAPES[i].type === 'secondaire' && ETAPES[i - 1].type === 'secondaire'), ETAPES[i].id);
-  assert.deepEqual(ETAPES.filter((e) => e.passable).map((e) => e.id), ['invitation', 'en-ligne']);
+  assert.deepEqual(ETAPES.filter((e) => e.passable).map((e) => e.id), ['argent', 'invitation', 'en-ligne', 'or']);
 });
 
 test('quête 1 : gagner un combat en Carrière (les autres victoires ne comptent pas)', () => {
@@ -106,15 +106,27 @@ test('recrutement, podium, achat, division Argent puis Or', () => {
   assert.equal(noter(d, etat).length, 1);
 });
 
-test('quêtes qui demandent un ami : lien partagé, ou passées sans récompense', () => {
+test('quêtes qui demandent un ami ou le jeu en ligne : passées, elles restent à réussir avec leur récompense', () => {
   const c = a('invitation');
   c.parrainage.partage = true;
   assert.equal(noter(c, etat).length, 1);
   const d = a('en-ligne');
   assert.equal(passerQuete(a('deck'), h), null); // une quête ordinaire ne se passe pas
-  const r = passerQuete(d, h)!;
-  assert.deepEqual(r, []);
+  assert.deepEqual(passerQuete(d, h), []);
   assert.equal(ETAPES[d.histoire.etape].id, 'or');
+  assert.deepEqual(d.histoire.passees, ['en-ligne']);
+  // Plus tard, il gagne un combat en ligne : la quête passée est réussie, avec sa récompense.
+  const r = noter(d, { type: 'enLigne' });
+  assert.deepEqual(r.map((x) => ETAPES[x.etape].id), ['en-ligne']);
+  assert.equal(r[0].boosters.length, 1);
+  assert.deepEqual(d.histoire.passees, []);
+  assert.equal(ETAPES[d.histoire.etape].id, 'or'); // la quête en cours n'a pas bougé
+  // Division Argent passée, atteinte plus tard (état du jeu).
+  const e = a('argent');
+  passerQuete(e, h);
+  assert.deepEqual(noter(e, etat), []);
+  e.classement.division = 1;
+  assert.deepEqual(noter(e, etat).map((x) => ETAPES[x.etape].id), ['argent']);
 });
 
 test('fusions : première fusion, Épique, Champion du Monde, étoile (déjà fait = validé)', () => {
@@ -189,7 +201,7 @@ test('menus : chaque tuile ou mode apparaît quand la quête qui s\'en sert est 
   assert.ok(!tuileVisible(vu('invitation'), 'fusion') && tuileVisible(vu('fusion'), 'fusion'));
   assert.ok(fonctionVisible(vu('combos'), 'combos') && fonctionVisible(vu('enchainement'), 'enchainement'));
   assert.ok(fonctionVisible(vu('equipe'), 'equipe') && fonctionVisible(vu('rival'), 'infini'));
-  assert.ok(fonctionVisible(vu('fort'), 'fort') && fonctionVisible(vu('en-ligne'), 'amis'));
+  assert.ok(fonctionVisible(vu('fort'), 'fort') && fonctionVisible(vu('argent'), 'amis') && !fonctionVisible(vu('achat'), 'amis'));
   assert.ok(tuileVisible(vu('club-10'), 'saison'));
 });
 
@@ -215,7 +227,7 @@ test('ancienne sauvegarde (18 étapes) : reprise à la bonne quête, menus déj�
 
 test('histoire gardée dans la sauvegarde', () => {
   const c = nouvelleCollection();
-  c.histoire = { etape: 4, nations: [] };
+  c.histoire = { etape: 4, nations: [], passees: [] };
   assert.equal(depuisSauvegarde(JSON.parse(JSON.stringify(c))).histoire.etape, 4);
   assert.equal(depuisSauvegarde({ histoire: { etape: 99 }, scenesVues: ['histoire33'] }).histoire.etape, 33);
 });

@@ -1,7 +1,7 @@
 import { sonFin } from '../son';
 // Tournois (individuel, par équipe, compétitions de la saison).
 
-import { gagnerPoints } from '../classement';
+import { victoireFort } from '../classement';
 import { LUTTEUR_TEST, NATIONS, avecBonus, bonusNation, trouverLutteur, REGLES as R_ } from '../../moteur';
 import { Partie } from '../partie';
 import { NOM_RARETE, activerReflets } from '../carte';
@@ -405,7 +405,7 @@ export function finCombatTournoi(abandon: boolean) {
   }
   if (gagne && !essaiT) {
     gagnerCombatTournoi(S.collection, S.tournoi);
-    gagnerPoints(S.collection, { niveau: S.partie.niveau, tombe: e.finPar === 'tombe' });
+    if (S.partie.niveau === 'fort' && !S.combatEnAuto) victoireFort(S.collection); // classement « Ordinateur fort »
     histoire({ type: 'victoire', nation: trouverLutteur(S.partie.idOrdi).nation, niveau: S.partie.niveau, auto: S.combatEnAuto });
   }
   sauver(S.collection);

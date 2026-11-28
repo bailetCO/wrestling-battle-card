@@ -1,16 +1,17 @@
-// Classement mensuel (27/11/2026), sans affichage.
-// - Points de combat : chaque victoire rapporte des points selon la difficulté (voir REGLES.classement).
-//   Plafond par jour, remise à zéro le 1er du mois (heure universelle, la même que celle du serveur).
-// - Les points comptent pour tout le monde ; ils ne sont publiés (et le classement n'est visible)
-//   qu'avec un compte. Publication dans Firestore : classements/<mois>/joueurs/<identifiant>.
-// - Trois classements : tous les joueurs, mes amis (liste d'amis), mon pays (choisi par le joueur).
-// - Fin du mois : récompense du palier atteint (Bronze, Argent, Or), plus un booster rare et le badge
-//   « Top 10 » pour les 10 premiers (vérifié en ligne). Le badge s'affiche à côté du pseudo.
-// Le combat est calculé sur le téléphone : les règles de Firebase empêchent seulement de dépasser le
-// plafond du jour, pas un tricheur décidé à envoyer de faux combats sous ce plafond.
+// Classements (28/11/2026, 2e version), sans affichage. Trois classements :
+// - Division en ligne (saison classée = le mois) : seuls les combats en ligne la font bouger (victoire
+//   +25, défaite −15, jamais sous le début de sa division ; barres de plus en plus longues). Le 1er du
+//   mois, tout le monde repart en Bronze. Fin de saison (si au moins un combat en ligne dans le mois) :
+//   récompense de la division, cadre de saison, et un booster rare pour le Top 10. Le badge s'affiche
+//   à côté du pseudo la saison suivante. Publication : classements/<mois>/joueurs/<identifiant>.
+// - Ordinateur fort (à vie) : victoires contre l'ordinateur fort, à la main (pas en mode auto).
+// - Saison sportive (à vie) : saisons terminées, puis palier en cours.
+//   Publication des deux : palmares/<identifiant>.
+// Chaque classement se regarde pour tous les joueurs, mes amis ou mon pays ; il faut un compte pour y
+// apparaître. Les combats sont calculés sur le téléphone : les règles de Firebase limitent seulement
+// la vitesse de progression (un combat en ligne toutes les 2 minutes, etc.), pas un tricheur décidé.
 
 import { LUTTEURS, REGLES } from '../moteur';
-import type { Niveau } from '../moteur/ia';
 import { joindreGains, nbExemplaires, ouvrirBooster, type Booster, type Collection } from './collection';
 import { compteActuel } from './compte';
 import { FIREBASE, connexion, type Session } from './firebase';
@@ -20,80 +21,76 @@ const JOUR_MS = 86_400_000;
 export const jourUTC = (ms: number) => Math.floor(ms / JOUR_MS);
 export const moisUTC = (ms: number) => new Date(ms).toISOString().slice(0, 7);
 
-// ---------- Points ----------
-
-export interface CombatGagne { niveau?: Niveau | null; tombe?: boolean; enLigne?: boolean; tournoiGagne?: boolean }
-
-export function pointsCombat(x: CombatGagne): number {
-  if (x.tournoiGagne) return R.points.tournoiGagne;
-  const base = x.enLigne ? R.points.enLigne : R.points[x.niveau ?? 'normal'];
-  return base + (x.tombe ? R.points.tombe : 0);
-}
-
-// Passe au nouveau jour ou au nouveau mois. Un mois terminé où l'on a joué attend sa récompense ;
-// la nouvelle saison garde la division, et sa barre repart de zéro.
+// Passe au nouveau mois : un mois où l'on a joué en ligne attend sa récompense ; tout le monde repart
+// en Bronze.
 export function majPeriode(c: Collection, maintenant = Date.now()) {
   const k = c.classement;
-  const mois = moisUTC(maintenant), jour = jourUTC(maintenant);
-  if (k.mois !== mois) {
-    if (k.mois && k.points > 0 && !k.enAttente.some((e) => e.mois === k.mois)) k.enAttente.push({ mois: k.mois, points: k.points, division: k.division });
-    if (k.mois) k.progression = 0;
-    k.mois = mois;
-    k.points = 0;
-    k.jour = jour;
-    k.pointsJour = 0;
-  } else if (k.jour !== jour) {
-    k.jour = jour;
-    k.pointsJour = 0;
-  }
+  const mois = moisUTC(maintenant);
+  if (k.mois === mois) return;
+  if (k.mois && k.enLigne > 0 && !k.enAttente.some((e) => e.mois === k.mois)) k.enAttente.push({ mois: k.mois, points: k.points, division: k.division });
+  k.mois = mois;
+  k.points = 0;
+  k.enLigne = 0;
+  k.division = 0;
+  k.progression = 0;
 }
 
-// ---------- Divisions (saison classée) ----------
+// ---------- Division en ligne ----------
 
 export const DIVISIONS = R.divisions;
 export type Division = (typeof DIVISIONS)[number];
 export const nomDivision = (id: string | null) => DIVISIONS.find((d) => d.id === id)?.nom ?? '';
 export const estMaitre = (c: Collection) => c.classement.division >= DIVISIONS.length - 1;
+// Longueur de la barre d'une division (Maître : pas de barre, les points continuent pour classer).
+export const barreDe = (division: number): number | null => R.barres[division] ?? null;
+// Score du mois : barres des divisions passées + barre en cours (sert à classer les joueurs).
+export const scoreEnLigne = (division: number, progression: number) => R.barres.slice(0, division).reduce((n, b) => n + b, 0) + progression;
 
-export function gainDivision(x: CombatGagne): number {
-  const G = R.gainsDivision;
-  if (x.tournoiGagne) return G.tournoiGagne;
-  return (x.enLigne ? G.enLigne : G[x.niveau ?? 'normal']) + (x.tombe ? G.tombe : 0);
-}
-
-// Remplit la barre ; passe à la division suivante quand elle est pleine (la barre du Maître reste pleine).
+// Remplit la barre ; passe à la division suivante quand elle est pleine.
 export function progresser(c: Collection, gain: number): { monte: boolean } {
   const k = c.classement;
   const debut = k.division;
   k.progression += gain;
-  while (k.progression >= R.parDivision && k.division < DIVISIONS.length - 1) { k.progression -= R.parDivision; k.division++; }
-  if (k.division === DIVISIONS.length - 1) k.progression = Math.min(k.progression, R.parDivision);
+  for (let b = barreDe(k.division); b !== null && k.progression >= b; b = barreDe(k.division)) { k.progression -= b; k.division++; }
+  k.points = scoreEnLigne(k.division, k.progression);
   return { monte: k.division > debut };
 }
 
-// Défaite en ligne : la barre baisse, jamais sous le début de la division.
-export function perdreEnLigne(c: Collection, maintenant = Date.now()): number {
+// Combat en ligne terminé : victoire +25, défaite −15 (jamais sous le début de la division).
+// Renvoie le changement de la barre et la nouvelle division si elle monte.
+export function combatEnLigne(c: Collection, gagne: boolean, maintenant = Date.now()): { gain: number; monte: string | null } {
   majPeriode(c, maintenant);
   const k = c.classement;
+  if (maintenant - k.derniereEnLigne < R.secondesParCombatEnLigne * 1000) return { gain: 0, monte: null }; // anti-triche
+  k.enLigne++;
+  k.derniereEnLigne = maintenant;
+  if (gagne) {
+    const { monte } = progresser(c, R.victoireEnLigne);
+    programmerPublication(c);
+    return { gain: R.victoireEnLigne, monte: monte ? DIVISIONS[k.division].nom : null };
+  }
   const avant = k.progression;
-  k.progression = Math.max(0, k.progression - R.perteEnLigne);
-  return avant - k.progression;
+  k.progression = Math.max(0, k.progression - R.defaiteEnLigne);
+  k.points = scoreEnLigne(k.division, k.progression);
+  programmerPublication(c);
+  return { gain: k.progression - avant, monte: null };
 }
 
-// Ajoute les points d'une victoire (dans la limite du plafond du jour) et remplit la barre de division.
-// Renvoie les points ajoutés (0 : plafond du jour atteint, la barre ne bouge pas non plus).
-export function gagnerPoints(c: Collection, x: CombatGagne, maintenant = Date.now()): number {
-  majPeriode(c, maintenant);
-  const k = c.classement;
-  const n = Math.max(0, Math.min(pointsCombat(x), R.plafondJour - k.pointsJour));
-  k.points += n;
-  k.pointsJour += n;
-  if (n) {
-    progresser(c, gainDivision(x));
-    programmerPublication(c);
-  }
-  return n;
+// ---------- Palmarès à vie ----------
+
+// Victoire contre l'ordinateur fort, à la main : +1 au classement « Ordinateur fort ».
+export function victoireFort(c: Collection, maintenant = Date.now()) {
+  if (maintenant - c.palmares.derniereFort < R.secondesParVictoireFort * 1000) return; // anti-triche
+  c.palmares.fort++;
+  c.palmares.derniereFort = maintenant;
+  programmerPublication(c);
 }
+// Saison sportive : saisons terminées × 10 + palier en cours (6 paliers par saison au plus).
+export const scoreSaison = (c: Collection) => c.saison.terminees * 10 + Math.min(9, c.saison.palier);
+export const texteSaison = (score: number) => {
+  const t = Math.floor(score / 10), p = score % 10;
+  return t ? `${t} saison${t > 1 ? 's' : ''} · palier ${p + 1}` : `palier ${p + 1}`;
+};
 
 // Saison n° : la saison 1 est le mois de REGLES.classement.premiereSaison.
 export const numeroSaison = (mois: string) => {
@@ -151,25 +148,28 @@ export const joursRestants = (maintenant = Date.now()) => {
 const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents`;
 const entete = (s: Session) => ({ 'content-type': 'application/json', authorization: `Bearer ${s.jeton}` });
 
+export type TypeClassement = 'enLigne' | 'fort' | 'saison';
 export interface Ligne { uid: string; idCoach: string; pseudo: string; pays: string; points: number; badge: string; moi: boolean }
 
 // Badge affiché : « top » ou la division de la dernière saison terminée.
 export const badgeDe = (c: Collection) => (c.classement.badge ? (c.classement.badge.top ? 'top' : c.classement.badge.palier ?? '') : '');
 
+const CHEMIN = BASE.replace('https://firestore.googleapis.com/v1/', '');
+const ident = (c: Collection) => ({ idCoach: { stringValue: c.idCoach }, pseudo: { stringValue: c.coach ?? '' }, pays: { stringValue: c.pays }, badge: { stringValue: badgeDe(c) } });
+
+// Publie la ligne du mois (seulement si on a joué en ligne) et le palmarès à vie.
 export async function publier(c: Collection): Promise<boolean> {
   if (!compteActuel() || !c.coach) return false;
   const s = await connexion();
   if (!s.compte) return false;
   majPeriode(c);
   const k = c.classement;
-  const fields = {
-    idCoach: { stringValue: c.idCoach }, pseudo: { stringValue: c.coach }, pays: { stringValue: c.pays },
-    badge: { stringValue: badgeDe(c) },
-    points: { integerValue: String(k.points) }, jour: { integerValue: String(k.jour) }, pointsJour: { integerValue: String(k.pointsJour) },
-  };
-  const corps = { writes: [{ update: { name: `${BASE.replace('https://firestore.googleapis.com/v1/', '')}/classements/${k.mois}/joueurs/${s.uid}`, fields }, updateTransforms: [{ fieldPath: 'maj', setToServerValue: 'REQUEST_TIME' }] }] };
-  const r = await fetch(`${BASE}:commit`, { method: 'POST', headers: entete(s), body: JSON.stringify(corps) });
-  return r.ok;
+  const ecrire = (nom: string, fields: Record<string, unknown>) => ({ update: { name: `${CHEMIN}/${nom}`, fields }, updateTransforms: [{ fieldPath: 'maj', setToServerValue: 'REQUEST_TIME' }] });
+  // Deux envois séparés : si l'un est refusé (anti-triche), l'autre passe quand même.
+  const envoyer = (w: ReturnType<typeof ecrire>) => fetch(`${BASE}:commit`, { method: 'POST', headers: entete(s), body: JSON.stringify({ writes: [w] }) }).then((r) => r.ok);
+  const ok = await envoyer(ecrire(`palmares/${s.uid}`, { ...ident(c), fort: { integerValue: String(c.palmares.fort) }, saison: { integerValue: String(scoreSaison(c)) } }));
+  if (k.enLigne === 0) return ok;
+  return (await envoyer(ecrire(`classements/${k.mois}/joueurs/${s.uid}`, { ...ident(c), points: { integerValue: String(k.points) }, enLigne: { integerValue: String(k.enLigne) } }))) && ok;
 }
 
 let minuteur: ReturnType<typeof setTimeout> | null = null;
@@ -180,17 +180,22 @@ export function programmerPublication(c: Collection, delai = 3000) {
 }
 
 type Doc = { name: string; fields?: Record<string, { stringValue?: string; integerValue?: string }> };
-function ligneDe(d: Doc, monUid: string): Ligne {
+function ligneDe(d: Doc, monUid: string, champ: string): Ligne {
   const f = d.fields ?? {};
   const uid = d.name.split('/').pop() ?? '';
   return {
     uid, idCoach: f.idCoach?.stringValue ?? '', pseudo: f.pseudo?.stringValue ?? 'Coach', pays: f.pays?.stringValue ?? '',
-    points: Number(f.points?.integerValue ?? 0), badge: f.badge?.stringValue ?? '', moi: uid === monUid,
+    points: Number(f[champ]?.integerValue ?? 0), badge: f.badge?.stringValue ?? '', moi: uid === monUid,
   };
 }
 
-async function requete(s: Session, mois: string, q: Record<string, unknown>): Promise<Doc[]> {
-  const r = await fetch(`${BASE}/classements/${mois}:runQuery`, { method: 'POST', headers: entete(s), body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'joueurs' }], ...q } }) });
+// Où lire chaque classement : document parent, collection et champ qui classe.
+function source(type: TypeClassement, mois: string) {
+  return type === 'enLigne' ? { parent: `/classements/${mois}`, collection: 'joueurs', champ: 'points' } : { parent: '', collection: 'palmares', champ: type };
+}
+
+async function requete(s: Session, parent: string, collection: string, q: Record<string, unknown>): Promise<Doc[]> {
+  const r = await fetch(`${BASE}${parent}:runQuery`, { method: 'POST', headers: entete(s), body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], ...q } }) });
   if (!r.ok) throw new Error(`Classement illisible (${r.status})`);
   return ((await r.json()) as { document?: Doc }[]).flatMap((x) => (x.document ? [x.document] : []));
 }
@@ -201,38 +206,45 @@ const parPoints = (a: Ligne, b: Ligne) => b.points - a.points || a.pseudo.locale
 export type Vue = 'monde' | 'amis' | 'pays';
 export interface Resultat { lignes: Ligne[]; maPlace: number | null }
 
-// Lit un classement du mois. `maPlace` : rang du joueur (même s'il n'est pas dans la liste, pour « monde »).
-export async function lireClassement(c: Collection, vue: Vue, mois = moisUTC(Date.now())): Promise<Resultat> {
+// Ma valeur dans un classement (pour « ta place »).
+export const maValeur = (c: Collection, type: TypeClassement) => (type === 'enLigne' ? c.classement.points : type === 'fort' ? c.palmares.fort : scoreSaison(c));
+
+// Lit un classement. `maPlace` : rang du joueur (même s'il n'est pas dans la liste, pour « monde »).
+export async function lireClassement(c: Collection, vue: Vue, type: TypeClassement = 'enLigne', mois = moisUTC(Date.now())): Promise<Resultat> {
   const s = await connexion();
-  const ordre = { orderBy: [{ field: { fieldPath: 'points' }, direction: 'DESCENDING' }] };
+  const { parent, collection, champ } = source(type, mois);
+  const ordre = { orderBy: [{ field: { fieldPath: champ }, direction: 'DESCENDING' }] };
+  const lire = async (q: Record<string, unknown>) => (await requete(s, parent, collection, q)).map((d) => ligneDe(d, s.uid, champ));
   let lignes: Ligne[];
-  if (vue === 'monde') lignes = (await requete(s, mois, { ...ordre, limit: R.taille.monde })).map((d) => ligneDe(d, s.uid));
+  if (vue === 'monde') lignes = await lire({ ...ordre, limit: R.taille.monde });
   else if (vue === 'pays') {
     if (!c.pays) return { lignes: [], maPlace: null };
-    lignes = (await requete(s, mois, { where: filtre('pays', 'EQUAL', { stringValue: c.pays }), limit: R.taille.pays })).map((d) => ligneDe(d, s.uid));
+    lignes = await lire({ where: filtre('pays', 'EQUAL', { stringValue: c.pays }), limit: R.taille.pays });
   } else {
     const ids = [c.idCoach, ...Object.entries(c.amis).sort((a, b) => b[1].vu - a[1].vu).map(([id]) => id)].slice(0, R.taille.amis + 1);
-    lignes = (await requete(s, mois, { where: filtre('idCoach', 'IN', { arrayValue: { values: ids.map((id) => ({ stringValue: id })) } }) })).map((d) => ligneDe(d, s.uid));
+    lignes = await lire({ where: filtre('idCoach', 'IN', { arrayValue: { values: ids.map((id) => ({ stringValue: id })) } }) });
   }
+  lignes = lignes.filter((l) => l.points > 0 || l.moi);
   lignes.sort(parPoints);
   const i = lignes.findIndex((l) => l.moi);
   if (i >= 0 || vue !== 'monde') return { lignes, maPlace: i >= 0 ? i + 1 : null };
   // Pas dans les 50 premiers : on compte les joueurs devant.
-  const pts = mois === c.classement.mois ? c.classement.points : 0;
-  const r = await fetch(`${BASE}/classements/${mois}:runAggregationQuery`, {
+  const mien = type !== 'enLigne' || mois === c.classement.mois ? maValeur(c, type) : 0;
+  if (!mien) return { lignes, maPlace: null };
+  const r = await fetch(`${BASE}${parent}:runAggregationQuery`, {
     method: 'POST', headers: entete(s),
-    body: JSON.stringify({ structuredAggregationQuery: { structuredQuery: { from: [{ collectionId: 'joueurs' }], where: filtre('points', 'GREATER_THAN', { integerValue: String(pts) }) }, aggregations: [{ alias: 'n', count: {} }] } }),
+    body: JSON.stringify({ structuredAggregationQuery: { structuredQuery: { from: [{ collectionId: collection }], where: filtre(champ, 'GREATER_THAN', { integerValue: String(mien) }) }, aggregations: [{ alias: 'n', count: {} }] } }),
   });
-  if (!r.ok || !pts) return { lignes, maPlace: null };
+  if (!r.ok) return { lignes, maPlace: null };
   const n = Number(((await r.json()) as { result?: { aggregateFields?: { n?: { integerValue?: string } } } }[])[0]?.result?.aggregateFields?.n?.integerValue ?? NaN);
   return { lignes, maPlace: Number.isFinite(n) ? n + 1 : null };
 }
 
-// Le joueur est-il dans le Top 10 d'un mois terminé ? null : impossible de vérifier (hors ligne).
+// Le joueur est-il dans le Top 10 (division en ligne) d'un mois terminé ? null : impossible de vérifier (hors ligne).
 export async function dansLeTop(mois: string): Promise<boolean | null> {
   try {
     const s = await connexion();
-    const docs = await requete(s, mois, { orderBy: [{ field: { fieldPath: 'points' }, direction: 'DESCENDING' }], limit: R.top.places });
+    const docs = await requete(s, `/classements/${mois}`, 'joueurs', { orderBy: [{ field: { fieldPath: 'points' }, direction: 'DESCENDING' }], limit: R.top.places });
     return docs.some((d) => d.name.endsWith(`/${s.uid}`));
   } catch {
     return null;

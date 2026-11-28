@@ -351,17 +351,20 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les récompenses en boosters restent (arène, en ligne, consolation, bonus du tutoriel).
 - Médailles et $ s'affichent en haut du menu et de Social. Au départ : 0 médaille, 0 $.
 
-### Classement (27/11/2026) et saison classée (28/11/2026)
+### Classements (28/11/2026, 2e version)
 
-- Tuile « Classement » du menu, à partir de l'étape 5 du mode histoire. On n'y entre qu'avec un compte (sinon : explication et bouton « Créer mon compte ») ; les points du mois comptent quand même et sont publiés dès la création du compte.
-- Points de combat du mois : victoire contre l'ordinateur facile 1, normal 2, fort 4 ; +1 par tombé ; victoire en ligne contre un ami 6 (+1 par tombé) ; tournoi gagné +10 (en plus des combats du tournoi). Défaite : 0. Les tutoriels et parties d'essai ne comptent pas. Au plus 80 points par jour (« Plafond du jour atteint » en fin de combat). Remise à zéro le 1er du mois ; jours et mois en heure universelle (celle du serveur).
-- Fin de combat gagné : « 🏆 +4 points de classement » sous le verdict (lien vers le classement).
-- Écran : le mois et les jours restants, mes points, mon palier et une jauge jusqu'au palier suivant, mes points du jour ; trois onglets : 🌍 Tous (50 premiers, et « Ta place : 154e » si on est plus loin), 🤝 Amis (ma liste d'amis : coachs affrontés en ligne ou avec qui j'ai fait un transfert, s'ils ont un compte), Pays (joueurs de mon pays). Chaque ligne : rang, drapeau, pseudo, badge, points. « Comment gagner des points ? » résume le barème et les récompenses.
-- Pays : choisi par le joueur (liste de pays avec drapeaux) dans « Mon compte » ou dans l'onglet Pays.
-- Saison classée (28/11/2026) : une saison = un mois (saison 1 = novembre 2026). Les **divisions** remplacent les paliers de points : 🥉 Bronze → 🥈 Argent → 🥇 Or → 💠 Platine → 💎 Diamant → 👑 Maître. Chaque division a une barre de 100 : victoire contre l'ordinateur +10 (facile), +15 (normal), +25 (fort), +5 par tombé ; victoire en ligne +40 ; tournoi gagné +40 ; barre pleine : division suivante (celle du Maître reste pleine). Défaite en ligne : −15, jamais sous le début de la division ; les défaites contre l'ordinateur ne font rien perdre. Une victoire au-delà du plafond du jour (80 points) ne remplit pas la barre non plus. Le 1er du mois, on garde sa division et la barre repart de zéro. Fin de combat : « +4 points de classement · division +15 », « 🎉 Division Or atteinte ! » (avec une fanfare), ou « Défaite en ligne : division −15 ». La tuile Classement montre la division.
+- Trois classements au lieu d'un (avant : un seul classement par points de tous les combats ; la simulation de 4 profils montrait que même un joueur occasionnel finissait Maître dès le premier mois, et que tout le monde restait Maître ensuite) :
+  1. **🌐 En ligne** : division du mois, 🥉 Bronze → 🥈 Argent → 🥇 Or → 💠 Platine → 💎 Diamant → 👑 Maître. Seuls les combats en ligne la font bouger : victoire +25, défaite −15 (jamais sous le début de sa division). Barres de plus en plus longues : 100 pour passer Argent, 150 Or, 200 Platine, 300 Diamant, 400 Maître ; en Maître, les points continuent (pour classer les Maîtres). Une saison = un mois : le 1er, **tout le monde repart en Bronze**. Les joueurs sont classés par leur score du mois (barres passées + barre en cours).
+  2. **🤖 Ordinateur fort** (à vie) : nombre de victoires contre l'ordinateur fort, en jouant soi-même (pas en mode auto) : Carrière, entraînement et tournois.
+  3. **🏅 Saison sportive** (à vie) : saisons terminées, puis palier en cours (score = saisons terminées × 10 + palier).
+- Chaque classement se regarde pour 🌍 Tous (50 premiers, et « Ta place » si on est plus loin), 🤝 Amis ou 🏳️ Pays. Les joueurs à 0 ne sont pas listés. Tuile « Classement » du menu à partir de la quête 10 du mode histoire. On n'apparaît qu'avec un compte (sinon : explication et bouton « Créer mon compte ») ; ce qu'on fait avant compte quand même.
+- Fin de combat en ligne : « 🏆 Division en ligne +25 » (ou −15, ou « 🎉 Division en ligne Or atteinte ! ») sous le verdict.
+- Fin de saison : il faut avoir joué au moins un combat en ligne dans le mois. Récompense de la division atteinte, cadre de saison à poser sur une carte, badge à côté du pseudo la saison suivante, et 1 booster rare de plus pour le Top 10 du mois (classement en ligne).
 - Récompenses de fin de saison (si on a joué ; boîte à récompenses, au premier lancement de la saison suivante) : Bronze 1 booster classique ; Argent 1 booster rare ; Or 2 rares ; Platine 3 rares ; Diamant 3 rares + 1 carte épique au hasard ; Maître 3 rares + 1 carte légendaire au hasard ; 🏆 Top 10 du classement général : +1 booster rare (vérifié en ligne ; hors ligne, la récompense attend). Plus un **cadre de saison** (« Saison 1 · Or »), gardé pour toujours, à poser sur une carte de son choix (fenêtre de la carte dans la Collection, « Cadre de saison » ; « Aucun » pour l'enlever) : la carte prend la lueur de la division et un ruban avec le nom du cadre (aussi dans la grille de la Collection). Le badge de la division (ou 🏆) s'affiche à côté du pseudo toute la saison suivante.
-- Passage aux divisions : un joueur qui avait déjà des points ce mois-ci commence dans la division de son palier (Argent dès 120 points, Or dès 300) ; un mois terminé avant les divisions est récompensé selon ses points (palier → division).
-- En ligne : Firestore `classements/<mois>/joueurs/<identifiant>` (pseudo, pays, badge, points, points du jour). Les règles de sécurité vérifient le plafond de 80 points par jour, que les points ne baissent jamais, et que chacun n'écrit que sa ligne. Limite connue : le combat est calculé sur le téléphone, un tricheur décidé pourrait envoyer de faux combats sous ce plafond.
+- Passage au nouveau système (28/11/2026) : novembre 2026 se termine avec l'ancienne division (et les anciens points), récompensée comme avant ; le 1er décembre, tout le monde repart en Bronze.
+- Anti-triche (aussi dans les règles de Firebase) : un combat en ligne n'est compté que 60 secondes au moins après le précédent, une victoire contre l'ordinateur fort 20 secondes au moins après la précédente.
+- En ligne : Firestore `classements/<mois>/joueurs/<identifiant>` (pseudo, pays, badge, points, combats en ligne du mois ; publiée seulement après un combat en ligne) et `palmares/<identifiant>` (pseudo, pays, badge, victoires contre l'ordinateur fort, score de saison sportive). Les règles de sécurité vérifient : écriture de sa propre ligne avec un vrai compte, au plus +25 et −15 points par combat en ligne de plus, 60 secondes par combat, palmarès qui ne fait que monter (20 secondes par victoire contre l'ordinateur fort).
+- Pays : choisi par le joueur (liste de pays avec drapeaux) dans « Mon compte » ou dans l'onglet Pays.
 - Tous les chiffres sont dans `REGLES.classement` (fichier de configuration).
 
 ### Mon Club
@@ -509,8 +512,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Les 5 premières quêtes sont faciles (premier jour). Ensuite, une **quête secondaire** (découvrir une fonction : deck, quêtes du jour, boutique, combos, auto, fragments…) alterne avec une **quête principale** (★, avancer dans le jeu : Carrière, tournois, divisions, Mon Club, Cocoach), jamais deux secondaires de suite.
 - L'objectif en cours (avec une jauge quand il y en a une : médailles, nations battues, niveau de Mon Club) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les quêtes faites, la quête en cours (type, guide pas à pas, bouton vers le bon écran, récompense) et les quêtes verrouillées.
 - Les quêtes se débloquent dans l'ordre. Une quête ne se valide qu'une fois en cours, sauf celles qui portent sur l'état du jeu (Mon Club ouvert ou niveau 10, nations battues, division, fusions, étoile, lien d'invitation déjà partagé, lutteur déjà recruté) : validées tout de suite si c'est déjà fait, et enchaînées.
-- Les deux quêtes qui demandent un ami (lien d'invitation, combat en ligne) ont un bouton « Passer cette quête (sans récompense) », pour ne jamais bloquer un joueur qui joue seul.
-- Les menus et modes apparaissent quand la quête qui s'en sert devient la quête en cours : Mon Club (quête 5), Tournois (8), Social et la boutique (9), Classement (10), Fusion (12), combos (13), Enchaînement (17), tournoi par équipe (18), durée infinie (20), ordinateur fort (21), saison sportive (24), combat entre amis (25).
+- Les quêtes qui demandent un ami ou le jeu en ligne (division Argent, lien d'invitation, combat en ligne, division Or) ont un bouton « Passer cette quête » : le joueur avance à la suivante, et la quête passée reste à réussir quand il veut (⏭ dans la liste), avec sa récompense.
+- Les menus et modes apparaissent quand la quête qui s'en sert devient la quête en cours : Mon Club (quête 5), Tournois (8), Social et la boutique (9), Classement et combat entre amis (10), Fusion (12), combos (13), Enchaînement (17), tournoi par équipe (18), durée infinie (20), ordinateur fort (21), saison sportive (24).
 - Récompenses (chiffres dans `REGLES.histoire.recompenses`) : petites pour les secondaires ($ ou un booster), plus grosses pour les principales (boosters rares ou épiques, cartes légendaires). Une bulle annonce chaque quête réussie ; les boosters vont dans la boîte à récompenses, les $ sont ajoutés tout de suite. Le mode histoire ne donne pas de médailles.
   1. ★ Premier combat : gagner un combat en Carrière : 1 booster.
   2. Régler les actions d'un de ses lutteurs : 10 $.
@@ -521,8 +524,8 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   7. Recruter un lutteur dans Mon Club : 1 booster.
   8. ★ Finir sur le podium d'un tournoi individuel : 1 booster rare.
   9. Acheter un booster (ou une carte) dans la boutique (Social) : 15 $.
-  10. ★ Atteindre la division Argent : 1 booster rare.
-  11. Envoyer son lien d'invitation à un ami (peut être passée) : 1 booster.
+  10. ★ Atteindre la division Argent en ligne (peut être passée) : 1 booster rare.
+  11. Envoyer son lien d'invitation à un ami (peut être passée, puis réussie plus tard) : 1 booster.
   12. ★ Faire sa première fusion (ou première étoile) : 1 booster épique.
   13. Réussir 2 combos dans un même combat (pas en auto ; gagner n'est pas obligatoire) : 1 booster.
   14. ★ Battre 3 nations en Carrière : 2 boosters rares.
@@ -537,7 +540,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   23. Monter une carte jusqu'au niveau Épique par fusion : 1 booster rare.
   24. ★ Monter Mon Club au niveau 10 (ouvre la saison sportive) : 1 booster épique.
   25. Gagner un combat en ligne contre un ami (peut être passée) : 1 booster rare.
-  26. ★ Atteindre la division Or : 2 boosters rares.
+  26. ★ Atteindre la division Or en ligne (peut être passée) : 2 boosters rares.
   27. Obtenir une carte Champion du Monde par fusion : 1 booster épique.
   28. ★ Battre 9 nations en Carrière : 2 boosters épiques.
   29. Gagner un tournoi individuel sans passer par le tableau des perdants : 1 booster rare.
