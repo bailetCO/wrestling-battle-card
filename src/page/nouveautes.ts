@@ -2,11 +2,21 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.16.0';
+export const VERSION = '0.17.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.17.0',
+    date: '2026-11-28',
+    lignes: [
+      'Fusions : plus une carte est commune, plus il faut d\'exemplaires. Commune → Rare : 5, Rare → Épique : 4, Épique → Légendaire : 3, Légendaire → Champion du Monde : 2.',
+      'Étoiles des Champions du Monde : 2 doubles suffisent maintenant (au lieu de 5).',
+      'Collection : touche une carte grisée pour la voir en entier et savoir où l\'obtenir.',
+      'Histoire : la 1re étape est maintenant « Gagner un combat en Carrière ».',
+    ],
+  },
   {
     version: '0.16.0',
     date: '2026-11-28',

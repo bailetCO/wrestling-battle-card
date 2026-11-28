@@ -6,7 +6,7 @@
 import { CHAMPIONS, LUTTEURS, NATIONS, REGLES, creerHasard, niveauCarte, trouverLutteur, type Hasard, type Niveau } from '../moteur';
 import { fonctionVisible, type IdFonction } from './menu';
 import {
-  cartesPossedees, gagnerMedailles, gradeDe, nbExemplaires, nbStyles, niveauClub, niveauCompte, ouvrirBooster, placesClub,
+  carteConnue, cartesPossedees, gagnerMedailles, gradeDe, nbExemplaires, nbStyles, niveauClub, niveauCompte, ouvrirBooster, placesClub, prochaineFusion,
   type Booster, type Collection,
 } from './collection';
 
@@ -199,8 +199,17 @@ const FONCTION_QUETE: Record<string, IdFonction> = {
 };
 export const queteOuverte = (c: Collection, id: string) => !FONCTION_QUETE[id] || fonctionVisible(c, FONCTION_QUETE[id]);
 
+// « Faire une fusion » n'est proposée que si une fusion est prête ou presque (au plus 1 double manquant) :
+// depuis le 28/11/2026, il faut plus d'exemplaires et un débutant n'a souvent rien à fusionner.
+export const fusionAPortee = (c: Collection) => Object.keys(c.exemplaires).some((id) => {
+  if (!carteConnue(id)) return false;
+  const f = prochaineFusion(c, id);
+  return !!f && f.doublesDispo >= f.doublesNecessaires - 1;
+});
+const quetePossible = (c: Collection, id: string) => queteOuverte(c, id) && (id !== 'fusion' || fusionAPortee(c));
+
 const disponibles = (c: Collection, d: Difficulte, exclus: string[]) =>
-  QUETES.filter((q) => q.difficulte === d && q.niveauMin <= niveauCompte(c) && !exclus.includes(q.id) && (d !== 'unique' || !c.quetes.uniques.includes(q.id)) && queteOuverte(c, q.id));
+  QUETES.filter((q) => q.difficulte === d && q.niveauMin <= niveauCompte(c) && !exclus.includes(q.id) && (d !== 'unique' || !c.quetes.uniques.includes(q.id)) && quetePossible(c, q.id));
 
 function tirer(c: Collection, d: Difficulte, exclus: string[], h: Hasard): QueteDuJour | null {
   const pool = disponibles(c, d, exclus);
