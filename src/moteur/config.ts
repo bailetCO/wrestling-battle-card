@@ -426,6 +426,17 @@ export const REGLES = {
     taille: { monde: 50, pays: 500, amis: 29 }, // nombre de lignes lues (amis : 29 + soi, limite de Firebase)
   },
 
+  // Revenir chaque jour (27/11/2026) : calendrier de 7 jours, une récompense par jour (heure du
+  // téléphone). Un jour manqué ne fait rien perdre : on reprend à la case suivante. Après la 7e case,
+  // le calendrier recommence. Bonus de retour : après au moins 7 jours sans jouer, 1 booster rare
+  // (une fois tous les 30 jours au plus).
+  quotidien: {
+    calendrier: [
+      { dollars: 5 }, { boosters: 1 }, { dollars: 10 }, { boosters: 1 }, { dollars: 15 }, { boosters: 1, dollars: 5 }, { boostersRares: 1 },
+    ] as { dollars?: number; boosters?: number; boostersRares?: number }[],
+    retour: { joursAbsence: 7, boostersRares: 1, intervalleJours: 30 },
+  },
+
   // Parrainage (27/11/2026) : chaque joueur a son lien perso (il fait aussi entrer dans la bêta).
   // Le nouveau joueur arrivé par ce lien reçoit un booster rare de bienvenue ; le parrain reçoit
   // 1 booster rare quand son ami crée un vrai compte (Google ou e-mail), plus une carte légendaire

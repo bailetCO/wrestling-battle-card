@@ -368,6 +368,10 @@ test('mode Enchaînement entre amis : une séquence modifiée après l\'envoi es
   const a = new Duel(salle('a'), 'hote', null, undefined, { rapide: true, enchainement: true });
   const vraie = salle('b');
   const deck = trouverLutteur('japon').actions.map((x) => coder({ action: x }));
+  // Le tricheur ment partout : dans son dévoilement ET dans son historique (27/11/2026). S'il ne
+  // mentait que dans le dévoilement, l'ami qui lit son historique (quand le tricheur a déjà joué)
+  // rejouait la vraie séquence : rien à détecter, et le test échouait au hasard, environ 1 fois sur 8.
+  let fausse: number | null = null;
   const truquee: Salle = {
     ...vraie,
     publier(p) {
@@ -381,8 +385,10 @@ test('mode Enchaînement entre amis : une séquence modifiée après l\'envoi es
           const der = coder(autre[autre.length - 1]);
           autre = [...autre.slice(0, -1), decoder(deck.find((x) => x !== der)!)];
         }
-        q.rev.c = coderSequence(autre);
+        fausse ??= coderSequence(autre);
+        q.rev.c = fausse;
       }
+      if (fausse !== null && Array.isArray(q.h) && q.h.length > 0) q.h[0] = fausse;
       vraie.publier(q);
     },
   };

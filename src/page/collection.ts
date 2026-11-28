@@ -44,6 +44,7 @@ export interface Collection {
   battusMain: string[]; // lutteurs adverses battus au moins une fois en jouant soi-même (le combat auto n'est permis que contre eux)
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
   classement: Classement; // classement mensuel : points du mois, plafond du jour, badge, fins de mois à récompenser
+  quotidien: { jour: string; rang: number; visite: string; retour: string }; // dernier jour réclamé, prochaine case (0 à 6), dernière visite, dernier bonus de retour (jours AAAA-MM-JJ)
   parrain: { id: string; pseudo: string; declare: boolean } | null; // coach qui m'a invité (nouveau joueur) ; declare : signalé en ligne
   parrainage: { vus: string[]; recompenses: number; partage: boolean }; // amis invités déjà comptés, parrainages récompensés, lien déjà partagé
   pays: string; // pays choisi par le joueur (code à 2 lettres, '' = pas choisi), pour le classement par pays
@@ -74,7 +75,7 @@ export type TypeBooster = 'classique' | 'rare';
 // Un booster : des cartes, et parfois les médailles et les $ de la récompense.
 // Type « recompense » : sans cartes, seulement médailles et $.
 // Une récompense de la boîte : étape, palier de saison, quête, niveau de Mon Club.
-export type SourceRecompense = 'histoire' | 'saison' | 'quetes' | 'club' | 'classement' | 'parrainage';
+export type SourceRecompense = 'histoire' | 'saison' | 'quetes' | 'club' | 'classement' | 'parrainage' | 'quotidien';
 export interface RecompenseAOuvrir { titre: string; source: SourceRecompense; boosters: Booster[] }
 
 export interface Booster {
@@ -116,7 +117,7 @@ export function nouvelleCollection(): Collection {
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
     combosVus: [],
-    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false },
+    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' },
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
@@ -194,7 +195,7 @@ function lireClassement(x: unknown): Classement {
 function recompenseValide(r: unknown): r is RecompenseAOuvrir {
   const x = r as RecompenseAOuvrir;
   const ids = (l: unknown) => Array.isArray(l) && l.every((id) => typeof id === 'string' && trouverLutteurOuNull(id));
-  return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club', 'classement', 'parrainage'].includes(x.source)
+  return !!x && typeof x.titre === 'string' && ['histoire', 'saison', 'quetes', 'club', 'classement', 'parrainage', 'quotidien'].includes(x.source)
     && Array.isArray(x.boosters) && x.boosters.length > 0 && x.boosters.length <= 10
     && x.boosters.every((b) => b && ['classique', 'rare', 'recompense'].includes(b.type) && ids(b.cartes) && ids(b.nouvelles));
 }
@@ -528,6 +529,9 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
   c.classement = lireClassement(b.classement);
+  const q = b.quotidien as Collection['quotidien'];
+  const jourOk = (x: unknown) => typeof x === 'string' && (x === '' || /^\d{4}-\d{2}-\d{2}$/.test(x));
+  if (q && jourOk(q.jour) && jourOk(q.visite) && jourOk(q.retour) && Number.isInteger(q.rang)) c.quotidien = { jour: q.jour, rang: Math.min(6, Math.max(0, q.rang)), visite: q.visite, retour: q.retour };
   const pr = b.parrain as Collection['parrain'];
   if (pr && typeof pr.id === 'string' && typeof pr.pseudo === 'string') c.parrain = { id: pr.id.slice(0, 40), pseudo: pr.pseudo.slice(0, 16), declare: pr.declare === true };
   const pg = b.parrainage as Collection['parrainage'];

@@ -308,6 +308,14 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Sans serveur, ces transferts reposent sur la confiance entre amis ; Firebase les sécurisera.
 - Pour les tests : un bouton « Ouvrir un booster (test) » dans la Collection.
 
+### Revenir chaque jour (27/11/2026)
+
+- Récompense du jour : un bloc « 🎁 Récompense du jour » en haut du menu tant qu'elle n'est pas récupérée, avec un calendrier de 7 cases (J1 à J7, cases faites cochées, case du jour entourée) et un bouton « Récupérer » qui ouvre la récompense comme un booster.
+- Calendrier : J1 5 $, J2 1 booster, J3 10 $, J4 1 booster, J5 15 $, J6 1 booster + 5 $, J7 1 booster rare ; puis il recommence. Un jour manqué ne fait rien perdre : on reprend à la case suivante. Jours du téléphone (minuit, comme les quêtes du jour).
+- Bonus de retour : après au moins 7 jours sans jouer, Darius accueille le joueur (« Content de te revoir, Coach … ! ») avec 1 booster rare dans la boîte à récompenses, une fois tous les 30 jours au plus.
+- Notifications (à venir, lot suivant) : proposées après la première récompense du jour ; envoyées par Corentin depuis la console Firebase (rappel quotidien, annonces).
+- Chiffres dans `REGLES.quotidien`.
+
 ### Inviter un ami : parrainage (27/11/2026)
 
 - Bouton « 📨 Inviter un ami » : en haut de Social, dans le Classement (onglet Amis) et sous « Plus » en bas du menu. Il ouvre le menu de partage du téléphone (sinon, le lien est copié) avec un texte et le lien perso du joueur : `…/?parrain=<identifiant de coach>&de=<pseudo>`.
