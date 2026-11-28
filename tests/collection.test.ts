@@ -48,17 +48,19 @@ test('consolation : un booster toutes les 2 défaites d\'affilée, remis à zér
   assert.equal(consoler(c, creerHasard(5)), null);
 });
 
-test('fusion : chaque fusion monte d\'une rareté ; il faut autant d\'exemplaires que le rang visé', () => {
+test('fusion : chaque fusion monte d\'une rareté ; plus la carte est commune, plus il faut d\'exemplaires (5, 4, 3, 2)', () => {
   const c = nouvelleCollection();
   c.exemplaires = {};
   c.exemplaires['europe-7'] = 1; // commune
   assert.ok(fusionner(c, 'europe-7')); // pas de double
-  c.exemplaires['europe-7'] = 2; // Rare : 2 exemplaires (1 double)
-  assert.deepEqual(prochaineFusion(c, 'europe-7'), { type: 'grade', grade: 2, niveau: 'rare', doublesNecessaires: 1, doublesDispo: 1 });
+  c.exemplaires['europe-7'] = 4; // pas assez : Commune → Rare demande 5 exemplaires
+  assert.ok(fusionner(c, 'europe-7'));
+  c.exemplaires['europe-7'] = 5; // Rare : 5 exemplaires (4 doubles)
+  assert.deepEqual(prochaineFusion(c, 'europe-7'), { type: 'grade', grade: 2, niveau: 'rare', doublesNecessaires: 4, doublesDispo: 4 });
   assert.equal(fusionner(c, 'europe-7'), null);
   assert.equal(niveauCarte(trouverLutteur('europe-7'), gradeDe(c, 'europe-7')), 'rare');
   assert.equal(nbExemplaires(c, 'europe-7'), 1);
-  c.exemplaires['europe-7'] = 1 + 2 + 3 + 4; // Épique (2 doubles), Légendaire (3), Champion du Monde (4)
+  c.exemplaires['europe-7'] = 1 + 3 + 2 + 1; // Épique (3 doubles), Légendaire (2), Champion du Monde (1)
   for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'europe-7'), null);
   assert.equal(gradeDe(c, 'europe-7'), 5);
   assert.equal(niveauCarte(trouverLutteur('europe-7'), 5), 'champion');
@@ -66,14 +68,14 @@ test('fusion : chaque fusion monte d\'une rareté ; il faut autant d\'exemplaire
   assert.equal(prochaineFusion(c, 'europe-7')?.type, 'etoile');
 });
 
-test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, avec 5 exemplaires', () => {
+test('fusion : une légendaire n\'a qu\'une montée, vers Champion du Monde, avec 2 exemplaires', () => {
   const c = nouvelleCollection();
   const usa = trouverLutteur('usa'); // légendaire
   assert.equal(gradeMaxDe(usa), 2);
-  c.exemplaires.usa = 4;
-  assert.deepEqual(prochaineFusion(c, 'usa'), { type: 'grade', grade: 2, niveau: 'champion', doublesNecessaires: 4, doublesDispo: 3 });
+  c.exemplaires.usa = 1;
+  assert.deepEqual(prochaineFusion(c, 'usa'), { type: 'grade', grade: 2, niveau: 'champion', doublesNecessaires: 1, doublesDispo: 0 });
   assert.ok(fusionner(c, 'usa'));
-  c.exemplaires.usa = 5;
+  c.exemplaires.usa = 2;
   assert.equal(fusionner(c, 'usa'), null);
   assert.equal(niveauCarte(usa, gradeDe(c, 'usa')), 'champion');
   assert.equal(prochaineFusion(c, 'usa')?.type, 'etoile');
@@ -91,22 +93,24 @@ test('fusion : nombre de montées selon la rareté de départ', () => {
   const max = (r: string) => gradeMaxDe(LUTTEURS.find((l) => l.rarete === r)!);
   assert.deepEqual(['commune', 'rare', 'epique', 'legendaire'].map(max), [5, 4, 3, 2]);
   const rare = LUTTEURS.find((l) => l.rarete === 'rare')!;
-  assert.equal(exemplairesPourGrade(rare, 2), 3); // Rare → Épique : 3 exemplaires
+  assert.equal(exemplairesPourGrade(rare, 2), 4); // Rare → Épique : 4 exemplaires
+  const commune = LUTTEURS.find((l) => l.rarete === 'commune')!;
+  assert.deepEqual([2, 3, 4, 5].map((g) => exemplairesPourGrade(commune, g)), [5, 4, 3, 2]); // une commune jusqu'à Champion du Monde
 });
 
-test('étoiles (Champion du Monde) : 5 doubles, −1 au coût de l\'action choisie, 3 maximum par action', () => {
+test('étoiles (Champion du Monde) : 2 doubles, −1 au coût de l\'action choisie, 3 maximum par action', () => {
   const c = nouvelleCollection();
-  c.exemplaires.usa = 1 + 5 * 4;
+  c.exemplaires.usa = 1 + 2 * 4;
   c.grades.usa = 2; // légendaire montée en Champion du Monde
   const f = prochaineFusion(c, 'usa');
   assert.equal(f?.type, 'etoile');
-  assert.equal(f?.doublesNecessaires, 5);
+  assert.equal(f?.doublesNecessaires, 2);
   assert.ok(fusionner(c, 'usa')); // il faut choisir l'action
   const cout0 = coutAction(defPossede(c, 'usa'), 'double_jambe');
   for (let i = 0; i < 3; i++) assert.equal(fusionner(c, 'usa', 'double_jambe'), null);
   assert.equal(coutAction(defPossede(c, 'usa'), 'double_jambe'), cout0 - 3);
   assert.ok(fusionner(c, 'usa', 'double_jambe')); // déjà 3 étoiles
-  assert.equal(nbExemplaires(c, 'usa'), 1 + 5);
+  assert.equal(nbExemplaires(c, 'usa'), 1 + 2);
   assert.equal(nbEtoiles(c, 'usa'), 3);
 });
 

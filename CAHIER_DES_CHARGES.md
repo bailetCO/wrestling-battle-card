@@ -468,7 +468,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Easter egg : la carte **Cocoach**, Champion du Monde de naissance (style du rival : technicien des feintes et des ceintures, Europe ; endurance 59 (60 avant les rééquilibrages du 28/11/2026), force 175, récupération 44 % ; action de Champion : Changement de niveau). Différente du rival de la durée infinie et du lutteur de test.
 - **Première médaille d'or aux JO** : la carte, avec **4 étoiles** posées au hasard sur 4 actions différentes (−1 au coût de chacune), tirées une fois pour toutes.
-- **Chaque médaille d'or aux JO suivants** : un exemplaire de plus, qui sert de double pour la fusion (étoiles et styles de carte, règles habituelles : 5 doubles par étoile, 3 étoiles au plus par action).
+- **Chaque médaille d'or aux JO suivants** : un exemplaire de plus, qui sert de double pour la fusion (étoiles et styles de carte, règles habituelles : 2 doubles par étoile, 3 étoiles au plus par action).
 - Jamais dans les boosters, l'arène, la boutique, les fins de saison ni les quêtes. Jouable partout ; visible dans la collection (groupe Champions du Monde) une fois gagnée.
 - Équilibrage (simulation du 27/11/2026, sans ses étoiles) : 65,8 % de victoires, dans la fourchette des Champions du Monde (62,5 à 67,5 %) ; remesuré après la règle de priorité du combo et le rééquilibrage de l'étape 6 : 65,1 %.
 
@@ -534,12 +534,12 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 ### Fusion, niveaux de rareté et étoiles
 
 - Une carte a une rareté de départ (celle du booster) et un niveau, qui monte par fusion : Commune → Rare → Épique → Légendaire → Champion du Monde. Champion du Monde ne s'obtient que par fusion. Une commune peut donc monter 4 fois, une rare 3, une épique 2, une légendaire 1.
-- Monter au niveau visé demande autant d'exemplaires identiques que son rang : Rare 2, Épique 3, Légendaire 4, Champion du Monde 5 (l'original compris ; les doubles sont consommés). C'est le même nombre pour toutes les cartes : une légendaire a besoin de 5 exemplaires pour devenir Champion du Monde.
+- Monter d'un niveau demande des exemplaires identiques (l'original compris ; les doubles sont consommés), selon le niveau d'où part la carte (28/11/2026) : Commune → Rare 5, Rare → Épique 4, Épique → Légendaire 3, Légendaire → Champion du Monde 2. Plus une carte est commune, plus il en faut. (Avant : l'inverse, 2, 3, 4 puis 5 ; la simulation de 200 nouveaux joueurs donnait une 1re fusion dès le 1er booster ; avec les nouveaux chiffres, vers 23 boosters, 1re épique par fusion vers 33, 1er Champion du Monde par fusion vers 72.)
 - Bonus de statistiques compté par niveau gagné : +5 % pour chacun des 3 premiers niveaux gagnés, +10 % pour le 4e (+25 % au total pour une commune devenue Champion du Monde ; +5 % pour une légendaire).
 - Actions : le niveau de la carte fixe le nombre d'actions débloquées, dans un ordre fixe propre à la carte et affiché sur la carte : Commune 0, Rare 1, Épique 2, Légendaire 3, Champion du Monde 4 (toutes). Une carte rare ou plus a donc déjà des actions débloquées dès le booster, et tout Champion du Monde a accès à toutes ses actions. Une action débloquée coûte 1 d'endurance de moins que le coût de sa famille. En combat, on joue toujours avec 4 actions choisies parmi celles débloquées (au moins une de la famille spéciale).
 - La carte prend le cadre de son niveau ; Champion du Monde a un cadre rouge et or façon ceinture de champion.
 - Le marchand et les échanges comparent la rareté de départ.
-- Étoiles (une fois Champion du Monde) : chaque fusion de 5 doubles donne une étoile, qui baisse de 1 le coût d'une action choisie (coût minimum 1). 3 étoiles maximum par action ; on peut continuer jusqu'à ce que toutes les actions débloquées aient 3 étoiles.
+- Étoiles (une fois Champion du Monde) : chaque fusion de 2 doubles (3 exemplaires) donne une étoile (5 doubles avant le 28/11/2026), qui baisse de 1 le coût d'une action choisie (coût minimum 1). 3 étoiles maximum par action ; on peut continuer jusqu'à ce que toutes les actions débloquées aient 3 étoiles.
 - Styles de carte : un Champion du Monde débloque un nouveau style de carte à chaque quart des étoiles possibles (8 actions × 3 = 24 étoiles, soit un style toutes les 6 étoiles), jusqu'à 4 quand toutes les étoiles sont obtenues : Or massif, Nuit étoilée, Couleurs de la nation, Panthéon. Le dernier style débloqué s'affiche ; le joueur peut revenir à n'importe quel style débloqué (ou au cadre classique) depuis la Collection.
 - Dans le code, le « grade » est le nombre de niveaux gagnés + 1 (grade 1 = rareté de départ). Une ancienne sauvegarde qui dépasse le maximum est ramenée au maximum.
 
