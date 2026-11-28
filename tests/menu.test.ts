@@ -5,16 +5,21 @@ import assert from 'node:assert/strict';
 import { depuisSauvegarde, nouvelleCollection } from '../src/page/collection';
 import { noterVisite, tuileNouvelle, tuilesVisibles } from '../src/page/menu';
 
-test('au départ : Combat et Collection seulement, sans « Nouveau »', () => {
+test('au départ : Combat et Collection seulement, sans « Nouveau » ; Récompenses dès qu\'il y a quelque chose à ouvrir', () => {
   const c = nouvelleCollection();
-  assert.deepEqual(tuilesVisibles(c), ['combat', 'collection', 'recompenses']);
+  assert.deepEqual(tuilesVisibles(c), ['combat', 'collection']);
   assert.equal(tuileNouvelle(c, 'combat'), false);
+  c.aOuvrir.push({ titre: 'Victoire', source: 'histoire', boosters: [] });
+  assert.deepEqual(tuilesVisibles(c), ['combat', 'collection', 'recompenses']);
+  c.aOuvrir = [];
+  c.histoire.etape = 1; // 1re victoire en Carrière : la tuile reste
+  assert.deepEqual(tuilesVisibles(c), ['combat', 'collection', 'recompenses']);
 });
 
 test('les tuiles arrivent avec les quêtes (33 quêtes) : Mon Club (5), Tournois (8), Social (9), Classement (10), Fusion (12), Saison (24)', () => {
   const c = nouvelleCollection();
   const vues = (etape: number) => { c.histoire.etape = etape; return tuilesVisibles(c); };
-  assert.deepEqual(vues(0), ['combat', 'collection', 'recompenses']);
+  assert.deepEqual(vues(0), ['combat', 'collection']);
   assert.deepEqual(vues(4), ['combat', 'collection', 'club', 'recompenses']);
   assert.deepEqual(vues(7), ['combat', 'tournois', 'collection', 'club', 'recompenses']);
   assert.deepEqual(vues(8), ['combat', 'tournois', 'collection', 'club', 'social', 'recompenses']);

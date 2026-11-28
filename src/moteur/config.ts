@@ -407,8 +407,9 @@ export const REGLES = {
   // tutoriel des combos (13), format Enchaînement (14), durée infinie (15). Tutoriels et quêtes suivent.
   menu: {
     // Depuis le 28/11/2026 (Histoire en 33 quêtes) : la tuile ou le mode apparaît quand la quête qui
-    // s'en sert devient la quête en cours.
-    etapeTuile: { combat: 0, collection: 0, tournois: 7, club: 4, saison: 23, social: 8, classement: 9, fusion: 11, recompenses: 0 },
+    // s'en sert devient la quête en cours. Récompenses : après la 1re victoire en Carrière, ou dès qu'il y a
+    // quelque chose à ouvrir (point 16 : un menu très simple au tout début).
+    etapeTuile: { combat: 0, collection: 0, tournois: 7, club: 4, saison: 23, social: 8, classement: 9, fusion: 11, recompenses: 1 },
     etapeFonction: { fort: 20, amis: 9, combos: 12, enchainement: 16, infini: 19, equipe: 17 },
   },
 
