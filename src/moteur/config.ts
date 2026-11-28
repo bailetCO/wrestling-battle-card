@@ -417,11 +417,23 @@ export const REGLES = {
   classement: {
     points: { facile: 1, normal: 2, fort: 4, tombe: 1, enLigne: 6, tournoiGagne: 10 },
     plafondJour: 80,
-    paliers: [
-      { id: 'bronze', nom: 'Bronze', min: 30, classiques: 1, rares: 0 },
-      { id: 'argent', nom: 'Argent', min: 120, classiques: 0, rares: 1 },
-      { id: 'or', nom: 'Or', min: 300, classiques: 0, rares: 2 },
-    ],
+    // Divisions (28/11/2026, saison classée = le mois) : elles remplacent les paliers de points. Chaque
+    // division a une barre de `parDivision` ; une victoire la remplit (selon la difficulté), une défaite
+    // en ligne la vide un peu (jamais sous le début de la division). Le 1er du mois, on garde sa
+    // division et la barre repart de zéro. Récompense de fin de saison selon la division (si on a joué)
+    // et un cadre de carte « Saison N · Division », à poser sur une carte de son choix.
+    divisions: [
+      { id: 'bronze', nom: 'Bronze', classiques: 1, rares: 0, carte: null },
+      { id: 'argent', nom: 'Argent', classiques: 0, rares: 1, carte: null },
+      { id: 'or', nom: 'Or', classiques: 0, rares: 2, carte: null },
+      { id: 'platine', nom: 'Platine', classiques: 0, rares: 3, carte: null },
+      { id: 'diamant', nom: 'Diamant', classiques: 0, rares: 3, carte: 'epique' },
+      { id: 'maitre', nom: 'Maître', classiques: 0, rares: 3, carte: 'legendaire' },
+    ] as { id: string; nom: string; classiques: number; rares: number; carte: 'epique' | 'legendaire' | null }[],
+    parDivision: 100,
+    gainsDivision: { facile: 10, normal: 15, fort: 25, tombe: 5, enLigne: 40, tournoiGagne: 40 },
+    perteEnLigne: 15,
+    premiereSaison: '2026-11', // la saison 1 (pour le nom des cadres)
     top: { places: 10, rares: 1 },
     taille: { monde: 50, pays: 500, amis: 29 }, // nombre de lignes lues (amis : 29 + soi, limite de Firebase)
   },

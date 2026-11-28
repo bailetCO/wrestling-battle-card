@@ -2,8 +2,8 @@ import { proposerNotifications } from './notifications';
 import { bandeauQuotidien, brancherQuotidien, montrerRetour } from './quotidien';
 import { accueilFilleul } from './parrainage';
 import { verifierMiseAJour } from '../mise-a-jour';
-import { majPeriode, nomMois, programmerPublication } from '../classement';
-import { pastilleMonBadge } from './classement';
+import { DIVISIONS, majPeriode, programmerPublication, texteCadre } from '../classement';
+import { ICONE_DIVISION, pastilleMonBadge } from './classement';
 // Écran d'accueil (pseudo) et menu principal.
 
 import { LUTTEURS, trouverLutteur, niveauCarte, avecDeck, REGLES as R_, type DefLutteur } from '../../moteur';
@@ -58,7 +58,13 @@ export function etiquettesCarte(def: DefLutteur): string {
 }
 
 export function carteJoueur(def: DefLutteur, bouton = ''): string {
-  return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton, { grade: gradeDe(S.collection, def.id), etoiles: etoilesDe(S.collection, def.id), style: styleDe(S.collection, def.id) })}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
+  return `<div class="carte-possedee">${carteHTML(defJoueur(def), bouton, { grade: gradeDe(S.collection, def.id), etoiles: etoilesDe(S.collection, def.id), style: styleDe(S.collection, def.id), cadre: cadreCarte(def.id) })}<div class="pastilles">${etiquettesCarte(def)}</div></div>`;
+}
+
+// Cadre de saison posé sur une carte (28/11/2026).
+export function cadreCarte(id: string): { texte: string; division: string } | null {
+  const cd = S.collection.classement.cadreCartes[id];
+  return cd ? { texte: texteCadre(cd), division: cd.split(':')[1] } : null;
 }
 
 export const ICONES_MENU: Record<string, string> = {
@@ -157,7 +163,7 @@ export function ecranMenu() {
         ${tuile('fusion', 'Fusion', 'Fusionne tes doubles pour monter en rareté', '#fusion', fusions ? `${fusions} prête${fusions > 1 ? 's' : ''}` : '')}
         ${tuile('club', 'Mon Club', nivClub ? `Niveau ${nivClub} · ${S.collection.club.length}/${placesClub(S.collection)} lutteurs` : 'Recrute tes lutteurs dans ton club', '#club', '', nivClub ? '' : `${R_.club.medaillesOuverture} médailles`)}
         ${tuile('social', 'Social', 'Boutique, transferts de lutteurs et amis', '#social')}
-        ${tuile('classement', 'Classement', `${nomMois(S.collection.classement.mois)} · ${S.collection.classement.points} point${S.collection.classement.points > 1 ? 's' : ''}`, '#classement', '', compteActuel() ? '' : 'Compte')}
+        ${tuile('classement', 'Classement', `${ICONE_DIVISION[DIVISIONS[S.collection.classement.division].id]} ${DIVISIONS[S.collection.classement.division].nom} · ${S.collection.classement.points} point${S.collection.classement.points > 1 ? 's' : ''}`, '#classement', '', compteActuel() ? '' : 'Compte')}
         ${tuile('recompenses', 'Récompenses', S.collection.aOuvrir.length ? `${S.collection.aOuvrir.length} à ouvrir` : 'Rien à ouvrir pour l\'instant', '#recompenses', S.collection.aOuvrir.length ? `🎁 ${S.collection.aOuvrir.length}` : '')}
       </nav>
       ${piedMenu()}

@@ -1,3 +1,4 @@
+import { texteCadre } from '../classement';
 // Choix du deck, collection et fusion.
 
 import { ACTIONS, CARTES_SPECIALES, CHAMPIONS, LUTTEURS, NATIONS, nomLocal, trouverLutteur, NIVEAUX, etoilesPossibles, verifierDeck, coutAction, actionsDebloquees, TAILLE_DECK, REGLES as R_, type DefLutteur, type IdAction } from '../../moteur';
@@ -254,7 +255,7 @@ export function miniCarteCollection(l: DefLutteur): string {
       </div>`;
   }
   return `
-    <button class="mini-carte" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
+    <button class="mini-carte${S.collection.classement.cadreCartes[l.id] ? ` cadre-saison d-${S.collection.classement.cadreCartes[l.id].split(':')[1]}` : ''}" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
       <span class="mc-portrait">${portrait(l, niv)}</span>
       ${n > 1 ? `<span class="pastille nombre mc-nombre">×${n}</span>` : ''}
       <span class="mc-nom">${echap(l.nom)}</span>
@@ -278,6 +279,16 @@ export function blocStyles(def: DefLutteur): string {
   return `<div class="styles-carte"><p class="note">Style de la carte · ${n}/${R_.fusion.stylesCarte} débloqués. ${suite}</p><div class="puces">${boutons}</div></div>`;
 }
 
+// Cadres de saison (28/11/2026) : gagnés en fin de saison, posés sur une carte au choix.
+function blocCadres(def: DefLutteur): string {
+  const k = S.collection.classement;
+  if (nbExemplaires(S.collection, def.id) === 0 || !k.cadres.length) return '';
+  const actuel = k.cadreCartes[def.id] ?? '';
+  const puces = [`<button class="puce ${actuel ? '' : 'actif'}" data-cadre="">Aucun</button>`,
+    ...k.cadres.map((cd) => `<button class="puce ${cd === actuel ? 'actif' : ''}" data-cadre="${cd}">${texteCadre(cd)}</button>`)].join('');
+  return `<div class="styles-carte"><p class="note">Cadre de saison</p><div class="puces">${puces}</div></div>`;
+}
+
 export function fenetreCarteCollection(def: DefLutteur) {
   const f = prochaineFusion(S.collection, def.id);
   const n = nbExemplaires(S.collection, def.id);
@@ -285,6 +296,7 @@ export function fenetreCarteCollection(def: DefLutteur) {
     <div class="fenetre-carte">${carteJoueur(def)}</div>
     <p class="note">${n > 0 ? `${n} exemplaire${n > 1 ? 's' : ''} · ${NOM_RARETE[niveauDe(def.id)]}${niveauDe(def.id) !== def.rarete ? ` (au départ ${NOM_RARETE[def.rarete].toLowerCase()})` : ''}` : 'Carte du mode test'}${f ? (f.doublesDispo >= f.doublesNecessaires ? ` · fusion possible (${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'})` : ` · ${f.type === 'grade' ? NOM_RARETE[f.niveau] : 'étoile'} : ${f.doublesDispo}/${f.doublesNecessaires} doubles`) : ''}</p>
     ${blocStyles(def)}
+    ${blocCadres(def)}
     <div class="deck-boutons">
       <button class="principal" data-regler>Régler les actions</button>
       ${f ? `<a class="secondaire lien-bouton" href="#fusion" data-fermer>Aller à la fusion</a>` : ''}
@@ -292,6 +304,14 @@ export function fenetreCarteCollection(def: DefLutteur) {
     </div>`, true);
   activerReflets(f2);
   f2.querySelector('[data-regler]')!.addEventListener('click', () => fenetreDeck(def));
+  f2.querySelectorAll<HTMLButtonElement>('button[data-cadre]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const cd = b.dataset.cadre ?? '';
+      if (cd) S.collection.classement.cadreCartes[def.id] = cd; else delete S.collection.classement.cadreCartes[def.id];
+      sauver(S.collection);
+      ecranCollection();
+      fenetreCarteCollection(def);
+    }));
   f2.querySelectorAll<HTMLButtonElement>('button[data-style]').forEach((b) =>
     b.addEventListener('click', () => {
       S.collection.styles[def.id] = Number(b.dataset.style);

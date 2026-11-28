@@ -9,9 +9,9 @@
 // Le combat est calculé sur le téléphone : les règles de Firebase empêchent seulement de dépasser le
 // plafond du jour, pas un tricheur décidé à envoyer de faux combats sous ce plafond.
 
-import { REGLES } from '../moteur';
+import { LUTTEURS, REGLES } from '../moteur';
 import type { Niveau } from '../moteur/ia';
-import { joindreGains, ouvrirBooster, type Booster, type Collection } from './collection';
+import { joindreGains, nbExemplaires, ouvrirBooster, type Booster, type Collection } from './collection';
 import { compteActuel } from './compte';
 import { FIREBASE, connexion, type Session } from './firebase';
 
@@ -30,12 +30,14 @@ export function pointsCombat(x: CombatGagne): number {
   return base + (x.tombe ? R.points.tombe : 0);
 }
 
-// Passe au nouveau jour ou au nouveau mois. Un mois terminé avec des points attend sa récompense.
+// Passe au nouveau jour ou au nouveau mois. Un mois terminé où l'on a joué attend sa récompense ;
+// la nouvelle saison garde la division, et sa barre repart de zéro.
 export function majPeriode(c: Collection, maintenant = Date.now()) {
   const k = c.classement;
   const mois = moisUTC(maintenant), jour = jourUTC(maintenant);
   if (k.mois !== mois) {
-    if (k.mois && k.points > 0 && !k.enAttente.some((e) => e.mois === k.mois)) k.enAttente.push({ mois: k.mois, points: k.points });
+    if (k.mois && k.points > 0 && !k.enAttente.some((e) => e.mois === k.mois)) k.enAttente.push({ mois: k.mois, points: k.points, division: k.division });
+    if (k.mois) k.progression = 0;
     k.mois = mois;
     k.points = 0;
     k.jour = jour;
@@ -46,43 +48,95 @@ export function majPeriode(c: Collection, maintenant = Date.now()) {
   }
 }
 
-// Ajoute les points d'une victoire (dans la limite du plafond du jour). Renvoie les points ajoutés.
+// ---------- Divisions (saison classée) ----------
+
+export const DIVISIONS = R.divisions;
+export type Division = (typeof DIVISIONS)[number];
+export const nomDivision = (id: string | null) => DIVISIONS.find((d) => d.id === id)?.nom ?? '';
+export const estMaitre = (c: Collection) => c.classement.division >= DIVISIONS.length - 1;
+
+export function gainDivision(x: CombatGagne): number {
+  const G = R.gainsDivision;
+  if (x.tournoiGagne) return G.tournoiGagne;
+  return (x.enLigne ? G.enLigne : G[x.niveau ?? 'normal']) + (x.tombe ? G.tombe : 0);
+}
+
+// Remplit la barre ; passe à la division suivante quand elle est pleine (la barre du Maître reste pleine).
+export function progresser(c: Collection, gain: number): { monte: boolean } {
+  const k = c.classement;
+  const debut = k.division;
+  k.progression += gain;
+  while (k.progression >= R.parDivision && k.division < DIVISIONS.length - 1) { k.progression -= R.parDivision; k.division++; }
+  if (k.division === DIVISIONS.length - 1) k.progression = Math.min(k.progression, R.parDivision);
+  return { monte: k.division > debut };
+}
+
+// Défaite en ligne : la barre baisse, jamais sous le début de la division.
+export function perdreEnLigne(c: Collection, maintenant = Date.now()): number {
+  majPeriode(c, maintenant);
+  const k = c.classement;
+  const avant = k.progression;
+  k.progression = Math.max(0, k.progression - R.perteEnLigne);
+  return avant - k.progression;
+}
+
+// Ajoute les points d'une victoire (dans la limite du plafond du jour) et remplit la barre de division.
+// Renvoie les points ajoutés (0 : plafond du jour atteint, la barre ne bouge pas non plus).
 export function gagnerPoints(c: Collection, x: CombatGagne, maintenant = Date.now()): number {
   majPeriode(c, maintenant);
   const k = c.classement;
   const n = Math.max(0, Math.min(pointsCombat(x), R.plafondJour - k.pointsJour));
   k.points += n;
   k.pointsJour += n;
-  if (n) programmerPublication(c);
+  if (n) {
+    progresser(c, gainDivision(x));
+    programmerPublication(c);
+  }
   return n;
 }
 
-export type Palier = (typeof R.paliers)[number];
-export const palierDe = (points: number): Palier | null => [...R.paliers].reverse().find((p) => points >= p.min) ?? null;
-export const palierSuivant = (points: number): Palier | null => R.paliers.find((p) => points < p.min) ?? null;
-export const nomPalier = (id: string | null) => R.paliers.find((p) => p.id === id)?.nom ?? '';
+// Saison n° : la saison 1 est le mois de REGLES.classement.premiereSaison.
+export const numeroSaison = (mois: string) => {
+  const [a, m] = mois.split('-').map(Number), [a0, m0] = R.premiereSaison.split('-').map(Number);
+  return Math.max(1, (a - a0) * 12 + (m - m0) + 1);
+};
+// Cadre de saison : « 2026-11:or » → « Saison 1 · Or ».
+export const texteCadre = (cadre: string) => {
+  const [mois, div] = cadre.split(':');
+  return `Saison ${numeroSaison(mois)} · ${nomDivision(div)}`;
+};
 
-// Récompense d'un mois terminé : boosters du palier, plus le bonus du Top 10.
-export function recompenseMois(c: Collection, points: number, top: boolean, hasard: () => number = Math.random): Booster[] {
-  const p = palierDe(points);
+// Récompense d'une saison terminée : boosters et carte de la division, plus le bonus du Top 10.
+export function recompenseMois(c: Collection, division: number, top: boolean, hasard: () => number = Math.random): Booster[] {
+  const d = DIVISIONS[division];
   const boosters: Booster[] = [];
-  for (let k = 0; k < (p?.classiques ?? 0); k++) boosters.push(ouvrirBooster(c, hasard, 'classique'));
-  for (let k = 0; k < (p?.rares ?? 0) + (top ? R.top.rares : 0); k++) boosters.push(ouvrirBooster(c, hasard, 'rare'));
+  if (!d) return boosters;
+  for (let k = 0; k < d.classiques; k++) boosters.push(ouvrirBooster(c, hasard, 'classique'));
+  for (let k = 0; k < d.rares + (top ? R.top.rares : 0); k++) boosters.push(ouvrirBooster(c, hasard, 'rare'));
+  if (d.carte) {
+    const liste = LUTTEURS.filter((l) => l.rarete === d.carte);
+    const l = liste[Math.floor(hasard() * liste.length)];
+    const nouvelle = nbExemplaires(c, l.id) === 0;
+    c.exemplaires[l.id] = nbExemplaires(c, l.id) + 1;
+    boosters.push({ type: 'recompense', cartes: [l.id], nouvelles: nouvelle ? [l.id] : [] });
+  }
   return joindreGains(boosters, { medailles: 0, dollars: 0 });
 }
 
-// Termine un mois en attente : badge et boosters (à mettre dans la boîte à récompenses).
-export function cloturerMois(c: Collection, mois: string, top: boolean, hasard: () => number = Math.random): { titre: string; boosters: Booster[] } | null {
+// Termine une saison en attente : badge, cadre de saison et récompenses (à mettre dans la boîte).
+export function cloturerMois(c: Collection, mois: string, top: boolean, hasard: () => number = Math.random): { titre: string; boosters: Booster[]; cadre: string } | null {
   const i = c.classement.enAttente.findIndex((e) => e.mois === mois);
   if (i < 0) return null;
-  const { points } = c.classement.enAttente[i];
+  const e = c.classement.enAttente[i];
   c.classement.enAttente.splice(i, 1);
-  const p = palierDe(points);
-  if (!c.classement.badge || c.classement.badge.mois <= mois) c.classement.badge = { palier: p?.id ?? null, top, mois };
-  const boosters = recompenseMois(c, points, top, hasard);
-  if (!boosters.length) return null;
-  const nom = nomMois(mois);
-  return { titre: `Classement de ${nom} : ${top ? 'Top 10' : `palier ${p!.nom}`} (${points} points)`, boosters };
+  // Mois d'avant les divisions : la division vient des anciens paliers de points.
+  const division = e.division >= 0 ? e.division : e.points >= 300 ? 2 : e.points >= 120 ? 1 : 0;
+  const d = DIVISIONS[division];
+  if (!c.classement.badge || c.classement.badge.mois <= mois) c.classement.badge = { palier: d.id, top, mois };
+  const cadre = `${mois}:${d.id}`;
+  if (!c.classement.cadres.includes(cadre)) c.classement.cadres.push(cadre);
+  const boosters = recompenseMois(c, division, top, hasard);
+  return { titre: `Saison ${numeroSaison(mois)} (${nomMois(mois)}) : division ${d.nom}${top ? ' et Top 10' : ''}`, boosters, cadre };
 }
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -99,7 +153,7 @@ const entete = (s: Session) => ({ 'content-type': 'application/json', authorizat
 
 export interface Ligne { uid: string; idCoach: string; pseudo: string; pays: string; points: number; badge: string; moi: boolean }
 
-// Badge affiché : « top » ou le palier du dernier mois terminé.
+// Badge affiché : « top » ou la division de la dernière saison terminée.
 export const badgeDe = (c: Collection) => (c.classement.badge ? (c.classement.badge.top ? 'top' : c.classement.badge.palier ?? '') : '');
 
 export async function publier(c: Collection): Promise<boolean> {

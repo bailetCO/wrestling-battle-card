@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.13.0';
+export const VERSION = '0.14.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.14.0',
+    date: '2026-11-28',
+    lignes: [
+      'Nouveau : la saison classée ! Monte de 🥉 Bronze à 👑 Maître : chaque victoire remplit ta barre de division, une défaite en ligne la fait un peu baisser.',
+      'Une saison dure un mois. À la fin : des boosters selon ta division (jusqu\'à une carte légendaire en Maître) et un cadre de saison à poser sur ta carte préférée.',
+      'Le 1er du mois, tu gardes ta division : seule ta barre repart de zéro.',
+    ],
+  },
   {
     version: '0.13.0',
     date: '2026-11-28',

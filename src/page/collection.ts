@@ -57,9 +57,13 @@ export interface Classement {
   jour: number; // jour (n° depuis 1970, heure universelle) des points du jour
   pointsJour: number; // points gagnés ce jour-là (plafond)
   badge: { palier: string | null; top: boolean; mois: string } | null; // résultat du dernier mois terminé
-  enAttente: { mois: string; points: number }[]; // mois terminés pas encore récompensés (Top 10 à vérifier en ligne)
+  enAttente: { mois: string; points: number; division: number }[]; // mois terminés pas encore récompensés (Top 10 à vérifier en ligne)
+  division: number; // division de la saison en cours (0 = Bronze … 5 = Maître)
+  progression: number; // barre de la division (0 à REGLES.classement.parDivision)
+  cadres: string[]; // cadres de saison gagnés (« 2026-11:or ») ; posés sur une carte avec cadreCartes
+  cadreCartes: Record<string, string>; // carte → cadre posé
 }
-export const classementVide = (): Classement => ({ mois: '', points: 0, jour: 0, pointsJour: 0, badge: null, enAttente: [] });
+export const classementVide = (): Classement => ({ mois: '', points: 0, jour: 0, pointsJour: 0, badge: null, enAttente: [], division: 0, progression: 0, cadres: [], cadreCartes: {} });
 
 export type TriCollection = 'rarete' | 'nation' | 'fusions' | 'niveau';
 
@@ -188,7 +192,13 @@ function lireClassement(x: unknown): Classement {
   v.points = n('points'); v.jour = n('jour'); v.pointsJour = n('pointsJour');
   const b = o.badge as Classement['badge'];
   if (b && typeof b === 'object' && mois(b.mois) && typeof b.top === 'boolean') v.badge = { palier: typeof b.palier === 'string' ? b.palier : null, top: b.top, mois: b.mois };
-  if (Array.isArray(o.enAttente)) v.enAttente = (o.enAttente as { mois: unknown; points: unknown }[]).filter((e) => e && mois(e.mois) && typeof e.points === 'number').slice(-3) as Classement['enAttente'];
+  if (Array.isArray(o.enAttente)) v.enAttente = (o.enAttente as { mois: unknown; points: unknown; division?: unknown }[]).filter((e) => e && mois(e.mois) && typeof e.points === 'number').slice(-3).map((e) => ({ mois: e.mois as string, points: e.points as number, division: typeof e.division === 'number' ? Math.max(0, Math.min(5, Math.floor(e.division))) : -1 }));
+  const NB = REGLES.classement.divisions.length;
+  if (typeof o.division === 'number') v.division = Math.max(0, Math.min(NB - 1, Math.floor(o.division)));
+  else v.division = v.points >= 300 ? 2 : v.points >= 120 ? 1 : 0; // ancienne sauvegarde : division tirée du palier de points
+  if (typeof o.progression === 'number') v.progression = Math.max(0, Math.min(REGLES.classement.parDivision, Math.floor(o.progression)));
+  if (Array.isArray(o.cadres)) v.cadres = [...new Set((o.cadres as unknown[]).filter((x): x is string => typeof x === 'string' && /^\d{4}-\d{2}:[a-z]+$/.test(x)))].slice(-60);
+  if (o.cadreCartes && typeof o.cadreCartes === 'object') for (const [id, cd] of Object.entries(o.cadreCartes as Record<string, unknown>)) if (typeof cd === 'string' && v.cadres.includes(cd)) v.cadreCartes[id] = cd;
   return v;
 }
 
