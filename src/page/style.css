@@ -1709,3 +1709,11 @@ b.moi { color: #ff8a95; }
 .etape-histoire.passee { border: 2px dashed var(--orange); }
 .etape-histoire.passee .etape-n { background: var(--tapis-clair); }
 .onglets-classement.types { margin-bottom: .6rem; }
+/* Défi du créateur (28/11/2026) : cadre « Créateur » violet et or, liste des défis dans Social */
+.d-createur { --div: linear-gradient(90deg, #b06bff, #ffd76a); }
+.carte-l.cadre-saison.d-createur { box-shadow: 0 0 0 4px #b06bff, 0 0 20px #ffd76a; }
+.carte-l.cadre-saison.d-createur .ruban-saison { background: linear-gradient(90deg, #b06bff, #ffd76a); }
+.mini-carte.cadre-saison.d-createur { box-shadow: 0 0 0 3px #b06bff, 0 0 10px #ffd76a; }
+.defis-createurs { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.defis-createurs li { display: flex; align-items: center; gap: .6rem; justify-content: space-between; padding: .5rem .7rem; border-radius: 12px; background: rgba(176,107,255,.14); }
+.defis-createurs .etat-defi { display: block; font-size: .8rem; opacity: .85; }

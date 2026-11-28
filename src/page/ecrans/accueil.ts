@@ -64,7 +64,7 @@ export function carteJoueur(def: DefLutteur, bouton = ''): string {
 // Cadre de saison posé sur une carte (28/11/2026).
 export function cadreCarte(id: string): { texte: string; division: string } | null {
   const cd = S.collection.classement.cadreCartes[id];
-  return cd ? { texte: texteCadre(cd), division: cd.split(':')[1] } : null;
+  return cd ? { texte: texteCadre(cd), division: cd.startsWith('createur:') ? 'createur' : cd.split(':')[1] } : null;
 }
 
 export const ICONES_MENU: Record<string, string> = {

@@ -9,7 +9,8 @@ import { TUTOS, type IdTuto } from '../tutos';
 import { DEV } from '../dev';
 import { carteJoueur } from './accueil';
 import { cartes as toutesLesCartes, fenetreDeck } from './collection';
-import { boutonAuto, brancherStyle, encartRival, lancer, lancerArene, reglagesStyle } from './combat';
+import { boutonAuto, brancherStyle, encartRival, lancer, lancerArene, lancerDefi, reglagesStyle } from './combat';
+import { blocDefi } from './createurs';
 import { fonctionVisible } from '../menu';
 import { S, app, choixNiveau, echap, enTete, niveauOrdi, nouvelleGraine, portrait } from './commun';
 import { NOM_NIVEAU, boutonTuto, brancherTutos, tutoAuto } from './tutos-courts';
@@ -106,10 +107,11 @@ export function ecranArene(rapide = false) {
   const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...toutesLesCartes().filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   // Adversaire du combat auto : connu en Carrière et contre Cocoach ; au hasard (parmi les battus à la main) sinon.
   const advListe: string | null = rapide ? (S.infiniChoisi ? ID_RIVAL : null) : S.bossChoisi ? adversairesDe(S.bossChoisi)[PAR_NATION - 1] : etapeArene(S.collection).adversaire ?? '';
+  const defi = !rapide && S.defiChoisi ? S.collection.createurs.find((x) => x.code === S.defiChoisi) ?? null : null;
   const cartes = miens.map((l) => {
     const boutons = `
       <button class="principal cl-choisir" data-lutteur="${l.id}">Lutter avec ${echap(l.nom)}</button>
-      ${boutonAuto('data-lutteur-auto', l.id, advListe)}
+      ${defi ? '' : boutonAuto('data-lutteur-auto', l.id, advListe)}
       <button class="secondaire cl-deck" data-deck="${l.id}">Régler les actions${deckDe(S.collection, l.id) ? ' (perso)' : ''}</button>`;
     return `<div class="emplacement" data-nation="${l.nation}">${carteJoueur(l, boutons)}</div>`;
   }).join('');
@@ -123,6 +125,7 @@ export function ecranArene(rapide = false) {
              ${reglagesStyle('solo', S.enchainementChoisi ? 'enchainement' : 'normal', S.infiniChoisi ? 'infinie' : 'normale', [['normale', 'Normale', 'Une période'], ['infinie', 'Infinie', 'Jusqu\'au tombé contre Cocoach']])}
              ${encartRival()}
              <div class="tutos-ligne">${boutonTuto('combos')}${boutonTuto('enchainement')}${boutonTuto('infini')}</div></div>`
+        : defi ? `${enTete(`Défi de ${echap(defi.nom)}`, 'Combat complet contre sa carte Champion du Monde, jouée par l\'ordinateur fort. À jouer toi-même.', '#social')}<div class="marge">${blocDefi(defi.code)}</div>`
         : `${enTete('Carrière', 'Bats les nations une à une.', '#combat')}<div class="marge">${blocArene()}<div class="tutos-ligne">${boutonTuto('arene')}</div></div>`}
       ${S.collection.bonusTutoriel && !rapide ? '<p class="bandeau-bonus marge">Bonus du tutoriel : 2 boosters en plus si tu gagnes ce combat.</p>' : ''}
       <nav class="puces" aria-label="Aller à une nation">${puces}</nav>
@@ -153,6 +156,7 @@ export function ecranArene(rapide = false) {
     b.addEventListener('click', () => fenetreDeck(trouverLutteur(b.dataset.deck!))),
   );
   const lutter = (id: string, auto: boolean) => {
+    if (defi) return lancerDefi(id, defi.code);
     if (!rapide) return lancerArene(id, auto);
     const autres = LUTTEURS.filter((l) => l.id !== id);
     // En auto (hors Cocoach), l'adversaire est tiré parmi les lutteurs déjà battus à la main.
@@ -178,8 +182,8 @@ export function ecranArene(rapide = false) {
   });
   brancherTutos();
   app.querySelector('[data-annuler-boss]')?.addEventListener('click', () => { S.bossChoisi = null; ecranArene(); });
-  if (areneTerminee(S.collection) && !S.bossChoisi && !rapide) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
+  if (areneTerminee(S.collection) && !S.bossChoisi && !rapide && !defi) app.querySelector('.defile')?.closest('main')?.classList.add('arene-finie');
   activerReflets(app);
   window.scrollTo(0, 0);
-  tutoAuto(rapide ? 'combos' : 'arene');
+  if (!defi) tutoAuto(rapide ? 'combos' : 'arene');
 }

@@ -58,3 +58,31 @@ test('lecture d\'un code en ligne : actif, inconnu, désactivé', async () => {
   assert.equal(await lireCode('LUTTEMAG'), null);
   changerSession(null);
 });
+
+test('défi du créateur : une récompense par mois, cadre « Créateur » la première fois, seulement avec son code', async () => {
+  const { gagnerDefiCreateur, defiDisponible, cadreCreateur } = await import('../src/page/collection');
+  const { texteCadre } = await import('../src/page/classement');
+  const { creerHasard } = await import('../src/moteur/hasard');
+  const h = creerHasard(3);
+  const c = nouvelleCollection();
+  assert.equal(gagnerDefiCreateur(c, 'LUTTEMAG', '2026-12', h), null); // code jamais entré
+  recevoirCodeCreateur(c, lutteMag, h);
+  const id = 'createur-luttemag';
+  assert.equal(c.exemplaires[id], 1);
+  assert.ok(defiDisponible(c, 'LUTTEMAG', '2026-12'));
+  const r = gagnerDefiCreateur(c, 'LUTTEMAG', '2026-12', h)!;
+  assert.deepEqual(r.boosters.map((b) => b.type), ['recompense', 'epique']);
+  assert.ok(r.cadre);
+  assert.equal(c.exemplaires[id], 2);
+  assert.deepEqual(c.classement.cadres, [cadreCreateur('LUTTEMAG')]);
+  assert.equal(texteCadre('createur:LUTTEMAG'), 'Créateur · Lutte Mag');
+  assert.equal(gagnerDefiCreateur(c, 'LUTTEMAG', '2026-12', h), null); // même mois : rien
+  const r2 = gagnerDefiCreateur(c, 'LUTTEMAG', '2027-01', h)!; // mois suivant : de nouveau
+  assert.ok(!r2.cadre); // le cadre, une seule fois
+  assert.equal(c.exemplaires[id], 3);
+  // Sauvegarde : défi du mois et cadre gardés ; le cadre peut être posé sur une carte.
+  c.classement.cadreCartes.usa = 'createur:LUTTEMAG';
+  const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
+  assert.equal(d.defisCreateurs.LUTTEMAG, '2027-01');
+  assert.deepEqual(d.classement.cadreCartes, { usa: 'createur:LUTTEMAG' });
+});

@@ -1,4 +1,5 @@
 import { dessinArbitre } from '../arbitre';
+import { idCarteCreateur } from '../createurs';
 import { ETIQUETTE_RESULTAT, resultatAction, type ResultatAction } from '../resultats';
 import { boutonSon, brancherBoutonSon } from './reglages-son';
 import { jouer, vibrer } from '../son';
@@ -1013,6 +1014,12 @@ export function fenetrePileOuFace(choixHumain: Choix, choixOrdi: Choix, change: 
 
 // Combat d'arène : l'adversaire et le niveau de l'ordinateur viennent de la progression
 // (ou du boss choisi pour une revanche).
+// Défi du créateur (28/11/2026) : combat complet contre la carte du créateur, ordinateur fort, à la main.
+export function lancerDefi(idHumain: string, code: string) {
+  lancer(idHumain, idCarteCreateur(code), nouvelleGraine(), false, 'fort', false, null);
+  S.defiCreateur = code;
+}
+
 export function lancerArene(idHumain: string, auto = false) {
   if (S.bossChoisi) {
     const nation = S.bossChoisi;
@@ -1030,6 +1037,7 @@ export function lancer(idHumain: string, idOrdi: string, graine: number, rapide 
   essai: { id: IdTuto; enchainement: boolean; infini: boolean; def: DefLutteur; defOrdi?: DefLutteur; script?: Choix[]; scriptSeq?: Sequence[] } | null = null) {
   if (location.hash) history.replaceState(null, '', location.pathname);
   S.mode = 'solo';
+  S.defiCreateur = null;
   S.HUMAIN = 0;
   S.ORDI = 1;
   // Mode Enchaînement : à l'essai, seulement en combat rapide (pas en interclub ni en arène).
