@@ -174,7 +174,7 @@ export interface EtapeGuidee {
 
 export const ETAPES_GUIDEES: EtapeGuidee[] = [
   {
-    ordi: { action: 'double_jambe' },
+    ordi: { action: 'attaque_base' }, // Colt n'a plus la Double jambe de base depuis l'équilibrage du 28/11/2026
     conseil: { action: 'defense', speciale: false },
     texte: 'Premier tour ! Colt va attaquer (dans un vrai combat, tu ne verras pas son choix). La <b>Défense bat l\'Attaque</b> : choisis Défense.',
   },

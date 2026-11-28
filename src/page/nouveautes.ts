@@ -2,11 +2,21 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.11.0';
+export const VERSION = '0.12.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.12.0',
+    date: '2026-11-28',
+    lignes: [
+      'Grand rééquilibrage des cartes : chaque lutteur est maintenant aussi bon contre un débutant que contre un bon joueur.',
+      'Défenseurs « grande réserve d\'énergie » : une Feinte à la place de l\'Attaque, un peu moins d\'endurance.',
+      'Explosifs : l\'Attaque à la place de la Double jambe, qui devient leur première action débloquée. Techniciens « feintes et ceintures » et Contre-attaquants patients retouchés aussi.',
+      'Si tu avais composé ton propre deck avec une action retirée, cette carte reprend son deck de départ : pense à le refaire dans la Collection.',
+    ],
+  },
   {
     version: '0.11.0',
     date: '2026-11-28',

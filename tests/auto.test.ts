@@ -42,7 +42,9 @@ test('auto : au niveau 10 du compte, il gagne bien plus souvent qu\'au niveau 3 
     return v / N;
   };
   const t3 = taux(chanceFortAuto(3)), t10 = taux(chanceFortAuto(10));
-  assert.ok(t10 > t3 + 0.15, `niveau 3 : ${t3}, niveau 10 : ${t10}`);
+  // Seuil 0,10 depuis l'équilibrage du 28/11/2026 (avant : 0,15). Les cartes dépendent beaucoup
+  // moins du niveau de jeu (22 cartes → 0) : jouer mieux rapporte toujours, mais un peu moins.
+  assert.ok(t10 > t3 + 0.10, `niveau 3 : ${t3}, niveau 10 : ${t10}`);
   assert.ok(t10 > 0.35 && t10 < 0.65, `niveau 10 contre fort : ${t10}`);
 });
 
