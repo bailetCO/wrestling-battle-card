@@ -141,7 +141,7 @@ test('individuel : perdre au premier combat puis tout gagner mène à la qualifi
   assert.ok(vus > 0);
 });
 
-test('individuel : gains 1er 10 médailles + 15 $ + booster rare ; 2e 6 et 9 $ ; 3e 3 et 5 $', () => {
+test('individuel : gains 1er 10 médailles + 15 $ + booster épique ; 2e 6 et 9 $ ; 3e 3 et 5 $', () => {
   const col = nouvelleCollection();
   col.dollars = I.inscription;
   assert.equal(payerInscription(col, 'individuel'), null);
@@ -150,7 +150,7 @@ test('individuel : gains 1er 10 médailles + 15 $ + booster rare ; 2e 6 et 9 $ ;
   const noms = jouerTout(t, () => true);
   for (const _ of noms) gagnerCombatTournoi(col, t);
   const r = recompenserTournoi(col, t, creerHasard(1));
-  assert.equal(r[0].type, 'rare');
+  assert.equal(r[0].type, 'epique');
   assert.equal(r[0].medailles, I.medailles[1] + noms.length);
   for (const [place, perdre] of [[2, (nom: string) => nom !== 'Finale'], [3, (nom: string) => nom !== '1/2 finale']] as const) {
     const c = nouvelleCollection();

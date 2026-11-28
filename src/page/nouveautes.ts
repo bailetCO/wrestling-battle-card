@@ -2,11 +2,19 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.14.0';
+export const VERSION = '0.15.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.15.0',
+    date: '2026-11-28',
+    lignes: [
+      'Nouveau : le booster épique ! 8 cartes, dont au moins 1 épique et 3 rares. En boutique pour 63 $.',
+      'Gagne-le aussi en réussissant tes 3 quêtes du jour, en battant une nation en Carrière ou en remportant un tournoi.',
+    ],
+  },
   {
     version: '0.14.0',
     date: '2026-11-28',

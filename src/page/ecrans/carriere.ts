@@ -26,7 +26,7 @@ export function ecranCombatMenu() {
       <section class="bloc">
         <h2>Carrière</h2>
         ${S.collection.bonusTutoriel ? '<p class="bandeau-bonus">Tutoriel terminé : ta prochaine victoire en Carrière rapporte 2 boosters en bonus.</p>' : ''}
-        <p>${areneTerminee(S.collection) ? 'Carrière terminée : réaffronte les boss pour gagner leur carte.' : `En cours : <b>${echap(etapeArene(S.collection).nation!.nom)}</b>, adversaire ${etapeArene(S.collection).rang + 1}/${PAR_NATION}.`} Bats les nations une à une : 5 lutteurs chacune, de plus en plus forts, le dernier est le boss. +1 médaille par victoire ; nation battue : 2 ou 3 boosters et ${R_.arene.medaillesParNation} médailles. Toutes les 2 défaites d'affilée, un booster de consolation.</p>
+        <p>${areneTerminee(S.collection) ? 'Carrière terminée : réaffronte les boss pour gagner leur carte.' : `En cours : <b>${echap(etapeArene(S.collection).nation!.nom)}</b>, adversaire ${etapeArene(S.collection).rang + 1}/${PAR_NATION}.`} Bats les nations une à une : 5 lutteurs chacune, de plus en plus forts, le dernier est le boss. +1 médaille par victoire ; nation battue : 2 ou 3 boosters, 1 booster épique et ${R_.arene.medaillesParNation} médailles. Toutes les 2 défaites d'affilée, un booster de consolation.</p>
         <a class="principal lien-bouton" href="#arene">Aller en Carrière</a>
       </section>
       <section class="bloc">

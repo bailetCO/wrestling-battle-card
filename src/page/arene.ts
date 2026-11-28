@@ -67,6 +67,7 @@ export function victoireArene(c: Collection, hasard: Hasard, bonus = 0): { boost
     const [mini, maxi] = A.boostersParNation;
     const n = mini + Math.floor(hasard() * (maxi - mini + 1));
     for (let k = 0; k < n; k++) boosters.push(ouvrirBooster(c, hasard));
+    boosters.push(ouvrirBooster(c, hasard, 'epique')); // nation battue : 1 booster épique en plus (28/11/2026)
     medailles += A.medaillesParNation;
     carte = tenterCarteBoss(c, e.nation.id, hasard);
   }

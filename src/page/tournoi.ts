@@ -456,7 +456,7 @@ export function recompenserTournoi(c: Collection, t: Tournoi, hasard: Hasard): B
   if (premier && !('essai' in t && t.essai)) gagnerPoints(c, { tournoiGagne: true }); // classement : +10
   const g = gagnerMedailles(c, medailles);
   c.dollars += dollars;
-  const boosters = premier ? [ouvrirBooster(c, hasard, 'rare')] : [];
+  const boosters = premier ? [ouvrirBooster(c, hasard, 'epique')] : []; // tournoi gagné : booster épique (rare avant le 28/11/2026)
   t.recompense = joindreGains(boosters, {
     medailles: g.medailles + t.gainsCombats.medailles,
     dollars: g.dollars + dollars + t.gainsCombats.dollars,

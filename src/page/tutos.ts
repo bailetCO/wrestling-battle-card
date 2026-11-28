@@ -125,7 +125,7 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     id: 'arene', titre: 'La Carrière',
     ecrans: [
       { titre: 'Une nation après l\'autre', html: `<p>En Carrière, tu affrontes les nations une à une : ${R.arene.niveaux.length} lutteurs chacune, de plus en plus forts, le dernier étant son champion (ordinateur fort). Une défaite ? Tu réaffrontes le même lutteur.</p>` },
-      { titre: 'Les récompenses', html: `<p>Chaque victoire rapporte un booster et une médaille. Une nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion.</p>
+      { titre: 'Les récompenses', html: `<p>Chaque victoire rapporte un booster et une médaille. Une nation battue : ${R.arene.boostersParNation[0]} ou ${R.arene.boostersParNation[1]} boosters, 1 booster épique, ${R.arene.medaillesParNation} médailles, et 1 chance sur ${Math.round(1 / R.arene.chanceCarteBoss)} de gagner la carte du champion.</p>
         <p>Partie d'essai : un combat contre un premier adversaire, ordinateur facile. Le coach te guide sur les premiers tours. Pas de progression ; un booster si tu gagnes (une fois).</p>` },
     ],
     essai: { type: 'arene', deck: ['attaque_base', 'defense', 'feinte', 'contre'] },
@@ -146,7 +146,7 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     id: 'individuel', titre: 'Le tournoi individuel',
     ecrans: [
       { titre: 'Le double tableau', html: `<p>Toi et des lutteurs de l'ordinateur, en double tableau. Une défaite avant les 1/2 finales t'envoie dans le <b>tableau des perdants</b> ; une deuxième t'élimine. Les perdants des 1/2 finales affrontent les vainqueurs du tableau des perdants, pour la petite finale.</p>` },
-      { titre: 'Les gains', html: `<p>Un vrai tournoi coûte ${R.tournoi.individuel.inscription} $ : médailles et $ pour le podium, un booster rare au vainqueur.</p>
+      { titre: 'Les gains', html: `<p>Un vrai tournoi coûte ${R.tournoi.individuel.inscription} $ : médailles et $ pour le podium, un booster épique au vainqueur.</p>
         <p>Tournoi d'essai : ${R.tournoi.individuel.minimum} lutteurs, gratuit, sans gain.</p>` },
     ],
     essai: { type: 'individuel' },
