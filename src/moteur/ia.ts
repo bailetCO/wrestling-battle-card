@@ -6,7 +6,7 @@
 // - Fort : joue contre tes habitudes ; avec l'initiative, contre ton action 3 fois sur 4.
 
 import { ACTIONS, REGLES } from './config';
-import {
+import { seuilPrecision,
   actionsJouables, chanceReussite, comparerFamilles, coutDuTour, coutSpeciale, peutJouerSpeciale, pointsCombo, precisionDe, souffleDispo,
 } from './combat';
 import { choisirParmi, reussit, type Hasard } from './hasard';
@@ -101,7 +101,7 @@ function precision(etat: EtatCombat, j: Joueur, c: Candidat): number {
   if (attaque && l.derniereReussie === REGLES.combos.contreTemps.avant) return 1;
   if (c.action === 'tour_hanche' && l.def.force > etat.joueurs[j === 0 ? 1 : 0].def.force) return 1;
   const malus = attaque && l.malusPrecisionTours > 0 && c.action !== 'simple_jambe' ? REGLES.matraquage.malusPrecision : 0;
-  return chanceReussite(precisionDe(l.endurance) - malus);
+  return chanceReussite(precisionDe(l.endurance) - malus, l.def.enduranceMax);
 }
 
 function coutDe(etat: EtatCombat, j: Joueur, c: Candidat): number {
@@ -138,13 +138,14 @@ export function valeurAction(etat: EtatCombat, j: Joueur, c: Candidat, adverses:
     total += p * q * duelVal + p * (1 - q) * gain(etat, j, c, null) - (1 - p) * q * gain(etat, o, d, null);
   }
   let v = total / Math.max(1, adverses.length);
-  // Coût en endurance : plus cher quand l'endurance baisse, et passer sous 50 fait rater des actions.
+  // Coût en endurance : plus cher quand l'endurance baisse, et passer sous la moitié de son endurance max fait rater des actions.
   const cout = coutDe(etat, j, c);
   const reste = lj.endurance - cout;
   const E = REGLES.ia.fort.endurance;
   const poids = lj.endurance > E.seuilHaut ? E.poidsHaut : lj.endurance > E.seuilBas ? E.poidsMoyen : E.poidsBas;
   v -= cout * poids;
-  if (lj.endurance >= 50 && reste < 50) v -= E.passerSous50;
+  const seuil = seuilPrecision(lj.def.enduranceMax);
+  if (lj.endurance >= seuil && reste < seuil) v -= E.passerSous50;
   if (reste <= 0) v -= E.tomberAZero;
   // Passivité : 3 tours sans attaque ni contre donnent un point à l'adversaire.
   const fam = ACTIONS[c.action].famille;

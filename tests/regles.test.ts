@@ -21,11 +21,16 @@ describe('Précision', () => {
 
   it('chances : 100 % dès 50 d\'endurance, puis une baisse régulière jusqu\'à 40 % à 0', () => {
     const presque = (x: number, y: number) => assert.ok(Math.abs(x - y) < 1e-9, `${x} ≠ ${y}`);
-    assert.equal(chanceReussite(precisionDe(50)), 1);
-    assert.equal(chanceReussite(precisionDe(80)), 1);
-    presque(chanceReussite(precisionDe(49)), 0.4 + 0.6 * 49 / 50);
-    presque(chanceReussite(precisionDe(25)), 0.7);
-    presque(chanceReussite(precisionDe(0)), 0.4);
+    // Depuis le 28/11/2026 : le seuil est la moitié de l'endurance max du lutteur.
+    assert.equal(chanceReussite(precisionDe(50), 100), 1);
+    assert.equal(chanceReussite(precisionDe(80), 100), 1);
+    presque(chanceReussite(precisionDe(49), 100), 0.4 + 0.6 * 49 / 50);
+    presque(chanceReussite(precisionDe(25), 100), 0.7);
+    presque(chanceReussite(precisionDe(0), 100), 0.4);
+    // Lutteur à 60 d'endurance max : toujours réussi dès 30, 70 % à 15.
+    assert.equal(chanceReussite(precisionDe(30), 60), 1);
+    presque(chanceReussite(precisionDe(15), 60), 0.7);
+    assert.ok(chanceReussite(precisionDe(29), 60) < 1);
   });
 
   it("une action ratée part dans le vent : l'action adverse réussit seule", () => {

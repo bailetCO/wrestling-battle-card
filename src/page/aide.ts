@@ -94,7 +94,7 @@ export function reglesHTML(): string {
       <h2>Endurance et précision</h2>
       <p>Plus ton endurance baisse, plus tes actions risquent de rater :</p>
       <ul class="liste-regles">
-        <li>${R.precision.seuilPlein} d'endurance ou plus : <b>toujours réussie</b>.</li>
+        <li>À la moitié de ton endurance max ou plus (repère sur la barre) : <b>toujours réussie</b>.</li>
         <li>En dessous, la chance baisse un peu à chaque point perdu, jusqu'à ${pct(R.precision.chanceMinimale)} à 0. Elle s'affiche sur chaque action.</li>
         <li><b>Second souffle</b> : une fois par combat, sous ${R.souffle.seuil} d'endurance, « Souffler » rend ${R.souffle.gain} d'endurance. Si l'adversaire attaque pendant ce temps, il marque son attaque et ${R.souffle.penalite} point de plus.</li>
         <li>Sans assez d'endurance pour une action, il ne reste que <b>Lutte</b> (1 chance sur 10 de marquer). ${R.toursSansEnduranceAvantTombe} tours à 0, c'est le tombé.</li>
@@ -195,6 +195,6 @@ export const ETAPES_GUIDEES: EtapeGuidee[] = [
   },
 ];
 
-export const TEXTE_LIBRE = `Renversement ! À toi de jouer seul pour les ${R.tutoriel.toursCombat - 4} derniers tours. Surveille ta barre : sous 50 d'endurance, tes actions peuvent rater.`;
+export const TEXTE_LIBRE = `Renversement ! À toi de jouer seul pour les ${R.tutoriel.toursCombat - 4} derniers tours. Surveille ta barre : sous la moitié de ton endurance (le repère sur la barre), tes actions peuvent rater.`;
 
 export const TEXTE_LIBRE_SUITE = `Dernier tour : l'Attaque bat la Feinte, la Feinte bat la Défense et le Contre, la Défense bat l'Attaque, le Contre bat la Défense.`;
