@@ -172,6 +172,8 @@ export function ecranCollection() {
         <button class="lien" data-raz>Remettre la collection à zéro</button>
       </section>
     </main>`;
+  app.querySelectorAll<HTMLButtonElement>('[data-verrou]').forEach((b) =>
+    b.addEventListener('click', () => fenetreCarteVerrouillee(trouverLutteur(b.dataset.verrou!))));
   app.querySelectorAll<HTMLButtonElement>('[data-carte]').forEach((b) =>
     b.addEventListener('click', () => fenetreCarteCollection(trouverLutteur(b.dataset.carte!))),
   );
@@ -249,11 +251,11 @@ export function miniCarteCollection(l: DefLutteur): string {
   const niv = niveauDe(l.id);
   if (!a) {
     return `
-      <div class="mini-carte verrouillee" data-rarete="${l.rarete}" aria-label="Carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner">
+      <button class="mini-carte verrouillee" data-rarete="${l.rarete}" data-verrou="${l.id}" aria-label="${echap(l.nom)}, carte ${NOM_RARETE[l.rarete].toLowerCase()} à gagner : voir la carte">
         <span class="mc-portrait">${portrait(l)}</span>
         <span class="mc-nom">${echap(l.nom)}</span>
-        <span class="mc-bas">À gagner</span>
-      </div>`;
+        <span class="mc-bas">🔒 À gagner</span>
+      </button>`;
   }
   return `
     <button class="mini-carte${S.collection.classement.cadreCartes[l.id] ? ` cadre-saison d-${S.collection.classement.cadreCartes[l.id].split(':')[1]}` : ''}" data-rarete="${niv}" data-carte="${l.id}" aria-label="${echap(l.nom)}, ${NOM_RARETE[niv].toLowerCase()}${g > 1 ? ' (fusionnée)' : ''}, ${n} exemplaire${n > 1 ? 's' : ''} : voir et régler">
@@ -288,6 +290,29 @@ function blocCadres(def: DefLutteur): string {
   const puces = [`<button class="puce ${actuel ? '' : 'actif'}" data-cadre="">Aucun</button>`,
     ...k.cadres.map((cd) => `<button class="puce ${cd === actuel ? 'actif' : ''}" data-cadre="${cd}">${texteCadre(cd)}</button>`)].join('');
   return `<div class="styles-carte"><p class="note">Cadre de saison</p><div class="puces">${puces}</div></div>`;
+}
+
+// Où obtenir une carte qu'on n'a pas encore (28/11/2026).
+export function ouObtenir(def: DefLutteur): string {
+  if (CHAMPIONS.includes(def)) return `Récompense de fin de saison, ou à acheter dans la boutique de Mon Club (${R_.saison.prixChampion} $).`;
+  if (CARTES_SPECIALES.includes(def)) return 'Carte secrète : elle se gagne par un exploit.';
+  const nation = NATIONS.find((n) => n.id === def.nation)?.nom ?? '';
+  switch (def.rarete) {
+    case 'commune': return 'Dans tous les boosters (classique, rare, épique), surtout les classiques.';
+    case 'rare': return 'Dans tous les boosters ; plus souvent dans les boosters rares et épiques (3 rares garanties dans un booster épique).';
+    case 'epique': return 'Dans les boosters, surtout les boosters épiques (1 épique garantie).';
+    default: return `Très rare dans les boosters. Ou avec ${R_.collection.fragmentsPourLegendaire} fragments de légende${nation ? ` de la nation ${nation}` : ''} (page Fusion : tes doubles de cette nation deviennent des fragments).`;
+  }
+}
+
+// Carte pas encore gagnée : on la voit en entier, grisée, avec l'endroit où l'obtenir.
+export function fenetreCarteVerrouillee(def: DefLutteur) {
+  const f = ouvrirFenetre(`
+    <div class="fenetre-carte carte-grisee"><span class="cadenas" aria-hidden="true">🔒</span>${carteJoueur(def)}</div>
+    <p class="note"><b>Pas encore dans ta collection</b> · ${NOM_RARETE[def.rarete]}</p>
+    <p class="note"><b>Où l'obtenir :</b> ${ouObtenir(def)}</p>
+    <div class="deck-boutons"><button class="lien" data-fermer>Fermer</button></div>`, true);
+  activerReflets(f);
 }
 
 export function fenetreCarteCollection(def: DefLutteur) {

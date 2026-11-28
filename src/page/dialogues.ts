@@ -24,12 +24,12 @@ export interface Replique { qui: Personnage; texte: string; humeur?: Humeur; ami
 export const SCENES: Record<string, Replique[]> = {
   h0: [
     { qui: 'darius', texte: 'Bienvenue au club, Coach ! Moi, c\'est Darius, directeur technique et ancien champion du monde. Crois-moi : tout le monde commence ici, sur ce tapis.' },
-    { qui: 'darius', texte: 'Premier objectif : trois victoires, contre trois nations différentes. Regarde comment chacun lutte : on apprend autant en gagnant qu\'en perdant.' },
+    { qui: 'darius', texte: 'Premier objectif : gagner ton premier combat en Carrière. Regarde comment ton adversaire lutte : on apprend autant en gagnant qu\'en perdant.' },
     { qui: 'cocoach', humeur: 'arrogant', texte: 'Darius recrute n\'importe qui, maintenant ? Moi, c\'est Cocoach. Retiens bien ce nom : tu vas l\'entendre souvent.' },
     { qui: 'darius', texte: 'Ne l\'écoute pas. Je n\'ai encore jamais regretté de faire confiance à un coach.' },
   ],
   h1: [
-    { qui: 'darius', texte: 'Trois nations battues, bravo ! Tu as le coup d\'œil. Maintenant, on passe au tournoi : il faut enchaîner les combats sans craquer.' },
+    { qui: 'darius', texte: 'Première victoire en Carrière, bravo ! Tu as le coup d\'œil. Maintenant, on passe au tournoi : il faut enchaîner les combats sans craquer.' },
     { qui: 'darius', texte: 'Objectif : gagner le tournoi individuel. Et si tu perds un combat, pas de panique : le tableau des perdants te laisse une seconde chance.' },
     { qui: 'cocoach', humeur: 'arrogant', texte: 'Je l\'ai gagné du premier coup, ce tournoi. Je dis ça, je dis rien.' },
     { qui: 'darius', texte: 'Moi, j\'ai perdu mon premier tournoi au premier tour. Le suivant, je l\'ai gagné. Ce qui compte, c\'est le prochain combat.' },

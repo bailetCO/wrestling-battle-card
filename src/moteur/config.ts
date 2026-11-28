@@ -508,7 +508,6 @@ export const REGLES = {
     // 26/11/2026, la saison sportive est un mode à part, ouvert au niveau 10 de Mon Club.
     boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3],
     combosTacticien: 2, // étape 13 : combos réussis dans un même combat
-    nationsEtape1: 3, // victoires contre des lutteurs de 3 nations différentes
     memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club
   },
 

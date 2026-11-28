@@ -17,13 +17,12 @@ test('histoire : 18 étapes, récompenses du PDF puis des étapes 13 à 18', () 
   assert.deepEqual(REGLES.histoire.boosters, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3]);
 });
 
-test('étape 1 : 3 nations différentes ; la même nation ne compte qu\'une fois', () => {
+test('étape 1 : gagner un combat en Carrière (les autres victoires ne comptent pas)', () => {
   const c = nouvelleCollection();
   assert.deepEqual(noter(c, { type: 'victoire', nation: 'usa', niveau: 'normal' }), []);
-  assert.deepEqual(noter(c, { type: 'victoire', nation: 'usa', niveau: 'facile' }), []);
-  assert.deepEqual(progression(c), [1, 3]);
-  noter(c, { type: 'victoire', nation: 'iran', niveau: null });
-  const r = noter(c, { type: 'victoire', nation: 'japon', niveau: 'normal' });
+  assert.deepEqual(noter(c, { type: 'victoire', nation: 'iran', niveau: null }), []);
+  assert.equal(progression(c), null);
+  const r = noter(c, { type: 'victoire', nation: 'japon', niveau: 'normal', carriere: true });
   assert.equal(r.length, 1);
   assert.equal(r[0].etape, 0);
   assert.equal(r[0].boosters.length, 1);
@@ -36,7 +35,7 @@ test('dans l\'ordre : un événement d\'une étape future ne compte pas, même p
   noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: true });
   noter(c, { type: 'enLigne' });
   assert.equal(c.histoire.etape, 0);
-  for (const n of ['usa', 'iran', 'japon']) noter(c, { type: 'victoire', nation: n, niveau: 'normal' });
+  noter(c, { type: 'victoire', nation: 'usa', niveau: 'normal', carriere: true });
   assert.equal(c.histoire.etape, 1); // le tournoi gagné avant ne compte pas
   assert.deepEqual(noter(c, { type: 'tournoiIndividuel', place: 2, invaincu: false }), []);
   assert.equal(noter(c, { type: 'tournoiIndividuel', place: 1, invaincu: false }).length, 1);

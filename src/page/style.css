@@ -682,6 +682,10 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 .mc-grade { color: var(--orange); letter-spacing: 1px; }
 .mc-nombre { position: absolute; top: -6px; right: -6px; }
 .mini-carte.verrouillee { filter: grayscale(1) brightness(.5); box-shadow: none; }
+button.mini-carte.verrouillee { cursor: pointer; }
+.carte-grisee { position: relative; }
+.carte-grisee .carte-possedee { filter: grayscale(1) brightness(.6); }
+.carte-grisee .cadenas { position: absolute; top: -1rem; right: .2rem; font-size: 2.2rem; z-index: 2; filter: drop-shadow(0 2px 6px #000); pointer-events: none; }
 .mini-carte:active:not(.verrouillee) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--encre); }
 
 /* ---------- Fusion ---------- */
