@@ -22,3 +22,25 @@ self.addEventListener('fetch', (ev) => {
       .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r ?? caches.match('./'))),
   );
 });
+
+// Notifications (28/11/2026) : envoyées par Corentin depuis la console Firebase (Cloud Messaging).
+// Le message arrive ici même quand le jeu est fermé ; on l'affiche, et toucher la notification
+// ouvre le jeu (ou le ramène au premier plan).
+self.addEventListener('push', (ev) => {
+  let d = {};
+  try { d = ev.data ? ev.data.json() : {}; } catch { d = { notification: { body: ev.data ? ev.data.text() : '' } }; }
+  const n = d.notification || {};
+  const lien = (d.fcmOptions && d.fcmOptions.link) || (d.data && d.data.lien) || './';
+  ev.waitUntil(self.registration.showNotification(n.title || 'Wrestling Battle Card', {
+    body: n.body || '', icon: n.icon || './icone-192.png', badge: './icone-192.png', image: n.image, data: { lien }, tag: d.fcmMessageId,
+  }));
+});
+
+self.addEventListener('notificationclick', (ev) => {
+  ev.notification.close();
+  const lien = new URL((ev.notification.data && ev.notification.data.lien) || './', self.location.href).href;
+  ev.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenetres) => {
+    const ouverte = fenetres.find((f) => f.url.startsWith(self.registration.scope));
+    return ouverte ? ouverte.focus() : self.clients.openWindow(lien);
+  }));
+});

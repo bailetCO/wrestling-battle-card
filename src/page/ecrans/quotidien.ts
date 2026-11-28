@@ -1,3 +1,4 @@
+import { prevoirPropositionNotifications } from './notifications';
 // Revenir chaque jour, à l'écran (27/11/2026) : la récompense du jour (calendrier de 7 jours) en haut
 // du menu, et le mot de Darius pour un joueur qui revient après une longue absence.
 
@@ -48,7 +49,7 @@ export function brancherQuotidien(racine: ParentNode) {
     if (!r) return route();
     sauver(S.collection);
     jouer('gain');
-    revelerPaquet({ titre: `Récompense du jour · jour ${r.rang + 1}`, boosters: r.boosters, ouvert: false }, () => route());
+    revelerPaquet({ titre: `Récompense du jour · jour ${r.rang + 1}`, boosters: r.boosters, ouvert: false }, () => { prevoirPropositionNotifications(); route(); });
   });
 }
 

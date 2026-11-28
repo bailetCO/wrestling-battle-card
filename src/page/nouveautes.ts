@@ -2,11 +2,20 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.10.0';
+export const VERSION = '0.11.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.11.0',
+    date: '2026-11-28',
+    lignes: [
+      'Nouveau : les notifications ! Reçois un rappel quand ta récompense du jour est prête, et les grandes nouveautés du jeu.',
+      'Active-les ou coupe-les quand tu veux : « Plus » → « Notifications ».',
+      'Sur iPhone, installe d\'abord le jeu sur ton écran d\'accueil pour pouvoir les recevoir.',
+    ],
+  },
   {
     version: '0.10.0',
     date: '2026-11-27',

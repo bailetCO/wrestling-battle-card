@@ -16,6 +16,11 @@ export const FIREBASE = {
   // Identifiant client web Google (console Firebase → Authentication → Google → Configuration du SDK Web).
   // Vide : le bouton « Continuer avec Google » n'est pas affiché (connexion par e-mail seulement).
   googleClientId: '626474743975-dsh3og0ahbj7h0tjch901vf9jkusrt01.apps.googleusercontent.com',
+  // Notifications (28/11/2026) : application web du projet (Paramètres du projet → Général) et clé
+  // publique « Web Push » (Paramètres du projet → Cloud Messaging → Certificats Web Push).
+  appId: '1:626474743975:web:f16df117aef6aa5d158382',
+  messagingSenderId: '626474743975',
+  vapidKey: 'BIvkl8IJQdHoH2mWxL1B0galI2e48Cn07JuFr5qsdljDEipSo7Qx5VTHaFudLdoDginjrNH164oh98IzsyAfXRA',
 };
 
 // ---------- Connexion anonyme ----------

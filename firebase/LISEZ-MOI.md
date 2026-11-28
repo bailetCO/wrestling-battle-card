@@ -35,3 +35,20 @@ après chaque modification.
 
 Les vieilles salles ne sont pas effacées automatiquement (il faudrait l'offre payante) : chaque
 joueur efface sa place en quittant, et un état sans signe de vie depuis 90 secondes est ignoré.
+
+## Notifications : envoyer un rappel ou une annonce (28/11/2026)
+
+Les joueurs qui ont accepté les notifications sont inscrits automatiquement. Pour leur écrire :
+
+1. Console Firebase → menu de gauche **Exécuter** (ou « Engage ») → **Messaging**.
+2. **Créer votre première campagne** (ou « Nouvelle campagne ») → **Messages Firebase Notifications** → Créer.
+3. **Titre** (ex. « 🎁 Ta récompense du jour t'attend ! ») et **Texte** (ex. « Reviens chercher ta case du calendrier, le 7e jour c'est un booster rare. »). Image : facultative.
+4. **Cible** : « Application » → choisir l'application web **Wrestling Battle Card**.
+5. **Planification** :
+   - Annonce : « Maintenant ».
+   - Rappel quotidien : « Planifié » → « Récurrent » → « Quotidien », à 18 h 00 (heure de Paris), sans date de fin. Cocher « Fuseau horaire du destinataire » si proposé.
+6. Options supplémentaires : rien d'obligatoire. **Examiner** → **Publier**.
+
+Pour essayer sur ton seul téléphone d'abord : à l'étape 3, bouton « Envoyer un message test » (il faut le jeton du téléphone : ouvre le jeu avec `?dev` à la fin de l'adresse, puis « Plus » → « Notifications » : le jeton s'affiche, à copier).
+Ne pas envoyer plus d'une notification par jour : c'est ce qui est promis aux joueurs.
+

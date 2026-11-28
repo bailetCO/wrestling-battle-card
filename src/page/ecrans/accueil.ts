@@ -1,3 +1,4 @@
+import { proposerNotifications } from './notifications';
 import { bandeauQuotidien, brancherQuotidien, montrerRetour } from './quotidien';
 import { accueilFilleul } from './parrainage';
 import { verifierMiseAJour } from '../mise-a-jour';
@@ -178,6 +179,7 @@ export function ecranMenu() {
   // Après une mise à jour, les nouveautés passent avant la scène de dialogue (montrée au retour au menu).
   if (montrerNouveautes()) return;
   if (montrerRetour()) return;
+  if (proposerNotifications()) return; // après la 1re récompense du jour
   // Une fois : l'accord pour les statistiques anonymes.
   if (demanderAccord()) return;
   // On présente au joueur son objectif du moment (scène de dialogue pas encore vue).
