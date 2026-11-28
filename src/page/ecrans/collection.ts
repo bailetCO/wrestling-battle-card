@@ -97,7 +97,8 @@ export const TRIS: { id: TriCollection; nom: string }[] = [
 
 // Toutes les cartes qu'un joueur peut posséder : les 120 lutteurs, les 12 Champions du Monde et la
 // carte secrète de Darius.
-export const CARTES: DefLutteur[] = [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES];
+// Toutes les cartes, y compris les cartes spéciales ajoutées en cours de partie (cartes des créateurs).
+export const cartes = (): DefLutteur[] => [...LUTTEURS, ...CHAMPIONS, ...CARTES_SPECIALES];
 
 // Les groupes de cartes de la collection, selon le tri choisi.
 // Sans aucun Champion du Monde, leur groupe est tout en bas ; dès le premier, il remonte en haut (tris
@@ -357,7 +358,7 @@ export function sectionFragments(): string {
 
 export function ecranFusion(message = '') {
   S.partie = null;
-  const miens = CARTES.filter((l) => nbExemplaires(S.collection, l.id) > 0)
+  const miens = cartes().filter((l) => nbExemplaires(S.collection, l.id) > 0)
     .sort((a, b) => {
       return Number(fusionPrete(S.collection, b.id)) - Number(fusionPrete(S.collection, a.id))
         || nbExemplaires(S.collection, b.id) - nbExemplaires(S.collection, a.id);

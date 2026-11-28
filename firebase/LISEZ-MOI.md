@@ -52,3 +52,20 @@ Les joueurs qui ont accepté les notifications sont inscrits automatiquement. Po
 Pour essayer sur ton seul téléphone d'abord : à l'étape 3, bouton « Envoyer un message test » (il faut le jeton du téléphone : ouvre le jeu avec `?dev` à la fin de l'adresse, puis « Plus » → « Notifications » : le jeton s'affiche, à copier).
 Ne pas envoyer plus d'une notification par jour : c'est ce qui est promis aux joueurs.
 
+## Codes créateurs : ajouter un créateur (28/11/2026)
+
+Un code donne au joueur la carte Champion du Monde du créateur (avec son nom et son image) et un booster épique, une fois par joueur.
+
+1. Console Firebase → **Firestore Database** → onglet **Données**.
+2. Si elle n'existe pas encore : **Commencer une collection**, identifiant `createurs`.
+3. **Ajouter un document** :
+   - **ID du document** : le code, en MAJUSCULES, 3 à 20 lettres ou chiffres, sans espace (ex. `LUTTEMAG`) ;
+   - champ `nom` (string) : le nom affiché sur la carte, 30 caractères au plus (ex. `Lutte Mag`) ;
+   - champ `nation` (string) : le style de la carte, celui du Champion du Monde de cette nation, parmi `usa`, `russie`, `japon`, `iran`, `georgie`, `azerbaidjan`, `turquie`, `ouzbekistan`, `kazakhstan`, `kirghizistan`, `afrique`, `europe` ;
+   - champ `image` (string, facultatif) : le lien d'une image carrée du créateur, qui commence par `https://` (laisser vide : portrait dessiné) ;
+   - champ `actif` (boolean) : `true`. Le passer à `false` désactive le code (ceux qui l'ont déjà gardent leur carte).
+4. Enregistrer : le code marche tout de suite, sans mise à jour du jeu.
+
+Combien de joueurs chaque code a amenés : collection `soutiens` (une fiche par joueur et par code, avec le champ `code`) ; dans l'onglet Données, filtrer sur `code` (« Ajouter un filtre », `code` == `LUTTEMAG`) pour compter.
+Penser aussi à coller les nouvelles règles `firestore.rules`.
+

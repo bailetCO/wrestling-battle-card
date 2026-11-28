@@ -12,7 +12,7 @@ import { NOM_RARETE, activerReflets } from '../carte';
 import { niveauCompte, deckDe, etoilesDe, gradeDe, possede, recompenser, sauver, styleDe } from '../collection';
 import { noterAmi } from '../club';
 import { ecranMenu } from './accueil';
-import { CARTES } from './collection';
+import { cartes } from './collection';
 import { autoDispo, boutonsActions, brancherStyle, demanderSpeciale, ecranCombat, fenetreDerniereAction, fermerFenetre, htmlTourAncien, ouvrirFenetre, quetesLigneComptees, reglagesStyle } from './combat';
 import { S, adv, app, echap, famille, legendeFamille, libelleAction, moiNom, pastilleNiveau, portrait } from './commun';
 import { revelerPaquet, sectionPaquet } from './fin';
@@ -276,7 +276,7 @@ export function majStatutLigne() {
 
 export function ecranSalle(v: Vue) {
   const enCollection = v.modeSalle === 'collection';
-  const dispo = enCollection ? CARTES.filter((l) => possede(S.collection, l.id)) : LUTTEURS;
+  const dispo = enCollection ? cartes().filter((l) => possede(S.collection, l.id)) : LUTTEURS;
   const liste = dispo.map((l) => {
     const g = enCollection ? gradeDe(S.collection, l.id) : 1;
     return `

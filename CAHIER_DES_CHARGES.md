@@ -334,6 +334,14 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - En ligne : Firestore `parrainages/<filleul>` (créé une seule fois, avec un vrai compte) et `amities/<joueur>_<ami>`. Le parrain ne cherche ces fiches que s'il a déjà partagé son lien.
 - Chiffres dans `REGLES.parrainage`.
 
+### Codes créateurs (28/11/2026)
+
+- Pour les créateurs de contenu lutte (YouTube, TikTok, Instagram, clubs, athlètes). Champ « Code créateur » en bas de Social (sous « Inviter un ami ») et sous « Plus » → « Code créateur ».
+- Chaque code s'entre une fois par joueur (un joueur peut entrer les codes de plusieurs créateurs) : il reçoit la **carte du créateur**, Champion du Monde (statistiques, actions et action de Champion du Champion du Monde de la nation choisie pour ce créateur ; le nom du créateur, son image s'il en a une, origine « Créateur »), et **un booster épique**, révélés comme un booster. Le « créateur soutenu » est le dernier code entré (« Tu soutiens … » dans Social).
+- Codes créés par Corentin dans la console Firebase, sans mise à jour du jeu : Firestore `createurs/<CODE>` (nom, nation, image, actif). Un code désactivé ne marche plus, mais ceux qui l'ont utilisé gardent leur carte. Chaque soutien est noté (`soutiens/<joueur>_<CODE>`) pour compter les joueurs amenés par chaque créateur. Mode d'emploi : `firebase/LISEZ-MOI.md`.
+- Les cartes des créateurs sont gardées dans la sauvegarde (avec la fiche du créateur), comme les cartes secrètes : jamais dans les boosters.
+- À venir (étape 3) : le défi du créateur.
+
 ### Médailles et $
 
 - Deux monnaies : les médailles mesurent la progression (jamais dépensées) ; les $ se dépensent (boosters, inscriptions aux tournois).

@@ -1,3 +1,4 @@
+import { fenetreCodeCreateur } from './createurs';
 import { fenetreNotifications } from './notifications';
 import { fenetreReglagesSon } from './reglages-son';
 import { fenetreInvitation } from './parrainage';
@@ -101,6 +102,7 @@ export const piedMenu = () => `
       <div class="pied-liens">
         <button class="lien" data-compte>Mon compte</button>
         <button class="lien" data-inviter-ami>Inviter un ami</button>
+        <button class="lien" data-code-createur>Code créateur</button>
         <button class="lien" data-reglages-son>Son et vibrations</button>
         <button class="lien" data-notifications>Notifications</button>
         <button class="lien" data-nouveautes>Nouveautés</button>
@@ -118,6 +120,7 @@ export function brancherPiedMenu() {
   app.querySelector('[data-sauvegarde]')?.addEventListener('click', () => fenetreSauvegarde());
   app.querySelector('[data-compte]')?.addEventListener('click', () => fenetreCompte());
   app.querySelector('[data-inviter-ami]')?.addEventListener('click', () => fenetreInvitation());
+  app.querySelector('[data-code-createur]')?.addEventListener('click', () => fenetreCodeCreateur());
   app.querySelector('[data-reglages-son]')?.addEventListener('click', () => fenetreReglagesSon());
   app.querySelector('[data-notifications]')?.addEventListener('click', () => fenetreNotifications());
   app.querySelector('[data-installer]')?.addEventListener('click', () => fenetreInstaller());

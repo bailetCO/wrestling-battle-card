@@ -5,7 +5,7 @@ import { possede, sauver } from '../collection';
 import { tutoVisible } from '../menu';
 import { creerTournoiEquipe, creerIndividuel } from '../tournoi';
 import { TUTOS, defAdversaireEssai, defEssai, type IdTuto } from '../tutos';
-import { CARTES } from './collection';
+import { cartes as toutesLesCartes } from './collection';
 import { fermerFenetre, lancer, ouvrirFenetre } from './combat';
 import { S, app, echap, nouvelleGraine } from './commun';
 import { ecranTournoiEnCours, ecranTournois, sauverTournoi } from './tournois';
@@ -73,7 +73,7 @@ export function lancerEssai(id: IdTuto) {
     return lancer('europe', adv, nouvelleGraine(), false, 'facile', false, null, false, { id, enchainement: false, infini: false, def: defEssai(e.deck), ...guide });
   }
   if (S.tournoi && !S.tournoi.recompense) return ecranTournois('<p class="alerte">Termine d\'abord le tournoi en cours.</p>');
-  const moi = CARTES.find((l) => possede(S.collection, l.id))?.id ?? 'europe';
+  const moi = toutesLesCartes().find((l) => possede(S.collection, l.id))?.id ?? 'europe';
   S.tournoi = e.type === 'individuel'
     ? { ...creerIndividuel(moi, R_.tournoi.individuel.minimum, nouvelleGraine()), essai: true }
     : { ...creerTournoiEquipe(S.collection.club.slice(0, R_.tournoi.equipe.duels), nouvelleGraine()), essai: true };

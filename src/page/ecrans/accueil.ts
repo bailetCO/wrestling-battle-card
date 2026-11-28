@@ -19,7 +19,7 @@ import { connecter, oublierSession, sessionLigne } from './amis';
 import { brancherPiedMenu, montrerNouveautes, piedMenu } from './beta';
 import { bandeauAvis, brancherAvis } from './avis';
 import { demanderAccord } from './stats';
-import { CARTES } from './collection';
+import { cartes } from './collection';
 import { S, app, echap, pastilleNiveau, pastilleSaisons } from './commun';
 import { bandeauHistoire, blocQuetes, histoire, quete, recompenseClub, scenesAuto } from './progression';
 
@@ -127,7 +127,7 @@ export function ecranMenu() {
   histoire({ type: 'etat' });
   quete({ type: 'etat' });
   const session = sessionLigne();
-  const fusions = CARTES.filter((l) => fusionPrete(S.collection, l.id)).length;
+  const fusions = cartes().filter((l) => fusionPrete(S.collection, l.id)).length;
   // Tuiles ouvertes pas à pas selon le mode histoire ; « Nouveau » jusqu'à la première visite.
   const tuile = (id: IdTuile, titre: string, sous: string, href: string, alerte = '', cadenas = '') => !tuileVisible(S.collection, id) ? '' : (alerte = alerte || (tuileNouvelle(S.collection, id) ? 'Nouveau' : ''), `
     <a class="tuile t-${id} ${cadenas ? 'verrouillee' : ''}" href="${href}">
