@@ -7,7 +7,7 @@ import { accueillirParrain, ajouterAmi, declarerParrain, lienParrainage, lireLie
 import { accorderInvitation } from './beta';
 import { ouvrirFenetre } from './combat';
 import { S, echap } from './commun';
-import { annoncer, mettreEnBoite } from './progression';
+import { annoncer, histoire, mettreEnBoite } from './progression';
 
 const P = REGLES.parrainage;
 
@@ -76,6 +76,7 @@ export async function partagerLien(): Promise<'partage' | 'copie' | 'annule'> {
   const lien = lienParrainage(c);
   c.parrainage.partage = true;
   sauver(c);
+  histoire({ type: 'etat' });
   if (navigator.share) {
     try { await navigator.share({ title: 'Wrestling Battle Card', text: texteInvitation(c), url: lien }); return 'partage'; } catch { /* fermé, ou refusé : on copie */ }
   }

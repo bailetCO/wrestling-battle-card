@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ID_LUTTEUR_TEST, LUTTEURS, LUTTEUR_TEST, niveauCarte, trouverLutteur } from '../src/moteur/config';
+import { ID_LUTTEUR_TEST, LUTTEURS, LUTTEUR_TEST, REGLES, niveauCarte, trouverLutteur } from '../src/moteur/config';
 import { creerHasard } from '../src/moteur/hasard';
 import { choisirDeck, defPossede, depuisSauvegarde, gradeDe, nouvelleCollection, possede } from '../src/page/collection';
 import { passerEtape } from '../src/page/histoire';
@@ -29,13 +29,15 @@ test('passer l\'étape (test) : tout le mode histoire puis toute la saison, avec
   const c = nouvelleCollection();
   const h = creerHasard(5);
   let boosters = 0;
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < REGLES.histoire.nbEtapes; i++) {
     const r = passerEtape(c, h);
     assert.ok(r.length >= 1);
     boosters += r.reduce((n, x) => n + x.boosters.length, 0);
   }
-  assert.equal(c.histoire.etape, 18);
-  assert.equal(boosters, 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 3 + 2 + 3 + 3 + 1 + 1); // dernière étape : la légendaire, puis la carte de Darius
+  assert.equal(c.histoire.etape, REGLES.histoire.nbEtapes);
+  // Boosters de toutes les quêtes, plus les cartes légendaires et la carte de Darius.
+  const attendus = Object.values(REGLES.histoire.recompenses).reduce((n, r) => n + (r.boosters ?? 0) + (r.rares ?? 0) + (r.epiques ?? 0) + (r.legendaire ? 1 : 0) + (r.darius ? 1 : 0), 0);
+  assert.equal(boosters, attendus);
   assert.deepEqual(passerEtape(c, h), []);
   assert.equal(passerPalier(c, h), null); // saison fermée : Mon Club pas au niveau 10
   c.medailles = 55;

@@ -7,7 +7,7 @@ import { portraitPersonnage } from '../portrait';
 import { jourDe } from '../club';
 import { payerInscription } from '../tournoi';
 import { changerQuete, destinationQuete, noterQuete, queteDe, quetesDuJour, texteRecompense, type EvenementQuete } from '../quetes';
-import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, progression, type EvenementHistoire } from '../histoire';
+import { ETAPES, NB_ETAPES, histoireFinie, noterHistoire, passerEtape, passerQuete, progression, recompenseDe, texteRecompense as texteRecompenseHistoire, type EvenementHistoire } from '../histoire';
 import { PALIERS, creerCompetitionSaison, nbPaliers, noterSaison, nouvelleSaison, passerPalier, saisonOlympique, objectifPalier, recompensePalier, saisonFinie, saisonOuverte, type EvenementSaison } from '../saison';
 import { PERSONNAGES, SCENES, scenesEnCours, varianteScene, type Personnage } from '../dialogues';
 import { DEV } from '../dev';
@@ -72,13 +72,15 @@ export function histoire(ev: EvenementHistoire) {
 export function etapesValidees(r: ReturnType<typeof noterHistoire>) {
   if (!r.length) return;
   for (const x of r) {
-    const legendaire = x.etape === NB_ETAPES - 1;
-    mettreEnBoite(`Étape ${x.etape + 1} validée${legendaire ? ', carte légendaire' : ''}`, 'histoire', x.boosters);
+    const legendaire = !!recompenseDe(x.etape).legendaire;
+    const titre = `Quête ${x.etape + 1} réussie${legendaire ? ', carte légendaire' : ''}`;
+    if (x.boosters.length) mettreEnBoite(titre, 'histoire', x.boosters);
   }
   sauver(S.collection);
-  for (const x of r) noterParcours('histoire', `etape ${x.etape + 1}`);
+  for (const x of r) noterParcours('histoire', `etape ${x.etape + 1} ${ETAPES[x.etape].id}`);
   const der = r[r.length - 1].etape;
-  annoncer(`Étape ${der + 1} validée : ${ETAPES[der].titre} !`);
+  const gains = r.reduce((n, x) => n + x.dollars, 0);
+  annoncer(`Quête ${der + 1} réussie : ${ETAPES[der].titre} !`, r.some((x) => x.boosters.length) ? '#recompenses' : '#histoire', r.some((x) => x.boosters.length) ? 'Touche ici pour ta récompense' : `+${gains} $`);
 }
 
 // Note un événement de la saison sportive.
@@ -126,7 +128,7 @@ export function bandeauHistoire(): string {
   }
   // Saison ouverte et mode histoire pas fini : un petit rappel du mode histoire en dessous.
   const reste = saisonOuverte(S.collection) && !histoireFinie(S.collection)
-    ? `<a class="bandeau-histoire petit" href="#histoire"><small>Mode histoire · étape ${S.collection.histoire.etape + 1}/${NB_ETAPES}</small><b>${echap(ETAPES[S.collection.histoire.etape].objectif)}</b></a>` : '';
+    ? `<a class="bandeau-histoire petit" href="#histoire"><small>Mode histoire · quête ${S.collection.histoire.etape + 1}/${NB_ETAPES}</small><b>${echap(ETAPES[S.collection.histoire.etape].objectif)}</b></a>` : '';
   if (saisonOuverte(S.collection)) {
     const num = S.collection.saison.numero;
     if (saisonFinie(S.collection)) return `<a class="bandeau-histoire fini" href="#saison"><small>Saison ${num} terminée</small><b>Commencer la saison ${num + 1} ▶</b></a>${reste}`;
@@ -142,7 +144,7 @@ export function bandeauHistoire(): string {
   }
   const i = S.collection.histoire.etape;
   const p = progression(S.collection);
-  return `<a class="bandeau-histoire" href="#histoire"><small>Mode histoire · étape ${i + 1}/${NB_ETAPES}</small>
+  return `<a class="bandeau-histoire" href="#histoire"><small>Mode histoire · quête ${i + 1}/${NB_ETAPES}</small>
     <b>${echap(ETAPES[i].objectif)}</b>${p ? `${jauge(p)}<span>${p[0]}/${p[1]}</span>` : ''}</a>`;
 }
 
@@ -154,6 +156,7 @@ export function quete(ev: EvenementQuete) {
   const r = noterQuete(S.collection, ev, jourDe(), Math.random);
   sauver(S.collection);
   if (!r.length) return;
+  histoire({ type: 'queteDuJour' });
   for (const x of r) mettreEnBoite(`Quête réussie : ${x.titre}`, 'quetes', x.boosters);
   sauver(S.collection);
   annoncer(r.length > 1 ? `${r.length} quêtes réussies !` : `Quête réussie : ${r[0].titre}`, r.some((x) => x.boosters.length) ? '#recompenses' : '#quetes');
@@ -316,25 +319,31 @@ export function ecranHistoire() {
   const p = progression(S.collection);
   const lignes = ETAPES.map((e, i) => {
     const etat = i < cours ? 'faite' : i === cours ? 'en-cours' : 'verrouillee';
-    const nb = R_.histoire.boosters[i];
-    const recompense = `${nb ? `${nb} booster${nb > 1 ? 's' : ''}` : ''}${i === NB_ETAPES - 1 ? `${nb ? ' + ' : ''}1 carte légendaire` : ''}`;
-    return `<li class="etape-histoire ${etat}">
+    const recompense = texteRecompenseHistoire(i);
+    return `<li class="etape-histoire ${etat} q-${e.type}">
       <span class="etape-n">${i < cours ? '✓' : i + 1}</span>
-      <div><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
+      <div><span class="type-quete">${e.type === 'principale' ? '★ Quête principale' : 'Quête secondaire'}</span><b>${echap(e.titre)}</b><p>${echap(e.objectif)}</p>
         ${i === cours ? `<p class="guide">${echap(e.guide)}</p>${p ? `<p class="progres">${jauge(p)} ${p[0]}/${p[1]}</p>` : ''}<a class="principal lien-bouton bouton-etape" href="${e.lien}">${echap(e.bouton)}</a>` : ''}
         ${i <= cours ? `<button class="lien revoir-scene" data-scene="h${i}">💬 Revoir la scène</button>` : ''}
+        ${i === cours && e.passable ? '<button class="lien" data-passer-quete>Passer cette quête (sans récompense)</button>' : ''}
         ${i === cours && DEV ? '<button class="secondaire bouton-test" data-passer-etape>⏭ Passer à l\'étape suivante (test)</button>' : ''}
         <small class="gain">🎁 ${recompense}</small></div></li>`;
   }).join('');
   app.innerHTML = `
     <main class="sous-menu">
-      ${enTete('Mode histoire', histoireFinie(S.collection) ? 'Toutes les étapes sont validées. Bravo, coach !' : `Étape ${cours + 1} sur ${NB_ETAPES} · chaque étape débloque la suivante`)}
+      ${enTete('Mode histoire', histoireFinie(S.collection) ? 'Toutes les quêtes sont validées. Bravo, coach !' : `Quête ${cours + 1} sur ${NB_ETAPES} · chaque quête débloque la suivante`)}
       ${lienBoite()}
-      <section class="bloc"><p class="note">Une étape ne compte qu'une fois débloquée : ce que tu as fait avant ne compte pas, sauf pour Mon Club (étapes 3 et 6) et la Carrière (étapes 7 et 11), validées tout de suite si c'est déjà fait. Pas de médailles dans le mode histoire, mais des boosters à chaque étape. La saison sportive est un mode à part, ouvert au niveau ${R_.club.niveauSaison} de Mon Club.</p></section>
+      <section class="bloc"><p class="note">★ Les quêtes principales te font avancer dans le jeu ; les quêtes secondaires te font découvrir ses fonctions. Une quête ne compte qu'une fois en cours, sauf celles qui portent sur ce que tu as déjà (Mon Club, nations battues, division, fusions…) : elles sont validées tout de suite. La saison sportive est un mode à part, ouvert au niveau ${R_.club.niveauSaison} de Mon Club.</p></section>
       <ol class="etapes-histoire">${lignes}</ol>
     </main>`;
   activerReflets(app);
   app.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach((b) => b.addEventListener('click', () => montrerScene([b.dataset.scene!])));
+  app.querySelector('[data-passer-quete]')?.addEventListener('click', () => {
+    const r = passerQuete(S.collection, Math.random);
+    sauver(S.collection);
+    if (r) etapesValidees(r);
+    ecranHistoire();
+  });
   app.querySelector('[data-passer-etape]')?.addEventListener('click', () => {
     etapesValidees(passerEtape(S.collection, Math.random));
     document.querySelector('.bulle-histoire')?.remove();

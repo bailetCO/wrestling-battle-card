@@ -1,122 +1,144 @@
-// Mode histoire, sans affichage : 18 étapes dans l'ordre. Les étapes 13 à 15 (26/11/2026) font
-// découvrir les combos, l'Enchaînement et la durée infinie ; les étapes 16 à 18, le rival Cocoach. Une étape ne se valide qu'une fois
-// débloquée : ce qui a été fait avant ne compte pas, sauf pour les étapes 3 (Mon Club ouvert), 6 (3 lutteurs
-// d'une même nation dans Mon Club), 7 (une nation battue dans l'arène) et 11 (arène terminée), validées
-// tout de suite si c'est déjà le cas.
+// Mode histoire, sans affichage (28/11/2026) : 33 quêtes dans l'ordre de progression d'un nouveau joueur,
+// fixé par la simulation de 4 profils (occasionnel, social, collectionneur, passionné). Les 5 premières
+// sont faciles ; ensuite, une quête secondaire (découvrir une fonction du jeu) alterne avec une quête
+// principale (avancer : Carrière, tournois, divisions, Mon Club, Cocoach). Une quête ne se valide qu'une
+// fois en cours ; celles qui portent sur l'état du jeu (nations battues, Mon Club, division, fusions,
+// lien partagé…) sont validées tout de suite si c'est déjà fait. Les quêtes qui demandent un ami
+// peuvent être passées (sans récompense), pour ne jamais bloquer un joueur seul.
+// Avant le 28/11/2026 : 18 étapes ; les sauvegardes sont converties par migrerEtape.
 
 import { DARIUS, ETOILES_DARIUS, ID_DARIUS, LUTTEURS, NIVEAUX, REGLES, niveauCarte, trouverLutteur, type Hasard, type IdAction, type Niveau } from '../moteur';
 import { PAR_NATION, areneTerminee } from './arene';
-import { gradeDe, nbExemplaires, niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
+import { gradeDe, nbExemplaires, nbEtoiles, niveauClub, ouvrirBooster, type Booster, type Collection } from './collection';
 
 const H = REGLES.histoire;
 
+export type TypeEtape = 'principale' | 'secondaire';
 export interface DefEtape {
+  id: string;
+  type: TypeEtape;
   titre: string;
   objectif: string;
   guide: string; // explication pas à pas
   lien: string; // écran où aller
   bouton: string;
+  passable?: boolean; // quête qui demande un ami : on peut la passer (sans récompense)
 }
 
+const P = 'principale', S = 'secondaire';
+const EX = REGLES.fusion.exemplairesParNiveau;
+
 export const ETAPES: DefEtape[] = [
-  {
-    titre: 'Premier combat', objectif: 'Gagner un combat en Carrière',
+  // ----- Les 5 premières : faciles, dès le premier jour -----
+  { id: 'carriere', type: P, titre: 'Premier combat', objectif: 'Gagner un combat en Carrière',
     guide: 'Va dans Carrière, choisis un lutteur de ta collection et bats ton premier adversaire. Si tu perds, recommence : chaque combat t\'apprend quelque chose.',
-    lien: '#arene', bouton: 'Aller en Carrière',
-  },
-  {
-    titre: 'Premier tournoi', objectif: 'Gagner un tournoi individuel',
-    guide: 'Dans Tournois, inscris-toi au tournoi individuel (5 $). Gagne tes combats du tableau principal, ou remonte par le tableau des perdants… mais seul le vainqueur de la finale gagne l\'étape.',
-    lien: '#tournois', bouton: 'Voir les tournois',
-  },
-  {
-    titre: 'Ton club', objectif: 'Ouvrir Mon Club',
-    guide: 'Mon Club ouvre à 10 médailles. Gagne des combats et des tournois pour en récolter. Si ton club est déjà ouvert, l\'étape est validée tout de suite.',
-    lien: '#club', bouton: 'Voir Mon Club',
-  },
-  {
-    titre: 'Esprit d\'équipe', objectif: 'Gagner un tournoi par équipe',
-    guide: 'Il faut Mon Club au niveau 5 avec 5 lutteurs recrutés (30 médailles). Inscris ensuite ton équipe dans Tournois : la première équipe à 3 victoires gagne.',
-    lien: '#tournois', bouton: 'Voir les tournois',
-  },
-  {
-    titre: 'Victoire éclair', objectif: 'Gagner un combat d\'entraînement par tombé ou par 10 points d\'écart',
-    guide: 'L\'entraînement se joue en une seule période. Une victoire aux points ne suffit pas : fais tomber ton adversaire, ou mène de 10 points.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'Fierté nationale', objectif: 'Recruter 3 lutteurs d\'une même nation dans Mon Club',
-    guide: 'Dans Mon Club, recrute des lutteurs pour avoir au moins 3 lutteurs de la même nation : c\'est le bonus de nation du tournoi par équipe. Si ton club les a déjà, l\'étape est validée tout de suite.',
-    lien: '#club', bouton: 'Voir Mon Club',
-  },
-  {
-    titre: 'Conquête', objectif: 'Battre une nation complète en Carrière',
-    guide: 'En Carrière, bats les 5 lutteurs d\'une nation, le dernier étant son champion. Si tu as déjà battu une nation, l\'étape est validée tout de suite.',
-    lien: '#arene', bouton: 'Aller en Carrière',
-  },
-  {
-    titre: 'Montée en puissance', objectif: 'Fusionner une carte jusqu\'au niveau épique ou légendaire',
-    guide: `Dans la Collection, réunis des doubles d'un même lutteur et fusionne-les : une carte rare devient épique avec ${REGLES.fusion.exemplairesParNiveau.rare} exemplaires, une épique devient légendaire avec ${REGLES.fusion.exemplairesParNiveau.epique}.`,
-    lien: '#collection', bouton: 'Ma collection',
-  },
-  {
-    titre: 'Le grand défi', objectif: 'Battre l\'ordinateur fort',
-    guide: 'Règle l\'ordinateur sur « fort » et gagne un combat, en jouant toi-même (le combat auto ne compte pas pour cette étape). Il lit tes habitudes : varie tes actions ! Le champion de chaque nation en Carrière est aussi au niveau fort.',
-    lien: '#arene', bouton: 'Aller en Carrière',
-  },
-  {
-    titre: 'Entre amis', objectif: 'Gagner un combat en ligne contre un ami',
-    guide: 'Dans Social, crée une salle et envoie le code à un ami, ou rejoins la sienne. Gagne le combat.',
-    lien: '#social', bouton: 'Ouvrir Social',
-  },
-  {
-    titre: 'Tour du monde', objectif: 'Terminer la Carrière en battant toutes les nations',
-    guide: 'Bats les 12 nations de la Carrière, l\'une après l\'autre. Si tu l\'as déjà terminée, l\'étape est validée tout de suite.',
-    lien: '#arene', bouton: 'Aller en Carrière',
-  },
-  {
-    titre: 'La consécration', objectif: 'Gagner un tournoi individuel sans passer par le tableau des perdants',
-    guide: 'Gagne le tournoi individuel sans perdre un seul combat.',
-    lien: '#tournois', bouton: 'Voir les tournois',
-  },
-  {
-    titre: 'Le tacticien', objectif: 'Réussir 2 combos dans un même combat',
-    guide: 'Un combo, ce sont deux actions qui s\'enchaînent : Matraquage puis Ceinture arrière, Sprawl puis une attaque, Simple jambe puis Double jambe, Esquive puis un contre. Le bouton de l\'action qui déclenche un combo s\'allume en vert. Le combat auto ne compte pas.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'L\'enchaîneur', objectif: 'Gagner un combat en format Enchaînement',
-    guide: 'Dans Entraînement (ou entre amis), choisis le format « Enchaînement » : tu composes des séquences de 3 actions. Attention au contre en 1re action et au Matraquage en 2e : ils brisent la chaîne.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'Jusqu\'au bout', objectif: 'Gagner un combat en durée infinie',
-    guide: 'Dans Entraînement (ou entre amis), choisis la durée « Infinie » : pas de périodes, pas d\'écart qui arrête le combat. Il faut faire tomber ton adversaire. Garde ton second souffle pour la fin.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'Le rival', objectif: 'Battre Cocoach une première fois',
-    guide: 'À l\'entraînement, la durée « Infinie » se joue contre Cocoach, ton rival. Il commence en carte rare : fais-le tomber. À chaque défaite, il monte de niveau.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'Rival de taille', objectif: 'Battre Cocoach au niveau Légendaire',
-    guide: 'Cocoach monte d\'un niveau à chaque fois que tu le bats : Épique, puis Légendaire. Au niveau Légendaire, l\'ordinateur qui le joue passe en fort. Bats-le à ce niveau.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
-  {
-    titre: 'Le sommet', objectif: 'Battre Cocoach Champion du Monde',
-    guide: 'Dernier défi : Cocoach au niveau Champion du Monde, avec toutes ses actions. Récompense : des boosters et une carte légendaire que tu n\'as pas encore.',
-    lien: '#rapide', bouton: 'Entraînement',
-  },
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'deck', type: S, titre: 'Ton style', objectif: 'Régler les actions d\'un de tes lutteurs',
+    guide: 'Dans la Collection, touche une carte puis « Régler les actions » : choisis les actions que ton lutteur emportera en combat.',
+    lien: '#collection', bouton: 'Ouvrir la Collection' },
+  { id: 'entrainement', type: S, titre: 'À l\'entraînement', objectif: 'Gagner un combat d\'entraînement',
+    guide: 'Combat → Entraînement : une seule période, idéale pour essayer un lutteur ou une action. Gagne un combat.',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'quete-jour', type: S, titre: 'Quêtes du jour', objectif: 'Réussir une quête du jour',
+    guide: 'Chaque jour, trois quêtes te rapportent des $ et des boosters. Ouvre-les depuis le menu, et réussis-en une.',
+    lien: '#quetes', bouton: 'Voir les quêtes' },
+  { id: 'club', type: P, titre: 'Ton club', objectif: 'Ouvrir Mon Club (10 médailles)',
+    guide: 'Chaque victoire rapporte des médailles. À 10 médailles, Mon Club ouvre ses portes. Si ton club est déjà ouvert, la quête est validée tout de suite.',
+    lien: '#arene', bouton: 'Gagner des médailles' },
+  // ----- Puis secondaires et principales en alternance -----
+  { id: 'nations-1', type: P, titre: 'Première nation', objectif: 'Battre une nation complète en Carrière, champion compris',
+    guide: 'Chaque nation a 5 adversaires ; le dernier, son champion, est joué par l\'ordinateur fort. Observe-le, puis bats-le.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'recrutement', type: S, titre: 'Recrutement', objectif: 'Recruter un lutteur dans Mon Club',
+    guide: 'Dans Mon Club, choisis un lutteur de ta collection pour l\'une de tes places. Ton club grandit avec tes médailles.',
+    lien: '#club', bouton: 'Voir Mon Club' },
+  { id: 'podium', type: P, titre: 'Premier tournoi', objectif: 'Finir sur le podium d\'un tournoi individuel',
+    guide: 'Dans Tournois, inscris-toi au tournoi individuel (5 $). Une défaite t\'envoie dans le tableau des perdants : tu peux encore finir sur le podium.',
+    lien: '#tournois', bouton: 'Voir les tournois' },
+  { id: 'achat', type: S, titre: 'La boutique', objectif: 'Acheter un booster dans la boutique',
+    guide: 'Dans Social, la boutique vend des boosters contre tes $. Plus le booster est cher, meilleures sont les cartes.',
+    lien: '#social', bouton: 'Aller à la boutique' },
+  { id: 'argent', type: P, titre: 'Classé', objectif: 'Atteindre la division Argent',
+    guide: 'Chaque victoire remplit ta barre de division (Classement). Barre pleine : division suivante. Les victoires contre un ordinateur plus fort la remplissent plus vite.',
+    lien: '#classement', bouton: 'Voir le classement' },
+  { id: 'invitation', type: S, titre: 'Invite un ami', objectif: 'Envoyer ton lien d\'invitation à un ami', passable: true,
+    guide: 'Dans Social, partage ton lien : ton ami reçoit un booster rare de bienvenue, et toi un booster rare quand il crée son compte. Tu joues seul ? Tu peux passer cette quête.',
+    lien: '#social', bouton: 'Ouvrir Social' },
+  { id: 'fusion', type: P, titre: 'Montée en puissance', objectif: 'Faire ta première fusion',
+    guide: `Réunis des exemplaires d'une même carte et fusionne-les : elle monte d'un niveau. Il en faut ${EX.commune} pour une commune, ${EX.rare} pour une rare, ${EX.epique} pour une épique, ${EX.legendaire} pour une légendaire.`,
+    lien: '#fusion', bouton: 'Aller à la Fusion' },
+  { id: 'combos', type: S, titre: 'Le tacticien', objectif: 'Réussir 2 combos dans un même combat',
+    guide: 'Certaines actions s\'enchaînent : le bouton s\'allume en vert quand un combo est possible. Réussis-en deux dans le même combat (en jouant toi-même).',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'nations-3', type: P, titre: 'Conquête', objectif: 'Battre 3 nations en Carrière',
+    guide: 'Continue ton tour du monde : chaque nation battue rapporte des boosters, dont un booster épique.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'auto', type: S, titre: 'Pilote automatique', objectif: 'Gagner un combat en mode auto',
+    guide: 'À partir du niveau 3, le bouton « Auto » fait jouer l\'ordinateur pour toi : pratique pour avancer vite. Il joue de mieux en mieux avec ton niveau.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'tournoi', type: P, titre: 'Champion du tournoi', objectif: 'Gagner un tournoi individuel',
+    guide: 'Cette fois, il faut gagner la finale. Une défaite n\'élimine pas : remonte par le tableau des perdants.',
+    lien: '#tournois', bouton: 'Voir les tournois' },
+  { id: 'enchainement', type: S, titre: 'L\'enchaîneur', objectif: 'Gagner un combat en format Enchaînement',
+    guide: 'Dans l\'Entraînement, choisis le format Enchaînement : tu prépares tes actions par trois, d\'avance. Gagne un combat en jouant toi-même.',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'equipe', type: P, titre: 'Esprit d\'équipe', objectif: 'Gagner un tournoi par équipe',
+    guide: 'Dans Tournois, compose une équipe de 5 lutteurs : la première équipe à 3 victoires gagne. Des lutteurs d\'une même nation donnent un bonus à toute l\'équipe.',
+    lien: '#tournois', bouton: 'Voir les tournois' },
+  { id: 'fragment', type: S, titre: 'Fragments de légende', objectif: 'Transformer un double en fragment de légende',
+    guide: 'Dans Fusion, un double d\'une nation peut devenir un fragment de sa légendaire. Avec assez de fragments, la légendaire est à toi.',
+    lien: '#fusion', bouton: 'Aller à la Fusion' },
+  { id: 'rival', type: P, titre: 'Le rival', objectif: 'Battre Cocoach, ton rival (entraînement, durée infinie)',
+    guide: 'Dans l\'Entraînement, choisis la durée infinie : pas de chrono, il faut faire tomber l\'adversaire. Cocoach t\'y attend, en carte rare. À jouer toi-même.',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'fort', type: S, titre: 'Le grand défi', objectif: 'Battre l\'ordinateur fort en jouant toi-même',
+    guide: 'L\'ordinateur fort lit tes habitudes : varie tes actions. Choisis-le dans l\'Entraînement (ou bats un champion de nation), sans le mode auto.',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'nations-6', type: P, titre: 'Mi-parcours', objectif: 'Battre 6 nations en Carrière',
+    guide: 'La moitié du tour du monde ! Les nations suivantes sont plus fortes : fais monter tes meilleures cartes.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'epique', type: S, titre: 'Carte épique', objectif: 'Monter une carte jusqu\'au niveau Épique par fusion',
+    guide: 'Choisis un lutteur que tu aimes jouer et fusionne ses exemplaires jusqu\'au niveau Épique : il gagne des statistiques et des actions.',
+    lien: '#fusion', bouton: 'Aller à la Fusion' },
+  { id: 'club-10', type: P, titre: 'Un grand club', objectif: 'Monter Mon Club au niveau 10',
+    guide: 'Mon Club monte d\'un niveau toutes les 5 médailles. Au niveau 10, la saison sportive s\'ouvre : interclub, championnats… jusqu\'aux Jeux Olympiques.',
+    lien: '#club', bouton: 'Voir Mon Club' },
+  { id: 'en-ligne', type: S, titre: 'Entre amis', objectif: 'Gagner un combat en ligne contre un ami', passable: true,
+    guide: 'Dans Combat, choisis « Contre un ami » et envoie-lui le lien du combat. Tu joues seul ? Tu peux passer cette quête.',
+    lien: '#amis', bouton: 'Combat entre amis' },
+  { id: 'or', type: P, titre: 'Division Or', objectif: 'Atteindre la division Or',
+    guide: 'Continue de remplir ta barre de division : la division Or rapporte de belles récompenses en fin de saison.',
+    lien: '#classement', bouton: 'Voir le classement' },
+  { id: 'champion', type: S, titre: 'Champion du Monde', objectif: 'Obtenir une carte Champion du Monde par fusion',
+    guide: 'Fusionne une carte jusqu\'au sommet : Champion du Monde. Elle débloque toutes ses actions, et son action de Champion.',
+    lien: '#fusion', bouton: 'Aller à la Fusion' },
+  { id: 'nations-9', type: P, titre: 'Presque au bout', objectif: 'Battre 9 nations en Carrière',
+    guide: 'Plus que trois nations après celles-là : les plus fortes. Prépare tes meilleures cartes.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'invaincu', type: S, titre: 'La consécration', objectif: 'Gagner un tournoi individuel sans passer par le tableau des perdants',
+    guide: 'Gagne tous tes combats du tableau principal, jusqu\'à la finale comprise.',
+    lien: '#tournois', bouton: 'Voir les tournois' },
+  { id: 'nations-12', type: P, titre: 'Tour du monde', objectif: 'Terminer la Carrière en battant les 12 nations',
+    guide: 'Douze nations, douze champions. Récompense : une carte légendaire que tu n\'as pas encore.',
+    lien: '#arene', bouton: 'Aller en Carrière' },
+  { id: 'etoile', type: S, titre: 'Première étoile', objectif: 'Donner une première étoile à une action',
+    guide: 'Une carte Champion du Monde peut encore progresser : dans Fusion, ses doubles donnent des étoiles qui rendent une action moins chère.',
+    lien: '#fusion', bouton: 'Aller à la Fusion' },
+  { id: 'rival-legendaire', type: P, titre: 'Rival de taille', objectif: 'Battre Cocoach au niveau Légendaire',
+    guide: 'Chaque fois que tu bats Cocoach, il monte d\'un niveau. Bats-le au niveau Légendaire (durée infinie, en jouant toi-même).',
+    lien: '#rapide', bouton: 'Entraînement' },
+  { id: 'rival-champion', type: P, titre: 'Le sommet', objectif: 'Battre Cocoach Champion du Monde',
+    guide: 'Dernier défi : Cocoach au niveau Champion du Monde, avec toutes ses actions. Récompense : une carte légendaire que tu n\'as pas encore… et une surprise de Darius.',
+    lien: '#rapide', bouton: 'Entraînement' },
 ];
 
 export const NB_ETAPES = ETAPES.length;
+export const indexEtape = (id: string) => ETAPES.findIndex((e) => e.id === id);
 
 // Ce qui se passe dans le jeu et peut faire avancer l'histoire.
 export type EvenementHistoire =
   | { type: 'victoire'; nation: string; niveau: Niveau | null; auto?: boolean; carriere?: boolean } // tout combat gagné (niveau null : en ligne ; auto : combat automatique ; carriere : en Carrière)
-  | { type: 'rapide'; tombe: boolean; ecart: number } // combat rapide gagné
+  | { type: 'rapide'; tombe: boolean; ecart: number } // combat d'entraînement gagné
   | { type: 'tournoiIndividuel'; place: number; invaincu: boolean }
   | { type: 'tournoiEquipe'; gagne: boolean }
   | { type: 'recrutement' }
@@ -125,52 +147,111 @@ export type EvenementHistoire =
   | { type: 'enLigne' } // combat en ligne gagné contre un ami
   | { type: 'combat'; gagne: boolean; combos: number; enchainement: boolean; infini: boolean; auto: boolean } // tout combat terminé
   | { type: 'rival'; grade: number; auto: boolean } // Cocoach battu (grade : son niveau pendant le combat, 1 = rare … 4 = Champion du Monde)
-  | { type: 'etat' }; // simple vérification (Mon Club, arène)
+  | { type: 'deck' } // actions d'un lutteur réglées
+  | { type: 'queteDuJour' } // une quête du jour réussie
+  | { type: 'achat' } // booster (ou carte) acheté dans la boutique
+  | { type: 'fragment' } // un double transformé en fragment de légende
+  | { type: 'etat' }; // simple vérification (Mon Club, Carrière, division, fusions…)
 
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
+const etapeEnCours = (c: Collection): DefEtape | null => ETAPES[c.histoire.etape] ?? null;
 
-// Progression de l'étape en cours, pour l'affichage ([fait, à faire]), ou null.
-export function progression(_c: Collection): [number, number] | null {
+// Nations battues en Carrière.
+export const nationsBattues = (c: Collection) => Math.floor(c.arene / PAR_NATION);
+// Plus haut niveau atteint par fusion (−1 : aucune fusion).
+function meilleureFusion(c: Collection): number {
+  let m = -1;
+  for (const [id, g] of Object.entries(c.grades)) {
+    if (g > 1 && nbExemplaires(c, id) > 0) m = Math.max(m, NIVEAUX.indexOf(niveauCarte(trouverLutteur(id), gradeDe(c, id))));
+  }
+  return m;
+}
+const nbNations = (id: string) => Number(id.split('-')[1]);
+
+// Progression de la quête en cours, pour l'affichage ([fait, à faire]), ou null.
+export function progression(c: Collection): [number, number] | null {
+  const e = etapeEnCours(c);
+  if (!e) return null;
+  if (e.id.startsWith('nations-')) return [Math.min(nationsBattues(c), nbNations(e.id)), nbNations(e.id)];
+  if (e.id === 'club-10') return [niveauClub(c), REGLES.club.niveauSaison];
+  if (e.id === 'club') return [Math.min(c.medailles, REGLES.club.medaillesOuverture), REGLES.club.medaillesOuverture];
   return null;
 }
 
-// L'événement valide-t-il l'étape en cours ?
+// L'état du jeu remplit-il déjà la quête ? (quêtes validées dès qu'elles sont en cours)
+function dejaFait(c: Collection, id: string): boolean {
+  switch (id) {
+    case 'club': return niveauClub(c) > 0;
+    case 'recrutement': return c.club.length > 0;
+    case 'argent': return c.classement.division >= 1;
+    case 'or': return c.classement.division >= 2;
+    case 'invitation': return c.parrainage.partage;
+    case 'fusion': return meilleureFusion(c) >= 0 || Object.keys(c.etoiles).some((x) => x !== ID_DARIUS && nbEtoiles(c, x) > 0);
+    case 'epique': return meilleureFusion(c) >= NIVEAUX.indexOf('epique');
+    case 'champion': return meilleureFusion(c) >= NIVEAUX.indexOf('champion');
+    case 'etoile': return Object.keys(c.etoiles).some((x) => x !== ID_DARIUS && nbEtoiles(c, x) > 0);
+    case 'club-10': return niveauClub(c) >= REGLES.club.niveauSaison;
+    case 'nations-12': return areneTerminee(c);
+    default: return id.startsWith('nations-') && nationsBattues(c) >= nbNations(id);
+  }
+}
+
+// L'événement valide-t-il la quête en cours ?
 function valide(c: Collection, ev: EvenementHistoire): boolean {
-  const h = c.histoire;
-  switch (h.etape) {
-    case 0: return ev.type === 'victoire' && !!ev.carriere;
-    case 1: return ev.type === 'tournoiIndividuel' && ev.place === 1;
-    case 2: return niveauClub(c) > 0;
-    case 3: return ev.type === 'tournoiEquipe' && ev.gagne;
-    case 4: return ev.type === 'rapide' && (ev.tombe || Math.abs(ev.ecart) >= REGLES.ecartSuperiorite);
-    case 5: {
-      // Validée dès le déblocage si Mon Club compte déjà 3 lutteurs d'une même nation.
-      const parNation = new Map<string, number>();
-      for (const id of c.club) parNation.set(trouverLutteur(id).nation, (parNation.get(trouverLutteur(id).nation) ?? 0) + 1);
-      return Math.max(0, ...parNation.values()) >= H.memeNationEtape6;
-    }
-    case 6: return c.arene >= PAR_NATION; // au moins une nation battue, avant ou après le déblocage
-    case 7: return ev.type === 'fusion' && NIVEAUX.indexOf(niveauCarte(trouverLutteur(ev.id), gradeDe(c, ev.id))) >= NIVEAUX.indexOf('epique');
-    case 8: return ev.type === 'victoire' && ev.niveau === 'fort' && !ev.auto; // à gagner à la main
-    case 9: return ev.type === 'enLigne';
-    case 10: return areneTerminee(c);
-    case 11: return ev.type === 'tournoiIndividuel' && ev.place === 1 && ev.invaincu;
-    case 12: return ev.type === 'combat' && !ev.auto && ev.combos >= H.combosTacticien;
-    case 13: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.enchainement;
-    case 14: return ev.type === 'combat' && !ev.auto && ev.gagne && ev.infini;
-    case 15: return ev.type === 'rival' && !ev.auto;
-    case 16: return ev.type === 'rival' && !ev.auto && ev.grade >= 3;
-    case 17: return ev.type === 'rival' && !ev.auto && ev.grade >= 4;
+  const e = etapeEnCours(c);
+  if (!e) return false;
+  if (dejaFait(c, e.id)) return true;
+  switch (e.id) {
+    case 'carriere': return ev.type === 'victoire' && !!ev.carriere;
+    case 'deck': return ev.type === 'deck';
+    case 'entrainement': return ev.type === 'rapide';
+    case 'quete-jour': return ev.type === 'queteDuJour';
+    case 'recrutement': return ev.type === 'recrutement';
+    case 'podium': return ev.type === 'tournoiIndividuel' && ev.place <= 3;
+    case 'achat': return ev.type === 'achat';
+    case 'fusion': return ev.type === 'fusion';
+    case 'combos': return ev.type === 'combat' && !ev.auto && ev.combos >= H.combosTacticien;
+    case 'auto': return ev.type === 'combat' && ev.auto && ev.gagne;
+    case 'tournoi': return ev.type === 'tournoiIndividuel' && ev.place === 1;
+    case 'enchainement': return ev.type === 'combat' && !ev.auto && ev.gagne && ev.enchainement;
+    case 'equipe': return ev.type === 'tournoiEquipe' && ev.gagne;
+    case 'fragment': return ev.type === 'fragment';
+    case 'rival': return ev.type === 'rival' && !ev.auto;
+    case 'fort': return ev.type === 'victoire' && ev.niveau === 'fort' && !ev.auto;
+    case 'en-ligne': return ev.type === 'enLigne';
+    case 'invaincu': return ev.type === 'tournoiIndividuel' && ev.place === 1 && ev.invaincu;
+    case 'rival-legendaire': return ev.type === 'rival' && !ev.auto && ev.grade >= 3;
+    case 'rival-champion': return ev.type === 'rival' && !ev.auto && ev.grade >= 4;
     default: return false;
   }
 }
 
-// Récompense de l'étape `i` : boosters classiques ; pour la dernière étape, une légendaire et la
-// carte secrète de Darius.
+// Récompense de la quête `i` (voir REGLES.histoire.recompenses).
+export const recompenseDe = (i: number) => H.recompenses[ETAPES[i]?.id] ?? {};
+export function texteRecompense(i: number): string {
+  const r = recompenseDe(i);
+  const pl = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+  return [
+    r.dollars ? `${r.dollars} $` : '',
+    r.boosters ? pl(r.boosters, 'booster') : '',
+    r.rares ? `${pl(r.rares, 'booster')} rare${r.rares > 1 ? 's' : ''}` : '',
+    r.epiques ? `${pl(r.epiques, 'booster')} épique${r.epiques > 1 ? 's' : ''}` : '',
+    r.legendaire ? '1 carte légendaire' : '',
+    r.darius ? 'une surprise' : '',
+  ].filter(Boolean).join(' + ');
+}
+
 function recompense(c: Collection, i: number, hasard: Hasard): Booster[] {
-  const n = H.boosters[i] ?? 0;
-  const boosters = Array.from({ length: n }, () => ouvrirBooster(c, hasard, 'classique'));
-  return i === NB_ETAPES - 1 ? [...boosters, legendaireOfferte(c, hasard), carteDarius(c, hasard)] : boosters;
+  const r = recompenseDe(i);
+  c.dollars += r.dollars ?? 0;
+  const boosters: Booster[] = [
+    ...Array.from({ length: r.boosters ?? 0 }, () => ouvrirBooster(c, hasard, 'classique')),
+    ...Array.from({ length: r.rares ?? 0 }, () => ouvrirBooster(c, hasard, 'rare')),
+    ...Array.from({ length: r.epiques ?? 0 }, () => ouvrirBooster(c, hasard, 'epique')),
+  ];
+  if (r.legendaire) boosters.push(legendaireOfferte(c, hasard));
+  if (r.darius) boosters.push(carteDarius(c, hasard));
+  return boosters;
 }
 
 // La carte de Darius, Champion du Monde avec 2 étoiles sur 2 actions différentes tirées au hasard
@@ -199,9 +280,9 @@ export function legendaireOfferte(c: Collection, hasard: Hasard): Booster {
   return { type: 'recompense', cartes: [id], nouvelles: nouvelle ? [id] : [] };
 }
 
-// Note un événement. Si l'étape en cours est validée, on passe à la suivante et on renvoie sa
-// récompense (une étape validée peut en valider une autre aussitôt : club ouvert, arène).
-export interface EtapeValidee { etape: number; boosters: Booster[] }
+// Note un événement. Si la quête en cours est validée, on passe à la suivante et on renvoie sa
+// récompense (une quête validée peut en valider une autre aussitôt : Mon Club, Carrière, fusions…).
+export interface EtapeValidee { etape: number; boosters: Booster[]; dollars: number }
 
 export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasard, forcer = false): EtapeValidee[] {
   const faites: EtapeValidee[] = [];
@@ -211,11 +292,20 @@ export function noterHistoire(c: Collection, ev: EvenementHistoire, hasard: Hasa
     const i = c.histoire.etape;
     c.histoire.etape++;
     c.histoire.nations = [];
-    faites.push({ etape: i, boosters: recompense(c, i, hasard) });
-    e = { type: 'etat' }; // l'étape suivante ne profite pas du même événement
+    faites.push({ etape: i, boosters: recompense(c, i, hasard), dollars: recompenseDe(i).dollars ?? 0 });
+    e = { type: 'etat' }; // la quête suivante ne profite pas du même événement
   }
   return faites;
 }
 
-// Test : valide l'étape en cours comme si elle était réussie (avec sa récompense).
+// Quête qui demande un ami : le joueur la passe, sans récompense. Renvoie les quêtes suivantes
+// validées aussitôt (déjà faites).
+export function passerQuete(c: Collection, hasard: Hasard): EtapeValidee[] | null {
+  const e = etapeEnCours(c);
+  if (!e?.passable) return null;
+  c.histoire.etape++;
+  return noterHistoire(c, { type: 'etat' }, hasard);
+}
+
+// Test : valide la quête en cours comme si elle était réussie (avec sa récompense).
 export const passerEtape = (c: Collection, hasard: Hasard) => noterHistoire(c, { type: 'etat' }, hasard, true);

@@ -75,6 +75,7 @@ export function fenetreDeck(base: DefLutteur) {
     if (choisirDeck(S.collection, def.id, choix)) return;
     sauver(S.collection);
     quete({ type: 'deck' });
+    histoire({ type: 'deck' });
     fermerFenetre();
     route();
   });
@@ -419,7 +420,7 @@ export function ecranFusion(message = '') {
   app.querySelectorAll<HTMLButtonElement>('[data-fragment]').forEach((b) =>
     b.addEventListener('click', () => {
       const erreur = enFragment(S.collection, b.dataset.fragment!);
-      if (!erreur) sauver(S.collection);
+      if (!erreur) { sauver(S.collection); histoire({ type: 'fragment' }); }
       ecranFusion(erreur ? `<p class="alerte">${echap(erreur)}</p>` : '');
     }),
   );

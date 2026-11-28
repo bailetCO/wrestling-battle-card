@@ -16,7 +16,7 @@ export const PERSONNAGES: Record<Personnage, { nom: string; role: string }> = {
 export type Humeur = 'neutre' | 'content' | 'malin' | 'vaincu' | 'vainqueur' | 'arrogant' | 'mefiant';
 export interface Replique { qui: Personnage; texte: string; humeur?: Humeur; ami?: boolean }
 
-// Clés : h0 à h17 = étapes 1 à 18 du mode histoire ; hdarius = mode histoire terminé (Darius offre sa
+// Clés : h0 à h32 = quêtes 1 à 33 du mode histoire (depuis le 28/11/2026) ; hdarius = mode histoire terminé (Darius offre sa
 // carte) ; hcocoach = première médaille d'or aux JO (Cocoach offre sa carte et devient un ami) ;
 // <clé>_ami = la même scène quand Cocoach est devenu un ami (sinon, la scène de base) ; hfin = ouverture de la saison sportive (Mon Club niveau 10 ; avant le 26/11/2026, cette
 // scène s'appelait h12) ; s0 à s5 = paliers de la saison ; s6 = saison olympique terminée ; s4b et
@@ -29,91 +29,138 @@ export const SCENES: Record<string, Replique[]> = {
     { qui: 'darius', texte: 'Ne l\'écoute pas. Je n\'ai encore jamais regretté de faire confiance à un coach.' },
   ],
   h1: [
-    { qui: 'darius', texte: 'Première victoire en Carrière, bravo ! Tu as le coup d\'œil. Maintenant, on passe au tournoi : il faut enchaîner les combats sans craquer.' },
-    { qui: 'darius', texte: 'Objectif : gagner le tournoi individuel. Et si tu perds un combat, pas de panique : le tableau des perdants te laisse une seconde chance.' },
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Je l\'ai gagné du premier coup, ce tournoi. Je dis ça, je dis rien.' },
-    { qui: 'darius', texte: 'Moi, j\'ai perdu mon premier tournoi au premier tour. Le suivant, je l\'ai gagné. Ce qui compte, c\'est le prochain combat.' },
+    { qui: 'darius', texte: 'Première victoire, bravo ! Un bon coach choisit les actions de ses lutteurs. Dans la Collection, règle celles d\'un de tes lutteurs.' },
   ],
   h2: [
-    { qui: 'darius', texte: 'Champion du tournoi ! Je savais que tu en étais capable. Un coach a besoin d\'une maison : il est temps de bâtir ton club.' },
-    { qui: 'darius', texte: 'Objectif : récolter 10 médailles. Chaque victoire t\'en rapporte une, et à 10, Mon Club ouvre ses portes. C\'est là que tu recruteras ton équipe.' },
+    { qui: 'darius', texte: 'À l\'entraînement, il n\'y a qu\'une période : parfait pour essayer une action ou un lutteur. Gagne un combat d\'entraînement.' },
   ],
   h3: [
-    { qui: 'darius', texte: 'Ton club est ouvert, je suis fier de toi. Place au travail d\'équipe : cinq lutteurs, et la première équipe à trois victoires l\'emporte.' },
-    { qui: 'darius', texte: 'Objectif : gagner un tournoi par équipe. Choisis des lutteurs qui se complètent, pas seulement les plus forts.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Mon équipe t\'attend. Prépare tes cinq meilleurs… ou tes cinq moins mauvais.' },
+    { qui: 'darius', texte: 'Chaque jour, trois quêtes t\'attendent, avec des $ et des boosters à la clé. Réussis-en une : c\'est la meilleure habitude à prendre.' },
   ],
   h4: [
-    { qui: 'darius', texte: 'À l\'entraînement, il n\'y a qu\'une période. Pas le temps de calculer : il faut oser.' },
-    { qui: 'darius', texte: 'Objectif : faire tomber ton adversaire, ou gagner avec 10 points d\'écart. Une petite victoire aux points ne suffira pas, alors attaque !' },
+    { qui: 'darius', texte: 'Tu prends le rythme, Coach. Un coach a besoin d\'une maison : il est temps de bâtir ton club.' },
+    { qui: 'darius', texte: 'Objectif : récolter 10 médailles. Chaque victoire t\'en rapporte une, et à 10, Mon Club ouvre ses portes. C\'est là que tu recruteras ton équipe.' },
+    { qui: 'cocoach', humeur: 'malin', texte: 'Un club ? Le mien a déjà dix places. Mais bon, il faut bien commencer quelque part.' },
   ],
   h5: [
-    { qui: 'darius', texte: 'Les grandes équipes ont une identité. Dans ma sélection, on se connaissait par cœur, et ça valait tous les muscles du monde.' },
-    { qui: 'darius', texte: 'Objectif : trois lutteurs d\'une même nation dans ton club. Toute l\'équipe gagne en force, tu vas le sentir tout de suite.' },
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Le bonus de nation ? Je l\'utilise depuis toujours. Bienvenue chez les grands.' },
+    { qui: 'darius', texte: 'Ton club est ouvert, je suis fier de toi. Maintenant, le grand voyage : la Carrière, c\'est le tour du monde des styles de lutte.' },
+    { qui: 'darius', texte: 'Objectif : battre une nation entière, champion compris. Le champion est joué par l\'ordinateur fort : observe-le, il a toujours une habitude à exploiter.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Le premier champion, c\'est le plus facile. Profite, ça ne va pas durer.' },
   ],
   h6: [
-    { qui: 'darius', texte: 'La Carrière, c\'est le tour du monde des styles de lutte. Chaque nation a ses spécialistes et son champion. C\'est le plus beau voyage qui soit.' },
-    { qui: 'darius', texte: 'Objectif : battre une nation entière, son champion compris. Observe le boss avant de l\'affronter, il a toujours une habitude à exploiter.' },
+    { qui: 'darius', texte: 'Une nation au tapis ! Ton club a des places libres : recrute un lutteur de ta collection pour lui donner vie.' },
   ],
   h7: [
-    { qui: 'darius', texte: 'Un bon lutteur, ça se construit, comme un champion. Réunis ses doubles et fusionne-les : sa carte monte de niveau et apprend de nouvelles actions.' },
-    { qui: 'darius', texte: 'Objectif : amener une carte au moins jusqu\'au niveau épique. Choisis un lutteur que tu aimes jouer, c\'est lui qui te le rendra le mieux.' },
+    { qui: 'darius', texte: 'Place au tournoi : il faut enchaîner les combats sans craquer.' },
+    { qui: 'darius', texte: 'Objectif : finir sur le podium du tournoi individuel. Et si tu perds un combat, pas de panique : le tableau des perdants te laisse une seconde chance.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Moi, j\'ai gagné mon premier tournoi. Un podium, c\'est pour les débutants. Je dis ça, je dis rien.' },
+    { qui: 'darius', texte: 'Moi, j\'ai perdu mon premier tournoi au premier tour. Ce qui compte, c\'est le prochain combat.' },
   ],
   h8: [
-    { qui: 'darius', texte: 'L\'ordinateur fort lit tes habitudes : si tu joues toujours la même chose, il te le fera payer. Moi aussi, j\'ai appris à varier… après quelques défaites.' },
-    { qui: 'darius', texte: 'Objectif : battre l\'ordinateur fort, en jouant toi-même. Change de rythme, feinte, surprends-le.' },
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Moi, je le bats les yeux fermés. Toi, fais-le à la main : le combat auto ne compte pas pour celui-là.' },
+    { qui: 'darius', texte: 'Sur le podium ! Tes $ servent aussi à acheter des boosters : la boutique est dans Social. Offre-toi un booster.' },
   ],
   h9: [
-    { qui: 'darius', texte: 'Le vrai test, c\'est un adversaire en chair et en os. Rien ne remplace ça.' },
-    { qui: 'darius', texte: 'Objectif : inviter un ami en ligne et le battre. Et après le combat, serrez-vous la main : c\'est ça aussi, la lutte.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Et si ton ami a besoin de conseils, il sait où me trouver.' },
+    { qui: 'darius', texte: 'Chaque victoire te fait monter au classement. Bronze, Argent, Or… jusqu\'à Maître, et chaque mois, une nouvelle saison classée.' },
+    { qui: 'darius', texte: 'Objectif : atteindre la division Argent. Les victoires contre un ordinateur plus fort font monter ta barre plus vite.' },
+    { qui: 'cocoach', humeur: 'malin', texte: 'Tu verras mon nom tout en haut du classement. Essaie de ne pas trop le regarder.' },
   ],
   h10: [
-    { qui: 'darius', texte: 'Tu as déjà fait un sacré bout de chemin. Il te reste des nations à conquérir.' },
-    { qui: 'darius', texte: 'Objectif : terminer la Carrière. Douze nations, douze champions. Une à la fois, et tu y arriveras.' },
+    { qui: 'darius', texte: 'La lutte, ça se partage : envoie ton lien d\'invitation à un ami, il recevra un booster rare. Tu joues seul ? Tu peux passer cette quête.' },
   ],
   h11: [
+    { qui: 'darius', texte: 'Un bon lutteur, ça se construit. Réunis des exemplaires d\'une même carte et fusionne-les : elle monte de niveau et apprend de nouvelles actions.' },
+    { qui: 'darius', texte: 'Objectif : faire ta première fusion. Plus une carte est commune, plus il en faut : garde tes doubles, ils valent de l\'or.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Mes cartes, je les ai toutes fusionnées. Tu as du retard, Coach.' },
+  ],
+  h12: [
+    { qui: 'darius', texte: 'Le bouton s\'allume en vert quand un combo est possible. Réussis deux combos dans un même combat. Mon préféré : sprawl, puis double jambe.' },
+  ],
+  h13: [
+    { qui: 'darius', texte: 'Ta carte a déjà pris du galon. Retour sur la route : trois nations, trois champions.' },
+    { qui: 'darius', texte: 'Objectif : battre 3 nations en Carrière. Chaque nation battue t\'offre un booster épique : de quoi préparer les suivantes.' },
+    { qui: 'cocoach', humeur: 'mefiant', texte: 'Trois nations ? Pas mal… pour un début.' },
+  ],
+  h14: [
+    { qui: 'darius', texte: 'Depuis le niveau 3, le bouton « Auto » fait jouer l\'ordinateur pour toi. Gagne un combat en auto : pratique quand tu veux avancer vite.' },
+  ],
+  h15: [
+    { qui: 'darius', texte: 'Un podium, c\'est bien. Une victoire, c\'est mieux. Cette fois, il faut gagner la finale.' },
+    { qui: 'darius', texte: 'Objectif : gagner un tournoi individuel. Aux Mondiaux, j\'ai gagné mes cinq combats en pensant à un seul à la fois. Fais pareil.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Je l\'ai gagné du premier coup, ce tournoi. Mais vas-y, je regarde.' },
+  ],
+  h16: [
+    { qui: 'darius', texte: 'Nouvel exercice : le format Enchaînement. Tu prépares tes actions par trois, d\'avance. Gagne un combat dans ce format, en jouant toi-même.' },
+  ],
+  h17: [
+    { qui: 'darius', texte: 'Champion du tournoi ! Place au travail d\'équipe : cinq lutteurs, et la première équipe à trois victoires l\'emporte.' },
+    { qui: 'darius', texte: 'Objectif : gagner un tournoi par équipe. Des lutteurs d\'une même nation donnent un bonus à toute l\'équipe : dans ma sélection, on se connaissait par cœur.' },
+    { qui: 'cocoach', humeur: 'malin', texte: 'Mon équipe t\'attend. Prépare tes cinq meilleurs… ou tes cinq moins mauvais.' },
+  ],
+  h18: [
+    { qui: 'darius', texte: 'Une astuce de vieux coach : dans Fusion, un double d\'une nation peut devenir un fragment de sa légendaire. Transforme un double en fragment.' },
+  ],
+  h19: [
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Assez parlé, Coach. En durée infinie, pas de chrono : il faut faire tomber l\'adversaire. Et c\'est moi qui t\'attends sur le tapis.' },
+    { qui: 'cocoach', humeur: 'malin', texte: 'Je commence en carte rare, pour être sympa. Fais-moi tomber… si tu peux.' },
+    { qui: 'darius', texte: 'Objectif : battre Cocoach, en jouant toi-même. Méfie-toi de ses feintes, et souviens-toi : chaque fois que tu le bats, il revient plus fort.' },
+  ],
+  h20: [
+    { qui: 'darius', texte: 'Cocoach au tapis ! L\'ordinateur fort, maintenant : il lit tes habitudes, alors varie tes actions. Bats-le en jouant toi-même, sans le mode auto.' },
+  ],
+  h21: [
+    { qui: 'darius', texte: 'Tu as déjà fait un sacré bout de chemin. Les nations suivantes sont plus fortes : fais monter tes meilleures cartes.' },
+    { qui: 'darius', texte: 'Objectif : battre 6 nations en Carrière. La moitié du tour du monde !' },
+    { qui: 'cocoach', humeur: 'mefiant', texte: 'Six nations… Tu commences à m\'inquiéter, Coach.' },
+  ],
+  h22: [
+    { qui: 'darius', texte: 'Choisis un lutteur que tu aimes jouer et fusionne-le jusqu\'au niveau Épique. C\'est lui qui te le rendra le mieux.' },
+  ],
+  h23: [
+    { qui: 'darius', texte: 'Ton club grandit. Au niveau 10, une vraie saison sportive s\'ouvre : interclub, championnats… et au bout, les Jeux Olympiques.' },
+    { qui: 'darius', texte: 'Objectif : monter Mon Club au niveau 10. Chaque médaille compte.' },
+    { qui: 'cocoach', humeur: 'mefiant', texte: 'Les Jeux ? On s\'y retrouvera. Sur le podium, il n\'y a qu\'une seule marche tout en haut.' },
+  ],
+  h24: [
+    { qui: 'darius', texte: 'Le vrai test, c\'est un adversaire en chair et en os. Invite un ami en ligne et bats-le. Tu joues seul ? Tu peux passer cette quête.' },
+  ],
+  h25: [
+    { qui: 'darius', texte: 'Ta barre de division se remplit vite. Vise plus haut : la division Or.' },
+    { qui: 'darius', texte: 'Objectif : atteindre la division Or. En fin de saison, chaque division rapporte ses récompenses.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'L\'Or ? Moi, je suis déjà en Platine. Rattrape-moi si tu peux.' },
+  ],
+  h26: [
+    { qui: 'darius', texte: 'Le sommet d\'une carte : Champion du Monde. Fusionne une carte jusque-là : elle débloque toutes ses actions, et son action de Champion.' },
+  ],
+  h27: [
+    { qui: 'darius', texte: 'Neuf nations, c\'est le dernier virage. Les trois dernières sont les plus fortes du monde.' },
+    { qui: 'darius', texte: 'Objectif : battre 9 nations en Carrière. Prends ton temps, prépare tes meilleures cartes.' },
+    { qui: 'cocoach', humeur: 'mefiant', texte: 'Plus que trois après ça… et ce ne sont pas les plus tendres.' },
+  ],
+  h28: [
     { qui: 'darius', texte: 'Nouvelle épreuve : gagner un tournoi individuel sans perdre un seul combat. Le tableau principal, de bout en bout.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Sans une seule défaite ? Même moi, il m\'a fallu trois essais. Bon courage.' },
-    { qui: 'darius', texte: 'Aux Mondiaux, j\'ai gagné mes cinq combats d\'affilée en pensant à un seul à la fois. Fais pareil : le prochain, rien que le prochain.' },
+  ],
+  h29: [
+    { qui: 'darius', texte: 'Tu es invaincu en tournoi, Coach. Il ne reste plus que le tour du monde à boucler.' },
+    { qui: 'darius', texte: 'Objectif : terminer la Carrière. Douze nations, douze champions. Une carte légendaire t\'attend au bout.' },
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Le tour du monde ? Je l\'ai fait deux fois. Mais je veux bien t\'attendre à l\'arrivée.' },
+  ],
+  h30: [
+    { qui: 'darius', texte: 'Une carte Champion du Monde peut encore progresser : dans Fusion, ses doubles donnent des étoiles. Donne une première étoile à une action.' },
+  ],
+  h31: [
+    { qui: 'cocoach', humeur: 'vainqueur', texte: 'Tu m\'as eu, d\'accord. Mais maintenant, je suis légendaire.' },
+    { qui: 'darius', texte: 'Objectif : battre Cocoach Légendaire. L\'ordinateur qui le joue lit tes habitudes : varie tes actions, garde de l\'endurance. Tu as tout ce qu\'il faut.' },
+  ],
+  h32: [
+    { qui: 'cocoach', humeur: 'arrogant', texte: 'Champion du Monde. Toutes mes actions, le changement de niveau compris. C\'est le sommet, Coach.' },
+    { qui: 'darius', texte: 'Dernier objectif : le battre à son meilleur niveau. Fais-le, et tu auras fait le tour de tout ce que je pouvais t\'apprendre.' },
+    { qui: 'cocoach', humeur: 'malin', texte: 'Et si tu gagnes… une carte légendaire t\'attend. Je l\'ai choisie moi-même.' },
+    { qui: 'darius', texte: 'Et moi aussi, j\'aurai une petite surprise pour toi. Allez, va le chercher.' },
   ],
   hfin: [
     { qui: 'darius', texte: 'Coach, ton club a atteint le niveau 10 : tu as fait tes preuves. Place aux choses sérieuses, une vraie saison sportive !' },
     { qui: 'darius', texte: 'Interclub, régional, national, international, championnats du monde… et au bout, les Jeux Olympiques. Je serai à tes côtés à chaque étape.' },
     { qui: 'cocoach', humeur: 'mefiant', texte: 'Les Jeux ? On s\'y retrouvera. Sur le podium, il n\'y a qu\'une seule marche tout en haut.' },
-  ],
-  h12: [
-    { qui: 'darius', texte: 'On travaille la technique. En vrai combat, les meilleurs enchaînent leurs actions.' },
-    { qui: 'darius', texte: 'Un matraquage puis une ceinture arrière, un sprawl puis une attaque… Le bouton s\'allume en vert quand un combo est possible.' },
-    { qui: 'darius', texte: 'Objectif : réussir deux combos dans un même combat. Mon enchaînement préféré, c\'était sprawl puis double jambe. Simple, mais imparable.' },
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Deux combos ? Moi, j\'en place trois par période. Mais bon, chacun son rythme.' },
-  ],
-  h13: [
-    { qui: 'darius', texte: 'Nouvel exercice : tu prépares tes actions par trois, d\'avance, comme une séquence travaillée mille fois à l\'entraînement.' },
-    { qui: 'darius', texte: 'Objectif : gagner un combat au format « Enchaînement ». Attention : un contre en 1re action, ou un matraquage en 2e, brise la chaîne.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Trois coups d\'avance… C\'est comme aux échecs. Sauf qu\'ici, ça fait mal.' },
-  ],
-  h14: [
-    { qui: 'darius', texte: 'Place à la durée infinie. Pas de chrono, pas de points qui arrêtent le combat : il faut faire tomber ton adversaire.' },
-    { qui: 'darius', texte: 'Objectif : gagner par tombé. Gère ton endurance, garde ton second souffle pour le bon moment. Ma finale mondiale, je l\'ai gagnée comme ça, à la fin.' },
-    { qui: 'cocoach', humeur: 'mefiant', texte: 'Jusqu\'au tombé ? Ça, c\'est de la lutte. Si tu y arrives, je viendrai te défier moi-même.' },
-  ],
-  h15: [
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Assez parlé, Coach. En durée infinie, c\'est moi qui t\'attends sur le tapis.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Je commence en carte rare, pour être sympa. Fais-moi tomber… si tu peux.' },
-    { qui: 'darius', texte: 'Objectif : battre Cocoach. Méfie-toi de ses feintes, et souviens-toi : chaque fois que tu le bats, il revient plus fort. Tu es prêt, je le sais.' },
-  ],
-  h16: [
-    { qui: 'cocoach', humeur: 'vainqueur', texte: 'Tu m\'as eu deux fois, d\'accord. Mais maintenant, je suis légendaire.' },
-    { qui: 'darius', texte: 'Objectif : battre Cocoach Légendaire. L\'ordinateur qui le joue lit tes habitudes : varie tes actions, garde de l\'endurance. Tu as tout ce qu\'il faut.' },
-  ],
-  h17: [
-    { qui: 'cocoach', humeur: 'arrogant', texte: 'Champion du Monde. Toutes mes actions, le changement de niveau compris. C\'est le sommet, Coach.' },
-    { qui: 'darius', texte: 'Dernier objectif : le battre à son meilleur niveau. Fais-le, et tu auras fait le tour de tout ce que je pouvais t\'apprendre.' },
-    { qui: 'cocoach', humeur: 'malin', texte: 'Et si tu gagnes… une carte légendaire t\'attend. Je l\'ai choisie moi-même.' },
-    { qui: 'darius', texte: 'Et moi aussi, j\'aurai une petite surprise pour toi. Allez, va le chercher.' },
   ],
   hdarius: [
     { qui: 'darius', texte: 'Tu l\'as fait, Coach. Cocoach Champion du Monde, au tapis. Je suis tellement fier de toi.' },

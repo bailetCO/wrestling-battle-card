@@ -1702,3 +1702,7 @@ b.moi { color: #ff8a95; }
 .form-code-createur { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .form-code-createur input { min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(0,0,0,.25); color: var(--texte); font: 800 18px var(--police); letter-spacing: .08em; text-transform: uppercase; }
 .fenetre .code-createur { margin: 0; }
+
+/* Mode histoire (28/11/2026) : quêtes principales et secondaires. */
+.etape-histoire .type-quete { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; margin-bottom: .1rem; }
+.etape-histoire.q-principale .type-quete { color: var(--or, #f2a93b); opacity: 1; }

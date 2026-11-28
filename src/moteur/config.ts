@@ -406,8 +406,10 @@ export const REGLES = {
   // histoire qui les présente (0 = étape 1) : ordinateur fort (étape 9), combat entre amis (10),
   // tutoriel des combos (13), format Enchaînement (14), durée infinie (15). Tutoriels et quêtes suivent.
   menu: {
-    etapeTuile: { combat: 0, collection: 0, tournois: 1, club: 2, saison: 2, social: 3, classement: 4, fusion: 7, recompenses: 0 },
-    etapeFonction: { fort: 8, amis: 9, combos: 12, enchainement: 13, infini: 14, equipe: 3 },
+    // Depuis le 28/11/2026 (Histoire en 33 quêtes) : la tuile ou le mode apparaît quand la quête qui
+    // s'en sert devient la quête en cours.
+    etapeTuile: { combat: 0, collection: 0, tournois: 7, club: 4, saison: 23, social: 8, classement: 9, fusion: 11, recompenses: 0 },
+    etapeFonction: { fort: 20, amis: 24, combos: 12, enchainement: 16, infini: 19, equipe: 17 },
   },
 
   // Classement mensuel (27/11/2026) : points de combat gagnés dans le mois (remis à zéro le 1er, heure
@@ -501,14 +503,49 @@ export const REGLES = {
   // contre le fort, son lutteur reçoit un bonus de statistiques (mesuré : +14 % ≈ 75 % de victoires).
   auto: { niveauCompteMin: 3, niveauCompteFort: 10, bonusExpert: { facile: 0, normal: 0, fort: 0.15 } as Record<'facile' | 'normal' | 'fort', number> },
 
-  // Mode histoire : 12 étapes, chacune débloque la suivante. Boosters classiques des étapes 1 à 11 ;
-  // l'étape 12 donne une carte légendaire (une que le joueur n'a pas, s'il en reste).
+  // Mode histoire (28/11/2026) : 33 quêtes dans l'ordre de progression d'un nouveau joueur (simulation de
+  // 4 profils : occasionnel, social, collectionneur, passionné). Les 5 premières sont faciles, puis on
+  // alterne quêtes secondaires (découvrir une fonction) et principales (avancer dans le jeu).
+  // Récompenses de chaque quête, par identifiant (voir ETAPES dans src/page/histoire.ts) : $ ou boosters
+  // (classiques, rares, épiques) ; carte légendaire ; la dernière donne aussi la carte de Darius.
   histoire: {
-    // Boosters de chaque étape (18). La dernière donne aussi une carte légendaire. Depuis le
-    // 26/11/2026, la saison sportive est un mode à part, ouvert au niveau 10 de Mon Club.
-    boosters: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3, 2, 3, 3],
-    combosTacticien: 2, // étape 13 : combos réussis dans un même combat
-    memeNationEtape6: 3, // lutteurs d'une même nation dans Mon Club
+    nbEtapes: 33,
+    combosTacticien: 2, // quête des combos : combos réussis dans un même combat
+    recompenses: {
+      carriere: { boosters: 1 },
+      deck: { dollars: 10 },
+      entrainement: { dollars: 10 },
+      'quete-jour': { boosters: 1 },
+      club: { rares: 1 },
+      'nations-1': { rares: 1 },
+      recrutement: { boosters: 1 },
+      podium: { rares: 1 },
+      achat: { dollars: 15 },
+      argent: { rares: 1 },
+      invitation: { boosters: 1 },
+      fusion: { epiques: 1 },
+      combos: { boosters: 1 },
+      'nations-3': { rares: 2 },
+      auto: { dollars: 15 },
+      tournoi: { rares: 2 },
+      enchainement: { boosters: 1 },
+      equipe: { epiques: 1 },
+      fragment: { boosters: 1 },
+      rival: { rares: 2 },
+      fort: { rares: 1 },
+      'nations-6': { epiques: 1 },
+      epique: { rares: 1 },
+      'club-10': { epiques: 1 },
+      'en-ligne': { rares: 1 },
+      or: { rares: 2 },
+      champion: { epiques: 1 },
+      'nations-9': { epiques: 2 },
+      invaincu: { rares: 1 },
+      'nations-12': { legendaire: true },
+      etoile: { epiques: 1 },
+      'rival-legendaire': { epiques: 2 },
+      'rival-champion': { legendaire: true, darius: true },
+    } as Record<string, { dollars?: number; boosters?: number; rares?: number; epiques?: number; legendaire?: boolean; darius?: boolean }>,
   },
 
   // Quêtes journalières : récompenses par difficulté (les quêtes uniques ont la leur), bonus quand

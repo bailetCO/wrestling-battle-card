@@ -81,16 +81,16 @@ test('saison : compétitions à la bonne taille et au bon niveau', () => {
 test('saison et scènes gardées dans la sauvegarde', () => {
   const c = ouverte();
   c.saison = { palier: 2, victoires: 0, numero: 1, terminees: 0 };
-  c.scenesVues = ['histoire15', 'h0', 's1'];
+  c.scenesVues = ['histoire15', 'histoire33', 'h0', 's1'];
   const d = depuisSauvegarde(JSON.parse(JSON.stringify(c)));
   assert.deepEqual(d.saison, { palier: 2, victoires: 0, numero: 1, terminees: 0 });
-  assert.deepEqual(d.scenesVues, ['histoire15', 'h0', 's1']);
+  assert.deepEqual(d.scenesVues, ['histoire15', 'histoire33', 'h0', 's1']);
   assert.deepEqual(depuisSauvegarde({}).saison, { palier: 0, victoires: 0, numero: 1, terminees: 0 });
 });
 
 test('dialogues : une scène pour chaque étape, chaque palier, et les deux fins', async () => {
   const { SCENES, scenesEnCours } = await import('../src/page/dialogues');
-  for (let i = 0; i <= 17; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
+  for (let i = 0; i <= 32; i++) assert.ok(SCENES[`h${i}`]?.length, `h${i}`);
   assert.ok(SCENES.hfin?.length);
   for (let i = 0; i <= 6; i++) assert.ok(SCENES[`s${i}`]?.length, `s${i}`);
   for (const r of Object.values(SCENES).flat()) assert.ok(r.texte.length <= 160, r.texte);

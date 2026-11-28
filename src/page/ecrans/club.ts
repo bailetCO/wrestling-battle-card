@@ -248,6 +248,7 @@ export function ecranSocial(message = '') {
       const r = acheterBooster(S.collection, b.dataset.acheter as 'classique' | 'rare', Math.random);
       if (typeof r === 'string') return ecranSocial(`<p class="alerte">${echap(r)}</p>`);
       sauver(S.collection);
+      histoire({ type: 'achat' });
       revelerPaquet({ titre: 'Booster acheté', boosters: [r], ouvert: false }, () => ecranSocial());
     }),
   );
@@ -256,6 +257,7 @@ export function ecranSocial(message = '') {
       const r = acheterChampion(S.collection, b.dataset.champion!);
       if (typeof r === 'string') return ecranSocial(`<p class="alerte">${echap(r)}</p>`);
       sauver(S.collection);
+      histoire({ type: 'achat' });
       revelerPaquet({ titre: 'Champion du Monde acheté', boosters: [r], ouvert: false }, () => ecranSocial());
     }),
   );
