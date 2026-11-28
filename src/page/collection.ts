@@ -39,6 +39,7 @@ export interface Collection {
   histoire: { etape: number; nations: string[] }; // mode histoire : étape en cours (0 = étape 1), nations battues à l'étape 1
   saison: { palier: number; victoires: number; numero: number; terminees: number }; // saison sportive : palier en cours (0 = interclub), victoires interclub, n° de la saison (1, 2…), saisons terminées
   scenesVues: string[]; // scènes de dialogue déjà montrées
+  ouverts: string[]; // tuiles du menu et modes restés ouverts après le passage à 33 quêtes (28/11/2026)
   combosVus: string[]; // combos différents déjà réussis (quête unique des 4 combos)
   tutosVus: string[]; // tutoriels courts déjà vus (ouverts tout seuls à la première visite d'un mode)
   essaisGagnes: string[]; // tutoriels courts dont la partie d'essai a été gagnée (booster déjà donné)
@@ -110,6 +111,22 @@ export function cartesDeDepart(hasard: Hasard = Math.random, deja: string[] = []
   return out;
 }
 
+// 28/11/2026 : le mode histoire passe de 18 étapes à 33 quêtes. Pour chaque ancienne étape, l'indice
+// de la nouvelle quête qui lui correspond (−1 : supprimée). On reprend à la première nouvelle quête
+// qui correspond à une ancienne étape pas encore faite ; les quêtes placées avant sont considérées
+// comme faites (sans récompense). Les menus et modes déjà ouverts le restent.
+export const ANCIEN_VERS_NOUVEAU = [0, 15, 4, 17, -1, -1, 5, 22, 20, 24, 29, 28, 12, 16, -1, 19, 31, 32];
+const ANCIENS_SEUILS: Record<string, number> = { tournois: 1, club: 2, saison: 2, social: 3, classement: 4, fusion: 7, fort: 8, amis: 9, combos: 12, enchainement: 13, infini: 14, equipe: 3 };
+export function migrerHistoire33(c: Collection) {
+  const ancienne = c.histoire.etape;
+  const restantes = ANCIEN_VERS_NOUVEAU.slice(ancienne).filter((x) => x >= 0);
+  const nouvelle = restantes.length ? Math.min(...restantes) : REGLES.histoire.nbEtapes;
+  c.ouverts = [...new Set([...c.ouverts, ...Object.keys(ANCIENS_SEUILS).filter((k) => ancienne >= ANCIENS_SEUILS[k])])];
+  c.histoire = { etape: nouvelle, nations: [] };
+  // Scènes : celles des quêtes passées sont vues ; celle de la quête en cours sera montrée.
+  c.scenesVues = [...c.scenesVues.filter((k) => !/^h\d+$/.test(k)), ...Array.from({ length: nouvelle }, (_, i) => `h${i}`), 'histoire33'];
+}
+
 function nouvelId(): string {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -123,7 +140,8 @@ export function nouvelleCollection(): Collection {
     styles: {}, tri: 'rarete', medailles: 0, dollars: 0, club: [], clubRecompense: 0, battusMain: [], tutosVus: [], essaisGagnes: [], menusVus: ['combat', 'collection', 'recompenses'], fragments: {}, departComplet: true, arene: 0,
     histoire: { etape: 0, nations: [] },
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
-    scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
+    scenesVues: ['histoire15', 'histoire33'], // repères : sauvegarde déjà au format des 15 puis des 33 quêtes
+    ouverts: [],
     combosVus: [],
     classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' }, createurs: [], createurSoutenu: '',
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
@@ -524,7 +542,7 @@ export function depuisSauvegarde(brut: unknown): Collection {
       uniques: Array.isArray(qu.uniques) ? qu.uniques.filter((x): x is string => typeof x === 'string') : [],
     };
   }
-  if (Array.isArray(b.scenesVues)) c.scenesVues = b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200);
+  c.scenesVues = Array.isArray(b.scenesVues) ? b.scenesVues.filter((x): x is string => typeof x === 'string').slice(0, 200) : [];
   const ri = b.rival as { grade?: unknown; etoiles?: unknown; victoires?: unknown; bonus?: unknown } | undefined;
   if (ri && typeof ri === 'object') {
     c.rival = {
@@ -549,10 +567,12 @@ export function depuisSauvegarde(brut: unknown): Collection {
   const hi = b.histoire as { etape?: unknown; nations?: unknown } | undefined;
   if (hi && typeof hi === 'object') {
     c.histoire = {
-      etape: Math.min(REGLES.histoire.boosters.length, entier(hi.etape)),
+      etape: Math.min(REGLES.histoire.nbEtapes, entier(hi.etape)),
       nations: Array.isArray(hi.nations) ? hi.nations.filter((x): x is string => typeof x === 'string') : [],
     };
   }
+  if (Array.isArray(b.ouverts)) c.ouverts = [...new Set(b.ouverts.filter((x): x is string => typeof x === 'string'))].slice(0, 30);
+  if (!c.scenesVues.includes('histoire33')) migrerHistoire33(c);
   if (b.fragments && typeof b.fragments === 'object') {
     c.fragments = Object.fromEntries(Object.entries(b.fragments as Record<string, unknown>).map(([k, v]) => [k, entier(v)]));
   }

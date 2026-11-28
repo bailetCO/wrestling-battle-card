@@ -438,7 +438,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - Personnages : **Darius** (Darius Westrell), le mentor, ancien champion du monde poids lourd américain devenu directeur technique, et **Cocoach**, le coach rival qu'on recroise jusqu'aux Jeux Olympiques. Darius remplace Philippe depuis le 27/11/2026 (même histoire, nouveau personnage).
 - Ton de Darius : bienveillant et motivant ; chaque scène donne un objectif clair (« Objectif : … ») ; il raconte parfois une anecdote de sa carrière quand le dialogue s'y prête.
 - Portrait de Darius : provisoire, découpé dans les illustrations ChatGPT de sa carte (`public/darius/coach.webp`) ; à remplacer par des portraits de coach faits exprès (buste, tenue de coach, quelques expressions), au même nom de fichier.
-- Scènes : une par étape (18), une quand le mode histoire est terminé (Darius offre sa carte), une à l'ouverture de la saison, une par palier de la saison (6) et une finale (champion olympique).
+- Scènes : une par quête (33 depuis le 28/11/2026 : 2 à 4 bulles pour les quêtes principales, une phrase de Darius pour les secondaires), une quand le mode histoire est terminé (Darius offre sa carte), une à l'ouverture de la saison, une par palier de la saison (6) et une finale (champion olympique).
 
 ### Moments à partager (27/11/2026)
 
@@ -484,7 +484,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 ### Outils de test (à retirer avant le lancement public)
 
-- Mode histoire et saison : un bouton « ⏭ Passer à l'étape suivante (test) » / « Passer au palier suivant (test) » valide l'étape ou le palier en cours comme s'il était réussi, avec sa récompense et sa scène de dialogue, pour parcourir toute l'histoire.
+- Mode histoire et saison : un bouton « ⏭ Passer à l'étape suivante (test) » / « Passer au palier suivant (test) » valide la quête ou le palier en cours comme s'il était réussi, avec sa récompense et sa scène de dialogue, pour parcourir toute l'histoire.
 - Lutteur de test **Cocoach (test)** (nommé « Cocoach » avant le 27/11/2026) : déjà Champion du Monde, avec les meilleures statistiques du jeu (le maximum des 120 lutteurs pour l'endurance, la force et la récupération, plus le bonus de Champion du Monde). Il apparaît en tête des listes de choix contre l'ordinateur (arène, combat rapide, tournoi individuel, saison), mais pas dans la collection, les boosters, l'arène adverse ni Mon Club, et il ne peut pas être choisi en ligne.
 - Collection, réglages de test : « +10 médailles », « +50 $ », mode test (toutes les cartes), ouvrir un booster.
 - Bonus du pseudo « Coco » (1000 $) et bouton « Passer le combat et gagner » : réservés au mode développeur (`?dev`) depuis la bêta (26/11/2026), car n'importe quel testeur pourrait choisir ce pseudo.
@@ -505,29 +505,48 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 ### Mode histoire
 
-- Un parcours de 18 étapes qui fait découvrir tout le jeu (12 à l'origine, 6 ajoutées le 26/11/2026). L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
-- Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf pour les étapes 3, 6, 7 et 11 : elles sont validées dès leur déblocage si le joueur remplit déjà la condition (Mon Club ouvert, 3 lutteurs d'une même nation dans Mon Club, une nation battue dans l'arène, arène terminée).
-  1. Gagner un combat en Carrière (depuis le 28/11/2026 ; avant : 3 victoires contre 3 nations différentes, tous modes) : 1 booster.
-  2. Gagner un tournoi individuel : 1 booster.
-  3. Ouvrir Mon Club : 1 booster.
-  4. Gagner un tournoi par équipe : 1 booster.
-  5. Gagner un combat rapide par tombé ou par 10 points d'écart : 2 boosters.
-  6. Avoir au moins 3 lutteurs d'une même nation dans Mon Club : 2 boosters (validée dès le déblocage si c'est déjà le cas).
-  7. Battre une nation complète dans l'arène : 2 boosters.
-  8. Faire monter une carte au niveau épique ou plus par une fusion : 2 boosters.
-  9. Battre l'ordinateur fort (n'importe quel combat, arène et tournois compris, mais pas en combat automatique) : 3 boosters.
-  10. Gagner un combat en ligne contre un ami : 3 boosters.
-  11. Terminer l'arène en battant toutes les nations : 3 boosters.
-  12. Gagner un tournoi individuel sans perdre un combat (donc sans passer par le tableau des perdants) : 3 boosters. (Jusqu'au 26/11/2026, cette étape ouvrait la saison sportive.)
-  13. Le tacticien : réussir 2 combos dans un même combat (pas en combat auto ; gagner n'est pas obligatoire) : 2 boosters.
-  14. L'enchaîneur : gagner un combat en format Enchaînement : 2 boosters.
-  15. Jusqu'au bout : gagner un combat en durée infinie : 3 boosters.
-  16. Le rival : battre Cocoach une première fois (combat rapide, durée infinie ; pas en combat auto) : 2 boosters.
-  17. Rival de taille : battre Cocoach au niveau Légendaire ou plus : 3 boosters.
-  18. Le sommet : battre Cocoach Champion du Monde : 3 boosters et une carte légendaire au hasard parmi celles que le joueur n'a pas ; s'il les a toutes, une légendaire au hasard (un double).
-- Anciennes sauvegardes : un joueur qui avait fini les 12 étapes garde sa saison et commence l'étape 13 ; la scène d'ouverture de la saison (ancienne clé h12, nouvelle clé hfin) n'est pas remontrée. Il recevra une seconde légendaire à l'étape 18.
-- Quand la saison est ouverte et que l'histoire n'est pas finie, l'accueil montre les deux bandeaux : la saison, puis l'étape du mode histoire en cours.
-- Les boosters des étapes sont des boosters classiques. Une bulle annonce chaque étape validée ; la récompense s'ouvre dans l'écran du mode histoire. Le mode histoire ne donne pas de médailles.
+- Depuis le 28/11/2026 : un parcours de **33 quêtes** (avant : 18 étapes), dans l'ordre où un nouveau joueur découvre le jeu. L'ordre vient d'une simulation de 4 profils de nouveaux joueurs sur 60 jours (occasionnel : 5 combats par jour, 5 jours sur 7 ; social : 6 combats et 4 combats en ligne ; collectionneur : 10 combats et achats de boosters ; passionné : 25 combats). Repères pour l'occasionnel : 1re victoire en Carrière J1, Mon Club J3, 1re nation J3, 1re fusion J10, 3 nations J10, Mon Club niveau 10 J14, 1er tournoi gagné J18, 6 nations J21, Carrière finie J36.
+- Les 5 premières quêtes sont faciles (premier jour). Ensuite, une **quête secondaire** (découvrir une fonction : deck, quêtes du jour, boutique, combos, auto, fragments…) alterne avec une **quête principale** (★, avancer dans le jeu : Carrière, tournois, divisions, Mon Club, Cocoach), jamais deux secondaires de suite.
+- L'objectif en cours (avec une jauge quand il y en a une : médailles, nations battues, niveau de Mon Club) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les quêtes faites, la quête en cours (type, guide pas à pas, bouton vers le bon écran, récompense) et les quêtes verrouillées.
+- Les quêtes se débloquent dans l'ordre. Une quête ne se valide qu'une fois en cours, sauf celles qui portent sur l'état du jeu (Mon Club ouvert ou niveau 10, nations battues, division, fusions, étoile, lien d'invitation déjà partagé, lutteur déjà recruté) : validées tout de suite si c'est déjà fait, et enchaînées.
+- Les deux quêtes qui demandent un ami (lien d'invitation, combat en ligne) ont un bouton « Passer cette quête (sans récompense) », pour ne jamais bloquer un joueur qui joue seul.
+- Les menus et modes apparaissent quand la quête qui s'en sert devient la quête en cours : Mon Club (quête 5), Tournois (8), Social et la boutique (9), Classement (10), Fusion (12), combos (13), Enchaînement (17), tournoi par équipe (18), durée infinie (20), ordinateur fort (21), saison sportive (24), combat entre amis (25).
+- Récompenses (chiffres dans `REGLES.histoire.recompenses`) : petites pour les secondaires ($ ou un booster), plus grosses pour les principales (boosters rares ou épiques, cartes légendaires). Une bulle annonce chaque quête réussie ; les boosters vont dans la boîte à récompenses, les $ sont ajoutés tout de suite. Le mode histoire ne donne pas de médailles.
+  1. ★ Premier combat : gagner un combat en Carrière : 1 booster.
+  2. Régler les actions d'un de ses lutteurs : 10 $.
+  3. Gagner un combat d'entraînement : 10 $.
+  4. Réussir une quête du jour : 1 booster.
+  5. ★ Ouvrir Mon Club (10 médailles ; jauge des médailles) : 1 booster rare.
+  6. ★ Battre une nation complète en Carrière, champion compris : 1 booster rare.
+  7. Recruter un lutteur dans Mon Club : 1 booster.
+  8. ★ Finir sur le podium d'un tournoi individuel : 1 booster rare.
+  9. Acheter un booster (ou une carte) dans la boutique (Social) : 15 $.
+  10. ★ Atteindre la division Argent : 1 booster rare.
+  11. Envoyer son lien d'invitation à un ami (peut être passée) : 1 booster.
+  12. ★ Faire sa première fusion (ou première étoile) : 1 booster épique.
+  13. Réussir 2 combos dans un même combat (pas en auto ; gagner n'est pas obligatoire) : 1 booster.
+  14. ★ Battre 3 nations en Carrière : 2 boosters rares.
+  15. Gagner un combat en mode auto : 15 $.
+  16. ★ Gagner un tournoi individuel : 2 boosters rares.
+  17. Gagner un combat en format Enchaînement (pas en auto) : 1 booster.
+  18. ★ Gagner un tournoi par équipe : 1 booster épique.
+  19. Transformer un double en fragment de légende : 1 booster.
+  20. ★ Battre Cocoach, le rival (entraînement, durée infinie ; pas en auto) : 2 boosters rares.
+  21. Battre l'ordinateur fort en jouant soi-même (n'importe quel combat) : 1 booster rare.
+  22. ★ Battre 6 nations en Carrière : 1 booster épique.
+  23. Monter une carte jusqu'au niveau Épique par fusion : 1 booster rare.
+  24. ★ Monter Mon Club au niveau 10 (ouvre la saison sportive) : 1 booster épique.
+  25. Gagner un combat en ligne contre un ami (peut être passée) : 1 booster rare.
+  26. ★ Atteindre la division Or : 2 boosters rares.
+  27. Obtenir une carte Champion du Monde par fusion : 1 booster épique.
+  28. ★ Battre 9 nations en Carrière : 2 boosters épiques.
+  29. Gagner un tournoi individuel sans passer par le tableau des perdants : 1 booster rare.
+  30. ★ Terminer la Carrière (12 nations) : 1 carte légendaire que le joueur n'a pas.
+  31. Donner une première étoile à une action (la carte de Darius ne compte pas) : 1 booster épique.
+  32. ★ Battre Cocoach au niveau Légendaire ou plus : 2 boosters épiques.
+  33. ★ Le sommet : battre Cocoach Champion du Monde : 1 carte légendaire que le joueur n'a pas, et la carte secrète de Darius.
+- Anciennes sauvegardes (18 étapes) : le joueur reprend à la première nouvelle quête qui correspond à une ancienne étape pas encore faite ; les quêtes placées avant sont considérées comme faites (sans récompense), celles qui portent sur l'état du jeu se valident seules. Les menus et modes qu'il avait déjà gardent ouverts (liste « ouverts » de la sauvegarde). Les scènes des quêtes passées sont marquées comme vues. Conversion une seule fois (repère « histoire33 »).
+- Quand la saison est ouverte et que l'histoire n'est pas finie, l'accueil montre les deux bandeaux : la saison, puis la quête du mode histoire en cours.
 - Le tutoriel présente les modes de jeu et se termine sur le mode histoire ; la page des règles décrit tous les modes.
 
 

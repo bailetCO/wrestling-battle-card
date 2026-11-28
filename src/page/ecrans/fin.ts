@@ -311,6 +311,7 @@ export function ecranFin() {
     if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto, carriere: enArene && !S.tuto && !S.essaiSolo });
     const niveauAvant = niveauCompte(S.collection);
     S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? victoireClassement({ niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
+    if (S.pointsFin) histoire({ type: 'etat' }); // division gagnée : quêtes « division Argent / Or »
     queueMicrotask(() => { if (niveauCompte(S.collection) > niveauAvant) jouer('niveau', 1.2); });
     let championBattu = gagne && S.areneCtx?.type === 'boss'; // champion d'une nation battu en Carrière
     if (e.rapide) {

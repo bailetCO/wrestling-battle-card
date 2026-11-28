@@ -5,7 +5,7 @@ import { ACTIONS, REGLES, type Choix, type IdAction } from '../moteur';
 import { ICONE } from './textes';
 
 const R = REGLES;
-const NB_ETAPES_HISTOIRE = R.histoire.boosters.length;
+const NB_ETAPES_HISTOIRE = R.histoire.nbEtapes;
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 
 // Schéma « qui bat qui » : chaque flèche va du gagnant vers le perdant.
@@ -134,7 +134,7 @@ export function reglesHTML(): string {
         <li><b>Tournoi individuel</b> (${R.tournoi.individuel.inscription} $) : de ${R.tournoi.individuel.minimum} à ${R.tournoi.individuel.maximum} lutteurs, en double tableau. Tu avances tant que tu gagnes ; une défaite avant les 1/2 finales t'envoie dans le tableau des perdants, une deuxième t'élimine. Chaque perdant de 1/2 finale affronte le vainqueur du tableau des perdants du côté opposé ; les deux gagnants jouent la petite finale (3e place). Gains : ${R.tournoi.individuel.medailles[1]}, ${R.tournoi.individuel.medailles[2]} et ${R.tournoi.individuel.medailles[3]} médailles, ${R.tournoi.individuel.dollars[1]}, ${R.tournoi.individuel.dollars[2]} et ${R.tournoi.individuel.dollars[3]} $, booster épique au vainqueur.</li>
         <li><b>Tournoi par équipe</b> (${R.tournoi.equipe.inscription} $) : tes ${R.tournoi.equipe.duels} lutteurs de Mon Club, un duel chacun ; la première équipe à ${R.tournoi.equipe.victoiresPourGagner} victoires gagne. <b>Bonus de nation</b> : 3 lutteurs d'une même nation donnent ${pct(R.tournoi.equipe.bonusNation[3])} à toute l'équipe, 4 : ${pct(R.tournoi.equipe.bonusNation[4])}, 5 : ${pct(R.tournoi.equipe.bonusNation[5])}.</li>
         <li><b>Mon Club</b> : ouvre à ${R.club.medaillesOuverture} médailles, puis un niveau et une place de plus toutes les ${R.club.medaillesParNiveau} médailles, jusqu'au niveau ${R.club.niveauMax} (${R.club.niveauMax} places). À partir du niveau ${R.club.niveauBooster}, chaque niveau donne aussi un booster rare.</li>
-        <li><b>Mode histoire</b> : ${NB_ETAPES_HISTOIRE} étapes qui font découvrir tout le jeu, à valider dans l'ordre. Chaque étape rapporte des boosters ; la dernière, aussi une carte légendaire. </li>
+        <li><b>Mode histoire</b> : ${NB_ETAPES_HISTOIRE} quêtes qui font découvrir tout le jeu, à valider dans l'ordre : des quêtes principales pour avancer, et des quêtes secondaires pour découvrir chaque fonction. Chacune rapporte des $ ou des boosters ; les plus grandes, une carte légendaire. </li>
         <li><b>Saison sportive</b> : un mode à part, ouvert au niveau ${R.club.niveauSaison} de Mon Club. Interclub, régional, national, international, championnats du monde, et Jeux Olympiques une saison sur 4.</li>
         <li><b>Médailles et niveau</b> : +1 médaille par victoire contre l'ordinateur ou en tournoi, +2 en ligne ; toutes les ${R.economie.medaillesParPalier} médailles, ${R.economie.dollarsParPalier} $. Un niveau de compte toutes les ${R.compte.medaillesParNiveau} médailles.</li>
       </ul>

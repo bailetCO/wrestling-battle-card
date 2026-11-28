@@ -2,11 +2,22 @@
 // Pour annoncer une mise à jour : changer VERSION (et "version" dans package.json), puis ajouter
 // une entrée EN HAUT de la liste, avec 3 à 5 lignes en français simple, du point de vue du joueur.
 
-export const VERSION = '0.17.0';
+export const VERSION = '0.18.0';
 
 export type Nouveautes = { version: string; date: string; lignes: string[] };
 
 export const NOUVEAUTES: Nouveautes[] = [
+  {
+    version: '0.18.0',
+    date: '2026-11-28',
+    lignes: [
+      'Nouveau mode histoire : 33 quêtes au lieu de 18, dans l\'ordre où tu découvres le jeu.',
+      '★ Les quêtes principales te font avancer (Carrière, tournois, divisions, Mon Club, Cocoach) ; les quêtes secondaires te font découvrir chaque fonction.',
+      'Plus de récompenses : $, boosters rares et épiques, et deux cartes légendaires.',
+      'Tu joues seul ? Les quêtes qui demandent un ami peuvent être passées.',
+      'Déjà avancé ? Tu reprends à la bonne quête, et tes menus restent ouverts.',
+    ],
+  },
   {
     version: '0.17.0',
     date: '2026-11-28',
