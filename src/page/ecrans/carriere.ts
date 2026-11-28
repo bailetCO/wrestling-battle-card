@@ -8,7 +8,7 @@ import { PAR_NATION, adversairesDe, areneTerminee, etapeArene, nationsArene } fr
 import { TUTOS, type IdTuto } from '../tutos';
 import { DEV } from '../dev';
 import { carteJoueur } from './accueil';
-import { CARTES, fenetreDeck } from './collection';
+import { cartes as toutesLesCartes, fenetreDeck } from './collection';
 import { boutonAuto, brancherStyle, encartRival, lancer, lancerArene, reglagesStyle } from './combat';
 import { fonctionVisible } from '../menu';
 import { S, app, choixNiveau, echap, enTete, niveauOrdi, nouvelleGraine, portrait } from './commun';
@@ -103,7 +103,7 @@ export function ecranArene(rapide = false) {
   // Format et durée pas encore ouverts par le mode histoire : on revient au réglage simple.
   if (!fonctionVisible(S.collection, 'enchainement')) S.enchainementChoisi = false;
   if (!fonctionVisible(S.collection, 'infini')) S.infiniChoisi = false;
-  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...toutesLesCartes().filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   // Adversaire du combat auto : connu en Carrière et contre Cocoach ; au hasard (parmi les battus à la main) sinon.
   const advListe: string | null = rapide ? (S.infiniChoisi ? ID_RIVAL : null) : S.bossChoisi ? adversairesDe(S.bossChoisi)[PAR_NATION - 1] : etapeArene(S.collection).adversaire ?? '';
   const cartes = miens.map((l) => {

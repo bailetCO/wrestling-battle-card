@@ -20,8 +20,8 @@ export interface DefEtape {
 
 export const ETAPES: DefEtape[] = [
   {
-    titre: 'Premiers combats', objectif: 'Gagner 3 combats contre 3 lutteurs de nations différentes',
-    guide: 'Choisis un lutteur et bats l\'ordinateur. Change d\'adversaire à chaque fois : il faut 3 nations différentes. Tous les combats comptent : Carrière, entraînement, tournoi, en ligne.',
+    titre: 'Premier combat', objectif: 'Gagner un combat en Carrière',
+    guide: 'Va dans Carrière, choisis un lutteur de ta collection et bats ton premier adversaire. Si tu perds, recommence : chaque combat t\'apprend quelque chose.',
     lien: '#arene', bouton: 'Aller en Carrière',
   },
   {
@@ -115,7 +115,7 @@ export const NB_ETAPES = ETAPES.length;
 
 // Ce qui se passe dans le jeu et peut faire avancer l'histoire.
 export type EvenementHistoire =
-  | { type: 'victoire'; nation: string; niveau: Niveau | null; auto?: boolean } // tout combat gagné (niveau null : en ligne ; auto : combat automatique)
+  | { type: 'victoire'; nation: string; niveau: Niveau | null; auto?: boolean; carriere?: boolean } // tout combat gagné (niveau null : en ligne ; auto : combat automatique ; carriere : en Carrière)
   | { type: 'rapide'; tombe: boolean; ecart: number } // combat rapide gagné
   | { type: 'tournoiIndividuel'; place: number; invaincu: boolean }
   | { type: 'tournoiEquipe'; gagne: boolean }
@@ -130,8 +130,7 @@ export type EvenementHistoire =
 export const histoireFinie = (c: Collection) => c.histoire.etape >= NB_ETAPES;
 
 // Progression de l'étape en cours, pour l'affichage ([fait, à faire]), ou null.
-export function progression(c: Collection): [number, number] | null {
-  if (c.histoire.etape === 0) return [c.histoire.nations.length, H.nationsEtape1];
+export function progression(_c: Collection): [number, number] | null {
   return null;
 }
 
@@ -139,10 +138,7 @@ export function progression(c: Collection): [number, number] | null {
 function valide(c: Collection, ev: EvenementHistoire): boolean {
   const h = c.histoire;
   switch (h.etape) {
-    case 0:
-      if (ev.type !== 'victoire' || h.nations.includes(ev.nation)) return false;
-      h.nations.push(ev.nation);
-      return h.nations.length >= H.nationsEtape1;
+    case 0: return ev.type === 'victoire' && !!ev.carriere;
     case 1: return ev.type === 'tournoiIndividuel' && ev.place === 1;
     case 2: return niveauClub(c) > 0;
     case 3: return ev.type === 'tournoiEquipe' && ev.gagne;

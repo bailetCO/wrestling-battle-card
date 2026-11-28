@@ -150,6 +150,21 @@ service cloud.firestore {
         && request.resource.data.cree == request.time;
     }
 
+    // Codes créateurs (28/11/2026) : createurs/<CODE>, créés par Corentin dans la console (personne
+    // ne les écrit depuis le jeu). soutiens/<joueur>_<CODE> : un joueur note qu'il a entré un code.
+    match /createurs/{code} {
+      allow read: if connecte();
+      allow write: if false;
+    }
+    match /soutiens/{id} {
+      allow read: if false;
+      allow create: if connecte() && id == request.auth.uid + '_' + request.resource.data.code
+        && request.resource.data.keys().hasOnly(['code', 'idCoach', 'cree'])
+        && texte('code', 20) && texte('idCoach', 40)
+        && exists(/databases/$(database)/documents/createurs/$(request.resource.data.code))
+        && request.resource.data.cree == request.time;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

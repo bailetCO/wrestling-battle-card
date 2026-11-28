@@ -308,7 +308,7 @@ export function ecranFin() {
     const x = S.bonusCeCombat ? REGLES.collection.multiplicateurApresTutoriel : 1;
     if (S.bonusCeCombat) S.collection.bonusTutoriel = false; // le bonus vaut pour un seul combat
     S.bonusCeCombat = false;
-    if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto });
+    if (gagne) histoire({ type: 'victoire', nation: o.def.nation, niveau: S.partie.niveau, auto: S.combatEnAuto, carriere: enArene && !S.tuto && !S.essaiSolo });
     const niveauAvant = niveauCompte(S.collection);
     S.pointsFin = gagne && !S.tuto && !S.essaiSolo ? victoireClassement({ niveau: S.partie.niveau, tombe: e.finPar === 'tombe' }) : null;
     queueMicrotask(() => { if (niveauCompte(S.collection) > niveauAvant) jouer('niveau', 1.2); });

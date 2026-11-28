@@ -1,3 +1,4 @@
+import { createurValide, enregistrerCreateur, type Createur } from './createurs';
 // La collection du joueur : son pseudo de coach, ses cartes (exemplaires et grades), ses decks.
 // Sauvegardée dans le navigateur du téléphone (une vraie sauvegarde par compte viendra avec Firebase).
 
@@ -45,6 +46,8 @@ export interface Collection {
   battusMain: string[]; // lutteurs adverses battus au moins une fois en jouant soi-même (le combat auto n'est permis que contre eux)
   rival: { grade: number; etoiles: Partial<Record<IdAction, number>>; victoires: number; bonus: number }; // Cocoach, rival du mode infini
   classement: Classement; // classement mensuel : points du mois, plafond du jour, badge, fins de mois à récompenser
+  createurs: Createur[]; // codes créateurs entrés (chacun une fois) : leurs cartes sont connues du jeu
+  createurSoutenu: string; // dernier code créateur entré
   quotidien: { jour: string; rang: number; visite: string; retour: string }; // dernier jour réclamé, prochaine case (0 à 6), dernière visite, dernier bonus de retour (jours AAAA-MM-JJ)
   parrain: { id: string; pseudo: string; declare: boolean } | null; // coach qui m'a invité (nouveau joueur) ; declare : signalé en ligne
   parrainage: { vus: string[]; recompenses: number; partage: boolean }; // amis invités déjà comptés, parrainages récompensés, lien déjà partagé
@@ -122,7 +125,7 @@ export function nouvelleCollection(): Collection {
     saison: { palier: 0, victoires: 0, numero: 1, terminees: 0 },
     scenesVues: ['histoire15'], // repère : sauvegarde déjà au format des 15 étapes
     combosVus: [],
-    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' },
+    classement: classementVide(), pays: '', parrain: null, parrainage: { vus: [], recompenses: 0, partage: false }, quotidien: { jour: '', rang: 0, visite: '', retour: '' }, createurs: [], createurSoutenu: '',
     rival: { grade: 1, etoiles: {}, victoires: 0, bonus: 0 },
     quetes: { jour: '', liste: [], change: false, bonus: false, uniques: [] },
   };
@@ -354,6 +357,18 @@ export function acheterChampion(c: Collection, id: string): Booster | string {
 // Victoire : 1 booster en arène, 2 en ligne (mode collection), plus les médailles (+1 en arène,
 // +2 en ligne) et les $ des paliers franchis. `multiplicateur` : 2 pour le combat d'arène qui suit
 // le tutoriel (boosters doublés). `boosters` : false en ligne avec les cartes de base (médailles seules).
+// Code créateur (28/11/2026) : la carte du créateur (Champion du Monde) et un booster épique.
+// null : code déjà utilisé par ce joueur.
+export function recevoirCodeCreateur(c: Collection, cr: Createur, hasard: Hasard): Booster[] | null {
+  if (c.createurs.some((x) => x.code === cr.code)) return null;
+  const def = enregistrerCreateur(cr);
+  c.createurs.push(cr);
+  c.createurSoutenu = cr.code;
+  const nouvelle = nbExemplaires(c, def.id) === 0;
+  c.exemplaires[def.id] = nbExemplaires(c, def.id) + 1;
+  return [{ type: 'recompense', cartes: [def.id], nouvelles: nouvelle ? [def.id] : [] }, ouvrirBooster(c, hasard, 'epique')];
+}
+
 export function recompenser(c: Collection, ou: 'arene' | 'enLigne', hasard: Hasard, multiplicateur = 1, boosters = true): Booster[] {
   c.victoires++;
   if (ou === 'arene') c.defaitesDeSuite = 0;
@@ -467,6 +482,10 @@ const CLE = 'wbc-collection-v1';
 
 // Lit une sauvegarde, y compris l'ancien format (liste de cartes sans exemplaires).
 export function depuisSauvegarde(brut: unknown): Collection {
+  // Cartes des créateurs : connues du jeu avant de vérifier les cartes de la sauvegarde.
+  const crs = (brut as { createurs?: unknown } | null)?.createurs;
+  const createurs = Array.isArray(crs) ? crs.filter(createurValide).slice(0, 50) : [];
+  createurs.forEach(enregistrerCreateur);
   const c = nouvelleCollection();
   if (!brut || typeof brut !== 'object') return c;
   const b = brut as Record<string, unknown>;
@@ -550,6 +569,8 @@ export function depuisSauvegarde(brut: unknown): Collection {
   if (typeof b.victoires === 'number') c.victoires = b.victoires;
   if (typeof b.defaitesDeSuite === 'number') c.defaitesDeSuite = b.defaitesDeSuite;
   c.classement = lireClassement(b.classement);
+  c.createurs = createurs;
+  if (typeof b.createurSoutenu === 'string' && createurs.some((x) => x.code === b.createurSoutenu)) c.createurSoutenu = b.createurSoutenu;
   const q = b.quotidien as Collection['quotidien'];
   const jourOk = (x: unknown) => typeof x === 'string' && (x === '' || /^\d{4}-\d{2}-\d{2}$/.test(x));
   if (q && jourOk(q.jour) && jourOk(q.visite) && jourOk(q.retour) && Number.isInteger(q.rang)) c.quotidien = { jour: q.jour, rang: Math.min(6, Math.max(0, q.rang)), visite: q.visite, retour: q.retour };

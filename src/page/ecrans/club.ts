@@ -1,3 +1,4 @@
+import { blocCodeCreateur, brancherCodeCreateur } from './createurs';
 import { blocInvitation, brancherInvitation, verifierParrainage } from './parrainage';
 // Mon Club et Social (boutique, transferts, amis).
 
@@ -11,7 +12,7 @@ import { Echange, accepterOffre, jourDe, listeAmis, offreFaite, offresDuJour, ty
 
 import { carteJoueur, niveauDe, porteMonnaie } from './accueil';
 import { acces, relaisPerso } from './amis';
-import { CARTES } from './collection';
+import { cartes } from './collection';
 import { fermerFenetre, ouvrirFenetre } from './combat';
 import { S, app, echap, enTete, portrait } from './commun';
 import { revelerPaquet, visuelPaquet } from './fin';
@@ -92,7 +93,7 @@ export function ecranMonClub(message = '') {
 }
 
 export function fenetreRecruter() {
-  const libres = CARTES.filter((l) => possede(S.collection, l.id) && !S.collection.club.includes(l.id));
+  const libres = cartes().filter((l) => possede(S.collection, l.id) && !S.collection.club.includes(l.id));
   const f = ouvrirFenetre(`
     <h2>Recruter un lutteur</h2>
     ${libres.length
@@ -167,6 +168,7 @@ export function ecranSocial(message = '') {
       ${porteMonnaie()}
       ${message}
       ${S.collection.coach ? blocInvitation() : ''}
+      ${S.collection.coach ? blocCodeCreateur() : ''}
       <section class="bloc boutique">
         <h2>Boutique</h2>
         <p>Achète des boosters avec tes $. Tu gagnes 10 $ toutes les 5 médailles.</p>
@@ -215,6 +217,7 @@ export function ecranSocial(message = '') {
       </section>
     </main>`;
   brancherInvitation(app);
+  brancherCodeCreateur(app);
   // Amis arrivés par mon lien depuis la dernière visite : récompenses, puis compteur à jour.
   if (S.collection.parrainage.partage) {
     void verifierParrainage().then(() => {

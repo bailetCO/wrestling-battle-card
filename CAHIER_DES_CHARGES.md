@@ -334,6 +334,14 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 - En ligne : Firestore `parrainages/<filleul>` (créé une seule fois, avec un vrai compte) et `amities/<joueur>_<ami>`. Le parrain ne cherche ces fiches que s'il a déjà partagé son lien.
 - Chiffres dans `REGLES.parrainage`.
 
+### Codes créateurs (28/11/2026)
+
+- Pour les créateurs de contenu lutte (YouTube, TikTok, Instagram, clubs, athlètes). Champ « Code créateur » en bas de Social (sous « Inviter un ami ») et sous « Plus » → « Code créateur ».
+- Chaque code s'entre une fois par joueur (un joueur peut entrer les codes de plusieurs créateurs) : il reçoit la **carte du créateur**, Champion du Monde (statistiques, actions et action de Champion du Champion du Monde de la nation choisie pour ce créateur ; le nom du créateur, son image s'il en a une, origine « Créateur »), et **un booster épique**, révélés comme un booster. Le « créateur soutenu » est le dernier code entré (« Tu soutiens … » dans Social).
+- Codes créés par Corentin dans la console Firebase, sans mise à jour du jeu : Firestore `createurs/<CODE>` (nom, nation, image, actif). Un code désactivé ne marche plus, mais ceux qui l'ont utilisé gardent leur carte. Chaque soutien est noté (`soutiens/<joueur>_<CODE>`) pour compter les joueurs amenés par chaque créateur. Mode d'emploi : `firebase/LISEZ-MOI.md`.
+- Les cartes des créateurs sont gardées dans la sauvegarde (avec la fiche du créateur), comme les cartes secrètes : jamais dans les boosters.
+- À venir (étape 3) : le défi du créateur.
+
 ### Médailles et $
 
 - Deux monnaies : les médailles mesurent la progression (jamais dépensées) ; les $ se dépensent (boosters, inscriptions aux tournois).
@@ -422,7 +430,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
   - Verrouillées : jamais dans les boosters, ni dans l'arène, ni chez les adversaires. On les obtient en fin de saison, ou dans la boutique (Social) à 200 $ l'exemplaire, autant de fois qu'on veut.
   - Elles sont déjà au niveau Champion du Monde : leurs doubles servent à gagner des étoiles (actions moins chères) et des styles de carte, par la fusion.
   - Dans la collection, elles ont leur propre groupe : tout en bas tant que le joueur n'en possède aucune ; en haut dès la première (seulement avec les tris « Rareté de base » et « Rareté actuelle » ; tout en bas avec les autres tris), avec seulement les cartes possédées et un bouton « Voir plus » pour afficher celles à gagner (comme les autres groupes). Le compte « x/120 cartes » ne les inclut pas.
-- Collection : cartes affichées en miniature (3 par ligne sur téléphone) ; dans chaque groupe, seules les cartes possédées sont affichées ; les cartes à gagner sont cachées derrière un bouton « Voir plus (N à gagner) », puis « Voir moins » pour les replier (sauf le groupe « À gagner » du tri par fusions). Le combat rapide contre l'ordinateur reste ouvert dès le début (seul le combat auto attend le niveau 3).
+- Collection : cartes affichées en miniature (3 par ligne sur téléphone) ; dans chaque groupe, seules les cartes possédées sont affichées ; les cartes à gagner sont cachées derrière un bouton « Voir plus (N à gagner) », puis « Voir moins » pour les replier (sauf le groupe « À gagner » du tri par fusions). Une carte à gagner (grisée, avec un cadenas) s'ouvre d'un clic (28/11/2026) : la carte entière en grisé (statistiques et actions) et « Où l'obtenir » (boosters selon la rareté, fragments de légende pour une légendaire, fin de saison ou boutique de Mon Club pour un Champion du Monde), pour que le joueur se fixe un objectif. Le combat rapide contre l'ordinateur reste ouvert dès le début (seul le combat auto attend le niveau 3).
 
 ### Scènes de dialogue (modes histoire)
 
@@ -499,7 +507,7 @@ Légendaires (cartes « championnes ») : dans les boosters avec une chance trè
 
 - Un parcours de 18 étapes qui fait découvrir tout le jeu (12 à l'origine, 6 ajoutées le 26/11/2026). L'objectif en cours (avec sa progression) est toujours affiché en haut du menu ; l'écran « Mode histoire » montre les étapes faites, l'étape en cours avec un guide pas à pas et un bouton vers le bon écran, et les étapes verrouillées.
 - Les étapes se débloquent dans l'ordre : il faut valider l'étape 1 pour passer à la 2, etc. Une étape ne se valide qu'une fois débloquée ; ce qui a été fait avant ne compte pas, sauf pour les étapes 3, 6, 7 et 11 : elles sont validées dès leur déblocage si le joueur remplit déjà la condition (Mon Club ouvert, 3 lutteurs d'une même nation dans Mon Club, une nation battue dans l'arène, arène terminée).
-  1. Gagner 3 combats contre des lutteurs de 3 nations différentes (tous les combats comptent : ordinateur, arène, combat rapide, tournoi, en ligne) : 1 booster.
+  1. Gagner un combat en Carrière (depuis le 28/11/2026 ; avant : 3 victoires contre 3 nations différentes, tous modes) : 1 booster.
   2. Gagner un tournoi individuel : 1 booster.
   3. Ouvrir Mon Club : 1 booster.
   4. Gagner un tournoi par équipe : 1 booster.

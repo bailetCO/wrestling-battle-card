@@ -13,7 +13,7 @@ import { PERSONNAGES, SCENES, scenesEnCours, varianteScene, type Personnage } fr
 import { DEV } from '../dev';
 import { niveauDe } from './accueil';
 import { miniCarteLutteur } from './club';
-import { CARTES } from './collection';
+import { cartes as toutesLesCartes } from './collection';
 import { autoDispo, lancer } from './combat';
 import { S, app, echap, enTete, nouvelleGraine } from './commun';
 import { revelerPaquet, sectionPaquet } from './fin';
@@ -417,7 +417,7 @@ export function ecranSaison() {
 export function ecranChoixSaison(quoi: 'interclub' | 'competition', message = '') {
   const p = PALIERS[S.collection.saison.palier];
   if (!p) return ecranSaison();
-  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...toutesLesCartes().filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete(p.nom, quoi === 'interclub' ? 'Combat rapide (1 période) contre un autre club' : `Inscription ${R_.tournoi.individuel.inscription} $ (tu as ${S.collection.dollars} $)`, '#saison')}

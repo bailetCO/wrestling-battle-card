@@ -8,7 +8,7 @@ import { etapeArene } from '../arene';
 import { ETAPES } from '../histoire';
 import { ETAPES_GUIDEES, TEXTE_LIBRE, TEXTE_LIBRE_SUITE, TUTO_COMBAT, ecransTutoriel, reglesHTML, type EtapeGuidee } from '../aide';
 import { niveauDe } from './accueil';
-import { CARTES } from './collection';
+import { cartes } from './collection';
 import { ecranCombat, lancerArene } from './combat';
 import { tourGuideEssai } from './tutos-courts';
 import { S, app, echap, enTete } from './commun';
@@ -121,7 +121,7 @@ export function ecranFinTutoriel() {
   noterParcours('tutoriel_fini', '', true);
   // Premier vrai combat : le meilleur lutteur du joueur contre le premier adversaire de la Carrière.
   const adv = etapeArene(S.collection).adversaire;
-  const premier = adv ? [...CARTES].filter((l) => possede(S.collection, l.id)).sort((x, y) => NIVEAUX.indexOf(niveauDe(y.id)) - NIVEAUX.indexOf(niveauDe(x.id)))[0] ?? null : null;
+  const premier = adv ? [...cartes()].filter((l) => possede(S.collection, l.id)).sort((x, y) => NIVEAUX.indexOf(niveauDe(y.id)) - NIVEAUX.indexOf(niveauDe(x.id)))[0] ?? null : null;
   app.innerHTML = `
     <main class="sous-menu tuto">
       ${enTete('Tutoriel terminé', '', '#combat')}

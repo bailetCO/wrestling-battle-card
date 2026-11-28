@@ -10,7 +10,7 @@ import { NOM_MATCH, avancer, creerTournoiEquipe, enregistrer, enregistrerDuel, e
 import { DEV } from '../dev';
 import { ICONE_MEDAILLE, defJoueur, niveauDe, porteMonnaie } from './accueil';
 import { miniCarteLutteur } from './club';
-import { CARTES } from './collection';
+import { cartes as toutesLesCartes } from './collection';
 import { boutonAuto, demarrer, htmlTourAncien, texteAuto } from './combat';
 import { S, app, echap, enTete, nouvelleGraine, portrait } from './commun';
 import { revelerPaquet, sectionPaquet } from './fin';
@@ -97,7 +97,7 @@ export const NOM_TOURNOI: Record<Tournoi['type'], string> = { individuel: 'Tourn
 export function ecranInscriptionIndividuel(nombre: number) {
   const C = R_.tournoi.individuel;
   const n = nombreParticipants(nombre);
-  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...CARTES.filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
+  const miens = [...(DEV ? [LUTTEUR_TEST] : []), ...toutesLesCartes().filter((l) => possede(S.collection, l.id))]; // + Cocoach, lutteur de test (mode développeur)
   app.innerHTML = `
     <main class="sous-menu">
       ${enTete('Tournoi individuel', `Inscription ${C.inscription} $ (tu as ${S.collection.dollars} $)`, '#tournois')}

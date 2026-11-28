@@ -682,6 +682,10 @@ button.place-vide { color: var(--orange); border-color: var(--orange); }
 .mc-grade { color: var(--orange); letter-spacing: 1px; }
 .mc-nombre { position: absolute; top: -6px; right: -6px; }
 .mini-carte.verrouillee { filter: grayscale(1) brightness(.5); box-shadow: none; }
+button.mini-carte.verrouillee { cursor: pointer; }
+.carte-grisee { position: relative; }
+.carte-grisee .carte-possedee { filter: grayscale(1) brightness(.6); }
+.carte-grisee .cadenas { position: absolute; top: -1rem; right: .2rem; font-size: 2.2rem; z-index: 2; filter: drop-shadow(0 2px 6px #000); pointer-events: none; }
 .mini-carte:active:not(.verrouillee) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--encre); }
 
 /* ---------- Fusion ---------- */
@@ -1693,3 +1697,8 @@ b.moi { color: #ff8a95; }
 /* Booster épique (28/11/2026) */
 .p-epique { --p1: #b06bff; --p2: #3c1475; box-shadow: 5px 5px 0 var(--encre), inset 0 0 0 3px rgba(255,255,255,.3), 0 0 18px rgba(190,120,255,.6); }
 .p-epique .paquet-type { color: #e2b8ff; }
+/* Code créateur (28/11/2026) */
+.code-createur h2 { margin: 0; }
+.form-code-createur { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.form-code-createur input { min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(0,0,0,.25); color: var(--texte); font: 800 18px var(--police); letter-spacing: .08em; text-transform: uppercase; }
+.fenetre .code-createur { margin: 0; }

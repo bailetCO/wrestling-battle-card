@@ -44,6 +44,7 @@ Jeu de cartes de lutte olympique jouable dans le navigateur. Les règles sont da
 - `src/page/son.ts` et `src/page/ecrans/reglages-son.ts` : sons (fabriqués en code, style arcade) et vibrations, avec leurs réglages.
 - `src/page/quotidien.ts` et `src/page/ecrans/quotidien.ts` : récompense du jour (calendrier de 7 jours) et cadeau de retour de Darius.
 - `src/page/notifications.ts` et `src/page/ecrans/notifications.ts` : inscription aux notifications (Firebase Cloud Messaging) ; leur affichage est dans `public/sw.js`.
+- `src/page/createurs.ts` et `src/page/ecrans/createurs.ts` : codes créateurs (fiches dans Firestore, carte Champion du Monde du créateur, booster épique).
 - `src/page/collection.ts` : la collection (cartes, boosters, decks, médailles et $), gardée dans le navigateur.
 - `src/page/nouveautes.ts` : le numéro de version et le texte des nouveautés (à compléter à chaque mise à jour).
 - `src/page/beta.ts` et `src/page/ecrans/beta.ts` : la bêta (code d'invitation, nouveautés, export et import de la sauvegarde, installation sur le téléphone).
