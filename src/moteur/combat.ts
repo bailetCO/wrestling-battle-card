@@ -97,12 +97,16 @@ export function precisionDe(endurance: number): number {
   return (100 + endurance) / 200;
 }
 
-// 100 % à partir de 50 d'endurance, puis une baisse régulière jusqu'à 40 % à 0 d'endurance.
-export function chanceReussite(precision: number): number {
+// Endurance à partir de laquelle les actions ne ratent jamais : la moitié de l'endurance max.
+export const seuilPrecision = (enduranceMax: number) => REGLES.precision.partPleine * enduranceMax;
+
+// 100 % à partir de la moitié de l'endurance max, puis une baisse régulière jusqu'à 40 % à 0 d'endurance.
+export function chanceReussite(precision: number, enduranceMax: number): number {
   const P = REGLES.precision;
+  const seuil = seuilPrecision(enduranceMax);
   const endurance = precision * 200 - 100;
-  if (endurance >= P.seuilPlein) return 1;
-  return P.chanceMinimale + (1 - P.chanceMinimale) * Math.max(0, endurance) / P.seuilPlein;
+  if (endurance >= seuil) return 1;
+  return P.chanceMinimale + (1 - P.chanceMinimale) * Math.max(0, endurance) / seuil;
 }
 
 // ---------- Ce qu'un joueur peut faire ----------
@@ -568,7 +572,7 @@ export function jouerTour(
     const sansMalus = id === 'simple_jambe' && REGLES.simpleJambeSansMalus;
     const malus = fam[j] === 'attaque' && J[j].malusPrecisionTours > 0 && !sansMalus ? REGLES.matraquage.malusPrecision : 0;
     const p = precisionDe(endDebut[j]) - malus;
-    chances[j] = chanceReussite(p);
+    chances[j] = chanceReussite(p, J[j].def.enduranceMax);
     passe[j] = reussit(hasard, chances[j]);
     if (!passe[j]) log(e, `${J[j].def.nom} rate son action (précision ${p.toFixed(2).replace('.', ',')}) : action dans le vent.`);
   }
@@ -822,7 +826,7 @@ export function jouerTour(
     for (const j of LES_DEUX) {
       const l = J[j];
       if (l.endurance <= 0) continue;
-      if (reussit(hasard, chanceReussite(precisionDe(l.endurance)))) {
+      if (reussit(hasard, chanceReussite(precisionDe(l.endurance), l.def.enduranceMax))) {
         const gain = RR.part * l.def.recuperation * l.def.enduranceMax;
         ajouterEndurance(l, gain);
         log(e, `${l.def.nom} récupère ${Math.round(gain * 10) / 10} d'endurance (tous les ${intervalle} tours).`);

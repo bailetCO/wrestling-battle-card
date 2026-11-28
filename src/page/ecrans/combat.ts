@@ -1,10 +1,12 @@
+import { dessinArbitre } from '../arbitre';
+import { ETIQUETTE_RESULTAT, resultatAction, type ResultatAction } from '../resultats';
 import { boutonSon, brancherBoutonSon } from './reglages-son';
 import { jouer, vibrer } from '../son';
 // Écran de combat : boutons, récapitulatif, mode Enchaînement, déroulé d'un tour et fenêtres.
 
 import { PRESENTATION_COCOACH } from '../portrait';
 import { fonctionVisible } from '../menu';
-import { ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type Sequence, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
+import { seuilPrecision, ACTIONS, REGLES, ID_RIVAL, COCOACH_RIVAL, autoOuvert, bonusAutoExpert, creerCombat, chanceFortAuto, combatAuto, avecBonus, actionsJouables, chanceReussite, coutSpeciale, nomLocal, peutJouerSpeciale, precisionDe, trouverLutteur, souffleDispo, comboPossible, coutDuTour, pointsCombo, surcoutFatigue, intervalleRecuperation, niveauFatigue, toursPeriode, actionsAjoutables, speciaux, souffleAjoutable, validerSequence, apercuSequence, enduranceApres, coutALaPlace, TAILLE_SEQUENCE, niveauCarte, avecDeck, coutAction, REGLES as R_, type Choix, type DefLutteur, type Sequence, type EtatCombat, type EtatLutteur, type Face, type IdAction, type Joueur, type Niveau } from '../../moteur';
 import { Partie, type TourJoue, type SequenceJouee } from '../partie';
 import { EFFET_SPECIALE, ICONE, effetAction } from '../textes';
 import { NOM_RARETE, activerReflets, carteHTML } from '../carte';
@@ -95,8 +97,9 @@ export function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquet
   const max = l.def.enduranceMax;
   const cible = Math.max(0, (l.endurance / max) * 100);
   const depart = S.endurancesAvant ? Math.max(0, (S.endurancesAvant[j] / max) * 100) : cible;
-  const repere = (50 / max) * 100;
-  const chance = chanceReussite(precisionDe(l.endurance));
+  const seuil = seuilPrecision(max);
+  const repere = (seuil / max) * 100;
+  const chance = chanceReussite(precisionDe(l.endurance), max);
   const etatPrecision = chance >= 1 ? 'pleine' : chance >= 0.6 ? 'moyenne' : 'faible';
   return `
     <div class="endu ${coin}">
@@ -106,8 +109,8 @@ export function barre(l: EtatLutteur, j: Joueur, coin: 'rouge' | 'bleu', etiquet
       </div>
       <div class="endu-barre ${etatPrecision}" role="meter" aria-label="Endurance ${etiquette}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${fmt(l.endurance)}">
         <div class="endu-trace" style="width:${Math.max(depart, cible)}%" data-cible="${cible}"></div>
-        <div class="endu-rempli ${l.endurance < 50 ? 'bas' : ''}" style="width:${depart}%" data-cible="${cible}"></div>
-        ${repere < 100 ? `<div class="endu-repere" style="${coin === 'bleu' ? 'right' : 'left'}:${repere}%" title="Sous 50, la précision baisse"></div>` : ''}
+        <div class="endu-rempli ${l.endurance < seuil ? 'bas' : ''}" style="width:${depart}%" data-cible="${cible}"></div>
+        ${repere < 100 ? `<div class="endu-repere" style="${coin === 'bleu' ? 'right' : 'left'}:${repere}%" title="Sous ${fmt(seuil)} (la moitié de l'endurance max), la précision baisse"></div>` : ''}
       </div>
       <span class="endu-precision ${etatPrecision}">Réussite ${pct(chance)}</span>
     </div>`;
@@ -120,7 +123,7 @@ export function chanceAction(e: EtatCombat, a: IdAction): number {
   if (attaque && l.derniereReussie === R_.combos.contreTemps.avant) return 1;
   if (a === 'tour_hanche' && l.def.force > e.joueurs[S.ORDI].def.force) return 1;
   const malus = attaque && l.malusPrecisionTours > 0 && a !== 'simple_jambe' ? R_.matraquage.malusPrecision : 0;
-  return chanceReussite(precisionDe(l.endurance) - malus);
+  return chanceReussite(precisionDe(l.endurance) - malus, l.def.enduranceMax);
 }
 
 export function boutonsActions(e: EtatCombat, mode: 'tour' | 'initiative'): string {
@@ -278,19 +281,24 @@ export function onomatopee(t: TourJoue, e: EtatCombat): { texte: string; cote: C
   return null;
 }
 
-export function miniCarte(c: Choix, def: DefLutteur, coin: 'rouge' | 'bleu', delai: number): string {
+export function miniCarte(c: Choix, def: DefLutteur, coin: 'rouge' | 'bleu', delai: number, resultat: ResultatAction | null = null): string {
   const lib = libelleAction(def.nation, c.action);
   const f = famille(c.action);
   return `
-    <div class="mini ${coin} ${c.speciale ? 'speciale' : ''}" style="--delai:${delai}ms">
+    <div class="mini ${coin} ${c.speciale ? 'speciale' : ''} ${resultat ? `r-${resultat}` : ''}" style="--delai:${delai}ms">
       <span class="mini-ico f-${f}">${ICONE[f]}</span>
       <b>${c.speciale ? '★ ' : ''}${echap(lib.local)}</b>
       <small>${echap(lib.fr)}${legendeFamille(f)}</small>
+      ${resultat && ETIQUETTE_RESULTAT[resultat] ? `<span class="mini-resultat">${ETIQUETTE_RESULTAT[resultat]}</span>` : ''}
     </div>`;
 }
 
-export function htmlDuel(choixH: Choix, choixO: Choix, e: EtatCombat): string {
-  return `<div class="duel-mini">${miniCarte(choixH, e.joueurs[S.HUMAIN].def, 'rouge', 0)}<span class="contre-mot">contre</span>${miniCarte(choixO, e.joueurs[S.ORDI].def, 'bleu', 140)}</div>`;
+// `lignes` : le récit du tour, pour colorer chaque case selon son résultat (absent : pas de couleur).
+export function htmlDuel(choixH: Choix, choixO: Choix, e: EtatCombat, lignes?: string[]): string {
+  const nh = e.joueurs[S.HUMAIN].def.nom, no = e.joueurs[S.ORDI].def.nom;
+  const rh = lignes ? resultatAction(lignes, nh, no) : null;
+  const ro = lignes ? resultatAction(lignes, no, nh) : null;
+  return `<div class="duel-mini">${miniCarte(choixH, e.joueurs[S.HUMAIN].def, 'rouge', 0, rh)}<span class="contre-mot">contre</span>${miniCarte(choixO, e.joueurs[S.ORDI].def, 'bleu', 140, ro)}</div>`;
 }
 
 export function lignesTour(t: TourJoue, e: EtatCombat): string {
@@ -621,7 +629,7 @@ export function caseDernierTour(e: EtatCombat): string {
         <div class="vs-portrait bleu">${portrait(o.def)}<span>${adv()}</span></div>
         <p class="case-aide">${e.enchainement
           ? `Compose en bas ta séquence de ${TAILLE_SEQUENCE} actions, dans l'ordre. ${S.mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} fait de même en secret ; les actions sont comparées une à une. Un contre réussi à la 1re action brise la chaîne ; un matraquage réussi à la 2e action peut annuler la dernière action adverse. L'action spéciale est possible dès le 2e tour, puis après 3 actions de recharge.`
-          : `Choisis ton action en bas. ${S.mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous 50 d'endurance, tes actions peuvent rater.`}${e.infini ? ' Durée infinie : le combat ne s\'arrête que sur un tombé ou un abandon.' : ''}</p>
+          : `Choisis ton action en bas. ${S.mode === 'ligne' ? 'Ton ami' : 'L\'ordinateur'} choisit en même temps que toi, en secret. Sous la moitié de ton endurance (le repère sur la barre), tes actions peuvent rater.`}${e.infini ? ' Durée infinie : le combat ne s\'arrête que sur un tombé ou un abandon.' : ''}</p>
       </section>`;
   }
   const ono = onomatopee(t, e);
@@ -631,7 +639,7 @@ export function caseDernierTour(e: EtatCombat): string {
     <section class="case ${ono?.fort ? 'secoue' : ''}" aria-live="polite">
       ${ono?.fort ? '<div class="rayons" aria-hidden="true"></div>' : ''}
       <div class="case-tete"><h3>${echap(titreTour(t))}</h3>${boutonChat()}</div>
-      ${htmlDuel(t.choixHumain, t.choixOrdi, e)}
+      ${htmlDuel(t.choixHumain, t.choixOrdi, e, t.lignes)}
       ${ono ? `<p class="onomato ${ono.cote}">${ono.texte}</p>` : ''}
       ${pts ? `<ul class="case-points">${pts}</ul>` : ''}
     </section>`;
@@ -686,8 +694,67 @@ function reagirAuTour(premier: TourJoue, dernier: TourJoue, e: EtatCombat) {
   else if (o?.texte === 'RATÉ !' || o?.texte === 'DANS LE VENT…') jouer('rate');
   else jouer('bloque');
   if (nouvellePeriode && !e.termine) jouer('periode', 0.35);
-  const seuil = R_.precision.seuilPlein;
+  const seuil = seuilPrecision(moi.def.enduranceMax);
   if (a.endurance >= seuil && moi.endurance < seuil && !e.termine) jouer('alerte', 0.5);
+}
+
+// L'arbitre lève le bras du vainqueur (28/11/2026) : un moment de 2,5 secondes avant l'écran de fin.
+let arbitreMontre = '';
+let arbitreEnCours = false;
+function montrerArbitre(e: EtatCombat, suite: () => void) {
+  const gagne = e.vainqueur === S.HUMAIN;
+  const v = e.joueurs[e.vainqueur!];
+  app.innerHTML = `
+    <main class="moment-arbitre ${gagne ? 'rouge' : 'bleu'}" data-passer-arbitre>
+      <div class="rayons" aria-hidden="true"></div>
+      ${dessinArbitre(gagne ? 'rouge' : 'bleu')}
+      <h1 class="onomato ${gagne ? 'rouge' : 'bleu'}">${gagne ? 'VICTOIRE !' : 'DÉFAITE…'}</h1>
+      <p class="arbitre-nom">Vainqueur : <b>${echap(v.def.nom)}</b>${e.finPar === 'tombe' ? ' par tombé' : ''}</p>
+      <p class="arbitre-aide">Touche l'écran pour continuer</p>
+    </main>`;
+  let fini = false;
+  arbitreEnCours = true;
+  const continuer = () => { if (fini) return; fini = true; arbitreEnCours = false; clearTimeout(t); suite(); };
+  const t = setTimeout(continuer, 2600);
+  app.querySelector('[data-passer-arbitre]')!.addEventListener('click', continuer);
+  window.scrollTo(0, 0);
+}
+
+// Fin de période (28/11/2026) : un panneau « PAUSE » avec le score de la période, les périodes
+// gagnées et la meilleure prise de la période. Il disparaît tout seul après 5 secondes.
+function montrerPause(e: EtatCombat, periode: number) {
+  document.querySelector('.pause-periode')?.remove();
+  const nh = e.joueurs[S.HUMAIN].def.nom;
+  let score: [number, number] | null = null; // [moi, adversaire]
+  let meilleure: { nom: string; points: number; prise: string } | null = null;
+  for (const t of S.tours) {
+    if (t.avant.periode !== periode) continue;
+    for (const l of t.lignes) {
+      const s = l.match(/^(?:Période \d gagnée par .* |Fin de la période ): (\d+) - (\d+)\.$/) ?? l.match(/^Supériorité technique \((\d+) - (\d+)\)\.$/);
+      if (s) score = S.HUMAIN === 0 ? [Number(s[1]), Number(s[2])] : [Number(s[2]), Number(s[1])];
+      const m = l.match(/^(.+) marque (\d+) points? \((.+)\)\.$/);
+      if (m && (!meilleure || Number(m[2]) > meilleure.points)) meilleure = { nom: m[1], points: Number(m[2]), prise: m[3].split(' : ')[0] };
+    }
+  }
+  const moi = e.joueurs[S.HUMAIN].periodesGagnees, lui = e.joueurs[S.ORDI].periodesGagnees;
+  const el = document.createElement('div');
+  el.className = 'pause-periode';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', `Pause : fin de la période ${periode}`);
+  el.innerHTML = `
+    <div class="pause-carte">
+      <p class="pause-titre">PAUSE</p>
+      <p class="pause-sous">Fin de la période ${periode}</p>
+      ${score ? `<p class="pause-score"><span class="rouge">${score[0]}</span> - <span class="bleu">${score[1]}</span></p>` : ''}
+      <p class="pause-periodes">Périodes gagnées : <b class="rouge">Toi ${moi}</b> · <b class="bleu">${echap(adv())} ${lui}</b></p>
+      <p class="pause-prise">${meilleure ? `Meilleure prise : <b>${echap(meilleure.prise)}</b>, ${meilleure.points} point${meilleure.points > 1 ? 's' : ''}, par <b class="${meilleure.nom === nh ? 'rouge' : 'bleu'}">${echap(meilleure.nom)}</b>` : 'Aucune prise n\'a marqué pendant cette période.'}</p>
+      <button class="secondaire" data-reprendre-pause>Période ${periode + 1} →</button>
+      <div class="pause-jauge" aria-hidden="true"><i></i></div>
+    </div>`;
+  const fermer = () => { clearTimeout(minuteur); el.remove(); };
+  const minuteur = setTimeout(fermer, 5000);
+  el.querySelector('[data-reprendre-pause]')!.addEventListener('click', fermer);
+  document.body.append(el);
 }
 
 export function ecranCombat() {
@@ -695,9 +762,21 @@ export function ecranCombat() {
   if (!e) return;
   const animer = S.tours.length !== S.toursAnimes;
   const premierNouveau = S.tours[Math.max(0, S.toursAnimes)]; // début du combat : aucun tour joué
-  if (animer && premierNouveau && S.tours.length > S.toursAnimes) reagirAuTour(premierNouveau, S.tours[S.tours.length - 1], e);
+  if (animer && premierNouveau && S.tours.length > S.toursAnimes) {
+    reagirAuTour(premierNouveau, S.tours[S.tours.length - 1], e);
+    if (premierNouveau.avant.periode !== e.periode && !e.termine && !e.rapide && !S.tuto) montrerPause(e, premierNouveau.avant.periode);
+  }
   S.toursAnimes = S.tours.length;
   if (S.tuto && (e.termine || e.periode > 1 || (S.partie?.toursJoues ?? 0) >= R_.tutoriel.toursCombat)) return ecranFinTutoriel();
+  // Fin du combat : d'abord l'arbitre lève le bras du vainqueur (une fois par combat), puis l'écran de fin.
+  if (e.termine && e.vainqueur !== null) {
+    const cle = S.mode === 'ligne' ? `ligne-${S.codeSalle}-${S.vueLigne?.graine ?? ''}` : `solo-${S.partie?.debut ?? ''}`;
+    if (cle !== arbitreMontre) {
+      arbitreMontre = cle;
+      return montrerArbitre(e, () => ecranCombat());
+    }
+    if (arbitreEnCours) return; // en ligne : un message de l'ami arrive pendant le moment de l'arbitre
+  }
   if (S.enTournoi !== null && e.termine) return finCombatTournoi(false);
   if (e.termine) return S.mode === 'ligne' ? ecranFinLigne() : ecranFin();
   const h = e.joueurs[S.HUMAIN];

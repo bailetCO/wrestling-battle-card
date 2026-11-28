@@ -138,7 +138,7 @@ export const TUTOS: Record<IdTuto, MiniTuto> = {
     deckAdversaire: ['double_jambe', 'defense', 'feinte', 'simple_jambe'],
     conseils: [
       'À toi de jouer seul ! La Carrière se joue en 3 périodes de 10 tours : gagne-en 2.',
-      'Sous 50 d\'endurance, tes actions peuvent rater : alterne attaques et défenses.',
+      'Sous la moitié de ton endurance max (le repère sur la barre), tes actions peuvent rater : alterne attaques et défenses.',
     ],
     verrou: () => null,
   },
